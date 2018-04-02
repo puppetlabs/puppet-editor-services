@@ -479,7 +479,7 @@ module PuppetDebugServer
       # Send experimental warning
       PuppetDebugServer::PuppetDebugSession.connection.send_output_event(
         'category' => 'console',
-        'output' => "**************************************************\n* The Puppet debugger is an experimental feature *\n* Debug Server v#{PuppetVSCode.version}                            *\n**************************************************\n\n"
+        'output' => "**************************************************\n* The Puppet debugger is an experimental feature *\n* Debug Server v#{PuppetEditorServices.version}                            *\n**************************************************\n\n"
       )
 
       PuppetDebugServer::PuppetDebugSession.connection.send_output_event(

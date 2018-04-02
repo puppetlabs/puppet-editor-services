@@ -1,26 +1,26 @@
-module PuppetVSCode
-  PUPPETVSCODEVERSION = '0.0.1'.freeze unless defined? PUPPETVSCODEVERSION
+module PuppetEditorServices
+  PUPPETEDITORSERVICESVERSION = '0.0.1'.freeze unless defined? PUPPETEDITORSERVICESVERSION
 
   # @api public
   #
-  # @return [String] containing the langauge server version, e.g. "0.4.0"
+  # @return [String] containing the editor services version, e.g. "0.4.0"
   def self.version
-    return @lang_server_version if @lang_server_version
+    return @editor_services_version if @editor_services_version
 
     version_file = File.join(File.dirname(__FILE__), 'VERSION')
     version = read_version_file(version_file)
 
-    @lang_server_version = version ? version : PUPPETVSCODEVERSION
+    @editor_services_version = version ? version : PUPPETEDITORSERVICESVERSION
   end
 
-  # Sets the langauge server version
+  # Sets the editor services version
   # Typically only used in testing
   #
   # @return [void]
   #
   # @api private
   def self.version=(version)
-    @lang_server_version = version
+    @editor_services_version = version
   end
 
   # @api private
