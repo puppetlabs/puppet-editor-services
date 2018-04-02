@@ -20,8 +20,8 @@ module PuppetLanguageServer
         json_obj = JSON.parse(content)
 
         # Check that this is from the same language server version
-        unless json_obj.nil? || json_obj['metadata']['version'] == PuppetVSCode.version
-          PuppetLanguageServer.log_message(:debug, "[PuppetHelperFileCache::load_from_persistent_cache] Error loading #{absolute_path}: Expected language server version #{PuppetVSCode.version} but found #{json_obj['metadata']['version']}")
+        unless json_obj.nil? || json_obj['metadata']['version'] == PuppetEditorServices.version
+          PuppetLanguageServer.log_message(:debug, "[PuppetHelperFileCache::load_from_persistent_cache] Error loading #{absolute_path}: Expected language server version #{PuppetEditorServices.version} but found #{json_obj['metadata']['version']}")
           json_obj = nil
         end
         # Check that the source file hash matches
@@ -44,7 +44,7 @@ module PuppetLanguageServer
         cache_file = File.join(cache_dir, cache_filename(file_key))
 
         # Inject metadata
-        content['metadata']['version'] = PuppetVSCode.version
+        content['metadata']['version'] = PuppetEditorServices.version
         content['metadata']['content_hash'] = calculate_hash(absolute_path)
 
         save_cache_file(cache_file, content.to_json)
