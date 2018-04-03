@@ -3,7 +3,7 @@ begin
   $VERBOSE = nil
 
   require 'languageserver/languageserver'
-  require 'puppet-vscode'
+  require 'puppet-editor-services'
 
   %w[json_rpc_handler message_router validation_queue server_capabilities document_validator puppet_parser_helper puppet_helper
      facter_helper completion_provider hover_provider definition_provider puppet_monkey_patches].each do |lib|
@@ -22,6 +22,10 @@ ensure
 end
 
 module PuppetLanguageServer
+  def self.version
+    PuppetEditorServices.version
+  end
+
   class CommandLineParser
     def self.parse(options)
       # Set defaults here
@@ -100,12 +104,12 @@ module PuppetLanguageServer
   end
 
   def self.log_message(severity, message)
-    PuppetVSCode.log_message(severity, message)
+    PuppetEditorServices.log_message(severity, message)
   end
 
   def self.init_puppet(options)
-    PuppetVSCode.init_logging(options)
-    log_message(:info, "Language Server is v#{PuppetVSCode.version}")
+    PuppetEditorServices.init_logging(options)
+    log_message(:info, "Language Server is v#{PuppetEditorServices.version}")
     log_message(:info, "Using Puppet v#{Puppet.version}")
 
     log_message(:info, 'Initializing Puppet Helper Cache...')
@@ -162,7 +166,7 @@ module PuppetLanguageServer
         handler.receive_data(data)
       end
     else
-      server = PuppetVSCode::SimpleTCPServer.new
+      server = PuppetEditorServices::SimpleTCPServer.new
 
       options[:servicename] = 'LANGUAGE SERVER'
 

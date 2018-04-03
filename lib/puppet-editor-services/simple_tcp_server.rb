@@ -3,7 +3,7 @@ require 'socket'
 # Based on code from
 # http://stackoverflow.com/questions/29858113/unable-to-make-socket-accept-non-blocking-ruby-2-2
 
-module PuppetVSCode
+module PuppetEditorServices
   class SimpleTCPServerConnection
     attr_accessor :socket
     attr_accessor :simple_tcp_server
@@ -11,17 +11,17 @@ module PuppetVSCode
     # Methods to override
     def post_init
       # Override this to recieve events after a client is connected
-      PuppetVSCode.log_message(:debug, 'TCPSRV: Client has connected')
+      PuppetEditorServices.log_message(:debug, 'TCPSRV: Client has connected')
     end
 
     def unbind
       # Override this to recieve events after a client is disconnected
-      PuppetVSCode.log_message(:debug, 'TCPSRV: Client has disconnected')
+      PuppetEditorServices.log_message(:debug, 'TCPSRV: Client has disconnected')
     end
 
     def receive_data(data)
       # Override this to recieve data
-      PuppetVSCode.log_message(:debug, "TCPSRV: Received #{data.length} characters")
+      PuppetEditorServices.log_message(:debug, "TCPSRV: Received #{data.length} characters")
     end
 
     # @api public
@@ -68,7 +68,7 @@ module PuppetVSCode
     @c_locker = Mutex.new
 
     def log(message)
-      PuppetVSCode.log_message(:debug, "TCPSRV: #{message}")
+      PuppetEditorServices.log_message(:debug, "TCPSRV: #{message}")
     end
 
     ####
@@ -95,7 +95,7 @@ module PuppetVSCode
     @handler_start_options = nil
     @server_options = nil
 
-    def start(handler = PuppetVSCode::SimpleTCPServerConnection, connection_options = {}, max_threads = 2)
+    def start(handler = PuppetEditorServices::SimpleTCPServerConnection, connection_options = {}, max_threads = 2)
       connection_options[:servicename] = 'LANGUAGE SERVER' if connection_options[:servicename].nil?
 
       # prepare threads
