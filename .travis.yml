@@ -1,0 +1,71 @@
+---
+sudo: false
+language: cpp
+
+os:
+  - linux
+# Do we actually need to run this on OSX?
+# OSX is REALLY slow to test
+#  - osx
+
+matrix:
+  fast_finish: true
+
+env:
+  matrix:
+    # Language Server testing
+    # LTS Agent
+    - PUPPET_GEM_VERSION="~> 4.7.0"
+      RUBY_VER=2.1.9
+      RAKE_TASK=test_languageserver
+
+    # Latest 4.x branch
+    - PUPPET_GEM_VERSION="~> 4.0"
+      RUBY_VER=2.1.9
+      RAKE_TASK=test_languageserver
+    # Latest Puppet
+    - PUPPET_GEM_VERSION="~> 5.0"
+      RUBY_VER=2.4.1
+      RAKE_TASK=test_languageserver
+    # Specific Puppet version testing
+    - PUPPET_GEM_VERSION="5.1.0"
+      RUBY_VER=2.4.1
+      RAKE_TASK=test_languageserver
+
+    # Debug Server testing
+    # LTS Agent
+    - PUPPET_GEM_VERSION="~> 4.7.0"
+      RUBY_VER=2.1.9
+      RAKE_TASK=test_debugserver
+    # Latest 4.x branch
+    - PUPPET_GEM_VERSION="~> 4.0"
+      RUBY_VER=2.1.9
+      RAKE_TASK=test_debugserver
+    # Latest Puppet
+    - PUPPET_GEM_VERSION="~> 5.0"
+      RUBY_VER=2.4.1
+      RAKE_TASK=test_debugserver
+
+    # Ruby style
+    - PUPPET_GEM_VERSION="~> 4.0"
+      RUBY_VER=2.4.1
+      RAKE_TASK=rubocop
+
+before_install: true
+
+install:
+  - "export BUILD_VERSION=99.99.0-travis.$TRAVIS_BUILD_NUMBER"
+  - if [ "$RUBY_VER" != "" ]; then
+      rvm install $RUBY_VER;
+      rvm use $RUBY_VER;
+      ruby -v;
+      gem -v;
+      bundle -v;
+      bundle install;
+      cat Gemfile.lock;
+    fi
+
+script:
+  - if [ "$RAKE_TASK" != "" ]; then
+      bundle exec rake $RAKE_TASK;
+    fi

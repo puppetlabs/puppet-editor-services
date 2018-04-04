@@ -1,3 +1,5 @@
+[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/github/lingua-pupuli/puppet-editor-services?branch=master&svg=true)](https://ci.appveyor.com/project/jpogran/puppet-editor-services) [![Travis Build Status](https://travis-ci.org/lingua-pupuli/puppet-editor-services.svg?branch=master)](https://travis-ci.org/lingua-pupuli/puppet-editor-services.svg?branch=master)
+
 # Puppet Language Server
 
 A ruby based JSON RPC server that provides Puppet Language support for the [Language Server Protocol](https://github.com/Microsoft/language-server-protocol)

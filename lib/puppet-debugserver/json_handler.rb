@@ -4,7 +4,7 @@ require 'json'
 # https://github.com/Microsoft/vscode-debugadapter-node/blob/master/protocol/src/debugProtocol.ts
 
 module PuppetDebugServer
-  class JSONHandler < PuppetVSCode::SimpleTCPServerConnection
+  class JSONHandler < PuppetEditorServices::SimpleTCPServerConnection
     def initialize(*_options)
       @state = :data
       @buffer = []

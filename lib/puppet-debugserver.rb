@@ -1,5 +1,5 @@
 require 'debugserver/debug_protocol'
-require 'puppet-vscode'
+require 'puppet-editor-services'
 
 %w[json_handler message_router hooks puppet_debug_session debug_hook_handlers puppet_debug_breakpoints puppet_monkey_patches].each do |lib|
   begin
@@ -13,6 +13,10 @@ require 'optparse'
 require 'logger'
 
 module PuppetDebugServer
+  def self.version
+    PuppetEditorServices.version
+  end
+
   class CommandLineParser
     def self.parse(options)
       # Set defaults here
@@ -49,7 +53,7 @@ module PuppetDebugServer
         end
 
         opts.on('-v', '--version', 'Prints the Debug Server version') do
-          puts PuppetVSCode.version
+          puts PuppetEditorServices.version
           exit
         end
       end
@@ -60,12 +64,12 @@ module PuppetDebugServer
   end
 
   def self.log_message(severity, message)
-    PuppetVSCode.log_message(severity, message)
+    PuppetEditorServices.log_message(severity, message)
   end
 
   def self.init_puppet(options)
-    PuppetVSCode.init_logging(options)
-    log_message(:info, "Debug Server is v#{PuppetVSCode.version}")
+    PuppetEditorServices.init_logging(options)
+    log_message(:info, "Debug Server is v#{PuppetEditorServices.version}")
 
     true
   end
@@ -73,7 +77,7 @@ module PuppetDebugServer
   def self.rpc_server(options)
     log_message(:info, 'Starting RPC Server...')
 
-    server = PuppetVSCode::SimpleTCPServer.new
+    server = PuppetEditorServices::SimpleTCPServer.new
 
     options[:servicename] = 'DEBUG SERVER'
 
