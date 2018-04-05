@@ -89,4 +89,46 @@ HEREDOC
   File.open(File.join(vendor_dir,'README.md'), 'wb') { |file| file.write(readme + "\n") }
 end
 
+desc "Create compressed files of the language and debug servers for release"
+task :build do
+  require 'fileutils'
+  require 'archive/zip'
+  require 'zlib'
+  require 'minitar'
+  require 'digest'
+
+  project_dir = File.dirname(__FILE__)
+  output_dir = File.join(project_dir, 'output')
+
+  file_list = ['lib', 'vendor', 'puppet-languageserver', 'puppet-debugserver', 'LICENSE']
+  # Remove files in the list that do not exist.
+  file_list.reject! { |filepath| !File.exists?(filepath) }
+
+  puts "Cleaning output directory..."
+  FileUtils.rm_rf Dir.glob("#{output_dir}/*") if Dir.exists?(output_dir)
+  Dir.mkdir(output_dir) unless Dir.exists?(output_dir)
+
+  puts "Fetch editor services version..."
+  require_relative 'lib/puppet-editor-services/version'
+  version = PuppetEditorServices.version
+  puts "Editor services is v#{version}"
+
+  puts "Creating zip file..."
+  zip_archive_file = File.join(output_dir,"puppet_editor_services_#{version}.zip")
+  Archive::Zip.archive(zip_archive_file, file_list)
+  puts "Created #{zip_archive_file}"
+
+  puts "Creating tar file..."
+  tar_archive_file = File.join(output_dir,"puppet_editor_services_#{version}.tar.gz")
+  Minitar.pack(file_list, Zlib::GzipWriter.new(File.open(tar_archive_file, 'wb')))
+  puts "Created #{tar_archive_file}"
+
+  puts "Creating checksums..."
+  [zip_archive_file, tar_archive_file].each do |filepath|
+    sha = Digest::SHA256.hexdigest(File.open(filepath, 'rb') { |file| file.read })
+    File.open(filepath + '.sha256', 'wb') { |file| file.write(sha) }
+  end
+  puts "Created checksums"
+end
+
 task :default => [:test]

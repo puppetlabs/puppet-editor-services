@@ -42,6 +42,11 @@ environment:
     RUBY_VER: 23-x64
     RAKE_TASK: rubocop
 
+  # Build release archives
+  - PUPPET_GEM_VERSION: "~> 4.0"
+    RUBY_VER: 23-x64
+    RAKE_TASK: build
+
 matrix:
   fast_finish: true
 
@@ -70,3 +75,6 @@ build: off
 
 test_script:
 - cmd: IF NOT [%RAKE_TASK%] == [] bundle exec rake %RAKE_TASK%
+
+artifacts:
+  - path: output/*.*
