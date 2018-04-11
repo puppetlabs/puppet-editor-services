@@ -29,6 +29,10 @@ group :development do
   gem "win32-process", "<= 0.7.5",  :require => false, :platforms => ["mswin", "mingw", "x64_mingw"]
   gem "win32-security", "<= 0.2.5", :require => false, :platforms => ["mswin", "mingw", "x64_mingw"]
   gem "win32-service", "<= 0.8.8",  :require => false, :platforms => ["mswin", "mingw", "x64_mingw"]
+
+  # Gems for building release tarballs etc.
+  gem "archive-zip", :require => false
+  gem "minitar"    , :require => false
 end
 
 # Evaluate Gemfile.local if it exists

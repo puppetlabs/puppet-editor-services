@@ -8,3 +8,4 @@ coverage/
 log/
 .DS_Store
 tmp/
+output/
