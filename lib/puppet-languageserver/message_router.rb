@@ -38,6 +38,19 @@ module PuppetLanguageServer
     def self.document_uris
       @doc_mutex.synchronize { @documents.keys.dup }
     end
+
+    def self.document_type(uri)
+      case uri
+      when /\/Puppetfile$/i
+        :puppetfile
+      when /\.pp$/i
+        :manifest
+      when /\.epp$/i
+        :epp
+      else
+        :unknown
+      end
+    end
   end
 
   module CrashDump
@@ -90,28 +103,16 @@ TEXT
     nil
   end
 
-  class MessageRouter < JSONRPCHandler
-    def initialize(*options)
-      super(*options)
+  class MessageRouter
+    attr_accessor :json_rpc_handler
 
-      @workspace = options.first[:workspace] unless options.compact.empty?
+    def initialize(options = {})
+      options = {} if options.nil?
+      @workspace = options[:workspace]
     end
 
     def documents
       PuppetLanguageServer::DocumentStore
-    end
-
-    def document_type(uri)
-      case uri
-      when /\/Puppetfile$/i
-        :puppetfile
-      when /\.pp$/i
-        :manifest
-      when /\.epp$/i
-        :epp
-      else
-        :unknown
-      end
     end
 
     def receive_request(request)
@@ -157,7 +158,7 @@ TEXT
 
       when 'puppet/compileNodeGraph'
         file_uri = request.params['external']
-        unless document_type(file_uri) == :manifest
+        unless documents.document_type(file_uri) == :manifest
           request.reply_result(LanguageServer::PuppetCompilation.create('error' => 'Files of this type can not be used to create a node graph.'))
           return
         end
@@ -191,7 +192,7 @@ TEXT
           file_uri = formatted_request['documentUri']
           content = documents.document(file_uri)
 
-          case document_type(file_uri)
+          case documents.document_type(file_uri)
           when :manifest
             changes, new_content = PuppetLanguageServer::DocumentValidator.fix_validate_errors(content, @workspace)
           else
@@ -220,7 +221,7 @@ TEXT
         char_num = request.params['position']['character']
         content = documents.document(file_uri)
         begin
-          case document_type(file_uri)
+          case documents.document_type(file_uri)
           when :manifest
             request.reply_result(PuppetLanguageServer::CompletionProvider.complete(content, line_num, char_num))
           else
@@ -246,7 +247,7 @@ TEXT
         char_num = request.params['position']['character']
         content = documents.document(file_uri)
         begin
-          case document_type(file_uri)
+          case documents.document_type(file_uri)
           when :manifest
             request.reply_result(PuppetLanguageServer::HoverProvider.resolve(content, line_num, char_num))
           else
@@ -263,7 +264,7 @@ TEXT
         char_num = request.params['position']['character']
         content = documents.document(file_uri)
         begin
-          case document_type(file_uri)
+          case documents.document_type(file_uri)
           when :manifest
             request.reply_result(PuppetLanguageServer::DefinitionProvider.find_definition(content, line_num, char_num))
           else
@@ -289,7 +290,7 @@ TEXT
 
       when 'exit'
         PuppetLanguageServer.log_message(:info, 'Received exit notification.  Closing connection to client...')
-        close_connection
+        @json_rpc_handler.close_connection
 
       when 'textDocument/didOpen'
         PuppetLanguageServer.log_message(:info, 'Received textDocument/didOpen notification.')
@@ -297,7 +298,7 @@ TEXT
         content = params['textDocument']['text']
         doc_version = params['textDocument']['version']
         documents.set_document(file_uri, content, doc_version)
-        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @workspace, self)
+        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @workspace, @json_rpc_handler)
 
       when 'textDocument/didClose'
         PuppetLanguageServer.log_message(:info, 'Received textDocument/didClose notification.')
@@ -310,7 +311,7 @@ TEXT
         content = params['contentChanges'][0]['text'] # TODO: Bad hardcoding zero
         doc_version = params['textDocument']['version']
         documents.set_document(file_uri, content, doc_version)
-        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @workspace, self)
+        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @workspace, @json_rpc_handler)
 
       when 'textDocument/didSave'
         PuppetLanguageServer.log_message(:info, 'Received textDocument/didSave notification.')

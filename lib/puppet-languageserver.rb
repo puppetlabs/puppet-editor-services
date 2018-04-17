@@ -155,8 +155,9 @@ module PuppetLanguageServer
       $stdin.sync = true
       $stdout.sync = true
 
-      handler = PuppetLanguageServer::MessageRouter.new
-      handler.socket = $stdout
+      handler = PuppetLanguageServer::JSONRPCHandler.new(options)
+      client_connection = PuppetEditorServices::SimpleSTDIOServerConnection.new($stdout)
+      handler.client_connection = client_connection
       handler.post_init
 
       loop do
@@ -172,7 +173,7 @@ module PuppetLanguageServer
 
       server.add_service(options[:ipaddress], options[:port])
       trap('INT') { server.stop_services(true) }
-      server.start(PuppetLanguageServer::MessageRouter, options, 2)
+      server.start(PuppetLanguageServer::JSONRPCHandler, options, 2)
     end
 
     log_message(:info, 'Language Server exited.')

@@ -12,7 +12,7 @@ module PuppetLanguageServer
 
     # Enqueue a file to be validated
     def self.enqueue(file_uri, doc_version, workspace, connection_object)
-      document_type = connection_object.document_type(file_uri)
+      document_type = PuppetLanguageServer::DocumentStore.document_type(file_uri)
 
       unless %i[manifest epp].include?(document_type)
         # Can't validate these types so just emit an empty validation result
@@ -48,7 +48,7 @@ module PuppetLanguageServer
 
     # Synchronously validate a file
     def self.validate_sync(file_uri, doc_version, workspace, connection_object)
-      document_type = connection_object.document_type(file_uri)
+      document_type = PuppetLanguageServer::DocumentStore.document_type(file_uri)
       content = documents.document(file_uri, doc_version)
       return nil if content.nil?
       result = validate(document_type, content, workspace)

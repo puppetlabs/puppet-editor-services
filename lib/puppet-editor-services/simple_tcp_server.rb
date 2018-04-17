@@ -4,47 +4,30 @@ require 'socket'
 # http://stackoverflow.com/questions/29858113/unable-to-make-socket-accept-non-blocking-ruby-2-2
 
 module PuppetEditorServices
-  class SimpleTCPServerConnection
+  class SimpleTCPServerConnection < SimpleServerConnectionBase
     attr_accessor :socket
     attr_accessor :simple_tcp_server
 
-    # Methods to override
-    def post_init
-      # Override this to recieve events after a client is connected
-      PuppetEditorServices.log_message(:debug, 'TCPSRV: Client has connected')
+    def initialize(simple_tcp_server, socket)
+      @simple_tcp_server = simple_tcp_server
+      @socket = socket
     end
 
-    def unbind
-      # Override this to recieve events after a client is disconnected
-      PuppetEditorServices.log_message(:debug, 'TCPSRV: Client has disconnected')
-    end
-
-    def receive_data(data)
-      # Override this to recieve data
-      PuppetEditorServices.log_message(:debug, "TCPSRV: Received #{data.length} characters")
-    end
-
-    # @api public
-    def error?
-      false
-    end
-
-    # @api public
     def send_data(data)
       return false if socket.nil?
       socket.write(data)
       true
     end
 
-    # @api public
     def close_connection_after_writing
       socket.flush unless socket.nil?
       simple_tcp_server.remove_connection_async(socket)
+      true
     end
 
-    # @api public
     def close_connection
       simple_tcp_server.remove_connection_async(socket)
+      true
     end
   end
 
@@ -77,7 +60,6 @@ module PuppetEditorServices
     def get_data(io, connection_data)
       data = io.recv_nonblock(1048576) # with maximum number of bytes to read at a time...
       raise 'Received a 0byte payload' if data.length.zero?
-
       # We're already in a callback so no need to invoke as a callback
       connection_data[:handler].receive_data(data)
     rescue StandardError => e
@@ -239,7 +221,7 @@ module PuppetEditorServices
               begin
                 callback(self, :add_connection, io.accept_nonblock, self.class.services[io])
               rescue Errno::EWOULDBLOCK => _ # rubocop:disable Lint/HandleExceptions
-                # There's nothing too handle. Swallow the error
+                # There's nothing to handle. Swallow the error
               rescue StandardError => e
                 log(e.message)
               end
@@ -332,8 +314,8 @@ module PuppetEditorServices
     # @api private
     def add_connection(io, service_object)
       handler = @handler_klass.new(@handler_start_options)
-      handler.socket = io
-      handler.simple_tcp_server = self
+      conn = SimpleTCPServerConnection.new(self, io)
+      handler.client_connection = conn
       if io
         self.class.c_locker.synchronize do
           self.class.io_connection_dic[io] = { handler: handler, service: service_object }

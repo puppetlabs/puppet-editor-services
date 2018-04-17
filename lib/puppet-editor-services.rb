@@ -1,4 +1,4 @@
-%w[logging version simple_tcp_server].each do |lib|
+%w[logging version simple_base simple_tcp_server simple_stdio_server].each do |lib|
   begin
     require "puppet-editor-services/#{lib}"
   rescue LoadError

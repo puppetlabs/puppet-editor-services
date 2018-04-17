@@ -37,8 +37,11 @@ module PuppetLanguageServer
   KEY_CODE      = 'code'.freeze
   KEY_MESSAGE   = 'message'.freeze
 
-  class JSONRPCHandler < PuppetEditorServices::SimpleTCPServerConnection
-    def initialize(*_options)
+  class JSONRPCHandler < PuppetEditorServices::SimpleServerConnectionHandler
+    attr_accessor :message_router
+
+    def initialize(options = {})
+      options = {} if options.nil?
       @key_jsonrpc = KEY_JSONRPC
       @key_id = KEY_ID
       @key_method = KEY_METHOD
@@ -46,12 +49,22 @@ module PuppetLanguageServer
 
       @state = :data
       @buffer = []
+
+      @client_connection = options[:connection]
+      if options[:message_router].nil?
+        @message_router = PuppetLanguageServer::MessageRouter.new(options)
+      else
+        @message_router = options[:message_router]
+      end
+      @message_router.json_rpc_handler = self
     end
 
+    # From PuppetEditorServices::SimpleServerConnectionHandler
     def post_init
       PuppetLanguageServer.log_message(:info, 'Client has connected to the language server')
     end
 
+    # From PuppetEditorServices::SimpleServerConnectionHandler
     def unbind
       PuppetLanguageServer.log_message(:info, 'Client has disconnected from the language server')
     end
@@ -72,6 +85,7 @@ module PuppetLanguageServer
       header
     end
 
+    # From PuppetEditorServices::SimpleServerConnectionHandler
     def receive_data(data)
       # Inspired by https://github.com/PowerShell/PowerShellEditorServices/blob/dba65155c38d3d9eeffae5f0358b5a3ad0215fac/src/PowerShellEditorServices.Protocol/MessageProtocol/MessageReader.cs
       return if data.empty?
@@ -113,7 +127,7 @@ module PuppetLanguageServer
       PuppetEditorServices.log_message(:debug, "--- OUTBOUND\n#{response}\n---")
 
       size = response.bytesize if response.respond_to?(:bytesize)
-      send_data "Content-Length: #{size}\r\n\r\n" + response
+      @client_connection.send_data "Content-Length: #{size}\r\n\r\n" + response
     end
 
     def parse_data(data)
@@ -171,20 +185,19 @@ module PuppetLanguageServer
       end
 
       if is_request
-        receive_request Request.new(self, id, method, params)
+        @message_router.receive_request Request.new(self, id, method, params)
       else
-        receive_notification method, params
+        @message_router.receive_notification method, params
       end
     end
 
-    # This method must be overriden in the user's inherited class.
-    def receive_request(request)
-      PuppetEditorServices.log_message(:debug, "request received:\n#{request.inspect}")
+    def close_connection
+      @client_connection.close_connection unless @client_connection.nil?
     end
 
-    # This method must be overriden in the user's inherited class.
-    def receive_notification(method, params)
-      PuppetEditorServices.log_message(:debug, "notification received (method: #{method.inspect}, params: #{params.inspect})")
+    def connection_error?
+      return false if @client_connection.nil?
+      @client_connection.error?
     end
 
     def encode_json(data)
@@ -201,7 +214,7 @@ module PuppetLanguageServer
     end
 
     def reply_diagnostics(uri, diagnostics)
-      return nil if error?
+      return nil if connection_error?
 
       response = {
         KEY_JSONRPC => VALUE_VERSION,
@@ -242,15 +255,15 @@ module PuppetLanguageServer
     class Request
       attr_reader :rpc_method, :params, :id
 
-      def initialize(conn, id, rpc_method, params)
-        @conn = conn
+      def initialize(json_rpc_handler, id, rpc_method, params)
+        @json_rpc_handler = json_rpc_handler
         @id = id
         @rpc_method = rpc_method
         @params = params
       end
 
       def reply_result(result)
-        return nil if @conn.error?
+        return nil if @json_rpc_handler.connection_error?
 
         response = {
           KEY_JSONRPC => VALUE_VERSION,
@@ -258,31 +271,31 @@ module PuppetLanguageServer
           KEY_RESULT => result
         }
 
-        @conn.send_response(@conn.encode_json(response))
+        @json_rpc_handler.send_response(@json_rpc_handler.encode_json(response))
         true
       end
 
       def reply_internal_error(message = nil)
-        return nil if @conn.error?
-        @conn.reply_error(@id, CODE_INTERNAL_ERROR, message || MSG_INTERNAL_ERROR)
+        return nil if @json_rpc_handler.error?
+        @json_rpc_handler.reply_error(@id, CODE_INTERNAL_ERROR, message || MSG_INTERNAL_ERROR)
       end
 
       def reply_method_not_found(message = nil)
-        return nil if @conn.error?
-        @conn.reply_error(@id, CODE_METHOD_NOT_FOUND, message || MSG_METHOD_NOT_FOUND)
+        return nil if @json_rpc_handler.connection_error?
+        @json_rpc_handler.reply_error(@id, CODE_METHOD_NOT_FOUND, message || MSG_METHOD_NOT_FOUND)
       end
 
       def reply_invalid_params(message = nil)
-        return nil if @conn.error?
-        @conn.reply_error(@id, CODE_INVALID_PARAMS, message || MSG_INVALID_PARAMS)
+        return nil if @json_rpc_handler.connection_error?
+        @json_rpc_handler.reply_error(@id, CODE_INVALID_PARAMS, message || MSG_INVALID_PARAMS)
       end
 
       def reply_custom_error(code, message)
-        return nil if @conn.error?
+        return nil if @json_rpc_handler.connection_error?
         unless code.is_a?(Integer) && (-32099..-32000).cover?(code)
           raise ArgumentError, 'code must be an integer between -32099 and -32000'
         end
-        @conn.reply_error(@id, code, message)
+        @json_rpc_handler.reply_error(@id, code, message)
       end
     end
   end

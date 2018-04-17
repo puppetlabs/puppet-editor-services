@@ -1,33 +1,34 @@
 module PuppetDebugServer
-  class MessageRouter < JSONHandler
-    def initialize(*options)
-      super(*options)
+  class MessageRouter
+    attr_accessor :json_handler
+
+    def initialize(*_options)
     end
 
     def send_termination_event
       obj = PuppetDebugServer::Protocol::TerminatedEvent.create({})
-      send_event obj
+      @json_handler.send_event obj
     end
 
     def send_exited_event(exitcode)
       obj = PuppetDebugServer::Protocol::ExitedEvent.create('exitCode' => exitcode)
-      send_event obj
+      @json_handler.send_event obj
     end
 
     def send_output_event(options)
       obj = PuppetDebugServer::Protocol::OutputEvent.create(options)
-      send_event obj
+      @json_handler.send_event obj
     end
 
     def send_stopped_event(reason, options = {})
       options['reason'] = reason
       obj = PuppetDebugServer::Protocol::StoppedEvent.create(options)
-      send_event obj
+      @json_handler.send_event obj
     end
 
     def send_thread_event(reason, thread_id)
       obj = PuppetDebugServer::Protocol::ThreadEvent.create('reason' => reason, 'threadId' => thread_id)
-      send_event obj
+      @json_handler.send_event obj
     end
 
     def receive_request(request, original_json)
@@ -59,12 +60,12 @@ module PuppetDebugServer
             'success' => true
           }, request
         )
-        send_response response
+        @json_handler.send_response response
 
         # Send a message that we are initialized
         # This must happen _after_ the capabilites are sent
         sleep(0.5) # Sleep for a small amount of time to give the client time to process the capabilites response
-        send_event PuppetDebugServer::Protocol::InitializedEvent.create
+        @json_handler.send_event PuppetDebugServer::Protocol::InitializedEvent.create
 
       when 'configurationDone'
         PuppetDebugServer.log_message(:debug, 'Received configurationDone request.')
@@ -75,7 +76,7 @@ module PuppetDebugServer
             'success' => true
           }, request
         )
-        send_response response
+        @json_handler.send_response response
 
         # Start the debug session if the session is not already running and, setup and configuration have completed
         PuppetDebugServer::PuppetDebugSession.start if !PuppetDebugServer::PuppetDebugSession.session_active? && PuppetDebugServer::PuppetDebugSession.setup?
@@ -92,7 +93,7 @@ module PuppetDebugServer
             'success' => 'true'
           }, request
         )
-        send_response response
+        @json_handler.send_response response
 
       when 'setFunctionBreakpoints'
         PuppetDebugServer.log_message(:debug, 'Received setFunctionBreakpoints request.')
@@ -112,7 +113,7 @@ module PuppetDebugServer
             'success' => 'true'
           }, request
         )
-        send_response response
+        @json_handler.send_response response
 
       when 'launch'
         PuppetDebugServer.log_message(:debug, 'Received launch request.')
@@ -124,7 +125,7 @@ module PuppetDebugServer
             'success' => true
           }, request
         )
-        send_response response
+        @json_handler.send_response response
 
         # Start the debug session
         PuppetDebugServer::PuppetDebugSession.setup(self, original_json['arguments'])
@@ -148,7 +149,7 @@ module PuppetDebugServer
             }, request
           )
         end
-        send_response response
+        @json_handler.send_response response
 
       when 'stackTrace'
         PuppetDebugServer.log_message(:debug, 'Received stackTrace request.')
@@ -160,7 +161,7 @@ module PuppetDebugServer
               'success' => false
             }, request
           )
-          send_response response
+          @json_handler.send_response response
           return
         end
 
@@ -171,7 +172,7 @@ module PuppetDebugServer
             'stackFrames' => frames
           }, request
         )
-        send_response response
+        @json_handler.send_response response
 
       when 'scopes'
         PuppetDebugServer.log_message(:debug, 'Received scopes request.')
@@ -183,7 +184,7 @@ module PuppetDebugServer
               'success' => false
             }, request
           )
-          send_response response
+          @json_handler.send_response response
           return
         end
 
@@ -196,7 +197,7 @@ module PuppetDebugServer
               'scopes' => []
             }, request
           )
-          send_response response
+          @json_handler.send_response response
           return
         end
 
@@ -207,7 +208,7 @@ module PuppetDebugServer
             'scopes' => scopes
           }, request
         )
-        send_response response
+        @json_handler.send_response response
 
       when 'variables'
         PuppetDebugServer.log_message(:debug, 'Received variables request.')
@@ -219,7 +220,7 @@ module PuppetDebugServer
               'success' => false
             }, request
           )
-          send_response response
+          @json_handler.send_response response
           return
         end
 
@@ -230,7 +231,7 @@ module PuppetDebugServer
             'variables' => variables
           }, request
         )
-        send_response response
+        @json_handler.send_response response
 
       when 'evaluate'
         PuppetDebugServer.log_message(:debug, 'Received evaluate request.')
@@ -242,7 +243,7 @@ module PuppetDebugServer
               'success' => false
             }, request
           )
-          send_response response
+          @json_handler.send_response response
           return
         end
 
@@ -254,7 +255,7 @@ module PuppetDebugServer
               'success' => true
             }, request
           )
-          send_response response
+          @json_handler.send_response response
           return
         end
 
@@ -270,7 +271,7 @@ module PuppetDebugServer
               'variablesReference' => 0
             }, request
           )
-          send_response response
+          @json_handler.send_response response
         rescue => exception # rubocop:disable Style/RescueStandardError
           response = PuppetDebugServer::Protocol::Response.create_from_request(
             {
@@ -278,7 +279,7 @@ module PuppetDebugServer
               'message' => exception.to_s
             }, request
           )
-          send_response response
+          @json_handler.send_response response
         end
 
       when 'continue'
@@ -293,7 +294,7 @@ module PuppetDebugServer
             'allThreadsContinued' => true
           }, request
         )
-        send_response response
+        @json_handler.send_response response
 
       when 'stepIn'
         PuppetDebugServer.log_message(:debug, 'Received stepIn request.')
@@ -305,14 +306,14 @@ module PuppetDebugServer
               'success' => false
             }, request
           )
-          send_response response
+          @json_handler.send_response response
           return
         end
 
         # Stepin the debug session
         PuppetDebugServer::PuppetDebugSession.continue_stepin_session
 
-        send_response PuppetDebugServer::Protocol::StepInResponse.create_from_request({ 'success' => true }, request)
+        @json_handler.send_response PuppetDebugServer::Protocol::StepInResponse.create_from_request({ 'success' => true }, request)
 
       when 'stepOut'
         PuppetDebugServer.log_message(:debug, 'Received stepOut request.')
@@ -324,14 +325,14 @@ module PuppetDebugServer
               'success' => false
             }, request
           )
-          send_response response
+          @json_handler.send_response response
           return
         end
 
         # Next the debug session
         PuppetDebugServer::PuppetDebugSession.continue_stepout_session
 
-        send_response PuppetDebugServer::Protocol::StepOutResponse.create_from_request({ 'success' => true }, request)
+        @json_handler.send_response PuppetDebugServer::Protocol::StepOutResponse.create_from_request({ 'success' => true }, request)
 
       when 'next'
         PuppetDebugServer.log_message(:debug, 'Received next request.')
@@ -343,20 +344,20 @@ module PuppetDebugServer
               'success' => false
             }, request
           )
-          send_response response
+          @json_handler.send_response response
           return
         end
 
         # Next the debug session
         PuppetDebugServer::PuppetDebugSession.continue_next_session
 
-        send_response PuppetDebugServer::Protocol::NextResponse.create_from_request({ 'success' => true }, request)
+        @json_handler.send_response PuppetDebugServer::Protocol::NextResponse.create_from_request({ 'success' => true }, request)
 
       when 'disconnect'
         # Don't really care about the arguments - Kill everything
         PuppetDebugServer.log_message(:info, 'Received disconnect request.  Closing connection to client...')
-        close_connection
-
+        @json_handler.close_connection
+        # TODO: client isn't disconnecting properly....
       else
         PuppetDebugServer.log_message(:error, "Unknown request command #{request['command']}")
 
@@ -366,7 +367,7 @@ module PuppetDebugServer
             'message' => "This feature is not supported - Request #{request['command']}"
           }, request
         )
-        send_response response
+        @json_handler.send_response response
       end
     end
   end
