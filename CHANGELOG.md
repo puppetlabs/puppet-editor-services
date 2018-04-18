@@ -6,7 +6,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
-- ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11))  Refactor the transport layers to loosen object coupling
+- ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Refactor the transport layers to loosen object coupling
+- ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Fix STDIO server
 
 ## 0.10.0 - 2018-03-29
 

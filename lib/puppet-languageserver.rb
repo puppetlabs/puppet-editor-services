@@ -130,6 +130,10 @@ module PuppetLanguageServer
   def self.init_puppet_worker(options)
     options[:puppet_settings].nil? ? Puppet.initialize_settings : Puppet.initialize_settings(options[:puppet_settings])
 
+    # Remove all other logging destinations except for ours
+    Puppet::Util::Log.destinations.clear
+    Puppet::Util::Log.newdestination('null_logger')
+
     log_message(:info, "Using Facter v#{Facter.version}")
     if options[:preload_puppet]
       log_message(:info, 'Preloading Puppet Types (Sync)...')
@@ -150,26 +154,17 @@ module PuppetLanguageServer
 
   def self.rpc_server(options)
     log_message(:info, 'Starting RPC Server...')
+    options[:servicename] = 'LANGUAGE SERVER'
 
     if options[:stdio]
-      $stdin.sync = true
-      $stdout.sync = true
+      log_message(:debug, 'Using STDIO')
+      server = PuppetEditorServices::SimpleSTDIOServer.new
 
-      handler = PuppetLanguageServer::JSONRPCHandler.new(options)
-      client_connection = PuppetEditorServices::SimpleSTDIOServerConnection.new($stdout)
-      handler.client_connection = client_connection
-      handler.post_init
-
-      loop do
-        data = $stdin.readpartial(1048576)
-        raise 'Receieved an empty input string' if data.length.zero?
-
-        handler.receive_data(data)
-      end
+      trap('INT') { server.stop }
+      server.start(PuppetLanguageServer::JSONRPCHandler, options)
     else
+      log_message(:debug, 'Using Simple TCP')
       server = PuppetEditorServices::SimpleTCPServer.new
-
-      options[:servicename] = 'LANGUAGE SERVER'
 
       server.add_service(options[:ipaddress], options[:port])
       trap('INT') { server.stop_services(true) }
