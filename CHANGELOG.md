@@ -8,6 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Refactor the transport layers to loosen object coupling
 - ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Fix STDIO server
+- Stop bad logfile destinations from crashing the language and debug servers
 
 ## 0.10.0 - 2018-03-29
 
