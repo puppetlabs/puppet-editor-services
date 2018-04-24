@@ -46,31 +46,20 @@ RSpec::Matchers.define :be_completion_item_with_type do |value|
 end
 
 # Mock ojects
-class MockJSONRPCHandler < PuppetLanguageServer::JSONRPCHandler
-  attr_accessor :socket
-  attr_accessor :simple_tcp_server
-
-  def post_init
-  end
-
-  def unbind
-  end
-
-  def receive_data(data)
-  end
-
-  def error?
-    false
-  end
-
+class MockConnection < PuppetEditorServices::SimpleServerConnectionBase
   def send_data(data)
     true
   end
+end
 
-  def close_connection_after_writing
+class MockJSONRPCHandler < PuppetLanguageServer::JSONRPCHandler
+  def initialize(options = {})
+    super(options)
+
+    @client_connection = MockConnection.new
   end
 
-  def close_connection
+  def receive_data(data)
   end
 end
 

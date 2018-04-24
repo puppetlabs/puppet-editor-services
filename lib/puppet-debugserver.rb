@@ -83,7 +83,7 @@ module PuppetDebugServer
 
     server.add_service(options[:ipaddress], options[:port])
     trap('INT') { server.stop_services(true) }
-    server.start(PuppetDebugServer::MessageRouter, options, 2)
+    server.start(PuppetDebugServer::JSONHandler, options, 2)
 
     log_message(:info, 'Debug Server exited.')
   end

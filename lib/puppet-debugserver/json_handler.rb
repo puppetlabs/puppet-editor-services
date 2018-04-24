@@ -4,17 +4,31 @@ require 'json'
 # https://github.com/Microsoft/vscode-debugadapter-node/blob/master/protocol/src/debugProtocol.ts
 
 module PuppetDebugServer
-  class JSONHandler < PuppetEditorServices::SimpleTCPServerConnection
-    def initialize(*_options)
+  class JSONHandler < PuppetEditorServices::SimpleServerConnectionHandler
+    attr_accessor :message_router
+
+    def initialize(options = {})
+      options = {} if options.nil?
+
       @state = :data
       @buffer = []
       @response_sequence = 1
+
+      @client_connection = options[:connection]
+      if options[:message_router].nil?
+        @message_router = PuppetDebugServer::MessageRouter.new(options)
+      else
+        @message_router = options[:message_router]
+      end
+      @message_router.json_handler = self
     end
 
+    # From PuppetEditorServices::SimpleServerConnectionHandler
     def post_init
       PuppetDebugServer.log_message(:info, 'Client has connected to the debug server')
     end
 
+    # From PuppetEditorServices::SimpleServerConnectionHandler
     def unbind
       PuppetDebugServer.log_message(:info, 'Client has disconnected from the debug server')
     end
@@ -35,6 +49,7 @@ module PuppetDebugServer
       header
     end
 
+    # From PuppetEditorServices::SimpleServerConnectionHandler
     def receive_data(data)
       # Inspired by https://github.com/PowerShell/PowerShellEditorServices/blob/dba65155c38d3d9eeffae5f0358b5a3ad0215fac/src/PowerShellEditorServices.Protocol/MessageProtocol/MessageReader.cs
       return if data.empty?
@@ -82,7 +97,7 @@ module PuppetDebugServer
       PuppetDebugServer.log_message(:debug, "--- OUTBOUND\n#{response_json}\n---")
 
       size = response_json.bytesize
-      send_data "Content-Length: #{size}\r\n\r\n" + response_json
+      @client_connection.send_data "Content-Length: #{size}\r\n\r\n" + response_json
     end
 
     def send_event(response)
@@ -95,7 +110,7 @@ module PuppetDebugServer
       PuppetDebugServer.log_message(:debug, "--- OUTBOUND\n#{response_json}\n---")
 
       size = response_json.bytesize
-      send_data "Content-Length: #{size}\r\n\r\n" + response_json
+      @client_connection.send_data "Content-Length: #{size}\r\n\r\n" + response_json
     end
 
     def parse_data(data)
@@ -115,7 +130,7 @@ module PuppetDebugServer
       # NOTE: Not implemented as it doesn't make sense using JSON RPC over pure TCP / UnixSocket.
       else
         PuppetDebugServer.log_message(:error, 'Closing connection as request is not a Hash')
-        close_connection_after_writing
+        @client_connection.close_connection_after_writing
         @state = :ignore
       end
     end
@@ -124,15 +139,10 @@ module PuppetDebugServer
       message = PuppetDebugServer::Protocol::ProtocolMessage.create(obj)
       case message['type']
       when 'request'
-        receive_request(PuppetDebugServer::Protocol::Request.create(obj), obj)
+        message_router.receive_request(PuppetDebugServer::Protocol::Request.create(obj), obj)
       else
         PuppetDebugServer.log_message(:error, "Unknown protocol message type #{message['type']}")
       end
-    end
-
-    # This method must be overriden in the user's inherited class.
-    def receive_request(request, _request_json)
-      PuppetDebugServer.log_message(:debug, "request received:\n#{request.inspect}")
     end
 
     def encode_json(data)
@@ -145,6 +155,10 @@ module PuppetDebugServer
       response.message = message unless message.nil?
       response.body = body unless body.nil?
       send_response response
+    end
+
+    def close_connection
+      @client_connection.close_connection unless @client_connection.nil?
     end
 
     # This method could be overriden in the user's inherited class.

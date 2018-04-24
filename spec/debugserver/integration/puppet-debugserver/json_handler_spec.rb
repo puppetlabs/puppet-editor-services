@@ -1,12 +1,10 @@
 require 'spec_debug_helper'
 require 'json'
 
-# A stubbed JSON Handler which is used to remember data sent to the client
-class StubbedMessageRouter < PuppetDebugServer::MessageRouter
+class StubbedSimpleServerConnection < PuppetEditorServices::SimpleServerConnectionBase
   attr_reader :data_stream
 
-  def initialize(*options)
-    super(*options)
+  def initialize()
     @data_stream = []
   end
 
@@ -32,8 +30,11 @@ def next_seq_id
   @tx_seq_id += 1
 end
 
-describe 'PuppetDebugServer::MessageRouter' do
-  let(:subject) { StubbedMessageRouter.new({}) }
+describe 'PuppetDebugServer::JSONHandler' do
+  let(:subject_options) {{
+    connection: StubbedSimpleServerConnection.new
+  }}
+  let(:subject) { PuppetDebugServer::JSONHandler.new(subject_options) }
 
   before(:each) {
     allow(subject).to receive(:close_connection_after_writing).and_return(true)
@@ -47,8 +48,7 @@ describe 'PuppetDebugServer::MessageRouter' do
     it 'should respond with the correct capabilities' do
       subject.parse_data(initialize_request)
 
-      response = data_from_request_seq_id(subject, 1)
-
+      response = data_from_request_seq_id(subject.client_connection, 1)
       expect(response['body']['supportsConfigurationDoneRequest']).to be true
       expect(response['body']['supportsFunctionBreakpoints']).to be true
       expect(response['body']['supportsRestartRequest']).to be false
@@ -61,7 +61,7 @@ describe 'PuppetDebugServer::MessageRouter' do
     it 'should respond with an Initialized event' do
       subject.parse_data(initialize_request)
 
-      response = data_from_event_name(subject, 'initialized')
+      response = data_from_event_name(subject.client_connection, 'initialized')
       expect(response).to_not be nil
     end
 
@@ -86,7 +86,7 @@ describe 'PuppetDebugServer::MessageRouter' do
         8 => 'stepOut',
         9 => 'next',
       }.each do |seq_id, command|
-        response = data_from_request_seq_id(subject, seq_id)
+        response = data_from_request_seq_id(subject.client_connection, seq_id)
         expect(response).to_not be nil
         expect(response['success']).to be false
         expect(response['command']).to eq(command)
@@ -101,7 +101,7 @@ describe 'PuppetDebugServer::MessageRouter' do
 
       last_seq_id = nil
       [10, 20, 30].each do |req_seq_id|
-        response = data_from_request_seq_id(subject, req_seq_id)
+        response = data_from_request_seq_id(subject.client_connection, req_seq_id)
         expect(response).to_not be nil
         expect(response['success']).to be false
         unless last_seq_id.nil?

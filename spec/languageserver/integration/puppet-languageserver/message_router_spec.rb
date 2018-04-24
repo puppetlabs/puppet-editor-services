@@ -1,8 +1,12 @@
 require 'spec_helper'
 
 describe 'message_router' do
-  let(:subject_options) { nil }
-  let(:subject) { PuppetLanguageServer::MessageRouter.new(subject_options) }
+  let(:subject_options) {}
+  let(:subject) do
+    result = PuppetLanguageServer::MessageRouter.new(subject_options)
+    result.json_rpc_handler = MockJSONRPCHandler.new
+    result
+  end
 
   describe '#receive_request' do
     let(:documents) {{
@@ -104,7 +108,7 @@ describe 'message_router' do
         @default_crash_file = PuppetLanguageServer::CrashDump.default_crash_file
         File.delete(@default_crash_file) if File.exists?(@default_crash_file)
 
-        expect(subject).to receive(:close_connection).and_raise('MockError')
+        expect(subject.json_rpc_handler).to receive(:close_connection).and_raise('MockError')
       end
 
       it 'should create a default crash dump file' do

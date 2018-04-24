@@ -6,6 +6,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+- ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Refactor the transport layers to loosen object coupling
+- ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Fix STDIO server
+- Stop bad logfile destinations from crashing the language and debug servers
+
 ## 0.10.0 - 2018-03-29
 
 - ([GH-218](https://github.com/jpogran/puppet-vscode/issues/218)) Validate EPP files

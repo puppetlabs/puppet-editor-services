@@ -7,8 +7,12 @@ describe 'message_router' do
   UNKNOWN_FILENAME = 'file:///I_do_not_work.exe'
   ERROR_CAUSING_FILE_CONTENT = "file_content which causes errros\n <%- Wee!\n class 'foo' {'"
 
-  let(:subject_options) { nil }
-  let(:subject) { PuppetLanguageServer::MessageRouter.new(subject_options) }
+  let(:subject_options) {}
+  let(:subject) do
+    result = PuppetLanguageServer::MessageRouter.new(subject_options)
+    result.json_rpc_handler = MockJSONRPCHandler.new
+    result
+  end
 
   describe '#documents' do
     it 'should respond to documents method' do
@@ -21,8 +25,10 @@ describe 'message_router' do
     let(:request_rpc_method) { nil }
     let(:request_params) { {} }
     let(:request_id) { 0 }
-    let(:request) { PuppetLanguageServer::JSONRPCHandler::Request.new(
-      request_connection,request_id,request_rpc_method,request_params) }
+    let(:request) do
+      PuppetLanguageServer::JSONRPCHandler::Request.new(
+        request_connection, request_id, request_rpc_method, request_params)
+    end
 
     before(:each) do
       allow(PuppetLanguageServer).to receive(:log_message)
@@ -467,7 +473,7 @@ describe 'message_router' do
     context 'given a notification that raises an error' do
       let(:notification_method) { 'exit' }
       before(:each) do
-        expect(subject).to receive(:close_connection).and_raise('MockError')
+        expect(subject.json_rpc_handler).to receive(:close_connection).and_raise('MockError')
         allow(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
       end
 
@@ -507,7 +513,7 @@ describe 'message_router' do
       end
 
       it 'should close the connection' do
-        expect(subject).to receive(:close_connection)
+        expect(subject.json_rpc_handler).to receive(:close_connection)
 
         subject.receive_notification(notification_method, notification_params)
       end
