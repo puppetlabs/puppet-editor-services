@@ -6,9 +6,14 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.11.0 - 2018-04-26
+
 - ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Refactor the transport layers to loosen object coupling
 - ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Fix STDIO server
 - Stop bad logfile destinations from crashing the language and debug servers
+- Add a packaging process
+- Rename PuppetVSCode namespace to editor services
+- Move the Editor Services out of the VS Code extension into a separate project
 
 ## 0.10.0 - 2018-03-29
 
