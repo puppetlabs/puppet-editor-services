@@ -37,7 +37,7 @@ module PuppetLanguageServer
         connection_timeout: 10,
         preload_puppet: true,
         debug: nil,
-        fast_start_tcpserver: true,
+        fast_start_langserver: true,
         workspace: nil
       }
 
@@ -69,8 +69,8 @@ module PuppetLanguageServer
           args[:debug] = debug
         end
 
-        opts.on('-s', '--slow-start', 'Delay starting the TCP Server until Puppet initialisation has completed.  Default is to start fast') do |_misc|
-          args[:fast_start_tcpserver] = false
+        opts.on('-s', '--slow-start', 'Delay starting the Language Server until Puppet initialisation has completed.  Default is to start fast') do |_misc|
+          args[:fast_start_langserver] = false
         end
 
         opts.on('--stdio', 'Runs the server in stdio mode, without a TCP listener') do |_misc|
@@ -116,7 +116,7 @@ module PuppetLanguageServer
     PuppetLanguageServer::PuppetHelper.configure_cache(options[:cache])
 
     log_message(:info, 'Initializing settings...')
-    if options[:fast_start_tcpserver]
+    if options[:fast_start_langserver]
       Thread.new do
         init_puppet_worker(options)
       end
