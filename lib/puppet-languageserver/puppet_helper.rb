@@ -150,10 +150,8 @@ module PuppetLanguageServer
       unless Puppet.settings[:environmentpath].nil?
         module_path_list << File.join(Puppet.settings[:environmentpath], Puppet.settings[:environment], 'modules') unless Puppet.settings[:environment].nil?
 
-        module_path_list.concat(Pathname.new(Puppet.settings[:environmentpath])
-                                        .children
-                                        .select { |c| c.directory? }
-                                        .collect { |c| File.join(c, 'modules') })
+        env_path = Pathname.new(Puppet.settings[:environmentpath])
+        module_path_list.concat(env_path.children.select { |c| c.directory? }.collect { |c| File.join(c, 'modules') }) if env_path.exist?
       end
       module_path_list.uniq!
       PuppetLanguageServer.log_message(:debug, "[PuppetHelper::_load_default_classes] Loading classes from #{module_path_list}")
