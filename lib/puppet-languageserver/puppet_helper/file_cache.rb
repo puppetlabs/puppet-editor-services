@@ -6,12 +6,23 @@ module PuppetLanguageServer
       def initialize(_inmemory_cache, _options = {})
         require 'digest'
         require 'json'
+        require 'tmpdir'
 
-        @cache_dir = File.join(ENV['TMP'], 'puppet-vscode-cache')
-        Dir.mkdir(@cache_dir) unless Dir.exist?(@cache_dir)
+        @cache_dir = File.join(Dir.tmpdir, 'puppet-vscode-cache')
+        begin
+          Dir.mkdir(@cache_dir) unless Dir.exist?(@cache_dir)
+        rescue Errno::ENOENT => e
+          PuppetLanguageServer.log_message(:error, "[PuppetHelperFileCache] An error occured while creating file cache.  Disabling cache: #{e}")
+          @cache_dir = nil
+        end
+      end
+
+      def cache_disabled?
+        @cache_dir.nil?
       end
 
       def load(absolute_path, file_key)
+        return nil if cache_disabled?
         cache_file = File.join(cache_dir, cache_filename(file_key))
 
         content = read_cache_file(cache_file)
@@ -40,6 +51,7 @@ module PuppetLanguageServer
       end
 
       def save!(absolute_path, content)
+        return false if cache_disabled?
         file_key = canonical_path(absolute_path)
         cache_file = File.join(cache_dir, cache_filename(file_key))
 
