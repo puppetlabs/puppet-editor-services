@@ -194,7 +194,7 @@ TEXT
 
           case documents.document_type(file_uri)
           when :manifest
-            changes, new_content = PuppetLanguageServer::Manifest::DocumentValidator.fix_validate_errors(content, @workspace)
+            changes, new_content = PuppetLanguageServer::Manifest::ValidationProvider.fix_validate_errors(content, @workspace)
           else
             raise "Unable to fixDiagnosticErrors on #{file_uri}"
           end

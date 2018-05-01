@@ -28,7 +28,7 @@ describe 'validation_queue' do
     before(:each) do
       subject.documents.clear
 
-      allow(PuppetLanguageServer::Manifest::DocumentValidator).to receive(:validate).and_raise("PuppetLanguageServer::Manifest::DocumentValidator.validate mock should not be called")
+      allow(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Manifest::ValidationProvider.validate mock should not be called")
       allow(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Epp::ValidationProvider.validate mock should not be called")
     end
 
@@ -70,7 +70,7 @@ describe 'validation_queue' do
         ])
 
         # We only expect the following results to be returned
-        expect(PuppetLanguageServer::Manifest::DocumentValidator).to receive(:validate).with(file_content2, workspace).and_return(validation_result)
+        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(file_content2, workspace).and_return(validation_result)
         expect(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).with(file_content1, workspace).and_return(validation_result)
         expect(connection).to receive(:reply_diagnostics).with(MANIFEST_FILENAME, validation_result)
         expect(connection).to receive(:reply_diagnostics).with(EPP_FILENAME, validation_result)
@@ -89,7 +89,7 @@ describe 'validation_queue' do
         validation_result = [{ 'result' => 'MockResult' }]
 
         before(:each) do
-          expect(PuppetLanguageServer::Manifest::DocumentValidator).to receive(:validate).with(FILE_CONTENT, workspace).and_return(validation_result)
+          expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(FILE_CONTENT, workspace).and_return(validation_result)
         end
 
         it_should_behave_like "single document which sends validation results", MANIFEST_FILENAME, FILE_CONTENT, validation_result
@@ -132,7 +132,7 @@ describe 'validation_queue' do
     before(:each) do
       subject.documents.clear
 
-      allow(PuppetLanguageServer::Manifest::DocumentValidator).to receive(:validate).and_raise("PuppetLanguageServer::Manifest::DocumentValidator.validate mock should not be called")
+      allow(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Manifest::ValidationProvider.validate mock should not be called")
       allow(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Epp::ValidationProvider.validate mock should not be called")
     end
 
@@ -146,7 +146,7 @@ describe 'validation_queue' do
       validation_result = [{ 'result' => 'MockResult' }]
 
       before(:each) do
-        expect(PuppetLanguageServer::Manifest::DocumentValidator).to receive(:validate).with(FILE_CONTENT, workspace).and_return(validation_result)
+        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(FILE_CONTENT, workspace).and_return(validation_result)
       end
 
       it_should_behave_like "document which sends validation results", MANIFEST_FILENAME, FILE_CONTENT, validation_result

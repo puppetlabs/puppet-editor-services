@@ -1,7 +1,7 @@
 require 'puppet-lint'
 module PuppetLanguageServer
   module Manifest
-    module DocumentValidator
+    module ValidationProvider
       def self.find_module_root_from_path(path)
         return nil if path.nil?
 
