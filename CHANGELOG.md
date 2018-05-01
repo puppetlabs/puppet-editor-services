@@ -6,6 +6,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+- ([GH-22](https://github.com/lingua-pupuli/puppet-editor-services/issues/22)) Refactor language server files to have consistent names
+
 ## 0.11.0 - 2018-04-26
 
 - ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Refactor the transport layers to loosen object coupling
