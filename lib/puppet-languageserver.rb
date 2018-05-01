@@ -5,7 +5,7 @@ begin
   require 'languageserver/languageserver'
   require 'puppet-editor-services'
 
-  %w[json_rpc_handler document_store message_router validation_queue server_capabilities puppet_parser_helper puppet_helper
+  %w[json_rpc_handler document_store crash_dump message_router validation_queue server_capabilities puppet_parser_helper puppet_helper
      facter_helper puppet_monkey_patches providers].each do |lib|
     begin
       require "puppet-languageserver/#{lib}"
