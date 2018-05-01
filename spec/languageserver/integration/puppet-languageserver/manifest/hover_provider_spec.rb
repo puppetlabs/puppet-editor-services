@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'hover_provider' do
-  let(:subject) { PuppetLanguageServer::HoverProvider }
+  let(:subject) { PuppetLanguageServer::Manifest::HoverProvider }
   let(:nil_response) { LanguageServer::Hover.create_nil_response }
 
   before(:all) do

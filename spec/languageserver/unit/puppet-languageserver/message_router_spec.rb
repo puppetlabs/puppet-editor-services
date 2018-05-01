@@ -430,14 +430,14 @@ describe 'message_router' do
         let(:file_uri) { MANIFEST_FILENAME }
 
         it 'should call resolve method on the Hover Provider' do
-          expect(PuppetLanguageServer::HoverProvider).to receive(:resolve).with(Object,line_num,char_num).and_return('something')
+          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num).and_return('something')
 
           subject.receive_request(request)
         end
 
         context 'and an error occurs during resolution' do
           before(:each) do
-            expect(PuppetLanguageServer::HoverProvider).to receive(:resolve).and_raise('MockError')
+            expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).and_raise('MockError')
           end
 
           it 'should log an error message' do

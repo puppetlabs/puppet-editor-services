@@ -249,7 +249,7 @@ TEXT
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::HoverProvider.resolve(content, line_num, char_num))
+            request.reply_result(PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num))
           else
             raise "Unable to provide hover on #{file_uri}"
           end
