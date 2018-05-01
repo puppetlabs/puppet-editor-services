@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'document_validator' do
-  let(:subject) { PuppetLanguageServer::DocumentValidator }
+  let(:subject) { PuppetLanguageServer::Manifest::DocumentValidator }
 
   describe '#fix_validate_errors' do
     describe "Given an incomplete manifest which has syntax errors but no lint errors" do
