@@ -85,7 +85,7 @@ module PuppetLanguageServer
       when :manifest
         PuppetLanguageServer::Manifest::DocumentValidator.validate(content, workspace)
       when :epp
-        PuppetLanguageServer::Manifest::DocumentValidator.validate_epp(content, workspace)
+        PuppetLanguageServer::Epp::ValidationProvider.validate(content, workspace)
       else
         []
       end
