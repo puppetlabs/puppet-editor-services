@@ -223,7 +223,7 @@ TEXT
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::CompletionProvider.complete(content, line_num, char_num))
+            request.reply_result(PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num))
           else
             raise "Unable to provide completion on #{file_uri}"
           end
@@ -234,7 +234,7 @@ TEXT
 
       when 'completionItem/resolve'
         begin
-          request.reply_result(PuppetLanguageServer::CompletionProvider.resolve(request.params.clone))
+          request.reply_result(PuppetLanguageServer::Manifest::CompletionProvider.resolve(request.params.clone))
         rescue StandardError => exception
           PuppetLanguageServer.log_message(:error, "(completionItem/resolve) #{exception}")
           # Spit back the same params if an error happens

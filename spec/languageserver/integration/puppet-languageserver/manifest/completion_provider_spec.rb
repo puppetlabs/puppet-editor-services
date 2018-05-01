@@ -5,7 +5,7 @@ def number_of_completion_item_with_type(completion_list, typename)
 end
 
 describe 'completion_provider' do
-  let(:subject) { PuppetLanguageServer::CompletionProvider }
+  let(:subject) { PuppetLanguageServer::Manifest::CompletionProvider }
   let(:nil_response) { LanguageServer::CompletionList.create_nil_response }
 
   before(:all) do

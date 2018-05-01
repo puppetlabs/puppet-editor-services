@@ -336,14 +336,14 @@ describe 'message_router' do
       context 'for a puppet manifest file' do
         let(:file_uri) { MANIFEST_FILENAME }
         it 'should call complete method on the Completion Provider' do
-          expect(PuppetLanguageServer::CompletionProvider).to receive(:complete).with(Object,line_num,char_num).and_return('something')
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object,line_num,char_num).and_return('something')
 
           subject.receive_request(request)
         end
 
         context 'and an error occurs during completion' do
           before(:each) do
-            expect(PuppetLanguageServer::CompletionProvider).to receive(:complete).and_raise('MockError')
+            expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).and_raise('MockError')
           end
 
           it 'should log an error message' do
@@ -371,14 +371,14 @@ describe 'message_router' do
       }}
 
       it 'should call resolve method on the Completion Provider' do
-        expect(PuppetLanguageServer::CompletionProvider).to receive(:resolve).and_return('something')
+        expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:resolve).and_return('something')
 
         subject.receive_request(request)
       end
 
       context 'and an error occurs during resolution' do
         before(:each) do
-          expect(PuppetLanguageServer::CompletionProvider).to receive(:resolve).and_raise('MockError')
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:resolve).and_raise('MockError')
         end
 
         it 'should log an error message' do
