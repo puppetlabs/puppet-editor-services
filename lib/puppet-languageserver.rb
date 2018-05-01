@@ -5,8 +5,8 @@ begin
   require 'languageserver/languageserver'
   require 'puppet-editor-services'
 
-  %w[json_rpc_handler message_router validation_queue server_capabilities document_validator puppet_parser_helper puppet_helper
-     facter_helper completion_provider hover_provider definition_provider puppet_monkey_patches].each do |lib|
+  %w[json_rpc_handler message_router validation_queue server_capabilities puppet_parser_helper puppet_helper
+     facter_helper puppet_monkey_patches providers].each do |lib|
     begin
       require "puppet-languageserver/#{lib}"
     rescue LoadError
