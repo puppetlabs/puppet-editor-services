@@ -1,0 +1,162 @@
+require 'spec_helper'
+
+describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
+  let(:subject) { PuppetLanguageServer::Puppetfile::ValidationProvider }
+
+  describe "#validate" do
+    context 'with an empty Puppetfile' do
+      let(:content) { '' }
+      it 'should return no validation errors' do
+        result = subject.validate(content, nil)
+
+        expect(result).to eq([])
+      end
+    end
+
+    context 'with a valid Puppetfile' do
+      let(:content) do <<-EOT
+        forge 'https://forge.puppetlabs.com/'
+
+        # Modules from the Puppet Forge
+        mod 'puppetlabs-somemodule',      '1.0.0'
+
+        # Git style modules
+        mod 'gitcommitmodule',
+          :git => 'https://github.com/username/repo',
+          :commit => 'abc123'
+        mod 'gittagmodule',
+          :git => 'https://github.com/username/repo',
+          :tag => '0.1'
+        EOT
+      end
+
+      it 'should return no validation errors' do
+        result = subject.validate(content, nil)
+
+        expect(result).to eq([])
+      end
+    end
+
+    context 'with a syntax error in the Puppetfile' do
+      let(:content) do <<-EOT
+        forge 'https://forge.puppetlabs.com/'
+
+        # Modules from the Puppet Forge
+        mod 'puppetlabs-somemodule',      '1.0.0'
+
+        # Git style modules
+        mod 'gitcommitmodule',
+          :git => 'https://github.com/username/repo',
+          :commit => 'abc123'
+        mod 'gittagmodule',
+          :git => 'https://github.com/username/repo',
+          :tag => '0.1'
+        } # I am a sytnax error
+        EOT
+      end
+
+      it 'should return a validation error' do
+        lint_error = subject.validate(content, nil)[0]
+
+        expect(lint_error['source']).to eq('Puppet')
+        expect(lint_error['message']).to match('syntax error')
+        expect(lint_error['range']).to_not be_nil
+        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+      end
+    end
+
+    context 'with a loading error in the Puppetfile' do
+      let(:content) do <<-EOT
+        forge 'https://forge.puppetlabs.com/'
+
+        # Modules from the Puppet Forge
+        mod 'puppetlabs-somemodule',      '1.0.0'
+
+        require 'not_loadable' # I am a load error
+
+        # Git style modules
+        mod 'gitcommitmodule',
+          :git => 'https://github.com/username/repo',
+          :commit => 'abc123'
+        mod 'gittagmodule',
+          :git => 'https://github.com/username/repo',
+          :tag => '0.1'
+        EOT
+      end
+
+      it 'should return a validation error' do
+        lint_error = subject.validate(content, nil)[0]
+
+        expect(lint_error['source']).to eq('Puppet')
+        expect(lint_error['message']).to match('not_loadable')
+        expect(lint_error['range']['start']['line']).to eq(5)
+        expect(lint_error['range']['end']['line']).to eq(5)
+        expect(lint_error['range']).to_not be_nil
+        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+      end
+    end
+
+    context 'with a standard error in the Puppetfile' do
+      let(:content) do <<-EOT
+        forge 'https://forge.puppetlabs.com/'
+
+        # Modules from the Puppet Forge
+        mod 'puppetlabs-somemodule',      '1.0.0'
+
+        # Git style modules
+        mod 'gitcommitmodule',
+          :git => 'https://github.com/username/repo',
+          :commit => 'abc123'
+
+        raise 'A Mock Runtime Error'
+
+        mod 'gittagmodule',
+          :git => 'https://github.com/username/repo',
+          :tag => '0.1'
+        EOT
+      end
+
+      it 'should return a validation error' do
+        lint_error = subject.validate(content, nil)
+        expect(lint_error.count).to eq(1)
+        lint_error = lint_error[0]
+
+        expect(lint_error['source']).to eq('Puppet')
+        expect(lint_error['message']).to match('A Mock Runtime Error')
+        expect(lint_error['range']['start']['line']).to eq(10)
+        expect(lint_error['range']['end']['line']).to eq(10)
+        expect(lint_error['range']).to_not be_nil
+        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+      end
+    end
+
+
+    context 'with an unknown method in the Puppetfile' do
+      let(:content) do <<-EOT
+        forge 'https://forge.puppetlabs.com/'
+
+        # Modules from the Puppet Forge
+        mod 'puppetlabs-somemodule',      '1.0.0'
+
+        # Git style modules
+        mod 'gitcommitmodule',
+          :git => 'https://github.com/username/repo',
+          :commit => 'abc123'
+        mod_BROKEN 'gittagmodule',
+          :git => 'https://github.com/username/repo',
+          :tag => '0.1'
+        EOT
+      end
+
+      it 'should return a validation error on the specified line' do
+        lint_error = subject.validate(content, nil)[0]
+
+        expect(lint_error['source']).to eq('Puppet')
+        expect(lint_error['message']).to match('mod_BROKEN')
+        expect(lint_error['range']['start']['line']).to eq(9)
+        expect(lint_error['range']['end']['line']).to eq(9)
+        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+      end
+    end
+  end
+end

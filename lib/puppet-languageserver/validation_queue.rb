@@ -14,7 +14,7 @@ module PuppetLanguageServer
     def self.enqueue(file_uri, doc_version, workspace, connection_object)
       document_type = PuppetLanguageServer::DocumentStore.document_type(file_uri)
 
-      unless %i[manifest epp].include?(document_type)
+      unless %i[manifest epp puppetfile].include?(document_type)
         # Can't validate these types so just emit an empty validation result
         connection_object.reply_diagnostics(file_uri, [])
         return
@@ -86,6 +86,8 @@ module PuppetLanguageServer
         PuppetLanguageServer::Manifest::ValidationProvider.validate(content, workspace)
       when :epp
         PuppetLanguageServer::Epp::ValidationProvider.validate(content, workspace)
+      when :puppetfile
+        PuppetLanguageServer::Puppetfile::ValidationProvider.validate(content, workspace)
       else
         []
       end

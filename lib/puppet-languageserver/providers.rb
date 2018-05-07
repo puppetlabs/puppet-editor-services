@@ -4,6 +4,8 @@
   manifest/definition_provider
   manifest/validation_provider
   manifest/hover_provider
+  puppetfile/r10k/puppetfile
+  puppetfile/validation_provider
 ].each do |lib|
   begin
     require "puppet-languageserver/#{lib}"

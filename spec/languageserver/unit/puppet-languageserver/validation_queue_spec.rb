@@ -30,6 +30,7 @@ describe 'validation_queue' do
 
       allow(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Manifest::ValidationProvider.validate mock should not be called")
       allow(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Epp::ValidationProvider.validate mock should not be called")
+      allow(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Puppetfile::ValidationProvider.validate mock should not be called")
     end
 
     context 'for an invalid or missing documents' do
@@ -56,24 +57,28 @@ describe 'validation_queue' do
 
       it 'should only return the most recent validation results' do
         # Configure the document store
-        subject.documents.set_document(MANIFEST_FILENAME, file_content0, document_version + 0)
-        subject.documents.set_document(MANIFEST_FILENAME, file_content1, document_version + 1)
-        subject.documents.set_document(MANIFEST_FILENAME, file_content3, document_version + 3)
-        subject.documents.set_document(EPP_FILENAME,      file_content1, document_version + 1)
+        subject.documents.set_document(MANIFEST_FILENAME,   file_content0, document_version + 0)
+        subject.documents.set_document(MANIFEST_FILENAME,   file_content1, document_version + 1)
+        subject.documents.set_document(MANIFEST_FILENAME,   file_content3, document_version + 3)
+        subject.documents.set_document(EPP_FILENAME,        file_content1, document_version + 1)
+        subject.documents.set_document(PUPPETFILE_FILENAME, file_content1, document_version + 1)
 
         # Preconfigure the validation queue
         subject.reset_queue([
-          { 'file_uri' => MANIFEST_FILENAME, 'doc_version' => document_version + 0, 'document_type' => :manifest, 'workspace' => workspace, 'connection_object' => connection },
-          { 'file_uri' => MANIFEST_FILENAME, 'doc_version' => document_version + 1, 'document_type' => :manifest, 'workspace' => workspace, 'connection_object' => connection },
-          { 'file_uri' => MANIFEST_FILENAME, 'doc_version' => document_version + 3, 'document_type' => :manifest, 'workspace' => workspace, 'connection_object' => connection },
-          { 'file_uri' => EPP_FILENAME,      'doc_version' => document_version + 1, 'document_type' => :epp,      'workspace' => workspace, 'connection_object' => connection },
+          { 'file_uri' => MANIFEST_FILENAME,   'doc_version' => document_version + 0, 'document_type' => :manifest,   'workspace' => workspace, 'connection_object' => connection },
+          { 'file_uri' => MANIFEST_FILENAME,   'doc_version' => document_version + 1, 'document_type' => :manifest,   'workspace' => workspace, 'connection_object' => connection },
+          { 'file_uri' => MANIFEST_FILENAME,   'doc_version' => document_version + 3, 'document_type' => :manifest,   'workspace' => workspace, 'connection_object' => connection },
+          { 'file_uri' => EPP_FILENAME,        'doc_version' => document_version + 1, 'document_type' => :epp,        'workspace' => workspace, 'connection_object' => connection },
+          { 'file_uri' => PUPPETFILE_FILENAME, 'doc_version' => document_version + 1, 'document_type' => :puppetfile, 'workspace' => workspace, 'connection_object' => connection },
         ])
 
         # We only expect the following results to be returned
         expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(file_content2, workspace).and_return(validation_result)
         expect(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).with(file_content1, workspace).and_return(validation_result)
+        expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(file_content1, workspace).and_return(validation_result)
         expect(connection).to receive(:reply_diagnostics).with(MANIFEST_FILENAME, validation_result)
         expect(connection).to receive(:reply_diagnostics).with(EPP_FILENAME, validation_result)
+        expect(connection).to receive(:reply_diagnostics).with(PUPPETFILE_FILENAME, validation_result)
 
         # Simulate a new document begin added by adding it to the document store and
         # enqueue validation for a version that it's in the middle of the versions in the queue
@@ -96,7 +101,11 @@ describe 'validation_queue' do
       end
 
       context 'of a Puppetfile file' do
-        validation_result = []
+        validation_result = [{ 'result' => 'MockResult' }]
+
+        before(:each) do
+          expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(FILE_CONTENT, workspace).and_return(validation_result)
+        end
 
         it_should_behave_like "single document which sends validation results", PUPPETFILE_FILENAME, FILE_CONTENT, validation_result
       end
@@ -134,6 +143,7 @@ describe 'validation_queue' do
 
       allow(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Manifest::ValidationProvider.validate mock should not be called")
       allow(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Epp::ValidationProvider.validate mock should not be called")
+      allow(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Puppetfile::ValidationProvider.validate mock should not be called")
     end
 
     it 'should not send validation results for documents that do not exist' do
@@ -153,7 +163,11 @@ describe 'validation_queue' do
     end
 
     context 'for a Puppetfile file' do
-      validation_result = []
+      validation_result = [{ 'result' => 'MockResult' }]
+
+      before(:each) do
+        expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(FILE_CONTENT, workspace).and_return(validation_result)
+      end
 
       it_should_behave_like "document which sends validation results", PUPPETFILE_FILENAME, FILE_CONTENT, validation_result
     end
