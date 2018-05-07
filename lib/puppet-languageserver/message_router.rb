@@ -1,108 +1,4 @@
 module PuppetLanguageServer
-  module DocumentStore
-    @documents = {}
-    @doc_mutex = Mutex.new
-
-    def self.set_document(uri, content, doc_version)
-      @doc_mutex.synchronize do
-        @documents[uri] = {
-          :content => content,
-          :version => doc_version
-        }
-      end
-    end
-
-    def self.remove_document(uri)
-      @doc_mutex.synchronize { @documents[uri] = nil }
-    end
-
-    def self.clear
-      @doc_mutex.synchronize { @documents.clear }
-    end
-
-    def self.document(uri, doc_version = nil)
-      @doc_mutex.synchronize do
-        return nil if @documents[uri].nil?
-        return nil unless doc_version.nil? || @documents[uri][:version] == doc_version
-        @documents[uri][:content].clone
-      end
-    end
-
-    def self.document_version(uri)
-      @doc_mutex.synchronize do
-        return nil if @documents[uri].nil?
-        @documents[uri][:version]
-      end
-    end
-
-    def self.document_uris
-      @doc_mutex.synchronize { @documents.keys.dup }
-    end
-
-    def self.document_type(uri)
-      case uri
-      when /\/Puppetfile$/i
-        :puppetfile
-      when /\.pp$/i
-        :manifest
-      when /\.epp$/i
-        :epp
-      else
-        :unknown
-      end
-    end
-  end
-
-  module CrashDump
-    def self.default_crash_file
-      File.join(Dir.tmpdir, 'puppet_language_server_crash.txt')
-    end
-
-    def self.write_crash_file(err, filename = nil, additional = {})
-      # Create the crash text
-
-      puppet_version         = Puppet.version rescue 'Unknown' # rubocop:disable Lint/RescueWithoutErrorClass, Style/RescueModifier
-      facter_version         = Facter.version rescue 'Unknown' # rubocop:disable Lint/RescueWithoutErrorClass, Style/RescueModifier
-      languageserver_version = PuppetLanguageServer.version rescue 'Unknown' # rubocop:disable Lint/RescueWithoutErrorClass, Style/RescueModifier
-
-      # rubocop:disable Layout/IndentHeredoc, Style/FormatStringToken
-      crashtext = <<-TEXT
-Puppet Language Server Crash File
--=--=--=--=--=--=--=--=--=--=--=-
-#{DateTime.now.strftime('%a %b %e %Y %H:%M:%S %Z')}
-Puppet Version #{puppet_version}
-Facter Version #{facter_version}
-Ruby Version #{RUBY_VERSION}-p#{RUBY_PATCHLEVEL}
-Language Server Version #{languageserver_version}
-
-Error: #{err}
-
-Backtrace
----------
-#{err.backtrace.join("\n")}
-
-TEXT
-      # rubocop:enable Layout/IndentHeredoc, Style/FormatStringToken
-
-      # Append the documents in the cache
-      PuppetLanguageServer::DocumentStore.document_uris.each do |uri|
-        crashtext += "Document - #{uri}\n---\n#{PuppetLanguageServer::DocumentStore.document(uri)}\n\n"
-      end
-      # Append additional objects from the crash
-      additional.each do |k, v|
-        crashtext += "#{k}\n---\n#{v}\n\n"
-      end
-
-      crash_file = filename.nil? ? default_crash_file : filename
-      File.open(crash_file, 'wb') { |file| file.write(crashtext) }
-    rescue # rubocop:disable Style/RescueStandardError, Lint/HandleExceptions
-      # Swallow all errors.  Errors in the error handler should not
-      # terminate the application
-    end
-
-    nil
-  end
-
   class MessageRouter
     attr_accessor :json_rpc_handler
 
@@ -194,7 +90,7 @@ TEXT
 
           case documents.document_type(file_uri)
           when :manifest
-            changes, new_content = PuppetLanguageServer::DocumentValidator.fix_validate_errors(content, @workspace)
+            changes, new_content = PuppetLanguageServer::Manifest::ValidationProvider.fix_validate_errors(content, @workspace)
           else
             raise "Unable to fixDiagnosticErrors on #{file_uri}"
           end
@@ -223,7 +119,7 @@ TEXT
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::CompletionProvider.complete(content, line_num, char_num))
+            request.reply_result(PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num))
           else
             raise "Unable to provide completion on #{file_uri}"
           end
@@ -234,7 +130,7 @@ TEXT
 
       when 'completionItem/resolve'
         begin
-          request.reply_result(PuppetLanguageServer::CompletionProvider.resolve(request.params.clone))
+          request.reply_result(PuppetLanguageServer::Manifest::CompletionProvider.resolve(request.params.clone))
         rescue StandardError => exception
           PuppetLanguageServer.log_message(:error, "(completionItem/resolve) #{exception}")
           # Spit back the same params if an error happens
@@ -249,7 +145,7 @@ TEXT
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::HoverProvider.resolve(content, line_num, char_num))
+            request.reply_result(PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num))
           else
             raise "Unable to provide hover on #{file_uri}"
           end
@@ -266,7 +162,7 @@ TEXT
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::DefinitionProvider.find_definition(content, line_num, char_num))
+            request.reply_result(PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(content, line_num, char_num))
           else
             raise "Unable to provide definition on #{file_uri}"
           end

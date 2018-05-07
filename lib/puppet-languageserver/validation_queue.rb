@@ -83,9 +83,9 @@ module PuppetLanguageServer
       # Perform validation
       case document_type
       when :manifest
-        PuppetLanguageServer::DocumentValidator.validate(content, workspace)
+        PuppetLanguageServer::Manifest::ValidationProvider.validate(content, workspace)
       when :epp
-        PuppetLanguageServer::DocumentValidator.validate_epp(content, workspace)
+        PuppetLanguageServer::Epp::ValidationProvider.validate(content, workspace)
       else
         []
       end

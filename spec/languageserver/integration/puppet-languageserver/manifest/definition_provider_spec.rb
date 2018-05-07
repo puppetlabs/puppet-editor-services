@@ -15,7 +15,7 @@ RSpec.shared_examples "a single definition result" do |filename_regex|
 end
 
 describe 'definition_provider' do
-  let(:subject) { PuppetLanguageServer::DefinitionProvider }
+  let(:subject) { PuppetLanguageServer::Manifest::DefinitionProvider }
 
   describe '#find_defintion' do
     before(:all) do
