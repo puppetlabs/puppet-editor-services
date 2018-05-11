@@ -36,6 +36,37 @@ module PuppetLanguageServer
         end
         return result if puppetfile.nil?
 
+        # Check for invalid module definitions
+        puppetfile.modules.each do |mod|
+          next unless mod.properties[:type] == :invalid
+          # Note - Ruby doesn't give a character position so just highlight the entire line
+          result << LanguageServer::Diagnostic.create('severity' => LanguageServer::DIAGNOSTICSEVERITY_ERROR,
+                                                      'fromline' => mod.puppetfile_line_number,
+                                                      'toline'   => mod.puppetfile_line_number,
+                                                      'fromchar' => 0,
+                                                      'tochar'   => max_line_length,
+                                                      'source'   => 'Puppet',
+                                                      'message'  => mod.properties[:error_message])
+        end
+
+        # Check for duplicate module definitions
+        dupes = puppetfile.modules
+                          .group_by { |mod| mod.name }
+                          .select { |_, v| v.size > 1 }
+                          .map(&:first)
+        dupes.each do |dupe_module_name|
+          puppetfile.modules.select { |mod| mod.name == dupe_module_name }.each do |puppet_module|
+            # Note - Ruby doesn't give a character position so just highlight the entire line
+            result << LanguageServer::Diagnostic.create('severity' => LanguageServer::DIAGNOSTICSEVERITY_ERROR,
+                                                        'fromline' => puppet_module.puppetfile_line_number,
+                                                        'toline'   => puppet_module.puppetfile_line_number,
+                                                        'fromchar' => 0,
+                                                        'tochar'   => max_line_length,
+                                                        'source'   => 'Puppet',
+                                                        'message'  => "Duplicate module definition for '#{puppet_module.name}'")
+          end
+        end
+
         result
       end
     end
