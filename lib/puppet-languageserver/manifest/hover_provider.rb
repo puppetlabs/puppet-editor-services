@@ -41,10 +41,10 @@ module PuppetLanguageServer
           item_type = PuppetLanguageServer::PuppetHelper.get_type(path[distance_up_ast - 1].type_name.value)
           raise "#{path[distance_up_ast - 1].type_name.value} is not a valid puppet type" if item_type.nil?
           # Check if it's a property
-          attribute = item_type.properties.keys.include?(item.attribute_name.intern)
+          attribute = item_type.properties.key?(item.attribute_name.intern)
           if attribute != false
             content = get_attribute_property_content(item_type, item.attribute_name.intern)
-          elsif item_type.parameters.keys.include?(item.attribute_name.intern)
+          elsif item_type.parameters.key?(item.attribute_name.intern)
             content = get_attribute_parameter_content(item_type, item.attribute_name.intern)
           end
 
