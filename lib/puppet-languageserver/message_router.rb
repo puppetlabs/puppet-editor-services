@@ -99,7 +99,7 @@ module PuppetLanguageServer
                                  'documentUri'  => formatted_request['documentUri'],
                                  'fixesApplied' => changes,
                                  'newContent'   => changes > 0 || formatted_request['alwaysReturnContent'] ? new_content : nil
-          ))
+                               ))
         rescue StandardError => exception
           PuppetLanguageServer.log_message(:error, "(puppet/fixDiagnosticErrors) #{exception}")
           unless formatted_request.nil?
@@ -107,7 +107,7 @@ module PuppetLanguageServer
                                    'documentUri'  => formatted_request['documentUri'],
                                    'fixesApplied' => 0,
                                    'newContent'   => formatted_request['alwaysReturnContent'] ? content : nil # rubocop:disable Metrics/BlockNesting
-            ))
+                                 ))
           end
         end
 
