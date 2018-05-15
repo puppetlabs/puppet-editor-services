@@ -126,6 +126,9 @@ module PuppetLanguageServer
     log_message(:info, 'Initializing Puppet Helper Cache...')
     PuppetLanguageServer::PuppetHelper.configure_cache(options[:cache])
 
+    log_message(:debug, 'Initializing Document Store...')
+    PuppetLanguageServer::DocumentStore.initialize_store(options)
+
     log_message(:info, 'Initializing settings...')
     if options[:fast_start_langserver]
       Thread.new do
