@@ -45,6 +45,31 @@ describe 'PuppetLanguageServer::DocumentStore' do
     end
   end
 
+  RSpec.shared_examples 'a cached workspace' do
+    it 'should cache the information' do
+      expect(subject).to receive(:file_exist?).at_least(:once)
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      # Subsequent calls should be cached
+      expect(subject).to receive(:file_exist?).exactly(0).times
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+    end
+
+    it 'should recache the information when the cache expires' do
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      # Expire the cache
+      PuppetLanguageServer::DocumentStore.expire_store_information
+      expect(subject).to receive(:file_exist?).at_least(:once)
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      # Subsequent calls should be cached
+      expect(subject).to receive(:file_exist?).exactly(0).times
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+    end
+  end
+
   # Empty or missing workspace
   context 'given a workspace option which is nil' do
     let(:server_options) { {} }
@@ -54,6 +79,24 @@ describe 'PuppetLanguageServer::DocumentStore' do
     end
 
     it_should_behave_like 'an empty workspace', nil
+
+    it 'should cache the information' do
+      expect(subject).to receive(:file_exist?).exactly(0).times
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+    end
+
+    it 'should not recache the information when the cache expires' do
+      expect(subject).to receive(:file_exist?).exactly(0).times
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      PuppetLanguageServer::DocumentStore.expire_store_information
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+    end
   end
 
   context 'given a workspace option with a missing directory' do
@@ -77,6 +120,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
     end
 
     it_should_behave_like 'a puppetfile workspace', expected_root
+    it_should_behave_like 'a cached workspace'
   end
 
   context 'given a workspace option which has a parent directory with a puppetfile' do
@@ -90,6 +134,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
     end
 
     it_should_behave_like 'a puppetfile workspace', expected_root
+    it_should_behave_like 'a cached workspace'
   end
 
   # Module metadata style workspaces
@@ -103,6 +148,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
     end
 
     it_should_behave_like 'a metadata.json workspace', expected_root
+    it_should_behave_like 'a cached workspace'
   end
 
   context 'given a workspace option which has a parent directory with metadata.json' do
@@ -116,5 +162,6 @@ describe 'PuppetLanguageServer::DocumentStore' do
     end
 
     it_should_behave_like 'a metadata.json workspace', expected_root
+    it_should_behave_like 'a cached workspace'
   end
 end

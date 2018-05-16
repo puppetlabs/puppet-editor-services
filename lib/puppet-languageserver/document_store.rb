@@ -61,6 +61,13 @@ module PuppetLanguageServer
       }
     end
 
+    # This method is mainly used for testin. It expires the cache
+    def self.expire_store_information
+      @doc_mutex.synchronize do
+        @workspace_info_cache[:expires] = Time.new - 120
+      end
+    end
+
     def self.store_root_path
       store_details[:root_path]
     end
@@ -89,7 +96,7 @@ module PuppetLanguageServer
 
       root_path = nil
       directory.ascend do |p|
-        if p.join('metadata.json').exist? || p.join('Puppetfile').exist?
+        if file_exist?(p.join('metadata.json')) || file_exist?(p.join('Puppetfile'))
           root_path = p.to_s
           break
         end
@@ -119,8 +126,8 @@ module PuppetLanguageServer
           new_cache[:root_path] = @workspace_path
         else
           new_cache[:root_path] = root_path
-          new_cache[:has_metadatajson] = File.exist?(File.join(root_path, 'metadata.json'))
-          new_cache[:has_puppetfile] = File.exist?(File.join(root_path, 'Puppetfile'))
+          new_cache[:has_metadatajson] = file_exist?(File.join(root_path, 'metadata.json'))
+          new_cache[:has_puppetfile] = file_exist?(File.join(root_path, 'Puppetfile'))
         end
       end
       new_cache[:expires] = Time.new + WORKSPACE_CACHE_TTL_SECONDS
@@ -131,5 +138,10 @@ module PuppetLanguageServer
       @workspace_info_cache
     end
     private_class_method :store_details
+
+    def self.file_exist?(path)
+      File.exist?(path)
+    end
+    private_class_method :file_exist?
   end
 end
