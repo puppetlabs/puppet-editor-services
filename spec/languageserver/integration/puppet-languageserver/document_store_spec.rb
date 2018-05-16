@@ -47,7 +47,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
 
   RSpec.shared_examples 'a cached workspace' do
     it 'should cache the information' do
-      expect(subject).to receive(:file_exist?).at_least(:once)
+      expect(subject).to receive(:file_exist?).at_least(:once).and_call_original
       result = PuppetLanguageServer::DocumentStore.store_root_path
       # Subsequent calls should be cached
       expect(subject).to receive(:file_exist?).exactly(0).times
@@ -60,12 +60,21 @@ describe 'PuppetLanguageServer::DocumentStore' do
       result = PuppetLanguageServer::DocumentStore.store_root_path
       # Expire the cache
       PuppetLanguageServer::DocumentStore.expire_store_information
-      expect(subject).to receive(:file_exist?).at_least(:once)
+      expect(subject).to receive(:file_exist?).at_least(:once).and_call_original
       result = PuppetLanguageServer::DocumentStore.store_root_path
       # Subsequent calls should be cached
       expect(subject).to receive(:file_exist?).exactly(0).times
       result = PuppetLanguageServer::DocumentStore.store_root_path
       result = PuppetLanguageServer::DocumentStore.store_root_path
+      result = PuppetLanguageServer::DocumentStore.store_root_path
+    end
+  end
+
+  RSpec.shared_examples 'a terminating file finder' do |expected_file_calls, expected_dir_calls|
+    it 'should only traverse until it finds an expected file' do
+      # TODO: This test is a little fragile but can't think of a better way to prove it
+      expect(subject).to receive(:file_exist?).exactly(expected_file_calls).times.and_call_original
+      expect(subject).to receive(:dir_exist?).exactly(expected_dir_calls).times.and_call_original
       result = PuppetLanguageServer::DocumentStore.store_root_path
     end
   end
@@ -121,6 +130,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
 
     it_should_behave_like 'a puppetfile workspace', expected_root
     it_should_behave_like 'a cached workspace'
+    it_should_behave_like 'a terminating file finder', 4, 1
   end
 
   context 'given a workspace option which has a parent directory with a puppetfile' do
@@ -135,6 +145,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
 
     it_should_behave_like 'a puppetfile workspace', expected_root
     it_should_behave_like 'a cached workspace'
+    it_should_behave_like 'a terminating file finder', 8, 1
   end
 
   # Module metadata style workspaces
@@ -149,6 +160,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
 
     it_should_behave_like 'a metadata.json workspace', expected_root
     it_should_behave_like 'a cached workspace'
+    it_should_behave_like 'a terminating file finder', 3, 1
   end
 
   context 'given a workspace option which has a parent directory with metadata.json' do
@@ -163,5 +175,6 @@ describe 'PuppetLanguageServer::DocumentStore' do
 
     it_should_behave_like 'a metadata.json workspace', expected_root
     it_should_behave_like 'a cached workspace'
+    it_should_behave_like 'a terminating file finder', 5, 1
   end
 end

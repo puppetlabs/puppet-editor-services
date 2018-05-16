@@ -84,25 +84,28 @@ module PuppetLanguageServer
     # root of the module/control repo actually is
     def self.find_root_path(path)
       return nil if path.nil?
+      filepath = File.expand_path(path)
 
-      filepath = Pathname.new(path).expand_path
-      return nil unless filepath.exist?
-
-      if filepath.directory?
+      if dir_exist?(filepath)
         directory = filepath
+      elsif file_exist?(filepath)
+        directory = File.dirname(filepath)
       else
-        directory = filepath.dirname
+        return nil
       end
 
-      root_path = nil
-      directory.ascend do |p|
-        if file_exist?(p.join('metadata.json')) || file_exist?(p.join('Puppetfile'))
-          root_path = p.to_s
-          break
+      until directory.nil?
+        break if file_exist?(File.join(directory, 'metadata.json')) || file_exist?(File.join(directory, 'Puppetfile'))
+        parent = File.dirname(directory)
+        # If the parent is the same as the original, then we've reached the end of the path chain
+        if parent == directory
+          directory = nil
+        else
+          directory = parent
         end
       end
 
-      root_path
+      directory
     end
     private_class_method :find_root_path
 
@@ -140,8 +143,13 @@ module PuppetLanguageServer
     private_class_method :store_details
 
     def self.file_exist?(path)
-      File.exist?(path)
+      File.exist?(path) && !File.directory?(path)
     end
     private_class_method :file_exist?
+
+    def self.dir_exist?(path)
+      Dir.exist?(path)
+    end
+    private_class_method :dir_exist?
   end
 end
