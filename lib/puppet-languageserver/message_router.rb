@@ -2,9 +2,7 @@ module PuppetLanguageServer
   class MessageRouter
     attr_accessor :json_rpc_handler
 
-    def initialize(options = {})
-      options = {} if options.nil?
-      @workspace = options[:workspace]
+    def initialize(_options = {})
     end
 
     def documents
@@ -90,7 +88,7 @@ module PuppetLanguageServer
 
           case documents.document_type(file_uri)
           when :manifest
-            changes, new_content = PuppetLanguageServer::Manifest::ValidationProvider.fix_validate_errors(content, @workspace)
+            changes, new_content = PuppetLanguageServer::Manifest::ValidationProvider.fix_validate_errors(content)
           else
             raise "Unable to fixDiagnosticErrors on #{file_uri}"
           end
@@ -194,7 +192,7 @@ module PuppetLanguageServer
         content = params['textDocument']['text']
         doc_version = params['textDocument']['version']
         documents.set_document(file_uri, content, doc_version)
-        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @workspace, @json_rpc_handler)
+        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @json_rpc_handler)
 
       when 'textDocument/didClose'
         PuppetLanguageServer.log_message(:info, 'Received textDocument/didClose notification.')
@@ -207,7 +205,7 @@ module PuppetLanguageServer
         content = params['contentChanges'][0]['text'] # TODO: Bad hardcoding zero
         doc_version = params['textDocument']['version']
         documents.set_document(file_uri, content, doc_version)
-        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @workspace, @json_rpc_handler)
+        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @json_rpc_handler)
 
       when 'textDocument/didSave'
         PuppetLanguageServer.log_message(:info, 'Received textDocument/didSave notification.')

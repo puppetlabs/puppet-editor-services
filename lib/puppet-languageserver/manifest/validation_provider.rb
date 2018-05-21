@@ -2,29 +2,6 @@ require 'puppet-lint'
 module PuppetLanguageServer
   module Manifest
     module ValidationProvider
-      def self.find_module_root_from_path(path)
-        return nil if path.nil?
-
-        filepath = Pathname.new(path).expand_path
-        return nil unless filepath.exist?
-
-        if filepath.directory?
-          directory = filepath
-        else
-          directory = filepath.dirname
-        end
-
-        module_root = nil
-        directory.ascend do |p|
-          if p.join('metadata.json').exist?
-            module_root = p
-            break
-          end
-        end
-
-        module_root
-      end
-
       # Similar to 'validate' this will run puppet-lint and returns
       # the manifest with any fixes applied
       #
@@ -32,9 +9,8 @@ module PuppetLanguageServer
       #  [ <Int> Number of problems fixed,
       #    <String> New Content
       #  ]
-      def self.fix_validate_errors(content, workspace)
-        # Find module root and attempt to build PuppetLint options
-        module_root = find_module_root_from_path(workspace)
+      def self.fix_validate_errors(content)
+        module_root = PuppetLanguageServer::DocumentStore.store_root_path
         linter_options = nil
         if module_root.nil?
           linter_options = PuppetLint::OptParser.build
@@ -52,13 +28,12 @@ module PuppetLanguageServer
         [problems_fixed, linter.manifest]
       end
 
-      def self.validate(content, workspace, _max_problems = 100)
+      def self.validate(content, _max_problems = 100)
         result = []
         # TODO: Need to implement max_problems
         problems = 0
 
-        # Find module root and attempt to build PuppetLint options
-        module_root = find_module_root_from_path(workspace)
+        module_root = PuppetLanguageServer::DocumentStore.store_root_path
         linter_options = nil
         if module_root.nil?
           linter_options = PuppetLint::OptParser.build

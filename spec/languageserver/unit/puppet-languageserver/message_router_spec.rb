@@ -538,7 +538,7 @@ describe 'message_router' do
         end
 
         it 'should enqueue the file for validation' do
-          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 1, Object, Object)
+          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 1, Object)
           subject.receive_notification(notification_method, notification_params)
         end
       end
@@ -609,7 +609,7 @@ describe 'message_router' do
         end
 
         it 'should enqueue the file for validation' do
-          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 2, Object, Object)
+          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 2, Object)
           subject.receive_notification(notification_method, notification_params)
         end
       end

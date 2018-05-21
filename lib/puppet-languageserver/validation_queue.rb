@@ -11,7 +11,7 @@ module PuppetLanguageServer
     @queue_thread = nil
 
     # Enqueue a file to be validated
-    def self.enqueue(file_uri, doc_version, workspace, connection_object)
+    def self.enqueue(file_uri, doc_version, connection_object)
       document_type = PuppetLanguageServer::DocumentStore.document_type(file_uri)
 
       unless %i[manifest epp puppetfile].include?(document_type)
@@ -27,7 +27,6 @@ module PuppetLanguageServer
           'file_uri'          => file_uri,
           'doc_version'       => doc_version,
           'document_type'     => document_type,
-          'workspace'         => workspace,
           'connection_object' => connection_object
         }
       end
@@ -47,11 +46,11 @@ module PuppetLanguageServer
     end
 
     # Synchronously validate a file
-    def self.validate_sync(file_uri, doc_version, workspace, connection_object)
+    def self.validate_sync(file_uri, doc_version, connection_object)
       document_type = PuppetLanguageServer::DocumentStore.document_type(file_uri)
       content = documents.document(file_uri, doc_version)
       return nil if content.nil?
-      result = validate(document_type, content, workspace)
+      result = validate(document_type, content)
 
       # Send the response
       connection_object.reply_diagnostics(file_uri, result)
@@ -79,15 +78,15 @@ module PuppetLanguageServer
     end
 
     # Validate a document
-    def self.validate(document_type, content, workspace)
+    def self.validate(document_type, content)
       # Perform validation
       case document_type
       when :manifest
-        PuppetLanguageServer::Manifest::ValidationProvider.validate(content, workspace)
+        PuppetLanguageServer::Manifest::ValidationProvider.validate(content)
       when :epp
-        PuppetLanguageServer::Epp::ValidationProvider.validate(content, workspace)
+        PuppetLanguageServer::Epp::ValidationProvider.validate(content)
       when :puppetfile
-        PuppetLanguageServer::Puppetfile::ValidationProvider.validate(content, workspace)
+        PuppetLanguageServer::Puppetfile::ValidationProvider.validate(content)
       else
         []
       end
@@ -109,7 +108,6 @@ module PuppetLanguageServer
         doc_version       = work_item['doc_version']
         connection_object = work_item['connection_object']
         document_type     = work_item['document_type']
-        workspace         = work_item['workspace']
 
         # Check if the document is the latest version
         content = documents.document(file_uri, doc_version)
@@ -119,7 +117,7 @@ module PuppetLanguageServer
         end
 
         # Perform validation
-        result = validate(document_type, content, workspace)
+        result = validate(document_type, content)
 
         # Check if the document is still latest version
         current_version = documents.document_version(file_uri)
