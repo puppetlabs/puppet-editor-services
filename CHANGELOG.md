@@ -6,7 +6,21 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
-- ([GH-22](https://github.com/lingua-pupuli/puppet-editor-services/issues/22)) Refactor language server files to have consistent names
+## 0.12.0 - 2018-06-01
+
+### Added
+
+- ([GH-28](https://github.com/lingua-pupuli/puppet-editor-services/issues/28)) Added basic Puppetfile validation
+
+### Changed
+
+- ([GH-22](https://github.com/lingua-pupuli/puppet-editor-services/issues/22)) Refactored language server files to have consistent names
+
+### Fixed
+
+- ([GH-26](https://github.com/lingua-pupuli/puppet-editor-services/issues/26)) `.puppet-lint.rc` was ignored in Control Repos
+- ([GH-14](https://github.com/lingua-pupuli/puppet-editor-services/issues/14)) Ignore environmentpath puppet setting if it does not exist
+- ([GH-10](https://github.com/lingua-pupuli/puppet-editor-services/issues/10)) Disabled the file cache if temp directory doesn't exist
 
 ## 0.11.0 - 2018-04-26
 
