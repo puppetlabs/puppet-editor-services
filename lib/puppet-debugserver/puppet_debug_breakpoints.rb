@@ -15,10 +15,20 @@ module PuppetDebugServer
 
     def self.source_breakpoints(filename)
       value = nil
+      filename = canonical_file_path(filename)
       @session_mutex.synchronize do
         value = @session_source_breakpoints[filename].dup unless @session_source_breakpoints[filename].nil?
       end
       value
+    end
+
+    def self.canonical_file_path(file_path)
+      # This could be a little dangerous.  The paths that come from the editor are URIs, and may or may not always
+      # represent their actual filename on disk e.g. case-insensitive file systems. So a quick and dirty way to
+      # reconcile this is just to always use lowercase file paths.  While this works ok on Windows (NTFS or FAT)
+      # other operating systems, could, in theory have two manifests being debugged that only differ by case.  This
+      # is not recommend as it breaks cross platform editing, but it's still possible
+      file_path.downcase
     end
 
     def self.validate_and_set_source_breakpoints(filesource, breakpoints)
@@ -74,7 +84,7 @@ module PuppetDebugServer
         bp_list << bp if verified
       end
 
-      @session_mutex.synchronize { @session_source_breakpoints[file_path] = bp_list }
+      @session_mutex.synchronize { @session_source_breakpoints[canonical_file_path(file_path)] = bp_list }
 
       bp_response
     end
