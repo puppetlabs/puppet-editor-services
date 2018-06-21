@@ -11,7 +11,7 @@ module PuppetLanguageServer
       facter_version         = Facter.version rescue 'Unknown' # rubocop:disable Lint/RescueWithoutErrorClass, Style/RescueModifier
       languageserver_version = PuppetLanguageServer.version rescue 'Unknown' # rubocop:disable Lint/RescueWithoutErrorClass, Style/RescueModifier
 
-      # rubocop:disable Layout/IndentHeredoc, Style/FormatStringToken
+      # rubocop:disable Layout/IndentHeredoc, Layout/ClosingHeredocIndentation, Style/FormatStringToken
       crashtext = <<-TEXT
 Puppet Language Server Crash File
 -=--=--=--=--=--=--=--=--=--=--=-
@@ -28,7 +28,7 @@ Backtrace
 #{err.backtrace.join("\n")}
 
 TEXT
-      # rubocop:enable Layout/IndentHeredoc, Style/FormatStringToken
+      # rubocop:enable Layout/IndentHeredoc, Layout/ClosingHeredocIndentation, Style/FormatStringToken
 
       # Append the documents in the cache
       PuppetLanguageServer::DocumentStore.document_uris.each do |uri|
