@@ -251,13 +251,13 @@ module PuppetEditorServices
     # IO - listening sockets (services)
 
     # @api public
-    def add_service(hostname = '127.0.0.1', port = 8081, parameters = {})
-      parameters[:port] = port
+    def add_service(hostname = 'localhost', port = nil, parameters = {})
+      hostname = 'localhost' if hostname.nil? || hostname.empty?
+      service = TCPServer.new(hostname, port)
       parameters[:hostname] = hostname
-      parameters.update port if port.is_a?(Hash)
-      service = TCPServer.new(parameters[:hostname], parameters[:port])
+      parameters[:port] = service.local_address.ip_port
       self.class.s_locker.synchronize { self.class.services[service] = parameters }
-      callback(self, :log, "Started listening on #{hostname}:#{port}.")
+      callback(self, :log, "Started listening on #{hostname}:#{parameters[:port]}.")
       true
     end
 

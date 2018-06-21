@@ -42,8 +42,8 @@ module PuppetLanguageServer
       # Set defaults here
       args = {
         stdio: false,
-        port: 8081,
-        ipaddress: '127.0.0.1',
+        port: nil,
+        ipaddress: 'localhost',
         stop_on_client_exit: true,
         connection_timeout: 10,
         preload_puppet: true,
@@ -55,7 +55,7 @@ module PuppetLanguageServer
       opt_parser = OptionParser.new do |opts|
         opts.banner = 'Usage: puppet-languageserver.rb [options]'
 
-        opts.on('-pPORT', '--port=PORT', "TCP Port to listen on.  Default is #{args[:port]}") do |port|
+        opts.on('-pPORT', '--port=PORT', "TCP Port to listen on.  Default is random port") do |port|
           args[:port] = port.to_i
         end
 
