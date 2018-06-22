@@ -1,5 +1,3 @@
-
-
 # Monkey Patch 3.x functions so where know where they were loaded from
 require 'puppet/parser/functions'
 module Puppet

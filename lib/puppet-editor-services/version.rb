@@ -10,7 +10,7 @@ module PuppetEditorServices
     version_file = File.join(File.dirname(__FILE__), 'VERSION')
     version = read_version_file(version_file)
 
-    @editor_services_version = version ? version : PUPPETEDITORSERVICESVERSION
+    @editor_services_version = version.nil? ? PUPPETEDITORSERVICESVERSION : version
   end
 
   # Sets the editor services version
