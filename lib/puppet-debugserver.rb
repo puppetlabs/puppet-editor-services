@@ -21,8 +21,8 @@ module PuppetDebugServer
     def self.parse(options)
       # Set defaults here
       args = {
-        port: 8082,
-        ipaddress: '127.0.0.1',
+        port: nil,
+        ipaddress: 'localhost',
         stop_on_client_exit: true,
         connection_timeout: 10,
         debug: nil
@@ -31,7 +31,7 @@ module PuppetDebugServer
       opt_parser = OptionParser.new do |opts|
         opts.banner = 'Usage: puppet-debugserver.rb [options]'
 
-        opts.on('-pPORT', '--port=PORT', "TCP Port to listen on.  Default is #{args[:port]}") do |port|
+        opts.on('-pPORT', '--port=PORT', "TCP Port to listen on.  Default is random port}") do |port|
           args[:port] = port.to_i
         end
 

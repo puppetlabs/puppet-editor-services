@@ -108,8 +108,8 @@ Note the language server will stop after 10 seconds if no client connection is m
 
 ```
 Usage: puppet-languageserver.rb [options]
-    -p, --port=PORT                  TCP Port to listen on.  Default is 8081
-    -i, --ip=ADDRESS                 IP Address to listen on (0.0.0.0 for all interfaces).  Default is 127.0.0.1
+    -p, --port=PORT                  TCP Port to listen on.  Default is random port
+    -i, --ip=ADDRESS                 IP Address to listen on (0.0.0.0 for all interfaces).  Default is localhost
     -c, --no-stop                    Do not stop the language server once a client disconnects.  Default is to stop
     -t, --timeout=TIMEOUT            Stop the language server if a client does not connection within TIMEOUT seconds.  A value of zero will not timeout.  Default is 10 seconds
     -d, --no-preload                 ** DEPRECATED ** Do not preload Puppet information when the language server starts.  Default is to preload
@@ -185,8 +185,8 @@ Note the debug server will stop after 10 seconds if no client connection is made
 
 ```
 Usage: puppet-debugserver.rb [options]
-    -p, --port=PORT                  TCP Port to listen on.  Default is 8082
-    -i, --ip=ADDRESS                 IP Address to listen on (0.0.0.0 for all interfaces).  Default is 127.0.0.1
+    -p, --port=PORT                  TCP Port to listen on.  Default is random port}
+    -i, --ip=ADDRESS                 IP Address to listen on (0.0.0.0 for all interfaces).  Default is localhost
     -t, --timeout=TIMEOUT            Stop the Debug Server if a client does not connection within TIMEOUT seconds.  A value of zero will not timeout.  Default is 10 seconds
         --debug=DEBUG                Output debug information.  Either specify a filename or 'STDOUT'.  Default is no debug output
     -h, --help                       Prints this help
