@@ -61,4 +61,77 @@ module LanguageServer
   MESSAGE_TYPE_WARNING = 2
   MESSAGE_TYPE_INFO = 3
   MESSAGE_TYPE_LOG = 2
+
+  # /**
+  # * A set of predefined code action kinds
+  # */
+  # export namespace CodeActionKind {
+  #   /**
+  #   * Base kind for quickfix actions: 'quickfix'
+  #   */
+  #   export const QuickFix: CodeActionKind = 'quickfix';
+
+  #   /**
+  #   * Base kind for refactoring actions: 'refactor'
+  #   */
+  #   export const Refactor: CodeActionKind = 'refactor';
+
+  #   /**
+  #   * Base kind for refactoring extraction actions: 'refactor.extract'
+  #   *
+  #   * Example extract actions:
+  #   *
+  #   * - Extract method
+  #   * - Extract function
+  #   * - Extract variable
+  #   * - Extract interface from class
+  #   * - ...
+  #   */
+  #   export const RefactorExtract: CodeActionKind = 'refactor.extract';
+
+  #   /**
+  #   * Base kind for refactoring inline actions: 'refactor.inline'
+  #   *
+  #   * Example inline actions:
+  #   *
+  #   * - Inline function
+  #   * - Inline variable
+  #   * - Inline constant
+  #   * - ...
+  #   */
+  #   export const RefactorInline: CodeActionKind = 'refactor.inline';
+
+  #   /**
+  #   * Base kind for refactoring rewrite actions: 'refactor.rewrite'
+  #   *
+  #   * Example rewrite actions:
+  #   *
+  #   * - Convert JavaScript function to class
+  #   * - Add or remove parameter
+  #   * - Encapsulate field
+  #   * - Make method static
+  #   * - Move method to base class
+  #   * - ...
+  #   */
+  #   export const RefactorRewrite: CodeActionKind = 'refactor.rewrite';
+
+  #   /**
+  #   * Base kind for source actions: `source`
+  #   *
+  #   * Source code actions apply to the entire file.
+  #   */
+  #   export const Source: CodeActionKind = 'source';
+
+  #   /**
+  #   * Base kind for an organize imports source action: `source.organizeImports`
+  #   */
+  #   export const SourceOrganizeImports: CodeActionKind = 'source.organizeImports';
+  # }
+  CODEACTIONKIND_QUICKFIX             = 'quickfix'.freeze
+  CODEACTIONKIND_REFACTOR             = 'refactor'.freeze
+  CODEACTIONKIND_REFACTOREXTRACT      = 'refactor.extract'.freeze
+  CODEACTIONKIND_REFACTORINLINE       = 'refactor.inline'.freeze
+  CODEACTIONKIND_REFACTORREWRITE      = 'refactor.rewrite'.freeze
+  CODEACTIONKIND_SOURCE               = 'source'.freeze
+  CODEACTIONKIND_SOURCEORGANIZEIMPORS = 'source.organizeImports'.freeze
 end

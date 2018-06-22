@@ -6,6 +6,7 @@ module PuppetLanguageServer
       {
         'textDocumentSync'        => LanguageServer::TEXTDOCUMENTSYNCKIND_FULL,
         'hoverProvider'           => true,
+        'codeActionProvider'      => true,
         'completionProvider'      => {
           'resolveProvider'   => true,
           'triggerCharacters' => ['>', '$', '[', '=']

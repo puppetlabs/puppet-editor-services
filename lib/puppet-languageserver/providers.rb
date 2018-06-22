@@ -1,5 +1,6 @@
 %w[
   epp/validation_provider
+  manifest/code_action_provider
   manifest/completion_provider
   manifest/definition_provider
   manifest/document_symbol_provider

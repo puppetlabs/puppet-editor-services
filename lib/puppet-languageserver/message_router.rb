@@ -132,6 +132,21 @@ module PuppetLanguageServer
           request.reply_result(LanguageServer::Hover.create_nil_response)
         end
 
+      when 'textDocument/codeAction'
+        begin
+          request_object = LanguageServer::CodeActionRequest.create(request.params)
+          file_uri = request_object['textDocument']['uri']
+          case documents.document_type(file_uri)
+          when :manifest
+            request.reply_result(PuppetLanguageServer::Manifest::CodeActionProvider.provide_actions(request_object))
+          else
+            raise "Unable to provide code actions on #{file_uri}"
+          end
+        rescue StandardError => exception
+          PuppetLanguageServer.log_message(:error, "(textDocument/codeAction) #{exception}")
+          request.reply_result(nil)
+        end
+
       when 'textDocument/definition'
         file_uri = request.params['textDocument']['uri']
         line_num = request.params['position']['line']
