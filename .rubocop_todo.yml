@@ -14,3 +14,4 @@ Naming/FileName:
     - 'lib/puppet-debugserver.rb'
     - 'lib/puppet-editor-services.rb'
     - 'lib/puppet-languageserver.rb'
+    - 'lib/puppet-languageserver-sidecar.rb'

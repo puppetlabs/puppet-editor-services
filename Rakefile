@@ -9,6 +9,12 @@ RSpec::Core::RakeTask.new(:test_languageserver) do |t|
   t.pattern    = 'spec/languageserver'
 end
 
+desc 'Run rspec tests for the Language Server with coloring.'
+RSpec::Core::RakeTask.new(:test_languageserver_sidecar) do |t|
+  t.rspec_opts = %w[--color --format documentation --default-path spec/languageserver-sidecar]
+  t.pattern    = 'spec/languageserver-sidecar'
+end
+
 desc 'Run rspec tests for the Debug Server with coloring.'
 RSpec::Core::RakeTask.new(:test_debugserver) do |t|
   t.rspec_opts = %w[--color --format documentation --default-path spec/debugserver]
@@ -102,7 +108,7 @@ task :build do
   project_dir = File.dirname(__FILE__)
   output_dir = File.join(project_dir, 'output')
 
-  file_list = ['lib', 'vendor', 'puppet-languageserver', 'puppet-debugserver', 'LICENSE']
+  file_list = ['lib', 'vendor', 'puppet-languageserver', 'puppet-debugserver', 'puppet-languageserver-sidecar', 'LICENSE']
   # Remove files in the list that do not exist.
   file_list.reject! { |filepath| !File.exists?(filepath) }
 
