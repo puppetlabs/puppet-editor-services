@@ -31,7 +31,7 @@ module PuppetDebugServer
       opt_parser = OptionParser.new do |opts|
         opts.banner = 'Usage: puppet-debugserver.rb [options]'
 
-        opts.on('-pPORT', '--port=PORT', "TCP Port to listen on.  Default is random port}") do |port|
+        opts.on('-pPORT', '--port=PORT', 'TCP Port to listen on.  Default is random port') do |port|
           args[:port] = port.to_i
         end
 
