@@ -55,6 +55,8 @@ Naming/MemoizedInstanceVariableName:
   Enabled: false
 Layout/EmptyLineAfterGuardClause:
   Enabled: false
+Metrics/ParameterLists:
+  Enabled: false
 
 # In some cases readability is better without these cops enabled
 Style/ConditionalAssignment:

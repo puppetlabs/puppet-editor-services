@@ -7,4 +7,4 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'lib'))
 require 'puppet-languageserver-sidecar'
 
 PuppetLanguageServerSidecar.init_puppet_sidecar(PuppetLanguageServerSidecar::CommandLineParser.parse(ARGV))
-PuppetLanguageServerSidecar.execute(PuppetLanguageServerSidecar::CommandLineParser.parse(ARGV))
+PuppetLanguageServerSidecar.execute_and_output(PuppetLanguageServerSidecar::CommandLineParser.parse(ARGV))
