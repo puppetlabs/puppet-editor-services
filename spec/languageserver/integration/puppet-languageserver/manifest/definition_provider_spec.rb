@@ -14,8 +14,37 @@ RSpec.shared_examples "a single definition result" do |filename_regex|
   end
 end
 
+def puppetclass_cache_object(key, source)
+  value = PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new
+  value.key = key
+  value.calling_source = source
+  value.source = source
+  value.line = rand(1000)
+  value.char = rand(1000)
+  value.length = rand(1000)
+  value
+end
+
 describe 'definition_provider' do
   let(:subject) { PuppetLanguageServer::Manifest::DefinitionProvider }
+
+  before(:all) do
+    # This is a little brittle
+    cache = PuppetLanguageServer::PuppetHelper.instance_variable_get(:@inmemory_cache)
+
+    cache.import_sidecar_list!([
+      puppetclass_cache_object(:deftypeone, '/root/deftypeone.pp'),
+      puppetclass_cache_object(:puppetclassone, '/root/puppetclassone.pp'),
+      puppetclass_cache_object(:testclasses, '/root/init.pp'),
+      puppetclass_cache_object(:"testclasses::nestedclass", '/root/nestedclass.pp')
+    ], :class, :rspec)
+  end
+
+  after(:all) do
+    # This is a little brittle
+    cache = PuppetLanguageServer::PuppetHelper.instance_variable_get(:@inmemory_cache)
+    cache.remove_section!(:class, :rspec)
+  end
 
   describe '#find_defintion' do
     before(:all) do

@@ -13,6 +13,7 @@ begin
     validation_queue
     server_capabilities
     sidecar_protocol
+    sidecar_queue
     puppet_parser_helper
     puppet_helper
     facter_helper
@@ -151,17 +152,17 @@ module PuppetLanguageServer
 
     log_message(:info, "Using Facter v#{Facter.version}")
     if options[:preload_puppet]
-      log_message(:info, 'Preloading Puppet Types (Sync)...')
-      PuppetLanguageServer::PuppetHelper.load_types
+      log_message(:info, 'Preloading Puppet Types (Async)...')
+      PuppetLanguageServer::PuppetHelper.load_default_types_async
 
       log_message(:info, 'Preloading Facter (Async)...')
       PuppetLanguageServer::FacterHelper.load_facts_async
 
       log_message(:info, 'Preloading Functions (Async)...')
-      PuppetLanguageServer::PuppetHelper.load_functions_async
+      PuppetLanguageServer::PuppetHelper.load_default_functions_async
 
       log_message(:info, 'Preloading Classes (Async)...')
-      PuppetLanguageServer::PuppetHelper.load_classes_async
+      PuppetLanguageServer::PuppetHelper.load_default_classes_async
     else
       log_message(:info, 'Skipping preloading Puppet')
     end

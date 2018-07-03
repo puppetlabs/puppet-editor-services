@@ -19,17 +19,17 @@ PuppetLanguageServer::init_puppet(server_options)
 def wait_for_puppet_loading
   interation = 0
   loop do
-    break if PuppetLanguageServer::PuppetHelper.functions_loaded? &&
-             PuppetLanguageServer::PuppetHelper.types_loaded? &&
-             PuppetLanguageServer::PuppetHelper.classes_loaded?
+    break if PuppetLanguageServer::PuppetHelper.default_functions_loaded? &&
+             PuppetLanguageServer::PuppetHelper.default_types_loaded? &&
+             PuppetLanguageServer::PuppetHelper.default_classes_loaded?
     sleep(1)
     interation += 1
     next if interation < 30
     raise <<-ERRORMSG
             Puppet has not be initialised in time:
-            functions_loaded? = #{PuppetLanguageServer::PuppetHelper.functions_loaded?}
-            types_loaded? = #{PuppetLanguageServer::PuppetHelper.types_loaded?}
-            classes_loaded? = #{PuppetLanguageServer::PuppetHelper.classes_loaded?}
+            functions_loaded? = #{PuppetLanguageServer::PuppetHelper.default_functions_loaded?}
+            types_loaded? = #{PuppetLanguageServer::PuppetHelper.default_types_loaded?}
+            classes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_classes_loaded?}
           ERRORMSG
   end
 end

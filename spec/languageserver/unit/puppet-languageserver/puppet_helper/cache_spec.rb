@@ -1,135 +1,123 @@
 require 'spec_helper'
 
 describe 'PuppetLanguageServer::PuppetHelper::Cache' do
-  let(:new_filename) { 'new_filename' }
-  let(:new_section) { :type }
-
-  let(:filename_existing) { 'abc123' }
   let(:section_existing) { :function }
-  let(:object_existing1) { {:func1 => 'func1', :func2 => 'func2' } }
-  let(:object_existing2) { {:func3 => 'func3', :func4 => 'func4' } }
+  let(:section_new) { :type }
+  let(:origin_default) { :default }
 
-  let(:subject) {
-    obj = PuppetLanguageServer::PuppetHelper::Cache.new()
-    obj.set(filename_existing, section_existing, object_existing1)
-    obj.set('second_file', section_existing, object_existing2)
-    obj
-  }
+  let(:subject) { PuppetLanguageServer::PuppetHelper::Cache.new() }
 
-  describe '#exist?' do
-    it 'should return true for a file that exists in the cache' do
-      expect(subject.exist?('abc123')).to be true
-    end
+  describe "#import_sidecar_list!" do
+    # Note that this method is used a lot in the test fixtures below so it
+    # doesn't require an exhaustive test suite
+    it 'should import an array of sidecar objects' do
+      obj1 = random_sidecar_puppet_function
+      obj1.key = :func1
+      obj2 = random_sidecar_puppet_function
+      obj2.key = :func2
+      subject.import_sidecar_list!([obj1, obj2], section_existing, origin_default)
 
-    it 'should return true for a file that exists in the cache (case insensitive)' do
-      expect(subject.exist?('aBc123')).to be true
-    end
-
-    it 'should return false for a file that exists in the cache' do
-      expect(subject.exist?('does_not_exist')).to be false
-    end
-
-    it 'should return true for a file and section that exists in the cache' do
-      expect(subject.exist?('abc123', :function)).to be true
-    end
-
-    it 'should return true for a file and section that exists in the cache (case insensitive)' do
-      expect(subject.exist?('abC123', :function)).to be true
-    end
-
-    it 'should return false for a file that exists, but not the section, in the cache' do
-      expect(subject.exist?('abc123', :doesnotexist)).to be false
+      expect(subject.object_names_by_section(section_existing)).to eq([:func1, :func2])
     end
   end
 
-  describe '#set' do
+  describe "#remove_section!" do
+    let(:origin_foo) { :foo }
+    let(:origin_bar) { :bar }
+
     before(:each) do
-      # Arrange
-      expect(subject.exist?(filename_existing)).to be true
-      expect(subject.exist?(filename_existing, section_existing)).to be true
-      expect(subject.exist?(new_filename)).to be false
+      obj1 = random_sidecar_puppet_function
+      obj1.key = :func1
+      obj2 = random_sidecar_puppet_function
+      obj2.key = :func2
+      obj3 = random_sidecar_puppet_class
+      obj3.key = :class3
+      obj4 = random_sidecar_puppet_class
+      obj4.key = :class4
+      obj5 = random_sidecar_puppet_class
+      obj5.key = :class5
+      subject.import_sidecar_list!([obj1, obj2], :function, origin_default)
+      subject.import_sidecar_list!([obj3], :class, origin_default)
+      subject.import_sidecar_list!([obj4], :class, origin_foo)
+      subject.import_sidecar_list!([obj5], :class, origin_bar)
     end
 
-    it 'should add new filenames' do
-      # Act
-      expect(subject.set(new_filename, new_section, {})).to be true
-      # Assert
-      expect(subject.exist?(new_filename)).to be true
-      expect(subject.exist?(new_filename, new_section)).to be true
+    it 'should not remove non-matching section' do
+      subject.remove_section!(:type)
+
+      expect(subject.object_names_by_section(:function)).to eq([:func1, :func2])
+      expect(subject.object_names_by_section(:class)).to eq([:class3, :class4, :class5])
     end
 
-    it 'should add new sections to existing filenames' do
-      # Arrange
-      expect(subject.exist?(filename_existing, new_section)).to be false
-      # Act
-      expect(subject.set(filename_existing, new_section, {})).to be true
-      # Assert
-      expect(subject.exist?(filename_existing)).to be true
-      expect(subject.exist?(filename_existing, section_existing)).to be true
-      expect(subject.exist?(filename_existing, new_section)).to be true
+    it 'should not remove non-matching section and origin' do
+      subject.remove_section!(:class, :does_not_match)
+
+      expect(subject.object_names_by_section(:function)).to eq([:func1, :func2])
+      expect(subject.object_names_by_section(:class)).to eq([:class3, :class4, :class5])
     end
 
-    it 'should overwrite sections in existing filenames' do
-      # Arrange
-      old_object = subject.get(filename_existing, section_existing)
-      new_object = { :something => 'new'}
-      # Act
-      expect(subject.set(filename_existing, section_existing, new_object)).to be true
-      # Assert
-      expect(subject.get(filename_existing, section_existing)).to eq(new_object)
+    it 'should only remove matching section and origin' do
+      subject.remove_section!(:class, origin_foo)
+
+      expect(subject.object_names_by_section(:function)).to eq([:func1, :func2])
+      expect(subject.object_names_by_section(:class)).to eq([:class3, :class5])
+    end
+
+    it 'should only remove matching section' do
+      subject.remove_section!(:class)
+
+      expect(subject.object_names_by_section(:function)).to eq([:func1, :func2])
+      expect(subject.object_names_by_section(:class)).to eq([])
     end
   end
 
-  describe '#get' do
+  context "given a populated cache" do
     before(:each) do
-      # Arrange
-      expect(subject.exist?(filename_existing)).to be true
-      expect(subject.exist?(filename_existing, section_existing)).to be true
+      func1 = random_sidecar_puppet_function
+      func1.key = :func1
+      func2 = random_sidecar_puppet_function
+      func2.key = :func2
+      func3 = random_sidecar_puppet_function
+      func3.key = :func3
+      func4 = random_sidecar_puppet_function
+      func4.key = :func4
+
+      subject.import_sidecar_list!([func1, func2, func3, func4], section_existing, origin_default)
     end
 
-    it 'should get existing items from the cache' do
-      expect(subject.get(filename_existing, section_existing)).to eq(object_existing1)
+    describe '#object_by_name' do
+      it 'should get existing items from the cache' do
+        expect(subject.object_by_name(section_existing, :func1).key).to eq(:func1)
+      end
+
+      it 'should return nil for objects that do not exist' do
+        expect(subject.object_by_name(:doesnotexist, :func1)).to be_nil
+        expect(subject.object_by_name(section_existing, :doesnotexist)).to be_nil
+      end
     end
 
-    it 'should return nil for objects that do not exist' do
-      expect(subject.get('does_not_exist', section_existing)).to be_nil
-      expect(subject.get('does_not_exist', :doesnotexist)).to be_nil
-    end
-  end
+    describe '#object_names_by_section' do
+      it 'should get existing items from the cache' do
+        expect(subject.object_names_by_section(section_existing)).to eq([:func1, :func2, :func3, :func4])
+      end
 
-  describe '#object_by_name' do
-    it 'should get existing items from the cache' do
-      expect(subject.object_by_name(section_existing, :func1)).to eq('func1')
-    end
-
-    it 'should return nil for objects that do not exist' do
-      expect(subject.object_by_name(:doesnotexist, :func1)).to be_nil
-      expect(subject.object_by_name(section_existing, :doesnotexist)).to be_nil
-    end
-  end
-
-
-  describe '#object_names_by_section' do
-    it 'should get existing items from the cache' do
-      expect(subject.object_names_by_section(section_existing)).to eq([:func1, :func2, :func3, :func4])
+      it 'should return empty array for objects that do not exist' do
+        expect(subject.object_names_by_section(:doesnotexist)).to eq([])
+      end
     end
 
-    it 'should return empty array for objects that do not exist' do
-      expect(subject.object_names_by_section(:doesnotexist)).to eq([])
-    end
-  end
+    describe '#objects_by_section' do
+      it 'should get existing items from the cache' do
+        result = []
+        subject.objects_by_section(section_existing) { |_name, obj| result << obj.key.to_s }
+        expect(result).to eq(['func1', 'func2', 'func3', 'func4'])
+      end
 
-  describe '#objects_by_section' do
-    it 'should get existing items from the cache' do
-      result = []
-      subject.objects_by_section(section_existing) { |_name, obj| result << obj }
-      expect(result).to eq(['func1', 'func2', 'func3', 'func4'])
-    end
-
-    it 'should not yield for that do not exist' do
-      result = []
-      subject.objects_by_section(:doesnotexist) { |_name, obj| result << obj }
-      expect(result).to eq([])
+      it 'should not yield for that do not exist' do
+        result = []
+        subject.objects_by_section(:doesnotexist) { |_name, obj| result << obj }
+        expect(result).to eq([])
+      end
     end
   end
 end
