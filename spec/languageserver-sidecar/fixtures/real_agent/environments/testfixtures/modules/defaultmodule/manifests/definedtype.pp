@@ -1,0 +1,4 @@
+define defaultdefinedtype(
+  $ensure       = 'UNSET',
+) {
+}
