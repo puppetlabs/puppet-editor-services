@@ -1,4 +1,3 @@
-require 'puppet/indirector/face'
 require 'pathname'
 
 %w[puppet_helper/cache_objects puppet_helper/cache].each do |lib|
@@ -24,15 +23,16 @@ module PuppetLanguageServer
       sidecar_queue.cache = @inmemory_cache
     end
 
-    # Resource Face
-    def self.resource_face_get_by_typename(typename)
-      resources = Puppet::Face[:resource, '0.0.1'].search(typename)
-      prune_resource_parameters(resources)
-    end
+    # Retrieve puppet resource as a manifest
+    def self.get_puppet_resource(typename, title, local_workspace)
+      ap = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new
+      ap['typename'] = typename
+      ap['title'] = title unless title.nil?
 
-    def self.resource_face_get_by_typename_and_title(typename, title)
-      resources = Puppet::Face[:resource, '0.0.1'].find("#{typename}/#{title}")
-      prune_resource_parameters(resources)
+      args = ['--action-parameters=' + ap.to_json]
+      args << "--local-workspace=#{local_workspace}" unless local_workspace.nil?
+
+      sidecar_queue.execute_sync('resource_list', args)
     end
 
     # Types
@@ -153,15 +153,5 @@ module PuppetLanguageServer
       @sidecar_queue_obj ||= PuppetLanguageServer::SidecarQueue.new
     end
     private_class_method :sidecar_queue
-
-    def self.prune_resource_parameters(resources)
-      # From https://github.com/puppetlabs/puppet/blob/488661d84e54904124514ab9e4500e81b10f84d1/lib/puppet/application/resource.rb#L146-L148
-      if resources.is_a?(Array)
-        resources.map(&:prune_parameters)
-      else
-        resources.prune_parameters
-      end
-    end
-    private_class_method :prune_resource_parameters
   end
 end

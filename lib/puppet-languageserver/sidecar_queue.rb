@@ -80,6 +80,9 @@ module PuppetLanguageServer
 
         PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
 
+      when 'resource_list'
+        return PuppetLanguageServer::Sidecar::Protocol::ResourceList.new.from_json!(result)
+
       # TODO: when 'workspace_classes'
 
       # TODO: when 'workspace_functions'

@@ -89,9 +89,11 @@ def random_sidecar_puppet_type
   result
 end
 
-def random_sidecar_resource
+def random_sidecar_resource(typename = nil, title = nil)
+  typename = 'randomtype' if typename.nil?
+  title = rand(1000).to_s if title.nil?
   result = PuppetLanguageServer::Sidecar::Protocol::Resource.new()
-  result.manifest = 'manifest_' + rand(1000).to_s
+  result.manifest = "#{typename} { '#{title}':\n  id => #{rand(1000).to_s}\n}"
   result
 end
 
@@ -116,22 +118,5 @@ end
 class MockRelationshipGraph
   attr_accessor :vertices
   def initialize()
-  end
-end
-
-class MockResource
-  attr_accessor :title
-
-  def initialize(type_name = 'type' + rand(65536).to_s, title = 'resource' + rand(65536).to_s)
-    @title = title
-    @type = type_name
-  end
-
-  def to_manifest
-    <<-HEREDOC
-#{@type} { '#{@title}':
-  ensure => present
-}
-    HEREDOC
   end
 end

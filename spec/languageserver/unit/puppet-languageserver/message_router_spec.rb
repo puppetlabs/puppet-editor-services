@@ -125,7 +125,7 @@ describe 'message_router' do
         } }
 
         it 'should return data with an empty string' do
-          expect(PuppetLanguageServer::PuppetHelper).to receive(:resource_face_get_by_typename).and_return(nil)
+          expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).and_return(nil)
           expect(request).to receive(:reply_result).with(hash_including('data' => ''))
 
           subject.receive_request(request)
@@ -136,14 +136,15 @@ describe 'message_router' do
         let(:request_params) { {
           'typename' => type_name,
         } }
-        let(:resource_response) {[
-          MockResource.new(type_name),
-          MockResource.new(type_name)
-        ]}
+        let(:resource_response) {
+          result = PuppetLanguageServer::Sidecar::Protocol::ResourceList.new()
+          result << random_sidecar_resource(type_name)
+          result << random_sidecar_resource(type_name)
+        }
 
         context 'and resource face returns empty array' do
           it 'should return data with an empty string' do
-            expect(PuppetLanguageServer::PuppetHelper).to receive(:resource_face_get_by_typename).and_return([])
+            expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).and_return([])
             expect(request).to receive(:reply_result).with(hash_including('data' => ''))
 
             subject.receive_request(request)
@@ -152,10 +153,10 @@ describe 'message_router' do
 
         context 'and resource face returns array with at least 2 elements' do
           before(:each) do
-            expect(PuppetLanguageServer::PuppetHelper).to receive(:resource_face_get_by_typename).with(type_name).and_return(resource_response)
+            expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).with(type_name, nil, Object).and_return(resource_response)
           end
 
-          it 'should call resource_face_get_by_typename' do
+          it 'should call get_puppet_resource' do
             subject.receive_request(request)
           end
 
@@ -172,11 +173,14 @@ describe 'message_router' do
           'typename' => type_name,
           'title' => title,
         } }
-        let(:resource_response) { MockResource.new(type_name,title) }
+        let(:resource_response) {
+          result = PuppetLanguageServer::Sidecar::Protocol::ResourceList.new()
+          result << random_sidecar_resource(type_name, title)
+        }
 
         context 'and resource face returns nil' do
           it 'should return data with an empty string' do
-            expect(PuppetLanguageServer::PuppetHelper).to receive(:resource_face_get_by_typename_and_title).and_return(nil)
+            expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).and_return(nil)
             expect(request).to receive(:reply_result).with(hash_including('data' => ''))
 
             subject.receive_request(request)
@@ -185,7 +189,7 @@ describe 'message_router' do
 
         context 'and resource face returns a resource' do
           before(:each) do
-            expect(PuppetLanguageServer::PuppetHelper).to receive(:resource_face_get_by_typename_and_title).with(type_name,title).and_return(resource_response)
+            expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).with(type_name, title, Object).and_return(resource_response)
           end
 
           it 'should call resource_face_get_by_typename' do

@@ -4,6 +4,7 @@ begin
 
   require 'languageserver/languageserver'
   require 'puppet-editor-services'
+  require 'puppet'
 
   %w[
     json_rpc_handler
@@ -27,7 +28,6 @@ begin
     end
   end
 
-  require 'puppet'
   require 'optparse'
   require 'logger'
 ensure

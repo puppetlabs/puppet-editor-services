@@ -34,20 +34,13 @@ module PuppetLanguageServer
           request.reply_result(LanguageServer::PuppetCompilation.create('error' => 'Missing Typename'))
           return
         end
-        resources = nil
+        resource_list = PuppetLanguageServer::PuppetHelper.get_puppet_resource(type_name, title, documents.store_root_path)
 
-        if title.nil?
-          resources = PuppetLanguageServer::PuppetHelper.resource_face_get_by_typename(type_name)
-        else
-          resources = PuppetLanguageServer::PuppetHelper.resource_face_get_by_typename_and_title(type_name, title)
-          resources = [resources] unless resources.nil?
-        end
-        if resources.nil? || resources.length.zero?
+        if resource_list.nil? || resource_list.length.zero?
           request.reply_result(LanguageServer::PuppetCompilation.create('data' => ''))
           return
         end
-        # TODO: Should probably move this to a helper?
-        content = resources.map(&:to_manifest).join("\n\n") + "\n"
+        content = resource_list.map(&:manifest).join("\n\n") + "\n"
         request.reply_result(LanguageServer::PuppetCompilation.create('data' => content))
 
       when 'puppet/compileNodeGraph'
