@@ -1,3 +1,5 @@
+require 'puppet/indirector/face'
+
 module PuppetLanguageServerSidecar
   module PuppetHelper
     def self.path_has_child?(path, child)
@@ -8,6 +10,24 @@ module PuppetLanguageServerSidecar
       value = child.slice(0, path.length)
       return true if value.casecmp(path).zero?
       false
+    end
+
+    # Resource Face
+    def self.get_puppet_resource(typename, title = nil)
+      result = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
+      if title.nil?
+        resources = Puppet::Face[:resource, '0.0.1'].search(typename)
+      else
+        resources = Puppet::Face[:resource, '0.0.1'].find("#{typename}/#{title}")
+      end
+      return result if resources.nil?
+      resources = [resources] unless resources.is_a?(Array)
+      prune_resource_parameters(resources).each do |item|
+        obj = PuppetLanguageServer::Sidecar::Protocol::Resource.new
+        obj.manifest = item.to_manifest
+        result << obj
+      end
+      result
     end
 
     # Class and Defined Type loading
@@ -122,6 +142,16 @@ module PuppetLanguageServerSidecar
     end
 
     # Private functions
+
+    def self.prune_resource_parameters(resources)
+      # From https://github.com/puppetlabs/puppet/blob/488661d84e54904124514ab9e4500e81b10f84d1/lib/puppet/application/resource.rb#L146-L148
+      if resources.is_a?(Array)
+        resources.map(&:prune_parameters)
+      else
+        resources.prune_parameters
+      end
+    end
+    private_class_method :prune_resource_parameters
 
     def self.current_environment
       begin

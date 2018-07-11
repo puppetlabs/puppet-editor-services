@@ -11,7 +11,7 @@ def run_sidecar(cmd_options)
   cmd = ['ruby', 'puppet-languageserver-sidecar'].concat(cmd_options)
   stdout, _stderr, status = Open3.capture3(*cmd)
 
-  raise "Expected exit code of 0, but got #{status.exitstatus}" unless status.exitstatus.zero?
+  raise "Expected exit code of 0, but got #{status.exitstatus} #{_stderr}" unless status.exitstatus.zero?
   return stdout.bytes.pack('U*')
 end
 
@@ -150,6 +150,46 @@ describe 'PuppetLanguageServerSidecar' do
         expect(obj.attributes[:when][:type]).to eq(:property)
         expect(obj.attributes[:when][:doc]).to eq("when_property\n\n")
         expect(obj.attributes[:when][:required?]).to be_nil
+      end
+    end
+  end
+
+  describe 'when running resource_list action' do
+    let (:cmd_options) { ['--action', 'resource_list'] }
+
+    context 'for a resource with no title' do
+      let (:action_params) {
+        value = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new()
+        value['typename'] = 'user'
+        value
+      }
+
+      it 'should return a deserializable resource list' do
+        result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
+        deserial = PuppetLanguageServer::Sidecar::Protocol::ResourceList.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        expect(deserial.count).to be > 0
+      end
+    end
+
+    context 'for a resource with a title' do
+      let (:action_params) {
+        # This may do odd things with non ASCII usernames on Windows
+        current_username = ENV['USER'] || ENV['USERNAME']
+
+        value = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new()
+        value['typename'] = 'user'
+        value['title'] = current_username
+        value
+      }
+
+      it 'should return a deserializable resource list with a single item' do
+        result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
+        deserial = PuppetLanguageServer::Sidecar::Protocol::ResourceList.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        expect(deserial.count).to be 1
       end
     end
   end

@@ -89,6 +89,12 @@ def random_sidecar_puppet_type
   result
 end
 
+def random_sidecar_resource
+  result = PuppetLanguageServer::Sidecar::Protocol::Resource.new()
+  result.manifest = 'manifest_' + rand(1000).to_s
+  result
+end
+
 # Mock ojects
 class MockConnection < PuppetEditorServices::SimpleServerConnectionBase
   def send_data(data)

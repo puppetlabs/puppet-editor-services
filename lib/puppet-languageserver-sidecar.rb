@@ -46,6 +46,7 @@ module PuppetLanguageServerSidecar
     default_classes
     default_functions
     default_types
+    resource_list
     workspace_classes
     workspace_functions
     workspace_types
@@ -56,6 +57,7 @@ module PuppetLanguageServerSidecar
       # Set defaults here
       args = {
         action: nil,
+        action_parameters: PuppetLanguageServer::Sidecar::Protocol::ActionParams.new,
         debug: nil,
         disable_cache: false,
         flags: [],
@@ -69,6 +71,16 @@ module PuppetLanguageServerSidecar
 
         opts.on('-a', '--action=NAME', ACTION_LIST, "The action for the sidecar to take. Expected #{ACTION_LIST}") do |name|
           args[:action] = name
+        end
+
+        opts.on('-c', '--action-parameters=JSON', 'JSON Encoded string containing the parameters for the sidecar action') do |json_string|
+          ap = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new
+          begin
+            ap.from_json!(json_string)
+            args[:action_parameters] = ap
+          rescue StandardError => ex
+            raise "Unable to parse the action parameters: #{ex}"
+          end
         end
 
         opts.on('-w', '--local-workspace=PATH', 'The workspace or file path that will be used to provide module-specific functionality. Default is no workspace path') do |path|
@@ -170,6 +182,16 @@ module PuppetLanguageServerSidecar
     when 'default_types'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(cache)
+
+    when 'resource_list'
+      inject_workspace_as_module
+      typename = options[:action_parameters]['typename']
+      title = options[:action_parameters]['title']
+      if typename.nil?
+        log_message(:error, 'Missing typename action paramater')
+        return []
+      end
+      PuppetLanguageServerSidecar::PuppetHelper.get_puppet_resource(typename, title)
 
     when 'workspace_classes'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new

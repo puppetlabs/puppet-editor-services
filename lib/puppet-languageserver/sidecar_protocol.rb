@@ -11,6 +11,22 @@ module PuppetLanguageServer
         end
       end
 
+      class ActionParams < Hash
+        include Base
+
+        def to_json(*options)
+          JSON.generate(to_h, options)
+        end
+
+        def from_json!(json_string)
+          obj = JSON.parse(json_string)
+          obj.each do |key, value|
+            self[key] = value
+          end
+          self
+        end
+      end
+
       # key            => Unique name of the object
       # calling_source => The file that was invoked to create the object
       # source         => The file that _actually_ created the object
@@ -155,6 +171,35 @@ module PuppetLanguageServer
       class PuppetTypeList < BasePuppetObjectList
         def child_type
           PuppetType
+        end
+      end
+
+      class Resource
+        attr_accessor :manifest
+
+        def to_h
+          {
+            'manifest' => manifest
+          }
+        end
+
+        def from_h!(value)
+          self.manifest = value['manifest']
+          self
+        end
+
+        def to_json(*options)
+          to_h.to_json(options)
+        end
+
+        def from_json!(json_string)
+          from_h!(JSON.parse(json_string))
+        end
+      end
+
+      class ResourceList < BasePuppetObjectList
+        def child_type
+          Resource
         end
       end
     end

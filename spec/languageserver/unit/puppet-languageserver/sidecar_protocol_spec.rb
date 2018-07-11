@@ -7,12 +7,12 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
       it "instance should respond to #{testcase}" do
         expect(subject).to respond_to(testcase)
       end
+    end
 
-      it 'should serialize to a string' do
-        serial = subject.to_json
+    it 'should serialize to a string' do
+      serial = subject.to_json
 
-        expect(serial).to be_a(String)
-      end
+      expect(serial).to be_a(String)
     end
   end
 
@@ -56,6 +56,31 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
   puppetclass_properties = []
   puppetfunction_properties = [:doc, :arity, :type]
   puppettype_properties = [:doc, :attributes]
+  resource_properties = [:manifest]
+
+  describe 'ActionParams' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::ActionParams }
+    let(:subject) {
+      value = subject_klass.new
+      value['val1_' + rand(1000).to_s] = rand(1000).to_s
+      value['val2_' + rand(1000).to_s] = rand(1000).to_s
+      value['val3_' + rand(1000).to_s] = rand(1000).to_s
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol object'
+
+    describe '#from_json!' do
+      it "should deserialize a serialized value" do
+        serial = subject.to_json
+        deserial = subject_klass.new.from_json!(serial)
+
+        subject.keys.each do |key|
+          expect(deserial[key]).to eq(deserial[key])
+        end
+      end
+    end
+  end
 
   describe 'BasePuppetObject' do
     let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::BasePuppetObject }
@@ -227,6 +252,49 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
 
     it "instance should have a childtype of PuppetClass" do
       expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::PuppetType)
+    end
+  end
+
+  describe 'Resource' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::Resource }
+    let(:subject) { random_sidecar_resource }
+
+    it_should_behave_like 'a base Sidecar Protocol object'
+
+    resource_properties.each do |testcase|
+      it "instance should respond to #{testcase}" do
+        expect(subject).to respond_to(testcase)
+      end
+    end
+
+    describe '#from_json!' do
+      resource_properties.each do |testcase|
+        it "should deserialize a serialized #{testcase} value" do
+          serial = subject.to_json
+          deserial = subject_klass.new.from_json!(serial)
+
+          expect(deserial.send(testcase)).to eq(subject.send(testcase))
+        end
+      end
+    end
+  end
+
+  describe 'ResourceList' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::ResourceList }
+    let(:subject) {
+      value = subject_klass.new
+      value << random_sidecar_resource
+      value << random_sidecar_resource
+      value << random_sidecar_resource
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol Puppet object list'
+
+    it_should_behave_like 'a serializable object list'
+
+    it "instance should have a childtype of Resource" do
+      expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::Resource)
     end
   end
 end
