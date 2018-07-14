@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'open3'
+require 'tempfile'
 
 def run_sidecar(cmd_options)
   cmd_options << '--no-cache'
@@ -18,6 +19,19 @@ end
 def child_with_key(array, key)
   idx = array.index { |item| item.key == key }
   return idx.nil? ? nil : array[idx]
+end
+
+def with_temporary_file(content)
+  tempfile = Tempfile.new("langserver-sidecar")
+  tempfile.open
+
+  tempfile.write(content)
+
+  tempfile.close
+
+  yield tempfile.path
+ensure
+  tempfile.delete if tempfile
 end
 
 RSpec::Matchers.define :contain_child_with_key do |key|
@@ -92,6 +106,26 @@ describe 'PuppetLanguageServerSidecar' do
     # Test fixtures used is fixtures/valid_module_workspace
     let(:workspace) { File.join($fixtures_dir, 'valid_module_workspace') }
 
+    describe 'when running node_graph action' do
+      let (:cmd_options) { ['--action', 'node_graph', '--local-workspace',workspace] }
+
+      it 'should return a deserializable node graph' do
+        # The fixture type is only present in the local workspace
+        with_temporary_file("fixture { 'test':\n}") do |filepath|
+          action_params = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new()
+          action_params['source'] = filepath
+
+          result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
+
+          deserial = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+          expect { deserial.from_json!(result) }.to_not raise_error
+
+          expect(deserial.dot_content).to match(/Fixture\[test\]/)
+          expect(deserial.error_content.to_s).to eq('')
+        end
+      end
+    end
+
     describe 'when running workspace_classes action' do
       let (:cmd_options) { ['--action', 'workspace_classes', '--local-workspace',workspace] }
 
@@ -150,6 +184,25 @@ describe 'PuppetLanguageServerSidecar' do
         expect(obj.attributes[:when][:type]).to eq(:property)
         expect(obj.attributes[:when][:doc]).to eq("when_property\n\n")
         expect(obj.attributes[:when][:required?]).to be_nil
+      end
+    end
+  end
+
+  describe 'when running node_graph action' do
+    let (:cmd_options) { ['--action', 'node_graph'] }
+
+    it 'should return a deserializable node graph' do
+      with_temporary_file("user { 'test':\nensure => present\n}") do |filepath|
+        action_params = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new()
+        action_params['source'] = filepath
+
+        result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
+
+        deserial = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        expect(deserial.dot_content).to_not eq('')
+        expect(deserial.error_content.to_s).to eq('')
       end
     end
   end

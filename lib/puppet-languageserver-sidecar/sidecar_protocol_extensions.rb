@@ -2,6 +2,14 @@ require 'puppet-languageserver/sidecar_protocol'
 
 module PuppetLanguageServerSidecar
   module Protocol
+    class NodeGraph < PuppetLanguageServer::Sidecar::Protocol::NodeGraph
+      def set_error(message) # rubocop:disable Naming/AccessorMethodName
+        self.error_content = message
+        self.dot_content = ''
+        self
+      end
+    end
+
     class PuppetClass < PuppetLanguageServer::Sidecar::Protocol::PuppetClass
       def self.from_puppet(name, item)
         obj = PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new

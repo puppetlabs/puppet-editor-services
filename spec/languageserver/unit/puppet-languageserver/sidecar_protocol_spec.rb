@@ -53,6 +53,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
   end
 
   basepuppetobject_properties = [:key, :calling_source, :source, :line, :char, :length]
+  nodegraph_properties = [:dot_content, :error_content]
   puppetclass_properties = []
   puppetfunction_properties = [:doc, :arity, :type]
   puppettype_properties = [:doc, :attributes]
@@ -100,6 +101,30 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
     describe '#from_json!' do
       basepuppetobject_properties.each do |testcase|
         it "should deserialize a serialized #{testcase} value" do
+          serial = subject.to_json
+          deserial = subject_klass.new.from_json!(serial)
+
+          expect(deserial.send(testcase)).to eq(subject.send(testcase))
+        end
+      end
+    end
+  end
+
+  describe 'NodeGraph' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::NodeGraph }
+    let(:subject) {
+      value = subject_klass.new
+      value.dot_content = 'dot_content_' + rand(1000).to_s
+      value.error_content = 'error_content_' + rand(1000).to_s
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol object'
+
+    describe '#from_json!' do
+      nodegraph_properties.each do |testcase|
+        it "should deserialize a serialized #{testcase} value" do
+          #require 'pry'; binding.pry
           serial = subject.to_json
           deserial = subject_klass.new.from_json!(serial)
 

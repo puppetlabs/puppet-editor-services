@@ -22,6 +22,7 @@ begin
     cache/null
     cache/filesystem
     puppet_helper
+    puppet_parser_helper
     puppet_monkey_patches
     sidecar_protocol_extensions
     workspace
@@ -46,6 +47,7 @@ module PuppetLanguageServerSidecar
     default_classes
     default_functions
     default_types
+    node_graph
     resource_list
     workspace_classes
     workspace_functions
@@ -182,6 +184,21 @@ module PuppetLanguageServerSidecar
     when 'default_types'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(cache)
+
+    when 'node_graph'
+      inject_workspace_as_module
+      result = PuppetLanguageServerSidecar::Protocol::NodeGraph.new
+      if options[:action_parameters]['source'].nil?
+        log_message(:error, 'Missing source action parameter')
+        return result.set_error('Missing source action parameter')
+      end
+      begin
+        manifest = File.open(options[:action_parameters]['source'], 'r:UTF-8') { |f| f.read }
+        PuppetLanguageServerSidecar::PuppetParserHelper.compile_node_graph(manifest)
+      rescue StandardError => ex
+        log_message(:error, "Unable to compile the manifest. #{ex}")
+        result.set_error("Unable to compile the manifest. #{ex}")
+      end
 
     when 'resource_list'
       inject_workspace_as_module
