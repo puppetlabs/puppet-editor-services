@@ -243,8 +243,15 @@ describe 'message_router' do
       end
 
       context 'and an error during generation of the node graph' do
+        let(:mock_return) {
+          value = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+          value.dot_content = ''
+          value.error_content = 'MockError'
+          value
+        }
+
         before(:each) do
-          expect(PuppetLanguageServer::PuppetParserHelper).to receive(:compile_to_pretty_relationship_graph).with(file_content).and_raise('MockError')
+          expect(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).with(file_content, Object).and_return(mock_return)
         end
 
         it 'should reply with the error text' do
@@ -254,54 +261,34 @@ describe 'message_router' do
         end
 
         it 'should not reply with dotContent' do
-          expect(request).to_not receive(:reply_result).with(hash_including('dotContent'))
+          expect(request).to receive(:reply_result).with(hash_including('dotContent' => ''))
 
           subject.receive_request(request)
         end
       end
 
       context 'and successfully generate the node graph' do
-        let(:relationship_graph) { MockRelationshipGraph.new() }
+        let(:mock_return) {
+          value = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+          value.dot_content = 'success'
+          value.error_content = ''
+          value
+        }
+
         before(:each) do
-          expect(PuppetLanguageServer::PuppetParserHelper).to receive(:compile_to_pretty_relationship_graph).with(file_content).and_return(relationship_graph)
+          expect(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).with(file_content, Object).and_return(mock_return)
         end
 
-        context 'with one or more resources' do
-          before(:each) do
-            relationship_graph.vertices = [double('node1'),double('node2')]
-            expect(relationship_graph).to receive(:to_dot).with(Hash).and_return(dot_content)
-          end
+        it 'should reply with dotContent' do
+          expect(request).to receive(:reply_result).with(hash_including('dotContent' => /success/))
 
-          it 'should reply with dotContent' do
-            expect(request).to receive(:reply_result).with(hash_including('dotContent' => dot_content))
-
-            subject.receive_request(request)
-          end
-
-          it 'should not reply with error' do
-            expect(request).to_not receive(:reply_result).with(hash_including('error'))
-
-            subject.receive_request(request)
-          end
+          subject.receive_request(request)
         end
 
-        context 'with zero resources' do
-          before(:each) do
-            relationship_graph.vertices = []
-            expect(relationship_graph).to receive(:to_dot).with(Hash).never
-          end
+        it 'should not reply with error' do
+          expect(request).to receive(:reply_result).with(hash_including('error' => ''))
 
-          it 'should reply with the error text' do
-            expect(request).to receive(:reply_result).with(hash_including('error' => /no resources/))
-
-            subject.receive_request(request)
-          end
-
-          it 'should not reply with dotContent' do
-            expect(request).to_not receive(:reply_result).with(hash_including('dotContent'))
-
-            subject.receive_request(request)
-          end
+          subject.receive_request(request)
         end
       end
     end

@@ -1,4 +1,5 @@
 require 'pathname'
+require 'tempfile'
 
 %w[puppet_helper/cache_objects puppet_helper/cache].each do |lib|
   begin
@@ -23,7 +24,19 @@ module PuppetLanguageServer
       sidecar_queue.cache = @inmemory_cache
     end
 
-    # Retrieve puppet resource as a manifest
+    # Node Graph
+    def self.get_node_graph(content, local_workspace)
+      with_temporary_file(content) do |filepath|
+        ap = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new
+        ap['source'] = filepath
+
+        args = ['--action-parameters=' + ap.to_json]
+        args << "--local-workspace=#{local_workspace}" unless local_workspace.nil?
+
+        sidecar_queue.execute_sync('node_graph', args, false)
+      end
+    end
+
     def self.get_puppet_resource(typename, title, local_workspace)
       ap = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new
       ap['typename'] = typename
@@ -153,5 +166,19 @@ module PuppetLanguageServer
       @sidecar_queue_obj ||= PuppetLanguageServer::SidecarQueue.new
     end
     private_class_method :sidecar_queue
+
+    def self.with_temporary_file(content)
+      tempfile = Tempfile.new('langserver-sidecar')
+      tempfile.open
+
+      tempfile.write(content)
+
+      tempfile.close
+
+      yield tempfile.path
+    ensure
+      tempfile.delete if tempfile
+    end
+    private_class_method :with_temporary_file
   end
 end

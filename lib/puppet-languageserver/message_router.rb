@@ -51,27 +51,14 @@ module PuppetLanguageServer
         end
         content = documents.document(file_uri)
 
-        dot_content = nil
-        error_content = nil
         begin
-          # The fontsize is inserted in the puppet code.  Need to remove it so the client can render appropriately.  Need to
-          # set it to blank.  The graph label is set to vscode so that we can do text replacement client side to inject the
-          # appropriate styling.
-          options = {
-            'fontsize' => '""',
-            'name' => 'vscode'
-          }
-          node_graph = PuppetLanguageServer::PuppetParserHelper.compile_to_pretty_relationship_graph(content)
-          if node_graph.vertices.count.zero?
-            error_content = 'There were no resources created in the node graph. Is there an include statement missing?'
-          else
-            dot_content = node_graph.to_dot(options)
-          end
-        rescue StandardError => exception
-          error_content = "Error while parsing the file. #{exception}"
+          node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(content, documents.store_root_path)
+          request.reply_result(LanguageServer::PuppetCompilation.create('dotContent' => node_graph.dot_content,
+                                                                        'error' => node_graph.error_content))
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(puppet/compileNodeGraph) Error generating node graph. #{e}")
+          request.reply_result(LanguageServer::PuppetCompilation.create('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.'))
         end
-        request.reply_result(LanguageServer::PuppetCompilation.create('dotContent' => dot_content,
-                                                                      'error' => error_content))
 
       when 'puppet/fixDiagnosticErrors'
         begin

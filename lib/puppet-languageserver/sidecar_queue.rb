@@ -80,6 +80,9 @@ module PuppetLanguageServer
 
         PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
 
+      when 'node_graph'
+        return PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new.from_json!(result)
+
       when 'resource_list'
         return PuppetLanguageServer::Sidecar::Protocol::ResourceList.new.from_json!(result)
 
