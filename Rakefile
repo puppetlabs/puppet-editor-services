@@ -19,6 +19,8 @@ if rubocop_available
   desc 'Run RuboCop'
   RuboCop::RakeTask.new(:rubocop) do |task|
     task.options << '--display-cop-names'
+    task.options << '--config'
+    task.options << '.rubocop.yml'
   end
 end
 
