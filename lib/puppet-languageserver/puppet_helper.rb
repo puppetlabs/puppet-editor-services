@@ -135,6 +135,19 @@ module PuppetLanguageServer
     end
     private_class_method :prune_resource_parameters
 
+    def self.current_environment
+      begin
+        env = Puppet.lookup(:environments).get!(Puppet.settings[:environment])
+        return env unless env.nil?
+      rescue Puppet::Environments::EnvironmentNotFound
+        PuppetLanguageServer.log_message(:warning, "[PuppetHelper::current_environment] Unable to load environment #{Puppet.settings[:environment]}")
+      rescue StandardError => ex
+        PuppetLanguageServer.log_message(:warning, "[PuppetHelper::current_environment] Error loading environment #{Puppet.settings[:environment]}: #{ex}")
+      end
+      Puppet.lookup(:current_environment)
+    end
+    private_class_method :current_environment
+
     # Class and Defined Type loading
     def self._load_default_classes
       @default_classes_loaded = false
@@ -325,7 +338,7 @@ module PuppetLanguageServer
 
       # From https://github.com/puppetlabs/puppet/blob/ebd96213cab43bb2a8071b7ac0206c3ed0be8e58/lib/puppet/metatype/manager.rb#L182-L189
       autoloader = Puppet::Util::Autoload.new(self, 'puppet/type')
-      current_env = Puppet.lookup(:current_environment)
+      current_env = current_environment
       type_count = 0
 
       # This is an expensive call
@@ -389,7 +402,7 @@ module PuppetLanguageServer
       PuppetLanguageServer.log_message(:debug, '[PuppetHelper::_load_default_functions] Starting')
 
       autoloader = Puppet::Parser::Functions.autoloader
-      current_env = Puppet.lookup(:current_environment)
+      current_env = current_environment
       function_count = 0
 
       # Functions that are already loaded (e.g. system default functions like alert)
