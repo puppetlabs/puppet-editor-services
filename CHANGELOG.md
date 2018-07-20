@@ -6,6 +6,18 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.13.0 - 2018-07-21
+
+### Changed
+
+- ([GH-36](https://github.com/lingua-pupuli/puppet-editor-services/issues/36)) Use automatic port assignment as default
+
+### Fixed
+
+- ([GH-31](https://github.com/lingua-pupuli/puppet-editor-services/issues/31)) Use canonical names for line based breakpoints
+- ([GH-46](https://github.com/lingua-pupuli/puppet-editor-services/issues/46)) Detect Puppet Environment correctly
+- Minor fixes for rubocop
+
 ## 0.12.0 - 2018-06-01
 
 ### Added
