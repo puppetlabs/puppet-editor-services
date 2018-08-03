@@ -78,6 +78,9 @@ module PuppetEditorServices
         l = nil
         begin
           l = pipe.readpartial(4096)
+        rescue EOFError
+          log('Reading from pipe has reached End of File.  Exiting STDIO server')
+          stop
         rescue # rubocop:disable Style/RescueStandardError, Lint/HandleExceptions
           # Any errors here should be swallowed because the pipe could be in any state
         end
