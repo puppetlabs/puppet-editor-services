@@ -6,6 +6,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.14.0 - 2018-08-17
+
+### Fixed
+
+- ([GH-49](https://github.com/lingua-pupuli/puppet-editor-services/issues/49)) Prevent an infinite loop when using stdio
+
 ## 0.13.0 - 2018-07-21
 
 ### Changed
