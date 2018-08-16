@@ -1,5 +1,5 @@
 module PuppetEditorServices
-  PUPPETEDITORSERVICESVERSION = '0.13.0'.freeze unless defined? PUPPETEDITORSERVICESVERSION
+  PUPPETEDITORSERVICESVERSION = '0.14.0'.freeze unless defined? PUPPETEDITORSERVICESVERSION
 
   # @api public
   #
