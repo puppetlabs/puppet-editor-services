@@ -47,8 +47,12 @@ module PuppetLanguageServerSidecar
       classes = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
       manifest_path_list.each do |manifest_path|
         Dir.glob("#{manifest_path}/**/*.pp").each do |manifest_file|
-          if path_has_child?(options[:root_path], manifest_file)
-            classes.concat(load_classes_from_manifest(cache, manifest_file))
+          begin
+            if path_has_child?(options[:root_path], manifest_file)
+              classes.concat(load_classes_from_manifest(cache, manifest_file))
+            end
+          rescue StandardError => err
+            PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::retrieve_classes] Error loading manifest #{manifest_file}: #{err} #{err.backtrace}")
           end
         end
       end
