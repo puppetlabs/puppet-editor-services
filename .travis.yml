@@ -23,9 +23,13 @@ env:
     - PUPPET_GEM_VERSION="~> 4.0"
       RUBY_VER=2.1.9
       RAKE_TASK=test_languageserver
-    # Latest Puppet
+    # Latest 5.x puppet
     - PUPPET_GEM_VERSION="~> 5.0"
       RUBY_VER=2.4.1
+      RAKE_TASK=test_languageserver
+    # Latest Puppet
+    - PUPPET_GEM_VERSION="~> 6.0"
+      RUBY_VER=2.5.1
       RAKE_TASK=test_languageserver
     # Specific Puppet version testing
     - PUPPET_GEM_VERSION="5.1.0"
