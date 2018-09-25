@@ -18,7 +18,29 @@ module Puppet
             :source => caller.absolute_path,
             :line   => caller.lineno - 1, # Convert to a zero based line number system
           }
+          monkey_append_function_info(name, result)
+
           result
+        end
+
+        def monkey_clear_function_info
+          @monkey_function_list = {}
+        end
+
+        def monkey_append_function_info(name, value)
+          @monkey_function_list = {} if @monkey_function_list.nil?
+          @monkey_function_list[name] = {
+            :arity           => value[:arity],
+            :name            => value[:name],
+            :type            => value[:type],
+            :doc             => value[:doc],
+            :source_location => value[:source_location]
+          }
+        end
+
+        def monkey_function_list
+          @monkey_function_list = {} if @monkey_function_list.nil?
+          @monkey_function_list.clone
         end
       end
     end

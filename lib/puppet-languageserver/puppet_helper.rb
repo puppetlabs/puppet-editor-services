@@ -374,8 +374,6 @@ module PuppetLanguageServer
       return 0 if @inmemory_cache.exist?(absolute_name, :function)
       return 0 if @inmemory_cache.load_from_persistent_cache!(absolute_name)
 
-      function_module = Puppet::Parser::Functions.environment_module(env)
-      function_count = 0
       @inmemory_cache.set(absolute_name, :function, nil)
       unless autoloader.loaded?(name)
         # This is an expensive call
@@ -386,9 +384,10 @@ module PuppetLanguageServer
 
       # Find the functions that were loaded based on source file name (case insensitive)
       funcs = {}
-      function_module.all_function_info
-                     .select { |_k, i| absolute_name.casecmp(i[:source_location][:source].to_s).zero? }
-                     .each do |func_name, item|
+      function_count = 0
+      Puppet::Parser::Functions.monkey_function_list
+                               .select { |_k, i| absolute_name.casecmp(i[:source_location][:source].to_s).zero? }
+                               .each do |func_name, item|
         obj = FauxFunction.new
         obj.from_puppet!(func_name, item)
         obj.calling_source = absolute_name
@@ -406,7 +405,7 @@ module PuppetLanguageServer
       @default_functions_loaded = false
       PuppetLanguageServer.log_message(:debug, '[PuppetHelper::_load_default_functions] Starting')
 
-      autoloader = Puppet::Parser::Functions.autoloader
+      autoloader = Puppet::Util::Autoload.new(self, 'puppet/parser/functions')
       current_env = current_environment
       function_count = 0
 
@@ -414,19 +413,17 @@ module PuppetLanguageServer
       # should already be populated so insert them into the function results
       #
       # Find the unique filename list
-      function_module = Puppet::Parser::Functions.environment_module(current_env)
       filenames = []
-      function_module.all_function_info.each_value do |data|
+      Puppet::Parser::Functions.monkey_function_list.each_value do |data|
         filenames << data[:source_location][:source] unless data[:source_location].nil? || data[:source_location][:source].nil?
       end
-      filenames.uniq!.compact!
       # Now add the functions in each file to the cache
-      filenames.each do |filename|
+      filenames.uniq.compact.each do |filename|
         @inmemory_cache.set(filename, :function, nil)
         funcs = {}
-        function_module.all_function_info
-                       .select { |_k, i| filename.casecmp(i[:source_location][:source].to_s).zero? }
-                       .each do |name, item|
+        Puppet::Parser::Functions.monkey_function_list
+                                 .select { |_k, i| filename.casecmp(i[:source_location][:source].to_s).zero? }
+                                 .each do |name, item|
           obj = FauxFunction.new
           obj.from_puppet!(name, item)
           funcs[obj.key] = obj
@@ -436,7 +433,12 @@ module PuppetLanguageServer
       end
 
       # Now we can load functions from the default locations
-      autoloader.files_to_load.each do |file|
+      if autoloader.method(:files_to_load).arity.zero?
+        params = []
+      else
+        params = [current_env]
+      end
+      autoloader.files_to_load(*params).each do |file|
         name = file.gsub(autoloader.path + '/', '')
         begin
           function_count += load_function_file(name, autoloader, current_env)
