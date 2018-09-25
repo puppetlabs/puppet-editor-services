@@ -295,7 +295,7 @@ module PuppetLanguageServer
       @inmemory_cache.set(absolute_name, :type, nil)
       unless autoloader.loaded?(name)
         # This is an expensive call
-        unless autoloader.load(name)
+        unless autoloader.load(name, env)
           PuppetLanguageServer.log_message(:error, "[PuppetHelper::load_type_file] type #{absolute_name} did not load")
         end
       end
@@ -342,7 +342,12 @@ module PuppetLanguageServer
       type_count = 0
 
       # This is an expensive call
-      autoloader.files_to_load.each do |file|
+      if autoloader.method(:files_to_load).arity.zero?
+        params = []
+      else
+        params = [current_env]
+      end
+      autoloader.files_to_load(*params).each do |file|
         name = file.gsub(autoloader.path + '/', '')
         begin
           type_count += load_type_file(name, autoloader, current_env)
