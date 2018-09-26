@@ -14,12 +14,7 @@ matrix:
 env:
   matrix:
     # Language Server testing
-    # LTS Agent
-    - PUPPET_GEM_VERSION="~> 4.7.0"
-      RUBY_VER=2.1.9
-      RAKE_TASK=test_languageserver
-
-    # Latest 4.x branch
+    # Latest 4.x branch (Covers LTS too)
     - PUPPET_GEM_VERSION="~> 4.0"
       RUBY_VER=2.1.9
       RAKE_TASK=test_languageserver

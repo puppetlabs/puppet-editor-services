@@ -10,7 +10,7 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
 
 * Ensure a modern ruby is installed (2.1+)
 
-  The editor services support Puppet 4.7.1 and above
+  The editor services support Puppet 4.10.12 and above
 
 * Clone this repository
 
