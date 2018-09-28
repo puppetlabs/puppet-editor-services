@@ -149,6 +149,21 @@ module PuppetLanguageServer
           request.reply_result(nil)
         end
 
+      when 'textDocument/documentSymbol'
+        file_uri = request.params['textDocument']['uri']
+        content  = documents.document(file_uri)
+        begin
+          case documents.document_type(file_uri)
+          when :manifest
+            r = PuppetLanguageServer::PuppetParserHelper.extract_document_symbols(content)
+            request.reply_result(r)
+          else
+            raise "Unable to provide definition on #{file_uri}"
+          end
+        rescue StandardError => exception
+          PuppetLanguageServer.log_message(:error, "(textDocument/documentSymbol) #{exception}")
+          request.reply_result(nil)
+        end
       else
         PuppetLanguageServer.log_message(:error, "Unknown RPC method #{request.rpc_method}")
       end

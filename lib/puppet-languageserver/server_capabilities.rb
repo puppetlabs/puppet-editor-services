@@ -10,7 +10,8 @@ module PuppetLanguageServer
           'resolveProvider'   => true,
           'triggerCharacters' => ['>', '$', '[', '=']
         },
-        'definitionProvider' => true
+        'definitionProvider' => true,
+        'documentSymbolProvider' => true,
       }
     end
   end
