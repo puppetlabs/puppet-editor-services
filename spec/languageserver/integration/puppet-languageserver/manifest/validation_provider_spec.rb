@@ -137,7 +137,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       it "should return same errors for both LF and CRLF line endings" do
         lint_error_lf = subject.validate(manifest_lf)
         lint_error_crlf = subject.validate(manifest_crlf)
-        expect(lint_error_crlf).to eq(lint_error_lf)
+        expect(lint_error_crlf.to_json).to eq(lint_error_lf.to_json)
       end
    end
 
@@ -156,11 +156,11 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       it "should return an entry with linting error information" do
         lint_error = subject.validate(manifest)[0]
 
-        expect(lint_error['source']).to eq('Puppet')
-        expect(lint_error['message']).to match('140')
-        expect(lint_error['range']).to_not be_nil
-        expect(lint_error['code']).to_not be_nil
-        expect(lint_error['severity']).to_not be_nil
+        expect(lint_error.source).to eq('Puppet')
+        expect(lint_error.message).to match('140')
+        expect(lint_error.range).to_not be_nil
+        expect(lint_error.code).to_not be_nil
+        expect(lint_error.severity).to_not be_nil
       end
 
       context "but disabled" do

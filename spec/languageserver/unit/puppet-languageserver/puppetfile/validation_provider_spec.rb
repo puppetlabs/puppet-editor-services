@@ -67,10 +67,10 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       it 'should return a validation error' do
         lint_error = subject.validate(content, nil)[0]
 
-        expect(lint_error['source']).to eq('Puppet')
-        expect(lint_error['message']).to match('syntax error')
-        expect(lint_error['range']).to_not be_nil
-        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+        expect(lint_error.source).to eq('Puppet')
+        expect(lint_error.message).to match('syntax error')
+        expect(lint_error.range).to_not be_nil
+        expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
       end
     end
 
@@ -96,11 +96,11 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       it 'should return a validation error' do
         lint_error = subject.validate(content, nil)[0]
 
-        expect(lint_error['source']).to eq('Puppet')
-        expect(lint_error['message']).to match('not_loadable')
-        expect(lint_error['range']['start']['line']).to eq(5)
-        expect(lint_error['range']['end']['line']).to eq(5)
-        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+        expect(lint_error.source).to eq('Puppet')
+        expect(lint_error.message).to match('not_loadable')
+        expect(lint_error.range.start.line).to eq(5)
+        expect(lint_error.range.end.line).to eq(5)
+        expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
       end
     end
 
@@ -129,11 +129,11 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
         expect(lint_error.count).to eq(1)
         lint_error = lint_error[0]
 
-        expect(lint_error['source']).to eq('Puppet')
-        expect(lint_error['message']).to match('A Mock Runtime Error')
-        expect(lint_error['range']['start']['line']).to eq(10)
-        expect(lint_error['range']['end']['line']).to eq(10)
-        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+        expect(lint_error.source).to eq('Puppet')
+        expect(lint_error.message).to match('A Mock Runtime Error')
+        expect(lint_error.range.start.line).to eq(10)
+        expect(lint_error.range.end.line).to eq(10)
+        expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
       end
     end
 
@@ -157,11 +157,11 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       it 'should return a validation error on the specified line' do
         lint_error = subject.validate(content, nil)[0]
 
-        expect(lint_error['source']).to eq('Puppet')
-        expect(lint_error['message']).to match('mod_BROKEN')
-        expect(lint_error['range']['start']['line']).to eq(9)
-        expect(lint_error['range']['end']['line']).to eq(9)
-        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+        expect(lint_error.source).to eq('Puppet')
+        expect(lint_error.message).to match('mod_BROKEN')
+        expect(lint_error.range.start.line).to eq(9)
+        expect(lint_error.range.end.line).to eq(9)
+        expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
       end
     end
 
@@ -177,11 +177,11 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       it 'should return a validation error' do
         lint_error = subject.validate(content, nil)[0]
 
-        expect(lint_error['source']).to eq('Puppet')
-        expect(lint_error['message']).to match('doesn\'t have an implementation')
-        expect(lint_error['range']['start']['line']).to eq(2)
-        expect(lint_error['range']['end']['line']).to eq(2)
-        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+        expect(lint_error.source).to eq('Puppet')
+        expect(lint_error.message).to match('doesn\'t have an implementation')
+        expect(lint_error.range.start.line).to eq(2)
+        expect(lint_error.range.end.line).to eq(2)
+        expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
       end
     end
 
@@ -204,25 +204,25 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
         expect(lint_errors.count).to eq(3)
 
         lint_error = lint_errors[0]
-        expect(lint_error['source']).to eq('Puppet')
-        expect(lint_error['message']).to match('doesn\'t have an implementation')
-        expect(lint_error['range']['start']['line']).to eq(7)
-        expect(lint_error['range']['end']['line']).to eq(7)
-        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+        expect(lint_error.source).to eq('Puppet')
+        expect(lint_error.message).to match('doesn\'t have an implementation')
+        expect(lint_error.range.start.line).to eq(7)
+        expect(lint_error.range.end.line).to eq(7)
+        expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
 
         lint_error = lint_errors[1]
-        expect(lint_error['source']).to eq('Puppet')
-        expect(lint_error['message']).to match(/Duplicate.+duplicatemodule/)
-        expect(lint_error['range']['start']['line']).to eq(4)
-        expect(lint_error['range']['end']['line']).to eq(4)
-        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+        expect(lint_error.source).to eq('Puppet')
+        expect(lint_error.message).to match(/Duplicate.+duplicatemodule/)
+        expect(lint_error.range.start.line).to eq(4)
+        expect(lint_error.range.end.line).to eq(4)
+        expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
 
         lint_error = lint_errors[2]
-        expect(lint_error['source']).to eq('Puppet')
-        expect(lint_error['message']).to match(/Duplicate.+duplicatemodule/)
-        expect(lint_error['range']['start']['line']).to eq(7)
-        expect(lint_error['range']['end']['line']).to eq(7)
-        expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+        expect(lint_error.source).to eq('Puppet')
+        expect(lint_error.message).to match(/Duplicate.+duplicatemodule/)
+        expect(lint_error.range.start.line).to eq(7)
+        expect(lint_error.range.end.line).to eq(7)
+        expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
       end
     end
 
@@ -316,13 +316,13 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
             expect(lint_error.count).to eq(1)
             lint_error = lint_error[0]
 
-            expect(lint_error['source']).to eq('Puppet')
+            expect(lint_error.source).to eq('Puppet')
             # The horrible gsub is for backslashes in regexes
-            expect(lint_error['message']).to match(testcase.gsub('\\','\\\\\\\\'))
-            expect(lint_error['range']['start']['line']).to eq(3)
-            expect(lint_error['range']['end']['line']).to eq(3)
-            expect(lint_error['range']).to_not be_nil
-            expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+            expect(lint_error.message).to match(testcase.gsub('\\','\\\\\\\\'))
+            expect(lint_error.range.start.line).to eq(3)
+            expect(lint_error.range.end.line).to eq(3)
+            expect(lint_error.range).to_not be_nil
+            expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
           end
         end
       end
@@ -358,13 +358,13 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
             expect(lint_error.count).to eq(1)
             lint_error = lint_error[0]
 
-            expect(lint_error['source']).to eq('Puppet')
+            expect(lint_error.source).to eq('Puppet')
             # The horrible gsub is for backslashes in regexes
-            expect(lint_error['message']).to match(testcase.gsub('\\','\\\\\\\\'))
-            expect(lint_error['range']['start']['line']).to eq(3)
-            expect(lint_error['range']['end']['line']).to eq(3)
-            expect(lint_error['range']).to_not be_nil
-            expect(lint_error['severity']).to eq(LanguageServer::DIAGNOSTICSEVERITY_ERROR)
+            expect(lint_error.message).to match(testcase.gsub('\\','\\\\\\\\'))
+            expect(lint_error.range.start.line).to eq(3)
+            expect(lint_error.range.end.line).to eq(3)
+            expect(lint_error.range).to_not be_nil
+            expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
           end
         end
       end

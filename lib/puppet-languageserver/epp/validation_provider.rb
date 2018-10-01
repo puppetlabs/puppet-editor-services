@@ -19,13 +19,10 @@ module PuppetLanguageServer
           message = detail.basic_message if message.nil? && detail.respond_to?(:basic_message)
 
           unless ex_line.nil? || ex_pos.nil? || message.nil?
-            result << LanguageServer::Diagnostic.create('severity' => LanguageServer::DIAGNOSTICSEVERITY_ERROR,
-                                                        'fromline' => ex_line,
-                                                        'toline'   => ex_line,
-                                                        'fromchar' => ex_pos,
-                                                        'tochar'   => ex_pos + 1,
-                                                        'source'   => 'Puppet',
-                                                        'message'  => message)
+            result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
+                                          'range'    => LSP.create_range(ex_line, ex_pos, ex_line, ex_pos + 1),
+                                          'source'   => 'Puppet',
+                                          'message'  => message)
           end
         end
         result

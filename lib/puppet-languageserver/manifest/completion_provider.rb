@@ -25,8 +25,10 @@ module PuppetLanguageServer
           # Find functions which don't return values i.e. statements
           all_statement_functions { |x| items << x }
 
-          return LanguageServer::CompletionList.create('isIncomplete' => incomplete,
-                                                       'items'        => items)
+          response = LSP::CompletionList.new
+          response.items = items
+          response.isIncomplete = incomplete
+          return response
         end
 
         item = result[:model]
@@ -56,21 +58,29 @@ module PuppetLanguageServer
           unless item_object.nil?
             # Add Parameters
             item_object.parameters.each_key do |name|
-              items << LanguageServer::CompletionItem.create('label'  => name.to_s,
-                                                             'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
-                                                             'detail' => 'Parameter',
-                                                             'data'   => { 'type'          => 'resource_parameter',
-                                                                           'param'         => name.to_s,
-                                                                           'resource_type' => item.type_name.value })
+              items << LSP::CompletionItem.new(
+                'label'  => name.to_s,
+                'kind'   => LSP::CompletionItemKind::PROPERTY,
+                'detail' => 'Parameter',
+                'data'   => {
+                  'type'          => 'resource_parameter',
+                  'param'         => name.to_s,
+                  'resource_type' => item.type_name.value
+                }
+              )
             end
             # Add Properties
             item_object.properties.each_key do |name|
-              items << LanguageServer::CompletionItem.create('label'  => name.to_s,
-                                                             'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
-                                                             'detail' => 'Property',
-                                                             'data'   => { 'type'          => 'resource_property',
-                                                                           'prop'          => name.to_s,
-                                                                           'resource_type' => item.type_name.value })
+              items << LSP::CompletionItem.new(
+                'label'  => name.to_s,
+                'kind'   => LSP::CompletionItemKind::PROPERTY,
+                'detail' => 'Property',
+                'data'   => {
+                  'type'          => 'resource_property',
+                  'prop'          => name.to_s,
+                  'resource_type' => item.type_name.value
+                }
+              )
             end
             # TODO: What about meta parameters?
           end
@@ -80,41 +90,55 @@ module PuppetLanguageServer
             unless item_object.nil?
               # Add Parameters
               item_object.parameters.each_key do |name|
-                items << LanguageServer::CompletionItem.create('label'  => name.to_s,
-                                                               'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
-                                                               'detail' => 'Parameter',
-                                                               'data'   => { 'type'          => 'resource_class_parameter',
-                                                                             'param'         => name.to_s,
-                                                                             'resource_type' => item.type_name.value })
+                items << LSP::CompletionItem.new(
+                  'label'  => name.to_s,
+                  'kind'   => LSP::CompletionItemKind::PROPERTY,
+                  'detail' => 'Parameter',
+                  'data'   => {
+                    'type'          => 'resource_class_parameter',
+                    'param'         => name.to_s,
+                    'resource_type' => item.type_name.value
+                  }
+                )
               end
             end
           end
         end
 
-        LanguageServer::CompletionList.create('isIncomplete' => incomplete,
-                                              'items'        => items)
+        response = LSP::CompletionList.new
+        response.items = items
+        response.isIncomplete = incomplete
+        response
       end
 
       # BEGIN CompletionItem Helpers
       def self.keywords(keywords = [], &block)
         keywords.each do |keyword|
-          item = LanguageServer::CompletionItem.create('label'  => keyword,
-                                                       'kind'   => LanguageServer::COMPLETIONITEMKIND_KEYWORD,
-                                                       'detail' => 'Keyword',
-                                                       'data'   => { 'type' => 'keyword',
-                                                                     'name' => keyword })
+          item = LSP::CompletionItem.new(
+            'label'  => keyword,
+            'kind'   => LSP::CompletionItemKind::KEYWORD,
+            'detail' => 'Keyword',
+            'data'   => {
+              'type' => 'keyword',
+              'name' => keyword
+            }
+          )
           block.call(item) if block
         end
       end
 
       def self.all_facts(&block)
         PuppetLanguageServer::FacterHelper.facts.each_key do |name|
-          item = LanguageServer::CompletionItem.create('label'      => name.to_s,
-                                                       'insertText' => "'#{name}'",
-                                                       'kind'       => LanguageServer::COMPLETIONITEMKIND_VARIABLE,
-                                                       'detail'     => 'Fact',
-                                                       'data'       => { 'type' => 'variable_expr_fact',
-                                                                         'expr' => name })
+          item = LSP::CompletionItem.new(
+            'label'      => name.to_s,
+            'insertText' => "'#{name}'",
+            'kind'       => LSP::CompletionItemKind::VARIABLE,
+            'detail'     => 'Fact',
+            'data'       => {
+              'type' => 'variable_expr_fact',
+              'expr' => name
+            }
+          )
           block.call(item) if block
         end
       end
@@ -122,20 +146,24 @@ module PuppetLanguageServer
       def self.all_resources(&block)
         # Find Puppet Types
         PuppetLanguageServer::PuppetHelper.type_names.each do |pup_type|
-          item = LanguageServer::CompletionItem.create('label'  => pup_type,
-                                                       'kind'   => LanguageServer::COMPLETIONITEMKIND_MODULE,
-                                                       'detail' => 'Resource',
-                                                       'data'   => { 'type' => 'resource_type',
-                                                                     'name' => pup_type })
+          item = LSP::CompletionItem.new(
+            'label'  => pup_type,
+            'kind'   => LSP::CompletionItemKind::MODULE,
+            'detail' => 'Resource',
+            'data'   => {
+              'type' => 'resource_type',
+              'name' => pup_type
+            }
+          )
           block.call(item) if block
         end
         # Find Puppet Classes/Defined Types
         PuppetLanguageServer::PuppetHelper.class_names.each do |pup_class|
-          item = LanguageServer::CompletionItem.create('label'  => pup_class,
-                                                       'kind'   => LanguageServer::COMPLETIONITEMKIND_MODULE,
-                                                       'detail' => 'Resource',
-                                                       'data'   => { 'type' => 'resource_class',
-                                                                     'name' => pup_class })
+          item = LSP::CompletionItem.new('label'  => pup_class,
+                                         'kind'   => LSP::CompletionItemKind::MODULE,
+                                         'detail' => 'Resource',
+                                         'data'   => { 'type' => 'resource_class',
+                                                       'name' => pup_class })
           block.call(item) if block
         end
       end
@@ -143,75 +171,75 @@ module PuppetLanguageServer
       def self.all_statement_functions(&block)
         # Find functions which don't return values i.e. statements
         PuppetLanguageServer::PuppetHelper.filtered_function_names { |_name, data| data.type == :statement }.each do |name|
-          item = LanguageServer::CompletionItem.create('label'  => name.to_s,
-                                                       'kind'   => LanguageServer::COMPLETIONITEMKIND_FUNCTION,
-                                                       'detail' => 'Function',
-                                                       'data'   => { 'type' => 'function',
-                                                                     'name' => name.to_s })
+          item = LSP::CompletionItem.new(
+            'label'  => name.to_s,
+            'kind'   => LSP::CompletionItemKind::FUNCTION,
+            'detail' => 'Function',
+            'data'   => {
+              'type' => 'function',
+              'name' => name.to_s
+            }
+          )
           block.call(item) if block
         end
       end
       # END Helpers
 
+      # completion_item is an instance of LSP::CompletionItem
       def self.resolve(completion_item)
         result = completion_item.clone
-        data = result['data']
+        data = result.data
         case data['type']
         when 'variable_expr_fact'
           value = PuppetLanguageServer::FacterHelper.facts[data['expr']]
           # TODO: More things?
-          result['documentation'] = value.to_s
+          result.documentation = value.to_s
 
         when 'keyword'
           case data['name']
           when 'class'
-            result['documentation'] = 'Classes are named blocks of Puppet code that are stored in modules for later use and ' \
-                                                'are not applied until they are invoked by name. They can be added to a node’s catalog ' \
-                                                'by either declaring them in your manifests or assigning them from an ENC.'
-            result['insertText'] = "# Class: $1\n#\n#\nclass ${1:name} {\n\t${2:# resources}\n}$0"
-            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+            result.documentation = 'Classes are named blocks of Puppet code that are stored in modules for later use and ' \
+                                   'are not applied until they are invoked by name. They can be added to a node’s catalog ' \
+                                   'by either declaring them in your manifests or assigning them from an ENC.'
+            result.insertText = "# Class: $1\n#\n#\nclass ${1:name} {\n\t${2:# resources}\n}$0"
+            result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
           when 'define'
-            result['documentation'] = 'Defined resource types (also called defined types or defines) are blocks of Puppet code ' \
-                                                'that can be evaluated multiple times with different parameters. Once defined, they act ' \
-                                                'like a new resource type: you can cause the block to be evaluated by declaring a resource ' \
-                                                'of that new resource type.'
-            result['insertText'] = "define ${1:name} () {\n\t${2:# resources}\n}$0"
-            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
-          when 'node'
-            result['documentation'] = 'A node definition or node statement is a block of Puppet code that will only be included in matching nodes\' catalogs. ' \
-                                      'This feature allows you to assign specific configurations to specific nodes.'
-            result['insertText'] = "node '${1:name}' {\n\t$0\n}"
-            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+            result.documentation = 'Defined resource types (also called defined types or defines) are blocks of Puppet code ' \
+                                   'that can be evaluated multiple times with different parameters. Once defined, they act ' \
+                                   'like a new resource type: you can cause the block to be evaluated by declaring a resource ' \
+                                   'of that new resource type.'
+            result.insertText = "define ${1:name} () {\n\t${2:# resources}\n}$0"
+            result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
           when 'application'
-            result['detail'] = 'Orchestrator'
-            result['documentation'] = 'Application definitions are a lot like a defined resource type except that instead of defining ' \
-                                                'a chunk of reusable configuration that applies to a single node, the application definition ' \
-                                                'operates at a higher level. The components you declare inside an application can be individually '\
-                                                'assigned to separate nodes you manage with Puppet.'
-            result['insertText'] = "application ${1:name} () {\n\t${2:# resources}\n}$0"
-            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+            result.detail = 'Orchestrator'
+            result.documentation = 'Application definitions are a lot like a defined resource type except that instead of defining ' \
+                                   'a chunk of reusable configuration that applies to a single node, the application definition ' \
+                                   'operates at a higher level. The components you declare inside an application can be individually '\
+                                   'assigned to separate nodes you manage with Puppet.'
+            result.insertText = "application ${1:name} () {\n\t${2:# resources}\n}$0"
+            result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
           when 'site'
-            result['detail'] = 'Orchestrator'
-            result['documentation'] = 'Within the site block, applications are declared like defined types. They can be declared any ' \
-                                                'number of times, but their type and title combination must be unique within an environment.'
-            result['insertText'] = "site ${1:name} () {\n\t${2:# applications}\n}$0"
-            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+            result.detail = 'Orchestrator'
+            result.documentation = 'Within the site block, applications are declared like defined types. They can be declared any ' \
+                                   'number of times, but their type and title combination must be unique within an environment.'
+            result.insertText = "site ${1:name} () {\n\t${2:# applications}\n}$0"
+            result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
           end
 
         when 'function'
           item_type = PuppetLanguageServer::PuppetHelper.function(data['name'])
-          return LanguageServer::CompletionItem.create(result) if item_type.nil?
-          result['documentation'] = item_type.doc unless item_type.doc.nil?
-          result['insertText'] = "#{data['name']}(${1:value}"
+          return result if item_type.nil?
+          result.documentation = item_type.doc unless item_type.doc.nil?
+          result.insertText = "#{data['name']}(${1:value}"
           (2..item_type.arity).each do |index|
-            result['insertText'] += ", ${#{index}:value}"
+            result.insertText += ", ${#{index}:value}"
           end
-          result['insertText'] += ')'
-          result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+          result.insertText += ')'
+          result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
 
         when 'resource_type'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(data['name'])
-          return LanguageServer::CompletionItem.create(result) if item_type.nil?
+          return result if item_type.nil?
 
           attr_names = []
           # Add required attributes.  Ignore namevars as they come from the resource title
@@ -235,47 +263,48 @@ module PuppetLanguageServer
           end
           snippet += '}'
 
-          result['documentation'] = item_type.doc unless item_type.doc.nil?
-          result['insertText'] = snippet
-          result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+          result.documentation = item_type.doc unless item_type.doc.nil?
+          result.insertText = snippet
+          result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
         when 'resource_parameter'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(data['resource_type'])
-          return LanguageServer::CompletionItem.create(result) if item_type.nil?
+          return result if item_type.nil?
           param_type = item_type.parameters[data['param'].intern]
           unless param_type.nil?
             # TODO: More things?
-            result['documentation'] = param_type[:doc] unless param_type[:doc].nil?
-            result['insertText'] = "#{data['param']} => "
+            result.documentation = param_type[:doc] unless param_type[:doc].nil?
+            result.insertText = "#{data['param']} => "
           end
         when 'resource_property'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(data['resource_type'])
-          return LanguageServer::CompletionItem.create(result) if item_type.nil?
+          return result if item_type.nil?
           prop_type = item_type.properties[data['prop'].intern]
           unless prop_type.nil?
             # TODO: More things?
-            result['documentation'] = prop_type[:doc] unless prop_type[:doc].nil?
-            result['insertText'] = "#{data['prop']} => "
+            result.documentation = prop_type[:doc] unless prop_type[:doc].nil?
+            result.insertText = "#{data['prop']} => "
           end
 
         when 'resource_class'
           item_class = PuppetLanguageServer::PuppetHelper.get_class(data['name'])
-          return LanguageServer::CompletionItem.create(result) if item_class.nil?
+          return result if item_class.nil?
 
-          result['insertText'] = "#{data['name']} { '${1:title}':\n\t$0\n}"
-          result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+          result.insertText = "#{data['name']} { '${1:title}':\n\t$0\n}"
+          result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
         when 'resource_class_parameter'
           item_class = PuppetLanguageServer::PuppetHelper.get_class(data['resource_type'])
-          return LanguageServer::CompletionItem.create(result) if item_class.nil?
+          return result if item_class.nil?
           param_type = item_class.parameters[data['param']]
           unless param_type.nil?
             doc = ''
             doc += param_type[:type] unless param_type[:type].nil?
             doc += "---\n" + param_type[:doc] unless param_type[:doc].nil?
-            result['documentation'] = doc
-            result['insertText'] = "#{data['param']} => "
+            result.documentation = doc
+            result.insertText = "#{data['param']} => "
           end
         end
-        LanguageServer::CompletionItem.create(result)
+
+        result
       end
     end
   end

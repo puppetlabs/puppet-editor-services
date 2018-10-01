@@ -6,11 +6,11 @@ RSpec.shared_examples "a single definition result" do |filename_regex|
 
     expect(result).to be_a(Array)
     expect(result.count).to eq(1)
-    expect(result[0]['uri']).to match(filename_regex)
-    expect(result[0]['range']['start']['line']).to_not be_nil
-    expect(result[0]['range']['start']['character']).to_not be_nil
-    expect(result[0]['range']['end']['line']).to_not be_nil
-    expect(result[0]['range']['end']['character']).to_not be_nil
+    expect(result[0].uri).to match(filename_regex)
+    expect(result[0].range.start.line).to_not be_nil
+    expect(result[0].range.start.character).to_not be_nil
+    expect(result[0].range.end.line).to_not be_nil
+    expect(result[0].range.end.character).to_not be_nil
   end
 end
 

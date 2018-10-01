@@ -24,13 +24,10 @@ module PuppetLanguageServer
           start_line_number = loc.nil? ? 0 : loc.lineno - 1 # Line numbers from ruby are base 1
           end_line_number = loc.nil? ? content.lines.count - 1 : loc.lineno - 1 # Line numbers from ruby are base 1
           # Note - Ruby doesn't give a character position so just highlight the entire line
-          result << LanguageServer::Diagnostic.create('severity' => LanguageServer::DIAGNOSTICSEVERITY_ERROR,
-                                                      'fromline' => start_line_number,
-                                                      'toline'   => end_line_number,
-                                                      'fromchar' => 0,
-                                                      'tochar'   => max_line_length,
-                                                      'source'   => 'Puppet',
-                                                      'message'  => detail.to_s)
+          result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
+                                        'range'    => LSP.create_range(start_line_number, 0, end_line_number, max_line_length),
+                                        'source'   => 'Puppet',
+                                        'message'  => detail.to_s)
 
           puppetfile = nil
         end
@@ -40,13 +37,10 @@ module PuppetLanguageServer
         puppetfile.modules.each do |mod|
           next unless mod.properties[:type] == :invalid
           # Note - Ruby doesn't give a character position so just highlight the entire line
-          result << LanguageServer::Diagnostic.create('severity' => LanguageServer::DIAGNOSTICSEVERITY_ERROR,
-                                                      'fromline' => mod.puppetfile_line_number,
-                                                      'toline'   => mod.puppetfile_line_number,
-                                                      'fromchar' => 0,
-                                                      'tochar'   => max_line_length,
-                                                      'source'   => 'Puppet',
-                                                      'message'  => mod.properties[:error_message])
+          result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
+                                        'range'    => LSP.create_range(mod.puppetfile_line_number, 0, mod.puppetfile_line_number, max_line_length),
+                                        'source'   => 'Puppet',
+                                        'message'  => mod.properties[:error_message])
         end
 
         # Check for duplicate module definitions
@@ -57,13 +51,10 @@ module PuppetLanguageServer
         dupes.each do |dupe_module_name|
           puppetfile.modules.select { |mod| mod.name == dupe_module_name }.each do |puppet_module|
             # Note - Ruby doesn't give a character position so just highlight the entire line
-            result << LanguageServer::Diagnostic.create('severity' => LanguageServer::DIAGNOSTICSEVERITY_ERROR,
-                                                        'fromline' => puppet_module.puppetfile_line_number,
-                                                        'toline'   => puppet_module.puppetfile_line_number,
-                                                        'fromchar' => 0,
-                                                        'tochar'   => max_line_length,
-                                                        'source'   => 'Puppet',
-                                                        'message'  => "Duplicate module definition for '#{puppet_module.name}'")
+            result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
+                                          'range'    => LSP.create_range(puppet_module.puppetfile_line_number, 0, puppet_module.puppetfile_line_number, max_line_length),
+                                          'source'   => 'Puppet',
+                                          'message'  => "Duplicate module definition for '#{puppet_module.name}'")
           end
         end
 

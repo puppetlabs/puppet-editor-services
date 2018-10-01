@@ -4,7 +4,7 @@ module PuppetLanguageServer
       # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize-request
 
       {
-        'textDocumentSync'        => LanguageServer::TEXTDOCUMENTSYNCKIND_FULL,
+        'textDocumentSync'        => LSP::TextDocumentSyncKind::FULL,
         'hoverProvider'           => true,
         'completionProvider'      => {
           'resolveProvider'   => true,

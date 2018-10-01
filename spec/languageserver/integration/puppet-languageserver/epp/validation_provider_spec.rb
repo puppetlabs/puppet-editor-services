@@ -13,10 +13,10 @@ describe 'PuppetLanguageServer::Epp::ValidationProvider' do
       it "should return a single syntax error" do
         result = subject.validate(template, nil)
         expect(result.length).to be > 0
-        expect(result[0]['range']['start']['line']).to eq(1)
-        expect(result[0]['range']['start']['character']).to eq(7)
-        expect(result[0]['range']['end']['line']).to eq(1)
-        expect(result[0]['range']['end']['character']).to eq(8)
+        expect(result[0].range.start.line).to eq(1)
+        expect(result[0].range.start.character).to eq(7)
+        expect(result[0].range.end.line).to eq(1)
+        expect(result[0].range.end.character).to eq(8)
       end
     end
 
