@@ -11,7 +11,12 @@ source ENV['GEM_SOURCE'] || "https://rubygems.org"
 group :development do
   gem 'rake', '>= 10.4',            :require => false
   gem 'rspec', '>= 3.2',            :require => false
-  gem "rubocop",                    :require => false, :platforms => [:ruby, :x64_mingw]
+
+  if RUBY_VERSION =~ /^2\.1\./
+    gem "rubocop", "<= 0.57.2", :require => false, :platforms => [:ruby, :x64_mingw]
+  else
+    gem "rubocop",              :require => false, :platforms => [:ruby, :x64_mingw]
+  end
 
   if ENV['PUPPET_GEM_VERSION']
     gem 'puppet', ENV['PUPPET_GEM_VERSION'], :require => false

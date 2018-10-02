@@ -53,6 +53,8 @@ Lint/UnneededCopDisableDirective:
 # Don't care
 Naming/MemoizedInstanceVariableName:
   Enabled: false
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
 
 # In some cases readability is better without these cops enabled
 Style/ConditionalAssignment:
