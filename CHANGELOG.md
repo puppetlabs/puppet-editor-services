@@ -6,6 +6,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+- ([GH-56](https://github.com/lingua-pupuli/puppet-editor-services/issues/56)) Add DocumentSymbol Support
+
 ## 0.14.0 - 2018-08-17
 
 ### Fixed

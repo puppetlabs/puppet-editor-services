@@ -155,8 +155,8 @@ module PuppetLanguageServer
         begin
           case documents.document_type(file_uri)
           when :manifest
-            r = PuppetLanguageServer::PuppetParserHelper.extract_document_symbols(content)
-            request.reply_result(r)
+            result = PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content)
+            request.reply_result(result)
           else
             raise "Unable to provide definition on #{file_uri}"
           end

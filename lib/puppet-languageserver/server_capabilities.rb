@@ -11,7 +11,7 @@ module PuppetLanguageServer
           'triggerCharacters' => ['>', '$', '[', '=']
         },
         'definitionProvider' => true,
-        'documentSymbolProvider' => true,
+        'documentSymbolProvider' => true
       }
     end
   end
