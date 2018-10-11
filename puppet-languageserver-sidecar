@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+# Add the language server into the load path
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'lib'))
+# Add the vendored gems into the load path
+
+require 'puppet-languageserver-sidecar'
+
+PuppetLanguageServerSidecar.init_puppet_sidecar(PuppetLanguageServerSidecar::CommandLineParser.parse(ARGV))
+PuppetLanguageServerSidecar.execute_and_output(PuppetLanguageServerSidecar::CommandLineParser.parse(ARGV))

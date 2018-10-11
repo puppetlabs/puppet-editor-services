@@ -12,6 +12,7 @@ begin
     message_router
     validation_queue
     server_capabilities
+    sidecar_protocol
     puppet_parser_helper
     puppet_helper
     facter_helper

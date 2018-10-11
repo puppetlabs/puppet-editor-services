@@ -1,0 +1,9 @@
+{
+  "name": "testfixture-defaultmodule",
+  "version": "0.1.0",
+  "author": "testfixture",
+  "summary": "Test fixture with things that should be loaded by default",
+  "license": "Apache-2.0",
+  "source": "http://localhost",
+  "dependencies": []
+}
