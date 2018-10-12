@@ -12,6 +12,7 @@
   puppetfile/r10k/module/svn
   puppetfile/r10k/puppetfile
   puppetfile/validation_provider
+  puppet_strings/render
 ].each do |lib|
   begin
     require "puppet-languageserver/#{lib}"

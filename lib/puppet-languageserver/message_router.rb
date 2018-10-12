@@ -19,6 +19,21 @@ module PuppetLanguageServer
         PuppetLanguageServer.log_message(:debug, 'Received shutdown method')
         request.reply_result(nil)
 
+      when 'puppet/generatePuppetStrings'
+        unless documents.store_has_module_metadata?
+          request.reply_result(LanguageServer::PuppetStrings.create('error' => 'Unable to generate Puppet Strings as this is not a module'))
+          return
+        end
+        data = nil
+        error_content = nil
+        begin
+          data = PuppetLanguageServer::PuppetStrings.render({:workspace => documents.store_root_path})
+        rescue StandardError => exception
+          error_content = "Error while parsing the file. #{exception}"
+        end
+        request.reply_result(LanguageServer::PuppetStrings.create('data' => data,
+                                                                  'error' => error_content))
+
       when 'puppet/getVersion'
         request.reply_result(LanguageServer::PuppetVersion.create('puppetVersion'   => Puppet.version,
                                                                   'facterVersion'   => Facter.version,

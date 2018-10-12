@@ -35,6 +35,10 @@ group :development do
   gem "win32-security", "<= 0.2.5", :require => false, :platforms => ["mswin", "mingw", "x64_mingw"]
   gem "win32-service", "<= 0.8.8",  :require => false, :platforms => ["mswin", "mingw", "x64_mingw"]
 
+  # The puppet-strings gem is not available in the Puppet Agent, but is in the PDK. We add it to the
+  # Gemfile here for testing and development.
+  gem "puppet-strings", "~> 2.0", :require => false
+
   # Gems for building release tarballs etc.
   gem "archive-zip", :require => false
   gem "minitar"    , :require => false
