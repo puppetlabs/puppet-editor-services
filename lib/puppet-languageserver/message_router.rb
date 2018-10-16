@@ -23,9 +23,9 @@ module PuppetLanguageServer
         request.reply_result(LanguageServer::PuppetVersion.create('puppetVersion'   => Puppet.version,
                                                                   'facterVersion'   => Facter.version,
                                                                   'factsLoaded'     => PuppetLanguageServer::FacterHelper.facts_loaded?,
-                                                                  'functionsLoaded' => PuppetLanguageServer::PuppetHelper.functions_loaded?,
-                                                                  'typesLoaded'     => PuppetLanguageServer::PuppetHelper.types_loaded?,
-                                                                  'classesLoaded'   => PuppetLanguageServer::PuppetHelper.classes_loaded?))
+                                                                  'functionsLoaded' => PuppetLanguageServer::PuppetHelper.default_functions_loaded?,
+                                                                  'typesLoaded'     => PuppetLanguageServer::PuppetHelper.default_types_loaded?,
+                                                                  'classesLoaded'   => PuppetLanguageServer::PuppetHelper.default_classes_loaded?))
 
       when 'puppet/getResource'
         type_name = request.params['typename']
@@ -34,20 +34,13 @@ module PuppetLanguageServer
           request.reply_result(LanguageServer::PuppetCompilation.create('error' => 'Missing Typename'))
           return
         end
-        resources = nil
+        resource_list = PuppetLanguageServer::PuppetHelper.get_puppet_resource(type_name, title, documents.store_root_path)
 
-        if title.nil?
-          resources = PuppetLanguageServer::PuppetHelper.resource_face_get_by_typename(type_name)
-        else
-          resources = PuppetLanguageServer::PuppetHelper.resource_face_get_by_typename_and_title(type_name, title)
-          resources = [resources] unless resources.nil?
-        end
-        if resources.nil? || resources.length.zero?
+        if resource_list.nil? || resource_list.length.zero?
           request.reply_result(LanguageServer::PuppetCompilation.create('data' => ''))
           return
         end
-        # TODO: Should probably move this to a helper?
-        content = resources.map(&:to_manifest).join("\n\n") + "\n"
+        content = resource_list.map(&:manifest).join("\n\n") + "\n"
         request.reply_result(LanguageServer::PuppetCompilation.create('data' => content))
 
       when 'puppet/compileNodeGraph'
@@ -58,27 +51,14 @@ module PuppetLanguageServer
         end
         content = documents.document(file_uri)
 
-        dot_content = nil
-        error_content = nil
         begin
-          # The fontsize is inserted in the puppet code.  Need to remove it so the client can render appropriately.  Need to
-          # set it to blank.  The graph label is set to vscode so that we can do text replacement client side to inject the
-          # appropriate styling.
-          options = {
-            'fontsize' => '""',
-            'name' => 'vscode'
-          }
-          node_graph = PuppetLanguageServer::PuppetParserHelper.compile_to_pretty_relationship_graph(content)
-          if node_graph.vertices.count.zero?
-            error_content = 'There were no resources created in the node graph. Is there an include statement missing?'
-          else
-            dot_content = node_graph.to_dot(options)
-          end
-        rescue StandardError => exception
-          error_content = "Error while parsing the file. #{exception}"
+          node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(content, documents.store_root_path)
+          request.reply_result(LanguageServer::PuppetCompilation.create('dotContent' => node_graph.dot_content,
+                                                                        'error' => node_graph.error_content))
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(puppet/compileNodeGraph) Error generating node graph. #{e}")
+          request.reply_result(LanguageServer::PuppetCompilation.create('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.'))
         end
-        request.reply_result(LanguageServer::PuppetCompilation.create('dotContent' => dot_content,
-                                                                      'error' => error_content))
 
       when 'puppet/fixDiagnosticErrors'
         begin

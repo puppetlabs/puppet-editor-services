@@ -1,0 +1,147 @@
+require 'open3'
+
+module PuppetLanguageServer
+  # Module for enqueing and running sidecar jobs asynchronously
+  # When adding a job, it will remove any other for the same
+  # job in the queue, so that only the latest job needs to be processed.
+  class SidecarQueue
+    attr_writer :cache
+
+    def initialize
+      @queue = []
+      @queue_mutex = Mutex.new
+      @queue_threads_mutex = Mutex.new
+      @queue_threads = []
+      @cache = nil
+    end
+
+    def queue_size
+      2
+    end
+
+    # Enqueue a sidecar action
+    def enqueue(action, additional_args)
+      @queue_mutex.synchronize do
+        @queue.reject! { |item| item[:action] == action }
+        @queue << { action: action, additional_args: additional_args }
+      end
+
+      @queue_threads_mutex.synchronize do
+        # Clear up any done threads
+        @queue_threads.reject! { |item| item.nil? || !item.alive? }
+        # Append a new thread if we have space
+        if @queue_threads.count < queue_size
+          @queue_threads << Thread.new do
+            begin
+              worker
+            rescue => err # rubocop:disable Style/RescueStandardError
+              PuppetLanguageServer.log_message(:error, "Error in SidecarQueue Thread: #{err}")
+              raise
+            end
+          end
+        end
+      end
+      nil
+    end
+
+    # Synchronously call the sidecar
+    # Returns nil if an error occurs, otherwise returns an object
+    def execute_sync(action, additional_args, handle_errors = false)
+      return nil if @cache.nil?
+      sidecar_path = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'puppet-languageserver-sidecar'))
+      args = ['--action', action].concat(additional_args)
+
+      cmd = ['ruby', sidecar_path].concat(args)
+      PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: Running sidecar #{cmd}")
+      stdout, stderr, status = run_sidecar(cmd)
+      unless status.exitstatus.zero?
+        PuppetLanguageServer.log_message(:warning, "SidecarQueue Thread: Calling sidecar with #{args.join(' ')} returned exitcode #{status.exitstatus}, #{stderr}")
+        return nil
+      end
+      # Correctly encode the result as UTF8
+      result = stdout.bytes.pack('U*')
+
+      case action.downcase
+      when 'default_classes'
+        list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new.from_json!(result)
+        @cache.import_sidecar_list!(list, :class, :default)
+
+        PuppetLanguageServer::PuppetHelper.assert_default_classes_loaded
+
+      when 'default_functions'
+        list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new.from_json!(result)
+        @cache.import_sidecar_list!(list, :function, :default)
+
+        PuppetLanguageServer::PuppetHelper.assert_default_functions_loaded
+
+      when 'default_types'
+        list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new.from_json!(result)
+        @cache.import_sidecar_list!(list, :type, :default)
+
+        PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
+
+      when 'node_graph'
+        return PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new.from_json!(result)
+
+      when 'resource_list'
+        return PuppetLanguageServer::Sidecar::Protocol::ResourceList.new.from_json!(result)
+
+      # TODO: when 'workspace_classes'
+
+      # TODO: when 'workspace_functions'
+
+      # TODO: when 'workspace_types'
+
+      else
+        PuppetLanguageServer.log_message(:error, "SidecarQueue Thread: Unknown action action #{action}")
+      end
+
+      true
+    rescue StandardError => e
+      raise unless handle_errors
+      PuppetLanguageServer.log_message(:error, "SidecarQueue Thread: Error running action #{action}. #{e}")
+      nil
+    end
+
+    # Wait for the queue to become empty
+    def drain_queue
+      @queue_threads.each do |item|
+        item.join unless item.nil? || !item.alive?
+      end
+      nil
+    end
+
+    # Testing helper resets the queue and prepopulates it with
+    # a known arbitrary configuration.
+    # ONLY USE THIS FOR TESTING!
+    def reset_queue(initial_state = [])
+      @queue_mutex.synchronize do
+        @queue = initial_state
+      end
+    end
+
+    private
+
+    # Thread worker which processes all jobs in the queue and calls the sidecar for each action
+    def worker
+      work_item = nil
+      loop do
+        @queue_mutex.synchronize do
+          return if @queue.empty?
+          work_item = @queue.shift
+        end
+        return if work_item.nil?
+
+        action          = work_item[:action]
+        additional_args = work_item[:additional_args]
+
+        # Perform action
+        _result = execute_sync(action, additional_args)
+      end
+    end
+
+    def run_sidecar(cmd)
+      Open3.capture3(*cmd)
+    end
+  end
+end
