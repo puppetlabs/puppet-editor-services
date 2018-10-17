@@ -6,7 +6,17 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.15.0 - 2018-08-18
+
+### Added
+
 - ([GH-56](https://github.com/lingua-pupuli/puppet-editor-services/issues/56)) Add DocumentSymbol Support
+- ([GH-40](https://github.com/lingua-pupuli/puppet-editor-services/issues/40)) Add Sidecar process for the Language Server
+
+### Fixed
+
+- ([GH-54](https://github.com/lingua-pupuli/puppet-editor-services/issues/54)) Support Puppet 6 in the Language Server
+- ([GH-51](https://github.com/lingua-pupuli/puppet-editor-services/issues/51)) Fixed handling of errors during class loading
 
 ## 0.14.0 - 2018-08-17
 
