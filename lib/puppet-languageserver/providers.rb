@@ -2,6 +2,7 @@
   epp/validation_provider
   manifest/completion_provider
   manifest/definition_provider
+  manifest/document_symbol_provider
   manifest/validation_provider
   manifest/hover_provider
   puppetfile/r10k/module/base
