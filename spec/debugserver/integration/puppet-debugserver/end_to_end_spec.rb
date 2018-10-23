@@ -32,7 +32,7 @@ describe 'End to End Testing' do
   }
 
   context 'Processing an empty manifest with no breakpoints' do
-    let(:manifest_file) { File.join($fixtures_dir, 'environments', 'test-fixtures', 'manifests', 'empty.pp') }
+    let(:manifest_file) { File.join($fixtures_dir, 'environments', 'testfixtures', 'manifests', 'empty.pp') }
     let(:noop) { true }
     let(:args) { [] }
 
@@ -61,7 +61,7 @@ describe 'End to End Testing' do
   end
 
   context 'Processing a manifest that fails compilation' do
-    let(:manifest_file) { File.join($fixtures_dir, 'environments', 'test-fixtures', 'manifests', 'fail.pp') }
+    let(:manifest_file) { File.join($fixtures_dir, 'environments', 'testfixtures', 'manifests', 'fail.pp') }
     let(:noop) { true }
     let(:args) { [] }
 
@@ -112,7 +112,7 @@ describe 'End to End Testing' do
   end
 
   context 'Processing a manifest with all debug features' do
-    let(:manifest_file) { File.join($fixtures_dir, 'environments', 'test-fixtures', 'manifests', 'kitchen_sink.pp') }
+    let(:manifest_file) { File.join($fixtures_dir, 'environments', 'testfixtures', 'manifests', 'kitchen_sink.pp') }
     let(:noop) { true }
     let(:args) { [] }
 
