@@ -5,61 +5,30 @@ init:
 
 environment:
   matrix:
-  # Language Server testing
   # Latest 4.x Puppet (Covers LTS too)
   - PUPPET_GEM_VERSION: "~> 4.0"
     RUBY_VER: 21-x64
-    RAKE_TASK: test_languageserver
+    RAKE_TASK: "test_languageserver test_languageserver_sidecar test_debugserver"
+
   # Latest 5.x Puppet
   - PUPPET_GEM_VERSION: "~> 5.0"
     RUBY_VER: 24-x64
-    RAKE_TASK: test_languageserver
+    RAKE_TASK: "test_languageserver test_languageserver_sidecar test_debugserver"
+
   # Latest 6.x Puppet
   - PUPPET_GEM_VERSION: "~> 6.0"
     RUBY_VER: 25-x64
-    RAKE_TASK: test_languageserver
-  # Specific Puppet version testing
+    RAKE_TASK: "test_languageserver test_languageserver_sidecar test_debugserver"
+
+    # Specific Puppet version testing
   - PUPPET_GEM_VERSION: "5.1.0"
     RUBY_VER: 24-x64
     RAKE_TASK: test_languageserver
 
-  # Language Server Sidecar testing
-  # Latest 4.x Puppet (Covers LTS too)
-  - PUPPET_GEM_VERSION: "~> 4.0"
-    RUBY_VER: 21-x64
-    RAKE_TASK: test_languageserver_sidecar
-  # Latest 5.x Puppet
-  - PUPPET_GEM_VERSION: "~> 5.0"
-    RUBY_VER: 24-x64
-    RAKE_TASK: test_languageserver_sidecar
-  # Latest 6.x Puppet
-  - PUPPET_GEM_VERSION: "~> 6.0"
+    # Ruby tasks (style, build release archives)
+  - PUPPET_GEM_VERSION: "> 0.0" # Version is irrelevant
     RUBY_VER: 25-x64
-    RAKE_TASK: test_languageserver_sidecar
-
-  # Debug Server testing
-  # Latest 4.x Puppet (Covers LTS too)
-  - PUPPET_GEM_VERSION: "~> 4.0"
-    RUBY_VER: 21-x64
-    RAKE_TASK: test_debugserver
-  # Latest 5.x Puppet
-  - PUPPET_GEM_VERSION: "~> 5.0"
-    RUBY_VER: 24-x64
-    RAKE_TASK: test_debugserver
-  # Latest 6.x Puppet
-  - PUPPET_GEM_VERSION: "~> 6.0"
-    RUBY_VER: 24-x64
-    RAKE_TASK: test_debugserver
-
-  # Ruby style
-  - PUPPET_GEM_VERSION: "~> 4.0"
-    RUBY_VER: 23-x64
-    RAKE_TASK: rubocop
-
-  # Build release archives
-  - PUPPET_GEM_VERSION: "~> 4.0"
-    RUBY_VER: 23-x64
-    RAKE_TASK: build
+    RAKE_TASK: rubocop build
 
 matrix:
   fast_finish: true
@@ -88,7 +57,7 @@ install:
 build: off
 
 test_script:
-- cmd: IF NOT [%RAKE_TASK%] == [] bundle exec rake %RAKE_TASK%
+- cmd: IF NOT "%RAKE_TASK%" == "" bundle exec rake %RAKE_TASK%
 
 artifacts:
   - path: output/*.*
