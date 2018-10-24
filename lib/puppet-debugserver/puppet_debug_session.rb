@@ -479,14 +479,22 @@ module PuppetDebugServer
       # Send experimental warning
       PuppetDebugServer::PuppetDebugSession.connection.send_output_event(
         'category' => 'console',
-        'output' => "**************************************************\n* The Puppet debugger is an experimental feature *\n* Debug Server v#{PuppetEditorServices.version}                            *\n**************************************************\n\n"
+        'output' => "**************************************************\n* The Puppet debugger is an experimental feature *\n* Debug Server v#{PuppetEditorServices.version}                           *\n**************************************************\n\n"
       )
 
-      PuppetDebugServer::PuppetDebugSession.connection.send_output_event(
-        'category' => 'console',
-        'output'   => 'puppet ' + cmd_args.join(' ') + "\n"
-      )
-      Puppet::Util::CommandLine.new('puppet.rb', cmd_args).execute
+      if Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
+        # Puppet Debug Server isn't supported on Puppet 6 yet
+        PuppetDebugServer::PuppetDebugSession.connection.send_output_event(
+          'category' => 'console',
+          'output' => "The Puppet debugger is not supported on Puppet #{Puppet.version}. Version 4.x and 5.x are supported.\n"
+        )
+      else
+        PuppetDebugServer::PuppetDebugSession.connection.send_output_event(
+          'category' => 'console',
+          'output'   => 'puppet ' + cmd_args.join(' ') + "\n"
+        )
+        Puppet::Util::CommandLine.new('puppet.rb', cmd_args).execute
+      end
     end
 
     class SourcePosition
