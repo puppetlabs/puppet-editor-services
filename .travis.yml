@@ -14,15 +14,15 @@ matrix:
 env:
   matrix:
     # Language Server testing
-    # Latest 4.x branch (Covers LTS too)
+    # Latest 4.x Puppet (Covers LTS too)
     - PUPPET_GEM_VERSION="~> 4.0"
       RUBY_VER=2.1.9
       RAKE_TASK=test_languageserver
-    # Latest 5.x puppet
+    # Latest 5.x Puppet
     - PUPPET_GEM_VERSION="~> 5.0"
       RUBY_VER=2.4.1
       RAKE_TASK=test_languageserver
-    # Latest Puppet
+    # Latest 6.x Puppet
     - PUPPET_GEM_VERSION="~> 6.0"
       RUBY_VER=2.5.1
       RAKE_TASK=test_languageserver
@@ -32,7 +32,7 @@ env:
       RAKE_TASK=test_languageserver
 
     # Language Server Sidecar testing
-    # Latest 4.x branch (Covers LTS too)
+    # Latest 4.x Puppet (Covers LTS too)
     - PUPPET_GEM_VERSION="~> 4.0"
       RUBY_VER=2.1.9
       RAKE_TASK=test_languageserver_sidecar
@@ -40,23 +40,23 @@ env:
     - PUPPET_GEM_VERSION="~> 5.0"
       RUBY_VER=2.4.1
       RAKE_TASK=test_languageserver_sidecar
-    # Latest Puppet
+    # Latest 6.x Puppet
     - PUPPET_GEM_VERSION="~> 6.0"
       RUBY_VER=2.5.1
       RAKE_TASK=test_languageserver_sidecar
 
     # Debug Server testing
-    # LTS Agent
-    - PUPPET_GEM_VERSION="~> 4.7.0"
-      RUBY_VER=2.1.9
-      RAKE_TASK=test_debugserver
-    # Latest 4.x branch
+    # Latest 4.x Puppet (Covers LTS too)
     - PUPPET_GEM_VERSION="~> 4.0"
       RUBY_VER=2.1.9
       RAKE_TASK=test_debugserver
-    # Latest Puppet
+    # Latest 5.x Puppet
     - PUPPET_GEM_VERSION="~> 5.0"
       RUBY_VER=2.4.1
+      RAKE_TASK=test_debugserver
+    # Latest 6.x Puppet
+    - PUPPET_GEM_VERSION="~> 6.0"
+      RUBY_VER=2.5.1
       RAKE_TASK=test_debugserver
 
     # Ruby style
