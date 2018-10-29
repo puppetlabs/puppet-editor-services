@@ -18,6 +18,7 @@ begin
     puppet_parser_helper
     puppet_helper
     facter_helper
+    uri_helper
     puppet_monkey_patches
     providers
   ].each do |lib|

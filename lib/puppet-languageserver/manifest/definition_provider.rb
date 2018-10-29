@@ -70,7 +70,7 @@ module PuppetLanguageServer
         item = PuppetLanguageServer::PuppetHelper.get_class(resource_name) if item.nil?
         unless item.nil?
           return LanguageServer::Location.create(
-            'uri' => 'file:///' + item.source,
+            'uri' => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
             'fromline' => item.line,
             'fromchar' => 0,
             'toline' => item.line,
@@ -85,7 +85,7 @@ module PuppetLanguageServer
         item = PuppetLanguageServer::PuppetHelper.function(func_name)
         return nil if item.nil? || item.source.nil? || item.line.nil?
         LanguageServer::Location.create(
-          'uri' => 'file:///' + item.source,
+          'uri' => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
           'fromline' => item.line,
           'fromchar' => 0,
           'toline' => item.line,
