@@ -6,6 +6,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.15.1 - 2018-10-30
+
+### Fixed
+
+- ([GH-66](https://github.com/lingua-pupuli/puppet-editor-services/issues/66)) Go to defintion does not work with paths with leading slash
+
 ## 0.15.0 - 2018-08-18
 
 ### Added
