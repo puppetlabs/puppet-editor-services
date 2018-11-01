@@ -179,9 +179,10 @@ module PuppetLanguageServer
           unless value['attributes'].nil?
             value['attributes'].each do |attr_name, obj_attr|
               attributes[attr_name.intern] = {
-                :type      => obj_attr['type'].intern,
-                :doc       => obj_attr['doc'],
-                :required? => obj_attr['required?']
+                :type       => obj_attr['type'].intern,
+                :doc        => obj_attr['doc'],
+                :required?  => obj_attr['required?'],
+                :isnamevar? => obj_attr['isnamevar?']
               }
             end
           end
