@@ -56,7 +56,7 @@ module LanguageServer
           'line'      => options['range'][0],
           'character' => options['range'][1]
         },
-        'end' => {
+        'end'   => {
           'line'      => options['range'][2],
           'character' => options['range'][3]
         }
@@ -67,7 +67,7 @@ module LanguageServer
           'line'      => options['selectionRange'][0],
           'character' => options['selectionRange'][1]
         },
-        'end' => {
+        'end'   => {
           'line'      => options['selectionRange'][2],
           'character' => options['selectionRange'][3]
         }

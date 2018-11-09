@@ -248,7 +248,7 @@ module PuppetDebugServer
       result = nil
 
       # Check if this is the topscope
-      if result.nil? && variable_reference == VARIABLE_REFERENCE_TOP_SCOPE
+      if result.nil? && variable_reference == VARIABLE_REFERENCE_TOP_SCOPE # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
         result = variable_list_from_hash(@session_compiler.topscope.to_hash(false))
       end
 
@@ -369,12 +369,12 @@ module PuppetDebugServer
           source_line = pup_stack[1]
 
           frame = {
-            'id' => stack_frames.count,
-            'name' => source_file.to_s,
+            'id'     => stack_frames.count,
+            'name'   => source_file.to_s,
             'source' => PuppetDebugServer::Protocol::Source.create(
               'path' => source_file
             ),
-            'line' => source_line,
+            'line'   => source_line,
             'column' => 0
           }
           stack_frames << frame
@@ -479,14 +479,14 @@ module PuppetDebugServer
       # Send experimental warning
       PuppetDebugServer::PuppetDebugSession.connection.send_output_event(
         'category' => 'console',
-        'output' => "**************************************************\n* The Puppet debugger is an experimental feature *\n* Debug Server v#{PuppetEditorServices.version}                           *\n**************************************************\n\n"
+        'output'   => "**************************************************\n* The Puppet debugger is an experimental feature *\n* Debug Server v#{PuppetEditorServices.version}                           *\n**************************************************\n\n"
       )
 
       if Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
         # Puppet Debug Server isn't supported on Puppet 6 yet
         PuppetDebugServer::PuppetDebugSession.connection.send_output_event(
           'category' => 'console',
-          'output' => "The Puppet debugger is not supported on Puppet #{Puppet.version}. Version 4.x and 5.x are supported.\n"
+          'output'   => "The Puppet debugger is not supported on Puppet #{Puppet.version}. Version 4.x and 5.x are supported.\n"
         )
       else
         PuppetDebugServer::PuppetDebugSession.connection.send_output_event(

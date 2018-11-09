@@ -124,7 +124,7 @@ module PuppetDebugServer
       PuppetDebugServer::PuppetDebugSession.connection.send_exited_event(option)
       PuppetDebugServer::PuppetDebugSession.connection.send_output_event(
         'category' => 'console',
-        'output' => "puppet exited with #{option}"
+        'output'   => "puppet exited with #{option}"
       )
     end
 
@@ -209,7 +209,7 @@ module PuppetDebugServer
 
       PuppetDebugServer::PuppetDebugSession.connection.send_output_event(
         'category' => category,
-        'output' => "#{level}: #{str}\n"
+        'output'   => "#{level}: #{str}\n"
       )
     end
   end

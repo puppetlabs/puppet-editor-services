@@ -20,7 +20,7 @@ module PuppetLanguageServer
           all_statement_functions { |x| items << x }
 
           return LanguageServer::CompletionList.create('isIncomplete' => incomplete,
-                                                       'items' => items)
+                                                       'items'        => items)
         end
 
         item = result[:model]
@@ -51,8 +51,8 @@ module PuppetLanguageServer
             items << LanguageServer::CompletionItem.create('label'  => name.to_s,
                                                            'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
                                                            'detail' => 'Parameter',
-                                                           'data'   => { 'type' => 'resource_parameter',
-                                                                         'param' => name.to_s,
+                                                           'data'   => { 'type'          => 'resource_parameter',
+                                                                         'param'         => name.to_s,
                                                                          'resource_type' => item.type_name.value })
           end
           # Add Properties
@@ -60,21 +60,21 @@ module PuppetLanguageServer
             items << LanguageServer::CompletionItem.create('label'  => name.to_s,
                                                            'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
                                                            'detail' => 'Property',
-                                                           'data'   => { 'type' => 'resource_property',
-                                                                         'prop' => name.to_s,
+                                                           'data'   => { 'type'          => 'resource_property',
+                                                                         'prop'          => name.to_s,
                                                                          'resource_type' => item.type_name.value })
           end
           # TODO: What about meta parameters?
         end
 
         LanguageServer::CompletionList.create('isIncomplete' => incomplete,
-                                              'items' => items)
+                                              'items'        => items)
       end
 
       # BEGIN CompletionItem Helpers
       def self.keywords(keywords = [], &block)
         keywords.each do |keyword|
-          item = LanguageServer::CompletionItem.create('label' => keyword,
+          item = LanguageServer::CompletionItem.create('label'  => keyword,
                                                        'kind'   => LanguageServer::COMPLETIONITEMKIND_KEYWORD,
                                                        'detail' => 'Keyword',
                                                        'data'   => { 'type' => 'keyword',
@@ -85,7 +85,7 @@ module PuppetLanguageServer
 
       def self.all_facts(&block)
         PuppetLanguageServer::FacterHelper.facts.each_key do |name|
-          item = LanguageServer::CompletionItem.create('label' => name.to_s,
+          item = LanguageServer::CompletionItem.create('label'      => name.to_s,
                                                        'insertText' => "'#{name}'",
                                                        'kind'       => LanguageServer::COMPLETIONITEMKIND_VARIABLE,
                                                        'detail'     => 'Fact',
@@ -97,7 +97,7 @@ module PuppetLanguageServer
 
       def self.all_resources(&block)
         PuppetLanguageServer::PuppetHelper.type_names.each do |pup_type|
-          item = LanguageServer::CompletionItem.create('label' => pup_type,
+          item = LanguageServer::CompletionItem.create('label'  => pup_type,
                                                        'kind'   => LanguageServer::COMPLETIONITEMKIND_MODULE,
                                                        'detail' => 'Resource',
                                                        'data'   => { 'type' => 'resource_type',
@@ -109,7 +109,7 @@ module PuppetLanguageServer
       def self.all_statement_functions(&block)
         # Find functions which don't return values i.e. statements
         PuppetLanguageServer::PuppetHelper.filtered_function_names { |_name, data| data.type == :statement }.each do |name|
-          item = LanguageServer::CompletionItem.create('label' => name.to_s,
+          item = LanguageServer::CompletionItem.create('label'  => name.to_s,
                                                        'kind'   => LanguageServer::COMPLETIONITEMKIND_FUNCTION,
                                                        'detail' => 'Function',
                                                        'data'   => { 'type' => 'function',

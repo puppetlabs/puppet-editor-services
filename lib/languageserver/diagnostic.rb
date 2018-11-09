@@ -48,10 +48,10 @@ module LanguageServer
       result['source']   = options['source']
       result['message']  = options['message']
       result['range'] = { 'start' => {
-        'line' => options['fromline'],
+        'line'      => options['fromline'],
         'character' => options['fromchar']
       },
-                          'end' => {
+                          'end'   => {
                             'line'      => options['toline'],
                             'character' => options['tochar']
                           } }

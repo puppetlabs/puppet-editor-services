@@ -21,11 +21,11 @@ module PuppetLanguageServer
           unless ex_line.nil? || ex_pos.nil? || message.nil?
             result << LanguageServer::Diagnostic.create('severity' => LanguageServer::DIAGNOSTICSEVERITY_ERROR,
                                                         'fromline' => ex_line,
-                                                        'toline' => ex_line,
+                                                        'toline'   => ex_line,
                                                         'fromchar' => ex_pos,
-                                                        'tochar' => ex_pos + 1,
-                                                        'source' => 'Puppet',
-                                                        'message' => message)
+                                                        'tochar'   => ex_pos + 1,
+                                                        'source'   => 'Puppet',
+                                                        'message'  => message)
           end
         end
         result

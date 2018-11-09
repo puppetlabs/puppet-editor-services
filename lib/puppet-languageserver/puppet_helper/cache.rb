@@ -90,15 +90,9 @@ module PuppetLanguageServer
       end
 
       def sidecar_protocol_to_cache_object(value)
-        if value.is_a?(PuppetLanguageServer::Sidecar::Protocol::PuppetClass)
-          return PuppetLanguageServer::PuppetHelper::PuppetClass.new.from_sidecar!(value)
-        end
-        if value.is_a?(PuppetLanguageServer::Sidecar::Protocol::PuppetFunction)
-          return PuppetLanguageServer::PuppetHelper::PuppetFunction.new.from_sidecar!(value)
-        end
-        if value.is_a?(PuppetLanguageServer::Sidecar::Protocol::PuppetType)
-          return PuppetLanguageServer::PuppetHelper::PuppetType.new.from_sidecar!(value)
-        end
+        return PuppetLanguageServer::PuppetHelper::PuppetClass.new.from_sidecar!(value) if value.is_a?(PuppetLanguageServer::Sidecar::Protocol::PuppetClass)
+        return PuppetLanguageServer::PuppetHelper::PuppetFunction.new.from_sidecar!(value) if value.is_a?(PuppetLanguageServer::Sidecar::Protocol::PuppetFunction)
+        return PuppetLanguageServer::PuppetHelper::PuppetType.new.from_sidecar!(value) if value.is_a?(PuppetLanguageServer::Sidecar::Protocol::PuppetType)
         nil
       end
     end

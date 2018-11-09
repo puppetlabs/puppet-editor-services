@@ -48,7 +48,7 @@ module PuppetLanguageServerSidecar
       manifest_path_list.each do |manifest_path|
         Dir.glob("#{manifest_path}/**/*.pp").each do |manifest_file|
           begin
-            if path_has_child?(options[:root_path], manifest_file)
+            if path_has_child?(options[:root_path], manifest_file) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
               classes.concat(load_classes_from_manifest(cache, manifest_file))
             end
           rescue StandardError => err
@@ -100,7 +100,7 @@ module PuppetLanguageServerSidecar
           expanded_name = autoloader.expand(name)
           absolute_name = Puppet::Util::Autoload.get_file(expanded_name, current_env)
           raise("Could not find absolute path of function #{name}") if absolute_name.nil?
-          if path_has_child?(options[:root_path], absolute_name)
+          if path_has_child?(options[:root_path], absolute_name) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
             funcs.concat(load_function_file(cache, name, absolute_name, autoloader, current_env))
           end
         rescue StandardError => err
@@ -132,7 +132,7 @@ module PuppetLanguageServerSidecar
           expanded_name = autoloader.expand(name)
           absolute_name = Puppet::Util::Autoload.get_file(expanded_name, current_env)
           raise("Could not find absolute path of type #{name}") if absolute_name.nil?
-          if path_has_child?(options[:root_path], absolute_name)
+          if path_has_child?(options[:root_path], absolute_name) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
             types.concat(load_type_file(cache, name, absolute_name, autoloader, current_env))
           end
         rescue StandardError => err
@@ -265,7 +265,7 @@ module PuppetLanguageServerSidecar
 
       unless autoloader.loaded?(name)
         # This is an expensive call
-        unless autoloader.load(name, env)
+        unless autoloader.load(name, env) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
           PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_function_file] function #{absolute_name} did not load")
         end
       end
@@ -317,7 +317,7 @@ module PuppetLanguageServerSidecar
 
       unless autoloader.loaded?(name)
         # This is an expensive call
-        unless autoloader.load(name, env)
+        unless autoloader.load(name, env) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
           PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_type_file] type #{absolute_name} did not load")
         end
       end

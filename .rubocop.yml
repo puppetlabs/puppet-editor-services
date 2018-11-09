@@ -77,3 +77,6 @@ Style/SymbolProc:
   Enabled: false
 Style/HashSyntax:
   Enabled: false
+
+Layout/AlignHash:
+  EnforcedHashRocketStyle: table
