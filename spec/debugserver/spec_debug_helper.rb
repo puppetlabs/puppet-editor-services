@@ -3,7 +3,7 @@
 # Add the debug server into the load path
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__),'..','lib'))
 
-require 'puppet-debugserver'
+require 'puppet_debugserver'
 # Normally globals are 'bad', but in this case it really should be global to all testing
 # code paths
 $fixtures_dir = File.join(File.dirname(__FILE__),'fixtures')

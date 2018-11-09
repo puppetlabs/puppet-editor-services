@@ -3,7 +3,7 @@ begin
   $VERBOSE = nil
 
   require 'languageserver/languageserver'
-  require 'puppet-editor-services'
+  require 'puppet_editor_services'
   require 'puppet'
 
   %w[
@@ -23,7 +23,7 @@ begin
     providers
   ].each do |lib|
     begin
-      require "puppet-languageserver/#{lib}"
+      require "puppet_languageserver/#{lib}"
     rescue LoadError
       require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
     end
