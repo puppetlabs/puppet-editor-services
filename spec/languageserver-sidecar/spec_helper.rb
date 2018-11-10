@@ -5,7 +5,7 @@ root = File.join(File.dirname(__FILE__),'..','..')
 $LOAD_PATH.unshift(File.join(root,'lib'))
 # Add the vendored gems into the load path
 
-require 'puppet-languageserver-sidecar'
+require 'puppet_languageserver_sidecar'
 # rubocop:disable Style/GlobalVars
 $fixtures_dir = File.join(File.dirname(__FILE__), 'fixtures')
 # rubocop:enable Style/GlobalVars

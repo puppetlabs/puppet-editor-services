@@ -56,7 +56,7 @@ module PuppetDebugServer
 
         response = PuppetDebugServer::Protocol::InitializeResponse.create_from_request(
           {
-            'body' => capabilities,
+            'body'    => capabilities,
             'success' => true
           }, request
         )
@@ -90,7 +90,7 @@ module PuppetDebugServer
         response = PuppetDebugServer::Protocol::SetBreakpointsResponse.create_from_request(
           {
             'breakpoints' => bp_response,
-            'success' => 'true'
+            'success'     => 'true'
           }, request
         )
         @json_handler.send_response response
@@ -110,7 +110,7 @@ module PuppetDebugServer
         response = PuppetDebugServer::Protocol::SetBreakpointsResponse.create_from_request(
           {
             'breakpoints' => bp_response,
-            'success' => 'true'
+            'success'     => 'true'
           }, request
         )
         @json_handler.send_response response
@@ -168,7 +168,7 @@ module PuppetDebugServer
         frames = PuppetDebugServer::PuppetDebugSession.generate_stackframe_list(obj['arguments'])
         response = PuppetDebugServer::Protocol::StackTraceResponse.create_from_request(
           {
-            'success' => true,
+            'success'     => true,
             'stackFrames' => frames
           }, request
         )
@@ -194,7 +194,7 @@ module PuppetDebugServer
           response = PuppetDebugServer::Protocol::ScopesResponse.create_from_request(
             {
               'success' => true,
-              'scopes' => []
+              'scopes'  => []
             }, request
           )
           @json_handler.send_response response
@@ -205,7 +205,7 @@ module PuppetDebugServer
         response = PuppetDebugServer::Protocol::ScopesResponse.create_from_request(
           {
             'success' => true,
-            'scopes' => scopes
+            'scopes'  => scopes
           }, request
         )
         @json_handler.send_response response
@@ -227,7 +227,7 @@ module PuppetDebugServer
         variables = PuppetDebugServer::PuppetDebugSession.generate_variable_list(obj['arguments']['variablesReference'], obj['arguments'])
         response = PuppetDebugServer::Protocol::VariablesResponse.create_from_request(
           {
-            'success' => true,
+            'success'   => true,
             'variables' => variables
           }, request
         )
@@ -290,7 +290,7 @@ module PuppetDebugServer
 
         response = PuppetDebugServer::Protocol::ContinueResponse.create_from_request(
           {
-            'success' => true,
+            'success'             => true,
             'allThreadsContinued' => true
           }, request
         )

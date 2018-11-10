@@ -114,8 +114,8 @@ module PuppetLanguageServer
       # TTL has expired, time to calculate the document store details
 
       new_cache = {
-        :root_path => nil,
-        :has_puppetfile => false,
+        :root_path        => nil,
+        :has_puppetfile   => false,
         :has_metadatajson => false
       }
       if @workspace_path.nil?

@@ -1,5 +1,5 @@
 require 'debugserver/debug_protocol'
-require 'puppet-editor-services'
+require 'puppet_editor_services'
 
 %w[json_handler message_router hooks puppet_debug_session debug_hook_handlers puppet_debug_breakpoints puppet_monkey_patches].each do |lib|
   begin

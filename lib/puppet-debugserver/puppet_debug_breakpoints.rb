@@ -76,7 +76,7 @@ module PuppetDebugServer
         # Generate a BreakPoint response object
         bpr = PuppetDebugServer::Protocol::Breakpoint.create(
           'verified' => verified,
-          'message' => message
+          'message'  => message
         )
         bp_response << bpr
 

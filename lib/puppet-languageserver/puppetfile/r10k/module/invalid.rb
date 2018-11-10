@@ -16,7 +16,7 @@ module PuppetLanguageServer
 
           def properties
             {
-              :type => :invalid,
+              :type          => :invalid,
               :error_message => @error_message
             }
           end

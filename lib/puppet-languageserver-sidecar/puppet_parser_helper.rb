@@ -9,7 +9,7 @@ module PuppetLanguageServerSidecar
         # appropriate styling.
         options = {
           'fontsize' => '""',
-          'name' => 'editorservices'
+          'name'     => 'editorservices'
         }
         node_graph = compile_to_pretty_relationship_graph(content)
         if node_graph.vertices.count.zero?

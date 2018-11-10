@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'puppet-editor-services'
+require 'puppet_editor_services'
 
 describe "version" do
   before :each do

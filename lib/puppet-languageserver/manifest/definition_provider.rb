@@ -70,11 +70,11 @@ module PuppetLanguageServer
         item = PuppetLanguageServer::PuppetHelper.get_class(resource_name) if item.nil?
         unless item.nil?
           return LanguageServer::Location.create(
-            'uri' => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+            'uri'      => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
             'fromline' => item.line,
             'fromchar' => 0,
-            'toline' => item.line,
-            'tochar' => 1024
+            'toline'   => item.line,
+            'tochar'   => 1024
           )
         end
         nil
@@ -85,11 +85,11 @@ module PuppetLanguageServer
         item = PuppetLanguageServer::PuppetHelper.function(func_name)
         return nil if item.nil? || item.source.nil? || item.line.nil?
         LanguageServer::Location.create(
-          'uri' => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+          'uri'      => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
           'fromline' => item.line,
           'fromchar' => 0,
-          'toline' => item.line,
-          'tochar' => 1024
+          'toline'   => item.line,
+          'tochar'   => 1024
         )
       end
       private_class_method :function_name

@@ -24,7 +24,7 @@ module PuppetLanguageServer
           REGEX_PRE     = '(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?'.freeze # Prerelease
           REGEX_BUILD   = '(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?'.freeze # Build
           REGEX_FULL    = REGEX_NUMERIC + REGEX_PRE + REGEX_BUILD.freeze
-          REGEX_FULL_RX = /\A#{REGEX_FULL}\Z/
+          REGEX_FULL_RX = /\A#{REGEX_FULL}\Z/.freeze
 
           def self.valid_version_string?(value)
             match = value.match(REGEX_FULL_RX)

@@ -206,9 +206,9 @@ module PuppetLanguageServer
 
     def reply_error(id, code, message)
       send_response encode_json(KEY_JSONRPC => VALUE_VERSION,
-                                KEY_ID => id,
-                                KEY_ERROR => {
-                                  KEY_CODE => code,
+                                KEY_ID      => id,
+                                KEY_ERROR   => {
+                                  KEY_CODE    => code,
                                   KEY_MESSAGE => message
                                 })
     end
@@ -218,8 +218,8 @@ module PuppetLanguageServer
 
       response = {
         KEY_JSONRPC => VALUE_VERSION,
-        KEY_METHOD => 'textDocument/publishDiagnostics',
-        KEY_PARAMS => { 'uri' => uri, 'diagnostics' => diagnostics }
+        KEY_METHOD  => 'textDocument/publishDiagnostics',
+        KEY_PARAMS  => { 'uri' => uri, 'diagnostics' => diagnostics }
       }
 
       send_response(encode_json(response))
@@ -229,8 +229,8 @@ module PuppetLanguageServer
     def send_show_message_notification(msg_type, message)
       response = {
         KEY_JSONRPC => VALUE_VERSION,
-        KEY_METHOD => 'window/showMessage',
-        KEY_PARAMS => { 'type' => msg_type, 'message' => message }
+        KEY_METHOD  => 'window/showMessage',
+        KEY_PARAMS  => { 'type' => msg_type, 'message' => message }
       }
 
       send_response(encode_json(response))
@@ -267,8 +267,8 @@ module PuppetLanguageServer
 
         response = {
           KEY_JSONRPC => VALUE_VERSION,
-          KEY_ID => @id,
-          KEY_RESULT => result
+          KEY_ID      => @id,
+          KEY_RESULT  => result
         }
 
         @json_rpc_handler.send_response(@json_rpc_handler.encode_json(response))
@@ -292,7 +292,7 @@ module PuppetLanguageServer
 
       def reply_custom_error(code, message)
         return nil if @json_rpc_handler.connection_error?
-        unless code.is_a?(Integer) && (-32099..-32000).cover?(code)
+        unless code.is_a?(Integer) && (-32099..-32000).cover?(code) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
           raise ArgumentError, 'code must be an integer between -32099 and -32000'
         end
         @json_rpc_handler.reply_error(@id, code, message)

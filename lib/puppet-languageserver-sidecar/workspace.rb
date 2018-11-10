@@ -54,8 +54,8 @@ module PuppetLanguageServerSidecar
 
     def self.process_workspace(path)
       result = {
-        :root_path => nil,
-        :has_puppetfile => false,
+        :root_path        => nil,
+        :has_puppetfile   => false,
         :has_metadatajson => false
       }
       return result if path.nil?

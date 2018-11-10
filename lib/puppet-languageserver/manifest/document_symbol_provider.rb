@@ -31,7 +31,7 @@ module PuppetLanguageServer
             'line'      => result[0],
             'character' => result[1]
           },
-          'end' => {
+          'end'   => {
             'line'      => result[2],
             'character' => result[3]
           }
@@ -60,7 +60,7 @@ module PuppetLanguageServer
             'detail'         => object.type_name.value,
             'range'          => create_range_array(object.offset, object.length, object.locator),
             'selectionRange' => create_range_array(object.offset, object.length, object.locator),
-            'children' => []
+            'children'       => []
           )
 
         when 'Puppet::Pops::Model::ResourceBody'
@@ -78,7 +78,7 @@ module PuppetLanguageServer
             'detail'         => attr_name,
             'range'          => create_range_array(object.offset, object.length, object.locator),
             'selectionRange' => create_range_array(object.offset, attr_name.length, object.locator),
-            'children' => []
+            'children'       => []
           )
 
         # Puppet Class
@@ -89,7 +89,7 @@ module PuppetLanguageServer
             'detail'         => object.name,
             'range'          => create_range_array(object.offset, object.length, object.locator),
             'selectionRange' => create_range_array(object.offset, object.length, object.locator),
-            'children' => []
+            'children'       => []
           )
           # Load in the class parameters
           object.parameters.each do |param|
@@ -99,7 +99,7 @@ module PuppetLanguageServer
               'detail'         => '$' + param.name,
               'range'          => create_range_array(param.offset, param.length, param.locator),
               'selectionRange' => create_range_array(param.offset, param.length, param.locator),
-              'children' => []
+              'children'       => []
             )
             this_symbol['children'].push(param_symbol)
           end
@@ -112,7 +112,7 @@ module PuppetLanguageServer
             'detail'         => object.name,
             'range'          => create_range_array(object.offset, object.length, object.locator),
             'selectionRange' => create_range_array(object.offset, object.length, object.locator),
-            'children' => []
+            'children'       => []
           )
           # Load in the class parameters
           object.parameters.each do |param|
@@ -122,7 +122,7 @@ module PuppetLanguageServer
               'detail'         => '$' + param.name,
               'range'          => create_range_array(param.offset, param.length, param.locator),
               'selectionRange' => create_range_array(param.offset, param.length, param.locator),
-              'children' => []
+              'children'       => []
             )
             this_symbol['children'].push(param_symbol)
           end
@@ -134,7 +134,7 @@ module PuppetLanguageServer
             'detail'         => '$' + object.left_expr.expr.value,
             'range'          => create_range_array(object.left_expr.offset, object.left_expr.length, object.left_expr.locator),
             'selectionRange' => create_range_array(object.left_expr.offset, object.left_expr.length, object.left_expr.locator),
-            'children' => []
+            'children'       => []
           )
 
         end

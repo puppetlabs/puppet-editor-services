@@ -131,9 +131,9 @@ module PuppetLanguageServer
 
         def to_h
           super.to_h.merge(
-            'doc'            => doc,
-            'arity'          => arity,
-            'type'           => type
+            'doc'   => doc,
+            'arity' => arity,
+            'type'  => type
           )
         end
 
