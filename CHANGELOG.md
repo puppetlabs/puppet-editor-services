@@ -6,6 +6,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+- ([GH-75](https://github.com/lingua-pupuli/puppet-editor-services/issues/75)) Add a node completion item snippet
+
 ## 0.15.1 - 2018-10-30
 
 ### Fixed
