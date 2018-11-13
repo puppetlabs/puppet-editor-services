@@ -55,6 +55,7 @@ module PuppetLanguageServerSidecar
             :doc  => attrclass.doc
           }
           val[:required?] = attrclass.required? if attrclass.respond_to?(:required?)
+          val[:isnamevar?] = attrclass.required? if attrclass.respond_to?(:isnamevar?)
           obj.attributes[attrname] = val
         end
         obj

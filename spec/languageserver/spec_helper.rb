@@ -83,8 +83,8 @@ def random_sidecar_puppet_type
   result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetType.new())
   result.doc = 'doc' + rand(1000).to_s
   result.attributes = {
-    :attr_name1 => { :type => :attr_type, :doc => 'attr_doc1', :required? => false },
-    :attr_name2 => { :type => :attr_type, :doc => 'attr_doc2', :required? => false }
+    :attr_name1 => { :type => :attr_type, :doc => 'attr_doc1', :required? => false, :isnamevar? => true },
+    :attr_name2 => { :type => :attr_type, :doc => 'attr_doc2', :required? => false, :isnamevar? => false }
   }
   result
 end

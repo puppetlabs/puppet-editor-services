@@ -235,8 +235,8 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
       value = subject_klass.new
       value.doc = 'doc'
       value.attributes = {
-        :attr_name1 => { :type => :attr_type, :doc => 'attr_doc1', :required? => false },
-        :attr_name2 => { :type => :attr_type, :doc => 'attr_doc2', :required? => false }
+        :attr_name1 => { :type => :attr_type, :doc => 'attr_doc1', :required? => false, :isnamevar? => false },
+        :attr_name2 => { :type => :attr_type, :doc => 'attr_doc2', :required? => false, :isnamevar? => true }
       }
       add_default_basepuppetobject_values!(value)
     }

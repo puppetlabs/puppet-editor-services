@@ -120,79 +120,105 @@ module PuppetLanguageServer
       # END Helpers
 
       def self.resolve(completion_item)
-        data = completion_item['data'].clone
+        result = completion_item.clone
+        data = result['data']
         case data['type']
         when 'variable_expr_fact'
           value = PuppetLanguageServer::FacterHelper.facts[data['expr']]
           # TODO: More things?
-          completion_item['documentation'] = value.to_s
+          result['documentation'] = value.to_s
 
         when 'keyword'
           case data['name']
           when 'class'
-            completion_item['documentation'] = 'Classes are named blocks of Puppet code that are stored in modules for later use and ' \
+            result['documentation'] = 'Classes are named blocks of Puppet code that are stored in modules for later use and ' \
                                                 'are not applied until they are invoked by name. They can be added to a node’s catalog ' \
                                                 'by either declaring them in your manifests or assigning them from an ENC.'
-            completion_item['insertText'] = "# Class: $1\n#\n#\nclass ${1:name} {\n\t${2:# resources}\n}$0"
-            completion_item['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+            result['insertText'] = "# Class: $1\n#\n#\nclass ${1:name} {\n\t${2:# resources}\n}$0"
+            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
           when 'define'
-            completion_item['documentation'] = 'Defined resource types (also called defined types or defines) are blocks of Puppet code ' \
+            result['documentation'] = 'Defined resource types (also called defined types or defines) are blocks of Puppet code ' \
                                                 'that can be evaluated multiple times with different parameters. Once defined, they act ' \
                                                 'like a new resource type: you can cause the block to be evaluated by declaring a resource ' \
                                                 'of that new resource type.'
-            completion_item['insertText'] = "define ${1:name} () {\n\t${2:# resources}\n}$0"
-            completion_item['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+            result['insertText'] = "define ${1:name} () {\n\t${2:# resources}\n}$0"
+            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
           when 'application'
-            completion_item['detail'] = 'Orchestrator'
-            completion_item['documentation'] = 'Application definitions are a lot like a defined resource type except that instead of defining ' \
+            result['detail'] = 'Orchestrator'
+            result['documentation'] = 'Application definitions are a lot like a defined resource type except that instead of defining ' \
                                                 'a chunk of reusable configuration that applies to a single node, the application definition ' \
                                                 'operates at a higher level. The components you declare inside an application can be individually '\
                                                 'assigned to separate nodes you manage with Puppet.'
-            completion_item['insertText'] = "application ${1:name} () {\n\t${2:# resources}\n}$0"
-            completion_item['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+            result['insertText'] = "application ${1:name} () {\n\t${2:# resources}\n}$0"
+            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
           when 'site'
-            completion_item['detail'] = 'Orchestrator'
-            completion_item['documentation'] = 'Within the site block, applications are declared like defined types. They can be declared any ' \
+            result['detail'] = 'Orchestrator'
+            result['documentation'] = 'Within the site block, applications are declared like defined types. They can be declared any ' \
                                                 'number of times, but their type and title combination must be unique within an environment.'
-            completion_item['insertText'] = "site ${1:name} () {\n\t${2:# applications}\n}$0"
-            completion_item['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+            result['insertText'] = "site ${1:name} () {\n\t${2:# applications}\n}$0"
+            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
           end
 
         when 'function'
           item_type = PuppetLanguageServer::PuppetHelper.function(data['name'])
-          completion_item['documentation'] = item_type.doc unless item_type.doc.nil?
-          completion_item['insertText'] = "#{data['name']}(${1:value}"
+          return LanguageServer::CompletionItem.create(result) if item_type.nil?
+          result['documentation'] = item_type.doc unless item_type.doc.nil?
+          result['insertText'] = "#{data['name']}(${1:value}"
           (2..item_type.arity).each do |index|
-            completion_item['insertText'] += ", ${#{index}:value}"
+            result['insertText'] += ", ${#{index}:value}"
           end
-          completion_item['insertText'] += ')'
-          completion_item['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+          result['insertText'] += ')'
+          result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
 
         when 'resource_type'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(data['name'])
-          # TODO: More things?
-          completion_item['documentation'] = item_type.doc unless item_type.doc.nil?
-          completion_item['insertText'] = "#{data['name']} { '${1:title}':\n\tensure => '${2:present}'\n}"
-          completion_item['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+          return LanguageServer::CompletionItem.create(result) if item_type.nil?
+
+          attr_names = []
+          # Add required attributes.  Ignore namevars as they come from the resource title
+          item_type.attributes.each { |name, item| attr_names.push(name.to_s) if item[:required?] && item[:isnamevar?] != true }
+          # Remove the'ensure' param/property for now, and we'll re-add later
+          attr_names.reject! { |item| item == 'ensure' }
+          # The param/property list should initially sorted alphabetically
+          attr_names.sort!
+          # Add the 'ensure' param/property at the top if the resource supports it
+          attr_names.insert(0, 'ensure') unless item_type.allattrs.find_index(:ensure).nil?
+          # Get the longest string length for later hash-rocket padding
+          max_length = -1
+          attr_names.each { |name| max_length = name.length if name.length > max_length }
+
+          # Generate the text snippet
+          snippet = "#{data['name']} { '${1:title}':\n"
+          attr_names.each_index do |index|
+            name = attr_names[index]
+            value_text = (name == 'ensure') ? 'present' : 'value' # rubocop:disable Style/TernaryParentheses  In this case it's easier to read.
+            snippet += "\t#{name.ljust(max_length, ' ')} => '${#{index + 2}:#{value_text}}'\n"
+          end
+          snippet += '}'
+
+          result['documentation'] = item_type.doc unless item_type.doc.nil?
+          result['insertText'] = snippet
+          result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
         when 'resource_parameter'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(data['resource_type'])
+          return LanguageServer::CompletionItem.create(result) if item_type.nil?
           param_type = item_type.parameters[data['param'].intern]
           unless param_type.nil?
             # TODO: More things?
-            completion_item['documentation'] = param_type[:doc] unless param_type[:doc].nil?
-            completion_item['insertText'] = "#{data['param']} => "
+            result['documentation'] = param_type[:doc] unless param_type[:doc].nil?
+            result['insertText'] = "#{data['param']} => "
           end
         when 'resource_property'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(data['resource_type'])
+          return LanguageServer::CompletionItem.create(result) if item_type.nil?
           prop_type = item_type.properties[data['prop'].intern]
           unless prop_type.nil?
             # TODO: More things?
-            completion_item['documentation'] = prop_type[:doc] unless prop_type[:doc].nil?
-            completion_item['insertText'] = "#{data['prop']} => "
+            result['documentation'] = prop_type[:doc] unless prop_type[:doc].nil?
+            result['insertText'] = "#{data['prop']} => "
           end
         end
-
-        LanguageServer::CompletionItem.create(completion_item)
+        LanguageServer::CompletionItem.create(result)
       end
     end
   end
