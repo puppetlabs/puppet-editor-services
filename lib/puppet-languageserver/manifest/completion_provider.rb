@@ -11,7 +11,7 @@ module PuppetLanguageServer
           # We are in the root of the document.
 
           # Add keywords
-          keywords(%w[class define application site]) { |x| items << x }
+          keywords(%w[class define node application site]) { |x| items << x }
 
           # Add resources
           all_resources { |x| items << x }
@@ -142,6 +142,11 @@ module PuppetLanguageServer
                                                 'like a new resource type: you can cause the block to be evaluated by declaring a resource ' \
                                                 'of that new resource type.'
             result['insertText'] = "define ${1:name} () {\n\t${2:# resources}\n}$0"
+            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+          when 'node'
+            result['documentation'] = 'A node definition or node statement is a block of Puppet code that will only be included in matching nodes\' catalogs. ' \
+                                      'This feature allows you to assign specific configurations to specific nodes.'
+            result['insertText'] = "node '${1:name}' {\n\t$0\n}"
             result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
           when 'application'
             result['detail'] = 'Orchestrator'
