@@ -41,6 +41,31 @@ describe 'completion_provider' do
     wait_for_puppet_loading
   end
 
+  before(:each) do
+    # Prepopulate the Object Cache with workspace objects
+    # Classes / Defined Types
+    list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
+    obj = random_sidecar_puppet_class
+    obj.key = :mock_workspace_class
+    list << obj
+    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :class, :workspace)
+    # Functions
+    list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
+    list << random_sidecar_puppet_function
+    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :function, :workspace)
+    # Types
+    list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
+    list << random_sidecar_puppet_type
+    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :type, :workspace)
+  end
+
+  after(:each) do
+    # Clear out the Object Cache of workspace objects
+    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
+    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
+    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :type, :workspace)
+  end
+
   describe '#complete' do
     describe "Given an incomplete manifest which has syntax errors" do
       it "should raise an error" do
@@ -70,10 +95,10 @@ EOT
 
       describe "When inside the root of the manifest" do
         let(:char_num) { 0 }
-        let(:expected_types) { ['keyword','resource_type','function'] }
+        let(:expected_types) { ['keyword','resource_type','function','resource_class'] }
 
         [0, 8].each do |line_num|
-          it "should return a list of keyword, resource_type, function regardless of cursor location (Testing line #{line_num})" do
+          it "should return a list of keyword, resource_type, function, resource_class regardless of cursor location (Testing line #{line_num})" do
             result = subject.complete(content, line_num, char_num)
 
             result['items'].each do |item|
@@ -90,9 +115,9 @@ EOT
       describe "When inside the root of a class" do
         let(:line_num) { 1 }
         let(:char_num) { 0 }
-        let(:expected_types) { ['keyword','resource_type'] }
+        let(:expected_types) { ['keyword','resource_type','resource_class'] }
 
-        it 'should return a list of keyword, resource_type' do
+        it 'should return a list of keyword, resource_type, resource_class' do
           result = subject.complete(content, line_num, char_num)
 
           result['items'].each do |item|
@@ -144,9 +169,9 @@ EOT
       describe "When typing inside the root of an empty manifest" do
         let(:line_num) { 0 }
         let(:char_num) { 1 }
-        let(:expected_types) { ['keyword','resource_type','function'] }
+        let(:expected_types) { ['keyword','resource_type','function','resource_class'] }
 
-        it "should return a list of keyword, resource_type, function" do
+        it "should return a list of keyword, resource_type, function, resource_class" do
           result = subject.complete(content_empty, line_num, char_num)
 
           result['items'].each do |item|
@@ -162,9 +187,9 @@ EOT
       describe "When typing inside the root of a non-empty manifest" do
         let(:line_num) { 6 }
         let(:char_num) { 1 }
-        let(:expected_types) { ['keyword','resource_type','function'] }
+        let(:expected_types) { ['keyword','resource_type','function','resource_class'] }
 
-        it "should return a list of keyword, resource_type, function" do
+        it "should return a list of keyword, resource_type, function, resource_class" do
           result = subject.complete(content_simple, line_num, char_num)
 
           result['items'].each do |item|
@@ -601,6 +626,42 @@ EOT
           result = subject.resolve(@resolve_request)
           expect(result['insertText']).to match(/.+ => /)
           expect(result['insertTextFormat']).to be_nil
+        end
+      end
+    end
+
+    context 'when resolving a resource_class request' do
+      let(:content) { <<-EOT
+        user { 'Alice':
+
+        }
+      EOT
+      }
+      let(:line_num) { 0 }
+      let(:char_num) { 0 }
+
+      before(:each) do
+        # Generate the resolution request based on a completion response
+        @completion_response = subject.complete(content, line_num, char_num)
+        @resolve_request = @completion_response["items"].find do |item|
+          item["label"] == 'mock_workspace_class' && item["kind"] == LanguageServer::COMPLETIONITEMKIND_MODULE
+        end
+        raise RuntimeError, "mock_workspace_class class could not be found" if @resolve_request.nil?
+      end
+
+      context 'for an unknown class' do
+        it 'should return the original request' do
+          @resolve_request['data']['name'] = 'class_not_found'
+          result = subject.resolve(@resolve_request)
+          expect(result).to eq(@resolve_request)
+        end
+      end
+
+      context 'for a known class' do
+        it 'should return a text snippet' do
+          result = subject.resolve(@resolve_request)
+          expect(result['insertText']).to match(/.+/)
+          expect(result['insertTextFormat']).to eq(LanguageServer::INSERTTEXTFORMAT_SNIPPET)
         end
       end
     end

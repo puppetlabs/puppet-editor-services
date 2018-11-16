@@ -45,26 +45,44 @@ module PuppetLanguageServer
           # We are inside a resource definition.  Should display all available
           # properities and parameters.
 
-          item_type = PuppetLanguageServer::PuppetHelper.get_type(item.type_name.value)
-          # Add Parameters
-          item_type.parameters.each_key do |name|
-            items << LanguageServer::CompletionItem.create('label'  => name.to_s,
-                                                           'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
-                                                           'detail' => 'Parameter',
-                                                           'data'   => { 'type'          => 'resource_parameter',
-                                                                         'param'         => name.to_s,
-                                                                         'resource_type' => item.type_name.value })
+          # Try Types first
+          item_object = PuppetLanguageServer::PuppetHelper.get_type(item.type_name.value)
+          unless item_object.nil?
+            # Add Parameters
+            item_object.parameters.each_key do |name|
+              items << LanguageServer::CompletionItem.create('label'  => name.to_s,
+                                                             'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
+                                                             'detail' => 'Parameter',
+                                                             'data'   => { 'type'          => 'resource_parameter',
+                                                                           'param'         => name.to_s,
+                                                                           'resource_type' => item.type_name.value })
+            end
+            # Add Properties
+            item_object.properties.each_key do |name|
+              items << LanguageServer::CompletionItem.create('label'  => name.to_s,
+                                                             'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
+                                                             'detail' => 'Property',
+                                                             'data'   => { 'type'          => 'resource_property',
+                                                                           'prop'          => name.to_s,
+                                                                           'resource_type' => item.type_name.value })
+            end
+            # TODO: What about meta parameters?
           end
-          # Add Properties
-          item_type.properties.each_key do |name|
-            items << LanguageServer::CompletionItem.create('label'  => name.to_s,
-                                                           'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
-                                                           'detail' => 'Property',
-                                                           'data'   => { 'type'          => 'resource_property',
-                                                                         'prop'          => name.to_s,
-                                                                         'resource_type' => item.type_name.value })
+          if item_object.nil?
+            # Try Classes/Defined Types
+            item_object = PuppetLanguageServer::PuppetHelper.get_class(item.type_name.value)
+            unless item_object.nil?
+              # Add Parameters
+              item_object.parameters.each_key do |name|
+                items << LanguageServer::CompletionItem.create('label'  => name.to_s,
+                                                               'kind'   => LanguageServer::COMPLETIONITEMKIND_PROPERTY,
+                                                               'detail' => 'Parameter',
+                                                               'data'   => { 'type'          => 'resource_class_parameter',
+                                                                             'param'         => name.to_s,
+                                                                             'resource_type' => item.type_name.value })
+              end
+            end
           end
-          # TODO: What about meta parameters?
         end
 
         LanguageServer::CompletionList.create('isIncomplete' => incomplete,
@@ -96,12 +114,22 @@ module PuppetLanguageServer
       end
 
       def self.all_resources(&block)
+        # Find Puppet Types
         PuppetLanguageServer::PuppetHelper.type_names.each do |pup_type|
           item = LanguageServer::CompletionItem.create('label'  => pup_type,
                                                        'kind'   => LanguageServer::COMPLETIONITEMKIND_MODULE,
                                                        'detail' => 'Resource',
                                                        'data'   => { 'type' => 'resource_type',
                                                                      'name' => pup_type })
+          block.call(item) if block
+        end
+        # Find Puppet Classes/Defined Types
+        PuppetLanguageServer::PuppetHelper.class_names.each do |pup_class|
+          item = LanguageServer::CompletionItem.create('label'  => pup_class,
+                                                       'kind'   => LanguageServer::COMPLETIONITEMKIND_MODULE,
+                                                       'detail' => 'Resource',
+                                                       'data'   => { 'type' => 'resource_class',
+                                                                     'name' => pup_class })
           block.call(item) if block
         end
       end
@@ -221,6 +249,24 @@ module PuppetLanguageServer
             # TODO: More things?
             result['documentation'] = prop_type[:doc] unless prop_type[:doc].nil?
             result['insertText'] = "#{data['prop']} => "
+          end
+
+        when 'resource_class'
+          item_class = PuppetLanguageServer::PuppetHelper.get_class(data['name'])
+          return LanguageServer::CompletionItem.create(result) if item_class.nil?
+
+          result['insertText'] = "#{data['name']} { '${1:title}':\n\t$0\n}"
+          result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+        when 'resource_class_parameter'
+          item_class = PuppetLanguageServer::PuppetHelper.get_class(data['resource_type'])
+          return LanguageServer::CompletionItem.create(result) if item_class.nil?
+          param_type = item_class.parameters[data['param']]
+          unless param_type.nil?
+            doc = ''
+            doc += param_type[:type] unless param_type[:type].nil?
+            doc += "---\n" + param_type[:doc] unless param_type[:doc].nil?
+            result['documentation'] = doc
+            result['insertText'] = "#{data['param']} => "
           end
         end
         LanguageServer::CompletionItem.create(result)

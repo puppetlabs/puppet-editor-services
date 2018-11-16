@@ -162,6 +162,11 @@ module PuppetLanguageServer
       @inmemory_cache.object_names_by_section(:class).map(&:to_s)
     end
 
+    # The object cache.  Note this should only be used for testing
+    def self.cache
+      @inmemory_cache
+    end
+
     def self.sidecar_queue
       @sidecar_queue_obj ||= PuppetLanguageServer::SidecarQueue.new
     end
