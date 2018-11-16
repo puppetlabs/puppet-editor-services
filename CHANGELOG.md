@@ -8,6 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 - ([GH-75](https://github.com/lingua-pupuli/puppet-editor-services/issues/75)) Add a node completion item snippet
 - ([GH-34](https://github.com/lingua-pupuli/puppet-editor-services/issues/34)) Autocomplete and hover should retrieve defined types and classes
+- ([GH-68](https://github.com/lingua-pupuli/puppet-editor-services/issues/68)) Language Server should evaluate the locally edited workspace
 
 ## 0.15.1 - 2018-10-30
 

@@ -204,6 +204,15 @@ module PuppetLanguageServer
 
       when 'textDocument/didSave'
         PuppetLanguageServer.log_message(:info, 'Received textDocument/didSave notification.')
+        # Expire the store cache so that the store information can re-evaluated
+        PuppetLanguageServer::DocumentStore.expire_store_information
+        if PuppetLanguageServer::DocumentStore.store_has_module_metadata?
+          # Load the workspace information
+          PuppetLanguageServer::PuppetHelper.load_workspace_async
+        else
+          # Purge the workspace information
+          PuppetLanguageServer::PuppetHelper.purge_workspace
+        end
 
       else
         PuppetLanguageServer.log_message(:error, "Unknown RPC notification #{method}")

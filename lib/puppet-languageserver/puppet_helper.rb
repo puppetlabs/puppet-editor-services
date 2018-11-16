@@ -167,6 +167,35 @@ module PuppetLanguageServer
       @inmemory_cache
     end
 
+    # Workspace Loading
+    def self.load_workspace_async
+      load_workspace_classes_async
+      load_workspace_functions_async
+      load_workspace_types_async
+      true
+    end
+
+    def self.load_workspace_classes_async
+      return if PuppetLanguageServer::DocumentStore.store_root_path.nil?
+      sidecar_queue.enqueue('workspace_classes', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path])
+    end
+
+    def self.load_workspace_functions_async
+      return if PuppetLanguageServer::DocumentStore.store_root_path.nil?
+      sidecar_queue.enqueue('workspace_functions', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path])
+    end
+
+    def self.load_workspace_types_async
+      return if PuppetLanguageServer::DocumentStore.store_root_path.nil?
+      sidecar_queue.enqueue('workspace_types', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path])
+    end
+
+    def self.purge_workspace
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :type, :workspace)
+    end
+
     def self.sidecar_queue
       @sidecar_queue_obj ||= PuppetLanguageServer::SidecarQueue.new
     end
