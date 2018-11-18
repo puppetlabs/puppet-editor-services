@@ -115,7 +115,31 @@ module PuppetLanguageServer
       end
 
       class PuppetClass < BasePuppetObject
-        # TODO: Doc, parameters?
+        attr_accessor :parameters
+        attr_accessor :doc
+
+        def to_h
+          super.to_h.merge(
+            'doc'        => doc,
+            'parameters' => parameters
+          )
+        end
+
+        def from_h!(value)
+          super
+
+          self.doc = value['doc']
+          self.parameters = {}
+          unless value['parameters'].nil?
+            value['parameters'].each do |attr_name, obj_attr|
+              parameters[attr_name] = {
+                :type => obj_attr['type'],
+                :doc  => obj_attr['doc']
+              }
+            end
+          end
+          self
+        end
       end
 
       class PuppetClassList < BasePuppetObjectList

@@ -27,6 +27,15 @@ module PuppetLanguageServer
     end
 
     class PuppetClass < BasePuppetObject
+      attr_accessor :doc
+      attr_accessor :parameters
+
+      def from_sidecar!(value)
+        super
+        @doc = value.doc
+        @parameters = value.parameters
+        self
+      end
     end
 
     class PuppetFunction < BasePuppetObject

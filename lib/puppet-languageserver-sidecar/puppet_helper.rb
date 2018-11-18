@@ -212,12 +212,13 @@ module PuppetLanguageServerSidecar
             next
           end
           puppet_class['name']       = item.name
+          puppet_class['doc']        = nil
           puppet_class['parameters'] = item.parameters
           puppet_class['source']     = manifest_file
           puppet_class['line']       = result.locator.line_for_offset(item.offset) - 1
           puppet_class['char']       = result.locator.offset_on_line(item.offset)
 
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetClass.from_puppet(item.name, puppet_class)
+          obj = PuppetLanguageServerSidecar::Protocol::PuppetClass.from_puppet(item.name, puppet_class, result.locator)
           class_info << obj
         end
       else
@@ -232,12 +233,12 @@ module PuppetLanguageServerSidecar
             next
           end
           puppet_class['name']       = item.name
+          puppet_class['doc']        = nil
           puppet_class['parameters'] = item.parameters
           puppet_class['source']     = manifest_file
           puppet_class['line']       = item.line
           puppet_class['char']       = item.pos
-
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetClass.from_puppet(item.name, puppet_class)
+          obj = PuppetLanguageServerSidecar::Protocol::PuppetClass.from_puppet(item.name, puppet_class, item.locator)
           class_info << obj
         end
       end

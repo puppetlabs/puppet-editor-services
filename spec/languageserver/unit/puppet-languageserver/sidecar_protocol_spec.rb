@@ -54,7 +54,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
 
   basepuppetobject_properties = [:key, :calling_source, :source, :line, :char, :length]
   nodegraph_properties = [:dot_content, :error_content]
-  puppetclass_properties = []
+  puppetclass_properties = [:doc, :parameters]
   puppetfunction_properties = [:doc, :arity, :type]
   puppettype_properties = [:doc, :attributes]
   resource_properties = [:manifest]
@@ -138,6 +138,11 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
     let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::PuppetClass }
     let(:subject) {
       value = subject_klass.new
+      value.doc = 'doc'
+      value.parameters = {
+        "attr_name1" => { :type => "Optional[String]", :doc => 'attr_doc1' },
+        "attr_name2" => { :type => "String", :doc => 'attr_doc2' }
+      }
       add_default_basepuppetobject_values!(value)
     }
 
