@@ -37,16 +37,24 @@ module PuppetLanguageServer
           end
           raise "Unable to find suitable parent object for object of type #{item.class}" if parent_klass.nil?
 
-          # Get an instance of the type
-          item_type = PuppetLanguageServer::PuppetHelper.get_type(path[distance_up_ast - 1].type_name.value)
-          raise "#{path[distance_up_ast - 1].type_name.value} is not a valid puppet type" if item_type.nil?
-          # Check if it's a property
-          attribute = item_type.properties.key?(item.attribute_name.intern)
-          if attribute != false
-            content = get_attribute_property_content(item_type, item.attribute_name.intern)
-          elsif item_type.parameters.key?(item.attribute_name.intern)
-            content = get_attribute_parameter_content(item_type, item.attribute_name.intern)
+          resource_type_name = path[distance_up_ast - 1].type_name.value
+          # Check if it's a Puppet Type
+          resource_object = PuppetLanguageServer::PuppetHelper.get_type(resource_type_name)
+          unless resource_object.nil?
+            # Check if it's a property
+            attribute = resource_object.properties.key?(item.attribute_name.intern)
+            if attribute != false
+              content = get_attribute_type_property_content(resource_object, item.attribute_name.intern)
+            elsif resource_object.parameters.key?(item.attribute_name.intern)
+              content = get_attribute_type_parameter_content(resource_object, item.attribute_name.intern)
+            end
           end
+          # Check if it's a Puppet Class / Defined Type
+          if resource_object.nil?
+            resource_object = PuppetLanguageServer::PuppetHelper.get_class(resource_type_name)
+            content = get_attribute_class_parameter_content(resource_object, item.attribute_name) unless resource_object.nil?
+          end
+          raise "#{resource_type_name} is not a valid puppet type, class or defined type" if resource_object.nil?
 
         else
           raise "Unable to generate Hover information for object of type #{item.class}"
@@ -102,18 +110,26 @@ module PuppetLanguageServer
         content
       end
 
-      def self.get_attribute_parameter_content(item_type, param)
+      def self.get_attribute_type_parameter_content(item_type, param)
         param_type = item_type.parameters[param]
         content = "**#{param}** Parameter"
         content += "\n\n#{param_type[:doc]}" unless param_type[:doc].nil?
         content
       end
 
-      def self.get_attribute_property_content(item_type, property)
+      def self.get_attribute_type_property_content(item_type, property)
         prop_type = item_type.properties[property]
         content = "**#{property}** Property"
         content += "\n\n(_required_)" if prop_type[:required?]
         content += "\n\n#{prop_type[:doc]}" unless prop_type[:doc].nil?
+        content
+      end
+
+      def self.get_attribute_class_parameter_content(item_class, param)
+        param_type = item_class.parameters[param]
+        return nil if param_type.nil?
+        content = "**#{param}** Parameter"
+        content += "\n\n#{param_type[:doc]}" unless param_type[:doc].nil?
         content
       end
 
@@ -124,17 +140,23 @@ module PuppetLanguageServer
         raise "Function #{func_name} does not exist" if func_info.nil?
 
         # TODO: what about rvalue?
-        content = "**#{func_name}** Function\n\n" # TODO: Do I add in the params from the arity number?
-        content += func_info.doc
+        content = "**#{func_name}** Function" # TODO: Do I add in the params from the arity number?
+        content += "\n\n" + func_info.doc unless func_info.doc.nil?
 
         content
       end
 
       def self.get_resource_expression_content(item)
         # Get an instance of the type
-        item_type = PuppetLanguageServer::PuppetHelper.get_type(item.type_name.value)
-        raise "#{item.type_name.value} is not a valid puppet type" if item_type.nil?
-        content = "**#{item.type_name.value}** Resource\n\n"
+        item_object = PuppetLanguageServer::PuppetHelper.get_type(item.type_name.value)
+        return get_puppet_type_content(item_object) unless item_object.nil?
+        item_object = PuppetLanguageServer::PuppetHelper.get_class(item.type_name.value)
+        return get_puppet_class_content(item_object) unless item_object.nil?
+        raise "#{item.type_name.value} is not a valid puppet type"
+      end
+
+      def self.get_puppet_type_content(item_type)
+        content = "**#{item_type.key}** Resource\n\n"
         content += "\n\n#{item_type.doc}" unless item_type.doc.nil?
         content += "\n\n---\n"
         item_type.allattrs.sort.each do |attr|
@@ -143,6 +165,20 @@ module PuppetLanguageServer
 
         content
       end
+      private_class_method :get_puppet_type_content
+
+      def self.get_puppet_class_content(item_class)
+        content = "**#{item_class.key}** Resource"
+        content += "\n\n#{item_class.doc}" unless item_class.doc.nil?
+        unless item_class.parameters.count.zero?
+          content += "\n\n---\n"
+          item_class.parameters.sort.each do |name, _param|
+            content += "* #{name}\n"
+          end
+        end
+        content.strip
+      end
+      private_class_method :get_puppet_class_content
     end
   end
 end

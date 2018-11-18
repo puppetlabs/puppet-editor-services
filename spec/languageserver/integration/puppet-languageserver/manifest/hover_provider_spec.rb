@@ -27,6 +27,31 @@ $array_var1 = split($string1, ':')
 EOT
     }
 
+    before(:each) do
+      # Prepopulate the Object Cache with workspace objects
+      # Classes / Defined Types
+      list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
+      obj = random_sidecar_puppet_class
+      obj.key = :mock_workspace_class
+      list << obj
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :class, :workspace)
+      # Functions
+      list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
+      list << random_sidecar_puppet_function
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :function, :workspace)
+      # Types
+      list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
+      list << random_sidecar_puppet_type
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :type, :workspace)
+    end
+
+    after(:each) do
+      # Clear out the Object Cache of workspace objects
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :type, :workspace)
+    end
+
     describe "Given a manifest which has syntax errors" do
       it "should raise an error" do
         expect{subject.resolve('user { "Bob"', 0, 1)}.to raise_error(RuntimeError)
@@ -123,7 +148,7 @@ EOT
       end
     end
 
-    context "Given a resource in the manifest" do
+    context "Given a resource (Puppet Type) in the manifest" do
       let(:content) { <<-EOT
 user { 'Bob':
   ensure => 'present',
@@ -206,6 +231,71 @@ EOT
           result = subject.resolve(content, line_num, char_num)
 
           expect(result['contents']).to start_with("**name** Parameter\n")
+        end
+      end
+    end
+
+    context "Given a resource (Puppet Class/Defined Type) in the manifest" do
+      let(:content) { <<-EOT
+mock_workspace_class { 'Dee':
+  attr_name1 => 'string1',
+  attr_name2 => 'string1',
+}
+EOT
+      }
+
+      describe 'when cursor is on the resource type name' do
+        let(:line_num) { 0 }
+        let(:char_num) { 3 }
+
+        it 'should return resource description' do
+          result = subject.resolve(content, line_num, char_num)
+
+          expect(result['contents']).to start_with("**mock_workspace_class** Resource\n")
+        end
+      end
+
+      describe 'when cursor is on the name of the resource' do
+        let(:line_num) { 0 }
+        let(:char_num) { 26 }
+
+        it 'should return resource description' do
+          result = subject.resolve(content, line_num, char_num)
+
+          expect(result['contents']).to start_with("**mock_workspace_class** Resource\n")
+        end
+      end
+
+      describe 'when cursor is on the whitespace before a Parameter name' do
+        let(:line_num) { 2 }
+        let(:char_num) { 1 }
+
+        it 'should return resource description' do
+          result = subject.resolve(content, line_num, char_num)
+
+          expect(result['contents']).to start_with("**mock_workspace_class** Resource\n")
+        end
+      end
+
+      describe 'when cursor is on the parameter name' do
+        let(:line_num) { 1 }
+        let(:char_num) { 5 }
+
+        it 'should return parameter description' do
+          result = subject.resolve(content, line_num, char_num)
+
+          expect(result['contents']).to start_with("**attr_name1** Parameter\n")
+        end
+      end
+
+      describe 'when cursor is on the "=>" after a parameter name' do
+        let(:line_num) { 1 }
+        let(:char_num) { 15 }
+
+        it 'should return parameter description' do
+          result = subject.resolve(content, line_num, char_num)
+
+          expect(result['contents']).to start_with("**attr_name1** Parameter\n")
         end
       end
     end
