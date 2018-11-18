@@ -159,15 +159,8 @@ module PuppetLanguageServer
 
         def to_h
           super.to_h.merge(
-            'key'            => key,
-            'calling_source' => calling_source,
-            'source'         => source,
-            'line'           => line,
-            'char'           => char,
-            'length'         => length,
-
-            'doc'            => doc,
-            'attributes'     => attributes
+            'doc'        => doc,
+            'attributes' => attributes
           )
         end
 
