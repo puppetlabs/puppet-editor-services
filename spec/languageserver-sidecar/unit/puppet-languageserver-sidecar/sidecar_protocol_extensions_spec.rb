@@ -29,17 +29,35 @@ describe 'PuppetLanguageServerSidecar::Protocol' do
     let(:puppet_classname) { :rspec_class }
     let(:puppet_class) {
       {
-        'source' => 'source',
-        'line'   => 1,
-        'char'   => 1,
+        'name'       => 'class_name',
+        'type'       => :class,
+        'doc'        => 'doc',
+        'parameters' => { }, # TODO: Need to test this for reals
+        'source'     => 'source',
+        'line'       => 1,
+        'char'       => 1,
       }
     }
 
     it_should_behave_like 'a base Sidecar Protocol extended object'
 
     describe '.from_puppet' do
-      it 'should populate from a Puppet class object' do
-        expect { subject_klass.from_puppet(puppet_classname, puppet_class) }.to_not raise_error
+      it 'should populate from a constructed hash' do
+        result = subject_klass.from_puppet(puppet_classname, puppet_class, nil)
+
+        expect(result.doc).to eq(puppet_class['doc'])
+        expect(result.parameters.count).to eq(puppet_class['parameters'].count)
+      end
+    end
+
+    describe '#from_json' do
+      [:doc, :parameters].each do |testcase|
+        it "should deserialize a serialized #{testcase} value" do
+          serial = subject_klass.from_puppet(puppet_classname, puppet_class, nil)
+          deserial = subject_klass.new.from_json!(serial.to_json)
+
+          expect(deserial.send(testcase)).to eq(serial.send(testcase))
+        end
       end
     end
   end

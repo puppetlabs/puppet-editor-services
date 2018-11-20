@@ -11,14 +11,25 @@ module PuppetLanguageServerSidecar
     end
 
     class PuppetClass < PuppetLanguageServer::Sidecar::Protocol::PuppetClass
-      def self.from_puppet(name, item)
+      def self.from_puppet(name, item, locator)
+        name = name.intern if name.is_a?(String)
         obj = PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new
         obj.key            = name
+        obj.doc            = item['doc']
         obj.source         = item['source']
         obj.calling_source = obj.source
         obj.line           = item['line']
         obj.char           = item['char']
-        # TODO: Doc, parameters?
+        obj.parameters     = {}
+        item['parameters'].each do |param|
+          val = {
+            :type => nil,
+            :doc  => nil
+          }
+          val[:type] = locator.extract_text(param.type_expr.offset, param.type_expr.length) unless param.type_expr.nil?
+          # TODO: Need to learn how to read the help/docs for hover support
+          obj.parameters[param.name] = val
+        end
         obj
       end
     end
