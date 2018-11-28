@@ -61,7 +61,6 @@ module PuppetLanguageServer
       }
     end
 
-    # This method is mainly used for testin. It expires the cache
     def self.expire_store_information
       @doc_mutex.synchronize do
         @workspace_info_cache[:expires] = Time.new - 120

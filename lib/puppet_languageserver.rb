@@ -164,6 +164,11 @@ module PuppetLanguageServer
 
       log_message(:info, 'Preloading Classes (Async)...')
       PuppetLanguageServer::PuppetHelper.load_default_classes_async
+
+      if PuppetLanguageServer::DocumentStore.store_has_module_metadata?
+        log_message(:info, 'Preloading Workspace (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_workspace_async
+      end
     else
       log_message(:info, 'Skipping preloading Puppet')
     end

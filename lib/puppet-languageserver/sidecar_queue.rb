@@ -54,10 +54,8 @@ module PuppetLanguageServer
       cmd = ['ruby', sidecar_path].concat(args)
       PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: Running sidecar #{cmd}")
       stdout, stderr, status = run_sidecar(cmd)
-      unless status.exitstatus.zero?
-        PuppetLanguageServer.log_message(:warning, "SidecarQueue Thread: Calling sidecar with #{args.join(' ')} returned exitcode #{status.exitstatus}, #{stderr}")
-        return nil
-      end
+      PuppetLanguageServer.log_message(:warning, "SidecarQueue Thread: Calling sidecar with #{args.join(' ')} returned exitcode #{status.exitstatus}, #{stderr}")
+      return nil unless status.exitstatus.zero?
       # Correctly encode the result as UTF8
       result = stdout.bytes.pack('U*')
 
@@ -65,18 +63,21 @@ module PuppetLanguageServer
       when 'default_classes'
         list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new.from_json!(result)
         @cache.import_sidecar_list!(list, :class, :default)
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_classes returned #{list.count} items")
 
         PuppetLanguageServer::PuppetHelper.assert_default_classes_loaded
 
       when 'default_functions'
         list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new.from_json!(result)
         @cache.import_sidecar_list!(list, :function, :default)
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_functions returned #{list.count} items")
 
         PuppetLanguageServer::PuppetHelper.assert_default_functions_loaded
 
       when 'default_types'
         list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new.from_json!(result)
         @cache.import_sidecar_list!(list, :type, :default)
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_types returned #{list.count} items")
 
         PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
 
@@ -86,11 +87,20 @@ module PuppetLanguageServer
       when 'resource_list'
         return PuppetLanguageServer::Sidecar::Protocol::ResourceList.new.from_json!(result)
 
-      # TODO: when 'workspace_classes'
+      when 'workspace_classes'
+        list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new.from_json!(result)
+        @cache.import_sidecar_list!(list, :class, :workspace)
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: workspace_classes returned #{list.count} items")
 
-      # TODO: when 'workspace_functions'
+      when 'workspace_functions'
+        list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new.from_json!(result)
+        @cache.import_sidecar_list!(list, :function, :workspace)
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: workspace_functions returned #{list.count} items")
 
-      # TODO: when 'workspace_types'
+      when 'workspace_types'
+        list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new.from_json!(result)
+        @cache.import_sidecar_list!(list, :type, :workspace)
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: workspace_types returned #{list.count} items")
 
       else
         PuppetLanguageServer.log_message(:error, "SidecarQueue Thread: Unknown action action #{action}")
