@@ -12,4 +12,5 @@ Gem List
 --------
 
 * puppet-lint (https://github.com/rodjek/puppet-lint.git ref 2.3.5)
+* hiera-eyaml (https://github.com/voxpupuli/hiera-eyaml ref v2.1.0)
 

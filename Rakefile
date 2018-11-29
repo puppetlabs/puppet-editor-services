@@ -50,6 +50,11 @@ task :gem_revendor do
       :directory => 'puppet-lint',
       :github_repo => 'https://github.com/rodjek/puppet-lint.git',
       :github_ref => '2.3.5',
+    },
+    {
+      :directory => 'hiera-eyaml',
+      :github_repo => 'https://github.com/voxpupuli/hiera-eyaml',
+      :github_ref => 'v2.1.0',
     }
   ]
 
@@ -75,6 +80,7 @@ task :gem_revendor do
     # Cleanup the gem directory...
     FileUtils.rm_rf(File.join(gem_dir,'.git'))
     FileUtils.rm_rf(File.join(gem_dir,'spec'))
+    FileUtils.rm_rf(File.join(gem_dir,'features'))
   end
 
   # Generate the README
