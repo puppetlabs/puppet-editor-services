@@ -142,7 +142,7 @@ module PuppetLanguageServerSidecar
 
     PuppetLanguageServerSidecar::Workspace.detect_workspace(options[:workspace])
     log_message(:debug, 'Detected Module Metadata in the workspace') if PuppetLanguageServerSidecar::Workspace.has_module_metadata?
-    log_message(:debug, 'Detected Puppetfile in the workspace') if PuppetLanguageServerSidecar::Workspace.has_puppetfile?
+    log_message(:debug, 'Detected Environment Config in the workspace') if PuppetLanguageServerSidecar::Workspace.has_environmentconf?
 
     # Remove all other logging destinations except for ours
     Puppet::Util::Log.destinations.clear
@@ -168,6 +168,13 @@ module PuppetLanguageServerSidecar
     true
   end
 
+  def self.inject_workspace_as_environment
+    return false unless PuppetLanguageServerSidecar::Workspace.has_environmentconf?
+
+    log_message(:debug, 'Injected the workspace into the environment loader')
+    true
+  end
+
   def self.execute(options)
     case options[:action].downcase
     when 'noop'
@@ -186,7 +193,7 @@ module PuppetLanguageServerSidecar
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(cache)
 
     when 'node_graph'
-      inject_workspace_as_module
+      inject_workspace_as_module || inject_workspace_as_environment
       result = PuppetLanguageServerSidecar::Protocol::NodeGraph.new
       if options[:action_parameters]['source'].nil?
         log_message(:error, 'Missing source action parameter')
@@ -201,7 +208,7 @@ module PuppetLanguageServerSidecar
       end
 
     when 'resource_list'
-      inject_workspace_as_module
+      inject_workspace_as_module || inject_workspace_as_environment
       typename = options[:action_parameters]['typename']
       title = options[:action_parameters]['title']
       if typename.nil?
@@ -212,19 +219,19 @@ module PuppetLanguageServerSidecar
 
     when 'workspace_classes'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
-      return nil unless inject_workspace_as_module
+      return nil unless inject_workspace_as_module || inject_workspace_as_environment
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(null_cache,
                                                                  :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
 
     when 'workspace_functions'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
-      return nil unless inject_workspace_as_module
+      return nil unless inject_workspace_as_module || inject_workspace_as_environment
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(null_cache,
                                                                    :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
 
     when 'workspace_types'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
-      return nil unless inject_workspace_as_module
+      return nil unless inject_workspace_as_module || inject_workspace_as_environment
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(null_cache,
                                                                :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
     else
