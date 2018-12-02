@@ -171,6 +171,16 @@ module PuppetLanguageServerSidecar
   def self.inject_workspace_as_environment
     return false unless PuppetLanguageServerSidecar::Workspace.has_environmentconf?
 
+    Puppet.settings[:environment] = PuppetLanguageServerSidecar::PuppetHelper::SIDECAR_PUPPET_ENVIRONMENT
+
+    %w[puppet_environment_monkey_patches].each do |lib|
+      begin
+        require "puppet-languageserver-sidecar/#{lib}"
+      rescue LoadError
+        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
+      end
+    end
+
     log_message(:debug, 'Injected the workspace into the environment loader')
     true
   end
