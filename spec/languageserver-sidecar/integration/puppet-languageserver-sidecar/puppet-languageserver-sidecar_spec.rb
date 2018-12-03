@@ -107,7 +107,7 @@ describe 'PuppetLanguageServerSidecar' do
     let(:workspace) { File.join($fixtures_dir, 'valid_module_workspace') }
 
     describe 'when running node_graph action' do
-      let (:cmd_options) { ['--action', 'node_graph', '--local-workspace',workspace] }
+      let (:cmd_options) { ['--action', 'node_graph', '--local-workspace', workspace] }
 
       it 'should return a deserializable node graph' do
         # The fixture type is only present in the local workspace
@@ -127,7 +127,7 @@ describe 'PuppetLanguageServerSidecar' do
     end
 
     describe 'when running workspace_classes action' do
-      let (:cmd_options) { ['--action', 'workspace_classes', '--local-workspace',workspace] }
+      let (:cmd_options) { ['--action', 'workspace_classes', '--local-workspace', workspace] }
 
       it 'should return a deserializable class list with the named fixtures' do
         result = run_sidecar(cmd_options)
@@ -143,7 +143,7 @@ describe 'PuppetLanguageServerSidecar' do
     end
 
     describe 'when running workspace_functions action' do
-      let (:cmd_options) { ['--action', 'workspace_functions', '--local-workspace',workspace] }
+      let (:cmd_options) { ['--action', 'workspace_functions', '--local-workspace', workspace] }
 
       it 'should return a deserializable function list with the named fixtures' do
         result = run_sidecar(cmd_options)
@@ -162,7 +162,7 @@ describe 'PuppetLanguageServerSidecar' do
     end
 
     describe 'when running workspace_types action' do
-      let (:cmd_options) { ['--action', 'workspace_types', '--local-workspace',workspace] }
+      let (:cmd_options) { ['--action', 'workspace_types', '--local-workspace', workspace] }
 
       it 'should return a deserializable type list with the named fixtures' do
         result = run_sidecar(cmd_options)
@@ -183,6 +183,97 @@ describe 'PuppetLanguageServerSidecar' do
         expect(obj.attributes[:name][:required?]).to be true
         expect(obj.attributes[:when][:type]).to eq(:property)
         expect(obj.attributes[:when][:doc]).to eq("when_property\n\n")
+        expect(obj.attributes[:when][:required?]).to be_nil
+      end
+    end
+  end
+
+  context 'given a workspace containing an environment.conf' do
+    # Test fixtures used is fixtures/valid_environment_workspace
+    let(:workspace) { File.join($fixtures_dir, 'valid_environment_workspace') }
+
+    describe 'when running node_graph action' do
+      let (:cmd_options) { ['--action', 'node_graph', '--local-workspace', workspace] }
+
+      it 'should return a deserializable node graph' do
+        # The envtype type is only present in the local workspace
+        with_temporary_file("envtype { 'test':\n}") do |filepath|
+          action_params = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new()
+          action_params['source'] = filepath
+
+          result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
+
+          deserial = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+          expect { deserial.from_json!(result) }.to_not raise_error
+
+          expect(deserial.dot_content).to match(/Envtype\[test\]/)
+          expect(deserial.error_content.to_s).to eq('')
+        end
+      end
+    end
+
+    describe 'when running workspace_classes action' do
+      let (:cmd_options) { ['--action', 'workspace_classes', '--local-workspace', workspace] }
+
+      it 'should return a deserializable class list with the named fixtures' do
+        result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        # Classes
+        expect(deserial).to contain_child_with_key(:"role::base")
+        expect(deserial).to contain_child_with_key(:"profile::main")
+        # Defined Types
+        expect(deserial).to contain_child_with_key(:envdeftype)
+
+        # Make sure the class has the right properties
+        obj = child_with_key(deserial, :envdeftype)
+        expect(obj.doc).to be_nil # We don't yet get documentation for classes or defined types
+        expect(obj.parameters['ensure']).to_not be_nil
+        expect(obj.parameters['ensure'][:type]).to eq('String')
+        expect(obj.source).to match(/valid_environment_workspace/)
+      end
+    end
+
+    describe 'when running workspace_functions action' do
+      let (:cmd_options) { ['--action', 'workspace_functions', '--local-workspace', workspace] }
+
+      it 'should return a deserializable function list with the named fixtures' do
+        result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        expect(deserial).to contain_child_with_key(:env_function)
+
+        # Make sure the function has the right properties
+        func = child_with_key(deserial, :env_function)
+        expect(func.doc).to eq('doc_env_function')
+        expect(func.source).to match(/valid_environment_workspace/)
+      end
+    end
+
+    describe 'when running workspace_types action' do
+      let (:cmd_options) { ['--action', 'workspace_types', '--local-workspace', workspace] }
+
+      it 'should return a deserializable type list with the named fixtures' do
+        result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        expect(deserial).to contain_child_with_key(:envtype)
+
+        # Make sure the type has the right properties
+        obj = child_with_key(deserial, :envtype)
+        expect(obj.doc).to eq('doc_type_fixture')
+        expect(obj.source).to match(/valid_environment_workspace/)
+        # Make sure the type attributes are correct
+        expect(obj.attributes.key?(:name)).to be true
+        expect(obj.attributes.key?(:when)).to be true
+        expect(obj.attributes[:name][:type]).to eq(:param)
+        expect(obj.attributes[:name][:doc]).to eq("name_env_parameter\n\n")
+        expect(obj.attributes[:name][:required?]).to be true
+        expect(obj.attributes[:when][:type]).to eq(:property)
+        expect(obj.attributes[:when][:doc]).to eq("when_env_property\n\n")
         expect(obj.attributes[:when][:required?]).to be_nil
       end
     end
