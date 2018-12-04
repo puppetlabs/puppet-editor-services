@@ -93,7 +93,7 @@ module PuppetLanguageServerSidecar
           args[:output] = path
         end
 
-        opts.on('-p', '--puppet-settings=TEXT', Array, 'Comma dilimited list of settings to pass into Puppet e.g. --vardir,/opt/test-fixture') do |text|
+        opts.on('-p', '--puppet-settings=TEXT', Array, 'Comma delimited list of settings to pass into Puppet e.g. --vardir,/opt/test-fixture') do |text|
           args[:puppet_settings] = text
         end
 

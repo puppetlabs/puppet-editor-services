@@ -7,12 +7,13 @@ module PuppetLanguageServer
   class SidecarQueue
     attr_writer :cache
 
-    def initialize
+    def initialize(options = {})
       @queue = []
       @queue_mutex = Mutex.new
       @queue_threads_mutex = Mutex.new
       @queue_threads = []
       @cache = nil
+      @queue_options = options
     end
 
     def queue_size
@@ -49,7 +50,7 @@ module PuppetLanguageServer
     def execute_sync(action, additional_args, handle_errors = false)
       return nil if @cache.nil?
       sidecar_path = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', 'puppet-languageserver-sidecar'))
-      args = ['--action', action].concat(additional_args)
+      args = ['--action', action].concat(additional_args).concat(sidecar_args_from_options)
 
       cmd = ['ruby', sidecar_path].concat(args)
       PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: Running sidecar #{cmd}")
@@ -152,6 +153,15 @@ module PuppetLanguageServer
 
     def run_sidecar(cmd)
       Open3.capture3(*cmd)
+    end
+
+    def sidecar_args_from_options
+      return [] if @queue_options.nil?
+      result = []
+      result << '--no-cache' if @queue_options[:disable_sidecar_cache]
+      result << "--feature-flags=#{@queue_options[:flags].join(',')}" if @queue_options[:flags]
+      result << "--puppet-settings=#{@queue_options[:puppet_settings].join(',')}" if @queue_options[:puppet_settings] && !@queue_options[:puppet_settings].empty?
+      result
     end
   end
 end
