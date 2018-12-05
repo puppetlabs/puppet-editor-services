@@ -44,14 +44,17 @@ module PuppetLanguageServer
     def self.parse(options)
       # Set defaults here
       args = {
-        stdio: false,
-        port: nil,
-        ipaddress: 'localhost',
-        stop_on_client_exit: true,
         connection_timeout: 10,
-        preload_puppet: true,
         debug: nil,
+        disable_sidecar_cache: false,
         fast_start_langserver: true,
+        flags: [],
+        ipaddress: 'localhost',
+        port: nil,
+        puppet_settings: [],
+        preload_puppet: true,
+        stdio: false,
+        stop_on_client_exit: true,
         workspace: nil
       }
 
@@ -91,10 +94,20 @@ module PuppetLanguageServer
           args[:stdio] = true
         end
 
-        opts.on('--enable-file-cache', 'Enables the file system cache for Puppet Objects (types, class etc.)') do |_misc|
-          args[:cache] = {
-            :persistent_cache => :file
-          }
+        opts.on('--enable-file-cache', '** DEPRECATED ** Enables the file system cache for Puppet Objects (types, class etc.)') do |_misc|
+        end
+
+        # These options are normally passed through to the Sidecar
+        opts.on('--[no-]cache', 'Enable or disable all caching inside the sidecar. By default caching is enabled.') do |cache|
+          args[:disable_sidecar_cache] = !cache
+        end
+
+        opts.on('--feature-flags=FLAGS', Array, 'A list of comma delimited feature flags') do |flags|
+          args[:flags] = flags
+        end
+
+        opts.on('--puppet-settings=TEXT', Array, 'Comma delimited list of settings to pass into Puppet e.g. --vardir,/opt/test-fixture') do |text|
+          args[:puppet_settings] = text
         end
 
         opts.on('--local-workspace=PATH', 'The workspace or file path that will be used to provide module-specific functionality. Default is no workspace path.') do |path|
@@ -126,8 +139,11 @@ module PuppetLanguageServer
     log_message(:info, "Language Server is v#{PuppetEditorServices.version}")
     log_message(:info, "Using Puppet v#{Puppet.version}")
 
-    log_message(:info, 'Initializing Puppet Helper Cache...')
-    PuppetLanguageServer::PuppetHelper.configure_cache(options[:cache])
+    log_message(:debug, "Detected additional puppet settings #{options[:puppet_settings]}")
+    options[:puppet_settings].nil? ? Puppet.initialize_settings : Puppet.initialize_settings(options[:puppet_settings])
+
+    log_message(:info, 'Initializing Puppet Helper...')
+    PuppetLanguageServer::PuppetHelper.initialize_helper(options)
 
     log_message(:debug, 'Initializing Document Store...')
     PuppetLanguageServer::DocumentStore.initialize_store(options)
@@ -145,8 +161,6 @@ module PuppetLanguageServer
   end
 
   def self.init_puppet_worker(options)
-    options[:puppet_settings].nil? ? Puppet.initialize_settings : Puppet.initialize_settings(options[:puppet_settings])
-
     # Remove all other logging destinations except for ours
     Puppet::Util::Log.destinations.clear
     Puppet::Util::Log.newdestination('null_logger')

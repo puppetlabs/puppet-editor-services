@@ -18,9 +18,11 @@ module PuppetLanguageServer
     @default_classes_loaded = nil
     @inmemory_cache = nil
     @sidecar_queue_obj = nil
+    @helper_options = nil
 
-    def self.configure_cache(options = {})
-      @inmemory_cache = PuppetLanguageServer::PuppetHelper::Cache.new(options)
+    def self.initialize_helper(options = {})
+      @helper_options = options
+      @inmemory_cache = PuppetLanguageServer::PuppetHelper::Cache.new
       sidecar_queue.cache = @inmemory_cache
     end
 
@@ -197,7 +199,7 @@ module PuppetLanguageServer
     end
 
     def self.sidecar_queue
-      @sidecar_queue_obj ||= PuppetLanguageServer::SidecarQueue.new
+      @sidecar_queue_obj ||= PuppetLanguageServer::SidecarQueue.new(@helper_options)
     end
     private_class_method :sidecar_queue
 
