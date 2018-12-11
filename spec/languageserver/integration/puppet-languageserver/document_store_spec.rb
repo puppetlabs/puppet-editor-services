@@ -12,12 +12,12 @@ describe 'PuppetLanguageServer::DocumentStore' do
       expect(PuppetLanguageServer::DocumentStore.store_has_module_metadata?).to be false
     end
 
-    it 'should not find puppetfile' do
-      expect(PuppetLanguageServer::DocumentStore.store_has_puppetfile?).to be false
+    it 'should not find environmentconf' do
+      expect(PuppetLanguageServer::DocumentStore.store_has_environmentconf?).to be false
     end
   end
 
-  RSpec.shared_examples 'a puppetfile workspace' do |expected_root_path|
+  RSpec.shared_examples 'a environmentconf workspace' do |expected_root_path|
     it 'should return the control repo root for the root_path' do
       expect(PuppetLanguageServer::DocumentStore.store_root_path).to eq(expected_root_path)
     end
@@ -26,8 +26,8 @@ describe 'PuppetLanguageServer::DocumentStore' do
       expect(PuppetLanguageServer::DocumentStore.store_has_module_metadata?).to be false
     end
 
-    it 'should find puppetfile' do
-      expect(PuppetLanguageServer::DocumentStore.store_has_puppetfile?).to be true
+    it 'should find environmentconf' do
+      expect(PuppetLanguageServer::DocumentStore.store_has_environmentconf?).to be true
     end
   end
 
@@ -40,8 +40,8 @@ describe 'PuppetLanguageServer::DocumentStore' do
       expect(PuppetLanguageServer::DocumentStore.store_has_module_metadata?).to be true
     end
 
-    it 'should not find puppetfile' do
-      expect(PuppetLanguageServer::DocumentStore.store_has_puppetfile?).to be false
+    it 'should not find environmentconf' do
+      expect(PuppetLanguageServer::DocumentStore.store_has_environmentconf?).to be false
     end
   end
 
@@ -118,8 +118,8 @@ describe 'PuppetLanguageServer::DocumentStore' do
     it_should_behave_like 'an empty workspace', '/a/directory/which/does/not/exist'
   end
 
-  # Puppetfile style workspaces
-  context 'given a workspace option with a puppetfile' do
+  # environmentconf style workspaces
+  context 'given a workspace option with a environmentconf' do
     expected_root = File.join($fixtures_dir, 'control_repos', 'valid')
 
     let(:server_options) { { :workspace => expected_root } }
@@ -128,12 +128,12 @@ describe 'PuppetLanguageServer::DocumentStore' do
       PuppetLanguageServer::DocumentStore.initialize_store(server_options)
     end
 
-    it_should_behave_like 'a puppetfile workspace', expected_root
+    it_should_behave_like 'a environmentconf workspace', expected_root
     it_should_behave_like 'a cached workspace'
     it_should_behave_like 'a terminating file finder', 4, 1
   end
 
-  context 'given a workspace option which has a parent directory with a puppetfile' do
+  context 'given a workspace option which has a parent directory with a environmentconf' do
     expected_root = File.join($fixtures_dir, 'control_repos', 'valid')
     deep_path = File.join(expected_root, 'site', 'profile')
 
@@ -143,7 +143,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
       PuppetLanguageServer::DocumentStore.initialize_store(server_options)
     end
 
-    it_should_behave_like 'a puppetfile workspace', expected_root
+    it_should_behave_like 'a environmentconf workspace', expected_root
     it_should_behave_like 'a cached workspace'
     it_should_behave_like 'a terminating file finder', 8, 1
   end

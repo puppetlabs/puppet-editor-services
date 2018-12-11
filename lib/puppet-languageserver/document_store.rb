@@ -75,11 +75,11 @@ module PuppetLanguageServer
       store_details[:has_metadatajson]
     end
 
-    def self.store_has_puppetfile?
-      store_details[:has_puppetfile]
+    def self.store_has_environmentconf?
+      store_details[:has_environmentconf]
     end
 
-    # Given a path, locate a metadata.json or Puppetfile file to determine where the
+    # Given a path, locate a metadata.json or environment.conf file to determine where the
     # root of the module/control repo actually is
     def self.find_root_path(path)
       return nil if path.nil?
@@ -94,7 +94,7 @@ module PuppetLanguageServer
       end
 
       until directory.nil?
-        break if file_exist?(File.join(directory, 'metadata.json')) || file_exist?(File.join(directory, 'Puppetfile'))
+        break if file_exist?(File.join(directory, 'metadata.json')) || file_exist?(File.join(directory, 'environment.conf'))
         parent = File.dirname(directory)
         # If the parent is the same as the original, then we've reached the end of the path chain
         if parent == directory
@@ -113,14 +113,14 @@ module PuppetLanguageServer
       # TTL has expired, time to calculate the document store details
 
       new_cache = {
-        :root_path        => nil,
-        :has_puppetfile   => false,
-        :has_metadatajson => false
+        :root_path           => nil,
+        :has_environmentconf => false,
+        :has_metadatajson    => false
       }
       if @workspace_path.nil?
         # If we have never been given a local workspace path on the command line then there is really no
         # way to know where the module file system path is.  Therefore the root_path is nil and assume that
-        # puppetfile and metadata.json does not exist. And don't bother trying to re-evaluate
+        # environment.conf and metadata.json does not exist. And don't bother trying to re-evaluate
         new_cache[:never_expires] = true
       else
         root_path = find_root_path(@workspace_path)
@@ -129,7 +129,7 @@ module PuppetLanguageServer
         else
           new_cache[:root_path] = root_path
           new_cache[:has_metadatajson] = file_exist?(File.join(root_path, 'metadata.json'))
-          new_cache[:has_puppetfile] = file_exist?(File.join(root_path, 'Puppetfile'))
+          new_cache[:has_environmentconf] = file_exist?(File.join(root_path, 'environment.conf'))
         end
       end
       new_cache[:expires] = Time.new + WORKSPACE_CACHE_TTL_SECONDS

@@ -2,13 +2,13 @@ module PuppetLanguageServerSidecar
   module Workspace
     @root_path = nil
     @has_module_metadata = false
-    @has_puppetfile = false
+    @has_environmentconf = false
 
     def self.detect_workspace(path)
       result = process_workspace(path)
       @root_path = result[:root_path]
       @has_module_metadata = result[:has_metadatajson]
-      @has_puppetfile = result[:has_puppetfile]
+      @has_environmentconf = result[:has_environmentconf]
     end
 
     def self.root_path
@@ -19,11 +19,11 @@ module PuppetLanguageServerSidecar
       @has_module_metadata
     end
 
-    def self.has_puppetfile? # rubocop:disable Naming/PredicateName
-      @has_puppetfile
+    def self.has_environmentconf? # rubocop:disable Naming/PredicateName
+      @has_environmentconf
     end
 
-    # Given a path, locate a metadata.json or Puppetfile file to determine where the
+    # Given a path, locate a metadata.json or environment.conf file to determine where the
     # root of the module/control repo actually is
     def self.find_root_path(path)
       return nil if path.nil?
@@ -38,7 +38,7 @@ module PuppetLanguageServerSidecar
       end
 
       until directory.nil?
-        break if file_exist?(File.join(directory, 'metadata.json')) || file_exist?(File.join(directory, 'Puppetfile'))
+        break if file_exist?(File.join(directory, 'metadata.json')) || file_exist?(File.join(directory, 'environment.conf'))
         parent = File.dirname(directory)
         # If the parent is the same as the original, then we've reached the end of the path chain
         if parent == directory
@@ -54,9 +54,9 @@ module PuppetLanguageServerSidecar
 
     def self.process_workspace(path)
       result = {
-        :root_path        => nil,
-        :has_puppetfile   => false,
-        :has_metadatajson => false
+        :root_path           => nil,
+        :has_environmentconf => false,
+        :has_metadatajson    => false
       }
       return result if path.nil?
 
@@ -66,7 +66,7 @@ module PuppetLanguageServerSidecar
       else
         result[:root_path] = root_path
         result[:has_metadatajson] = file_exist?(File.join(root_path, 'metadata.json'))
-        result[:has_puppetfile] = file_exist?(File.join(root_path, 'Puppetfile'))
+        result[:has_environmentconf] = file_exist?(File.join(root_path, 'environment.conf'))
       end
       result
     end
