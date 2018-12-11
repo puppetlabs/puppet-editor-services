@@ -82,6 +82,7 @@ module PuppetLanguageServer
           end
         end
       end
+
       private
 
       # <Type of object in the file :function, :type, :class>

@@ -24,7 +24,7 @@ def wait_for_puppet_loading
              PuppetLanguageServer::PuppetHelper.default_classes_loaded?
     sleep(1)
     interation += 1
-    next if interation < 60
+    next if interation < 90
     raise <<-ERRORMSG
             Puppet has not be initialised in time:
             functions_loaded? = #{PuppetLanguageServer::PuppetHelper.default_functions_loaded?}
