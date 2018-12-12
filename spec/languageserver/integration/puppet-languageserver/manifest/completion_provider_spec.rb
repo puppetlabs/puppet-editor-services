@@ -75,6 +75,7 @@ describe 'completion_provider' do
 
     context "Given a simple valid manifest" do
       let(:content) { <<-EOT
+
 class Alice {
 
   user { 'Bob':
@@ -97,7 +98,7 @@ EOT
         let(:char_num) { 0 }
         let(:expected_types) { ['keyword','resource_type','function','resource_class'] }
 
-        [0, 8].each do |line_num|
+        [0, 8, 9].each do |line_num|
           it "should return a list of keyword, resource_type, function, resource_class regardless of cursor location (Testing line #{line_num})" do
             result = subject.complete(content, line_num, char_num)
 

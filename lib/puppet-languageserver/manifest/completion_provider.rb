@@ -5,9 +5,9 @@ module PuppetLanguageServer
         items = []
         incomplete = false
 
-        result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num, true, [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression])
+        ast_object, _ = PuppetLanguageServer::PuppetParserHelper.estimate_object_under_cursor(content, line_num, char_num, [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression])
 
-        if result.nil?
+        if ast_object.nil?
           # We are in the root of the document.
 
           # Add keywords
@@ -23,11 +23,9 @@ module PuppetLanguageServer
                                                        'items'        => items)
         end
 
-        item = result[:model]
-
-        case item.class.to_s
+        case ast_object.class.to_s
         when 'Puppet::Pops::Model::VariableExpression'
-          expr = item.expr.value
+          expr = ast_object.expr.value
 
           # Complete for `$facts[...`
           all_facts { |x| items << x } if expr == 'facts'
@@ -46,7 +44,7 @@ module PuppetLanguageServer
           # properities and parameters.
 
           # Try Types first
-          item_object = PuppetLanguageServer::PuppetHelper.get_type(item.type_name.value)
+          item_object = PuppetLanguageServer::PuppetHelper.get_type(ast_object.type_name.value)
           unless item_object.nil?
             # Add Parameters
             item_object.parameters.each_key do |name|
@@ -55,7 +53,7 @@ module PuppetLanguageServer
                                                              'detail' => 'Parameter',
                                                              'data'   => { 'type'          => 'resource_parameter',
                                                                            'param'         => name.to_s,
-                                                                           'resource_type' => item.type_name.value })
+                                                                           'resource_type' => ast_object.type_name.value })
             end
             # Add Properties
             item_object.properties.each_key do |name|
@@ -64,7 +62,7 @@ module PuppetLanguageServer
                                                              'detail' => 'Property',
                                                              'data'   => { 'type'          => 'resource_property',
                                                                            'prop'          => name.to_s,
-                                                                           'resource_type' => item.type_name.value })
+                                                                           'resource_type' => ast_object.type_name.value })
             end
             # TODO: What about meta parameters?
           end
@@ -79,7 +77,7 @@ module PuppetLanguageServer
                                                                'detail' => 'Parameter',
                                                                'data'   => { 'type'          => 'resource_class_parameter',
                                                                              'param'         => name.to_s,
-                                                                             'resource_type' => item.type_name.value })
+                                                                             'resource_type' => ast_object.type_name.value })
               end
             end
           end

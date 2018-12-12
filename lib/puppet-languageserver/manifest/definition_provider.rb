@@ -2,12 +2,9 @@ module PuppetLanguageServer
   module Manifest
     module DefinitionProvider
       def self.find_definition(content, line_num, char_num)
-        result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num, false, [Puppet::Pops::Model::BlockExpression])
+        item, path = PuppetLanguageServer::PuppetParserHelper.exact_object_under_cursor(content, line_num, char_num, [Puppet::Pops::Model::BlockExpression])
 
-        return nil if result.nil?
-
-        path = result[:path]
-        item = result[:model]
+        return nil if item.nil?
 
         response = []
         case item.class.to_s

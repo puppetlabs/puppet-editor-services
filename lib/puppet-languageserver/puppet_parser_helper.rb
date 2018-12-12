@@ -1,5 +1,6 @@
 module PuppetLanguageServer
   module PuppetParserHelper
+
     def self.remove_chars_starting_at(content, line_offsets, line_num, char_num, num_chars_to_remove)
       line_offset = line_offsets[line_num]
       raise if line_offset.nil?
@@ -56,7 +57,15 @@ module PuppetLanguageServer
       end
     end
 
-    def self.object_under_cursor(content, line_num, char_num, multiple_attempts = false, disallowed_classes = [])
+    def self.estimate_object_under_cursor(content, line_num, char_num, disallowed_classes = [])
+      process_ast_for_object(content, line_num, char_num, true, true, disallowed_classes)
+    end
+
+    def self.exact_object_under_cursor(content, line_num, char_num, disallowed_classes = [])
+      process_ast_for_object(content, line_num, char_num, false, false, disallowed_classes)
+    end
+
+    def self.process_ast_for_object(content, line_num, char_num, multiple_attempts, after_keypress, disallowed_classes)
       # Use Puppet to generate the AST
       parser = Puppet::Pops::Parser::Parser.new
 
@@ -125,57 +134,79 @@ module PuppetLanguageServer
       rescue StandardError => _e
         line_offset = result['locator'].line_index[line_num]
       end
-      # Typically we're completing after something was typed, so go back one char
-      abs_offset = line_offset + char_num + move_offset - 1
+      abs_offset = line_offset + char_num + move_offset
+      # Typically we're completing after something was typed, so go back one
+      # char if we not at the beginning of a line
+      abs_offset -= 1 if after_keypress && char_num > 0
 
-      # Enumerate the AST looking for items that span the line/char we want.
-      # Once we have all valid items, sort them by the smallest span.  Typically the smallest span
-      # is the most specific object in the AST
-      #
-      # TODO: Should probably walk the AST and only look for the deepest child, but integer sorting
-      #       is so much easier and faster.
       model_path_struct = Struct.new(:model, :path)
-      valid_models = []
-      if result.model.respond_to? :eAllContents
-        valid_models = result.model.eAllContents.select do |item|
-          check_for_valid_item(item, abs_offset, disallowed_classes)
-        end
+      item, path = recurse_ast(result.model, abs_offset, disallowed_classes)
+      return nil, nil if item.nil?
 
-        valid_models.sort! { |a, b| a.length - b.length }
+      return item, path
+    end
+    private_class_method :process_ast_for_object
+
+    def self.recurse_ast(item, abs_offset, disallowed_classes, indent = 0, path = [])
+      this_path = path + [item]
+
+      if item.respond_to? :eAllContents
+        # Puppet 4
+        item.eContents.select do |child|
+          child_item = recurse_ast(child, abs_offset, disallowed_classes, indent + 1, this_path)
+          return child_item, child_path unless child_item.nil?
+        end
       else
-        path = []
-        result.model._pcore_all_contents(path) do |item|
-          if check_for_valid_item(item, abs_offset, disallowed_classes) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-            valid_models.push(model_path_struct.new(item, path.dup))
-          end
+        # Puppet 5+
+        item._pcore_contents do |child|
+          child_item, child_path = recurse_ast(child, abs_offset, disallowed_classes, indent + 1, this_path)
+          return child_item, child_path unless child_item.nil?
         end
-
-        valid_models.sort! { |a, b| a[:model].length - b[:model].length }
       end
-      # nil means the root of the document
-      return nil if valid_models.empty?
-      item = valid_models[0]
-
-      if item.respond_to? :eAllContents # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-        item = model_path_struct.new(item, construct_path(item))
+      if is_valid_item?(item, abs_offset, disallowed_classes)
+        return item, path
+      else
+        return nil, nil
       end
-
-      item
     end
 
-    def self.construct_path(item)
-      path = []
-      item = item.eContainer
-      while item.class != Puppet::Pops::Model::Program
-        path.unshift item
-        item = item.eContainer
-      end
+    # # Debugging only method
+    # def self.draw_ast(item, indent = 0, abs_offset, disallowed_classes)
+    #   puts "--- Finding offset #{abs_offset} ----------------- AST \n ( ) Invalid  (+) Valid Item" if indent.zero?
+    #   indentText = "  " * indent
+    #   if is_valid_item?(item, abs_offset, disallowed_classes)
+    #     indentText += "(+)"
+    #   else
+    #     indentText += "( )"
+    #   end
 
-      path
-    end
+    #   off = item.respond_to?(:offset) ? item.offset : '???'
+    #   length = item.respond_to?(:length) ? item.length : '???'
+    #   line = item.respond_to?(:line) ? item.line : '???'
+    #   pos = item.respond_to?(:pos) ? item.pos : '???'
+    #   off = off.nil? ? 'nil' : off
+    #   length = length.nil? ? 'nil' : length
 
-    def self.check_for_valid_item(item, abs_offset, disallowed_classes)
-      item.respond_to?(:offset) && !item.offset.nil? && !item.length.nil? && abs_offset >= item.offset && abs_offset <= item.offset + item.length && !disallowed_classes.include?(item.class)
+    #   puts "#{indentText} #{item.class.to_s} off:#{off} len:#{length} (#{line},#{pos}) [#{item.object_id}]"
+
+    #   if item.respond_to? :eContents
+    #     # Puppet 4
+    #     item.eContents.select { |child| draw_ast(child, indent + 1, abs_offset,disallowed_classes) }
+    #   else
+    #     # Puppet 5+
+    #     item._pcore_contents { |child| draw_ast(child, indent + 1, abs_offset,disallowed_classes) }
+    #   end
+    #   puts "---------------------------------------------- AST" if indent.zero?
+    # end
+    # private_class_method :draw_ast
+
+    def self.is_valid_item?(item, abs_offset, disallowed_classes)
+      return false if item.nil?
+      return false if !item.respond_to?(:offset) || item.offset.nil?
+      return false if !item.respond_to?(:length) || item.length.nil? || item.length.zero?
+      return false if disallowed_classes.include?(item.class)
+      abs_offset >= item.offset && abs_offset <= item.offset + item.length
     end
+    private_class_method :is_valid_item?
   end
 end
