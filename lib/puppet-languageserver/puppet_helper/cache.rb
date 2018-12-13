@@ -75,6 +75,14 @@ module PuppetLanguageServer
         end
       end
 
+      def all_objects(&_block)
+        @cache_lock.synchronize do
+          @inmemory_cache.each do |item|
+            yield item.key, item
+          end
+        end
+      end
+
       private
 
       # <Type of object in the file :function, :type, :class>

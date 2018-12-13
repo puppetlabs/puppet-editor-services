@@ -164,6 +164,17 @@ module PuppetLanguageServer
           PuppetLanguageServer.log_message(:error, "(textDocument/documentSymbol) #{exception}")
           request.reply_result(nil)
         end
+
+      when 'workspace/symbol'
+        begin
+          result = []
+          result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(request.params['query']))
+          request.reply_result(result)
+        rescue StandardError => exception
+          PuppetLanguageServer.log_message(:error, "(workspace/symbol) #{exception}")
+          request.reply_result([])
+        end
+
       else
         PuppetLanguageServer.log_message(:error, "Unknown RPC method #{request.rpc_method}")
       end

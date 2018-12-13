@@ -4,14 +4,15 @@ module PuppetLanguageServer
       # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize-request
 
       {
-        'textDocumentSync'       => LanguageServer::TEXTDOCUMENTSYNCKIND_FULL,
-        'hoverProvider'          => true,
-        'completionProvider'     => {
+        'textDocumentSync'        => LanguageServer::TEXTDOCUMENTSYNCKIND_FULL,
+        'hoverProvider'           => true,
+        'completionProvider'      => {
           'resolveProvider'   => true,
           'triggerCharacters' => ['>', '$', '[', '=']
         },
-        'definitionProvider'     => true,
-        'documentSymbolProvider' => true
+        'definitionProvider'      => true,
+        'documentSymbolProvider'  => true,
+        'workspaceSymbolProvider' => true
       }
     end
   end

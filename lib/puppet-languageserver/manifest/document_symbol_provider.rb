@@ -1,6 +1,56 @@
 module PuppetLanguageServer
   module Manifest
     module DocumentSymbolProvider
+      def self.workspace_symbols(query)
+        query = '' if query.nil?
+        result = []
+        PuppetLanguageServer::PuppetHelper.all_objects do |key, item|
+          key_string = key.to_s
+          next unless key_string.include?(query)
+          case item
+          when PuppetLanguageServer::PuppetHelper::PuppetType
+            result << LanguageServer::SymbolInformation.create(
+              'name'     => key_string,
+              'kind'     => LanguageServer::SYMBOLKIND_METHOD,
+              'location' => LanguageServer::Location.create(
+                'uri'      => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+                'fromline' => item.line,
+                'fromchar' => 0, # Don't have char pos for types
+                'toline'   => item.line,
+                'tochar'   => 1024, # Don't have char pos for types
+              )
+            )
+
+          when PuppetLanguageServer::PuppetHelper::PuppetFunction
+            result << LanguageServer::SymbolInformation.create(
+              'name'     => key_string,
+              'kind'     => LanguageServer::SYMBOLKIND_FUNCTION,
+              'location' => LanguageServer::Location.create(
+                'uri'      => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+                'fromline' => item.line,
+                'fromchar' => 0, # Don't have char pos for functions
+                'toline'   => item.line,
+                'tochar'   => 1024, # Don't have char pos for functions
+              )
+            )
+
+          when PuppetLanguageServer::PuppetHelper::PuppetClass
+            result << LanguageServer::SymbolInformation.create(
+              'name'     => key_string,
+              'kind'     => LanguageServer::SYMBOLKIND_CLASS,
+              'location' => LanguageServer::Location.create(
+                'uri'      => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+                'fromline' => item.line,
+                'fromchar' => 0, # Don't have char pos for classes
+                'toline'   => item.line,
+                'tochar'   => 1024, # Don't have char pos for classes
+              )
+            )
+          end
+        end
+        result
+      end
+
       def self.extract_document_symbols(content)
         parser = Puppet::Pops::Parser::Parser.new
         result = parser.parse_string(content, '')

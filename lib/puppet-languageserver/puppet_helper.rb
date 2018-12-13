@@ -26,6 +26,14 @@ module PuppetLanguageServer
       sidecar_queue.cache = @inmemory_cache
     end
 
+    def self.all_objects(&_block)
+      return nil if @default_types_loaded == false
+      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
+      @inmemory_cache.all_objects do |key, item|
+        yield key, item
+      end
+    end
+
     # Node Graph
     def self.get_node_graph(content, local_workspace)
       with_temporary_file(content) do |filepath|
