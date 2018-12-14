@@ -6,6 +6,17 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.17.0 - 2018-12-14
+
+### Added
+
+- ([GH-20](https://github.com/lingua-pupuli/puppet-editor-services/issues/20)) Add support for Control Repositories for intellisense e.g. hover, completion
+- ([GH-88](https://github.com/lingua-pupuli/puppet-editor-services/issues/20)) Add a workspace symbol provider
+
+### Changed
+
+- ([GH-35](https://github.com/lingua-pupuli/puppet-editor-services/issues/35)) Update Language Server command arguments to be like Sidecar
+
 ## 0.16.0 - 2018-11-30
 
 ### Added
