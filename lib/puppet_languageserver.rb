@@ -10,6 +10,7 @@ begin
     json_rpc_handler
     document_store
     crash_dump
+    diagnostics
     message_router
     validation_queue
     server_capabilities
