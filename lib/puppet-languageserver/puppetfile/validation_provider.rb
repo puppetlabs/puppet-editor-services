@@ -6,7 +6,7 @@ module PuppetLanguageServer
         1000
       end
 
-      def self.validate(content, _workspace, _max_problems = 100)
+      def self.validate(content, _max_problems = 100)
         result = []
         # TODO: Need to implement max_problems
         _problems = 0
