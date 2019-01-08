@@ -12,6 +12,7 @@
   puppetfile/r10k/module/git
   puppetfile/r10k/module/svn
   puppetfile/r10k/puppetfile
+  puppetfile/document_symbol_provider
   puppetfile/validation_provider
 ].each do |lib|
   begin

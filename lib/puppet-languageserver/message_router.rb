@@ -156,8 +156,11 @@ module PuppetLanguageServer
           case documents.document_type(file_uri)
           when :manifest
             request.reply_result(PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => PuppetLanguageServer::DocumentStore.module_plan_file?(file_uri)))
+          when :puppetfile
+            result = PuppetLanguageServer::Puppetfile::DocumentSymbolProvider.extract_document_symbols(content)
+            request.reply_result(result)
           else
-            raise "Unable to provide definition on #{file_uri}"
+            raise "Unable to provide document symbols on #{file_uri}"
           end
         rescue StandardError => exception
           PuppetLanguageServer.log_message(:error, "(textDocument/documentSymbol) #{exception}")
