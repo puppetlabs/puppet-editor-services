@@ -43,6 +43,18 @@ describe 'PuppetLanguageServer::Manifest::DocumentSymbolProvider' do
 
   context 'with Puppet 5.0 and above', :if => Gem::Version.new(Puppet.version) >= Gem::Version.new('5.0.0') do
     describe '#extract_document_symbols' do
+      context 'Given a Puppet Plan', :if => Puppet.tasks_supported? do
+        let(:content) { <<-EOT
+          plan mymodule::my_plan(
+          ) {
+          }
+          EOT
+        }
+        it "should not raise an error" do
+          result = subject.extract_document_symbols(content, { :tasks_mode => true})
+        end
+      end
+
       it 'should find a class in the document root' do
         content = "class foo {\n}"
         result = subject.extract_document_symbols(content)

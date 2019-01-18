@@ -1,17 +1,23 @@
 module PuppetLanguageServer
   module Manifest
     module CompletionProvider
-      def self.complete(content, line_num, char_num)
+      def self.complete(content, line_num, char_num, options = {})
+        options = {
+          :tasks_mode => false
+        }.merge(options)
         items = []
         incomplete = false
 
-        result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num, true, [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression])
-
+        result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
+                                                                              :multiple_attempts  => true,
+                                                                              :disallowed_classes => [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression],
+                                                                              :tasks_mode         => options[:tasks_mode])
         if result.nil?
           # We are in the root of the document.
 
           # Add keywords
           keywords(%w[class define node application site]) { |x| items << x }
+          keywords(%w[plan]) { |x| items << x } if options[:tasks_mode]
 
           # Add resources
           all_resources { |x| items << x }

@@ -17,7 +17,7 @@ module PuppetLanguageServer
                 'fromline' => item.line,
                 'fromchar' => 0, # Don't have char pos for types
                 'toline'   => item.line,
-                'tochar'   => 1024, # Don't have char pos for types
+                'tochar'   => 1024 # Don't have char pos for types
               )
             )
 
@@ -30,7 +30,7 @@ module PuppetLanguageServer
                 'fromline' => item.line,
                 'fromchar' => 0, # Don't have char pos for functions
                 'toline'   => item.line,
-                'tochar'   => 1024, # Don't have char pos for functions
+                'tochar'   => 1024 # Don't have char pos for functions
               )
             )
 
@@ -43,7 +43,7 @@ module PuppetLanguageServer
                 'fromline' => item.line,
                 'fromchar' => 0, # Don't have char pos for classes
                 'toline'   => item.line,
-                'tochar'   => 1024, # Don't have char pos for classes
+                'tochar'   => 1024 # Don't have char pos for classes
               )
             )
           end
@@ -51,9 +51,12 @@ module PuppetLanguageServer
         result
       end
 
-      def self.extract_document_symbols(content)
+      def self.extract_document_symbols(content, options = {})
+        options = {
+          :tasks_mode => false
+        }.merge(options)
         parser = Puppet::Pops::Parser::Parser.new
-        result = parser.parse_string(content, '')
+        result = parser.singleton_parse_string(content, options[:tasks_mode], '')
 
         if result.model.respond_to? :eAllContents
           # We are unable to build a document symbol tree for Puppet 4 AST
@@ -187,6 +190,28 @@ module PuppetLanguageServer
             'children'       => []
           )
 
+        # Puppet Plan
+        when 'Puppet::Pops::Model::PlanDefinition'
+          this_symbol = LanguageServer::DocumentSymbol.create(
+            'name'           => object.name,
+            'kind'           => LanguageServer::SYMBOLKIND_CLASS,
+            'detail'         => object.name,
+            'range'          => create_range_array(object.offset, object.length, object.locator),
+            'selectionRange' => create_range_array(object.offset, object.length, object.locator),
+            'children'       => []
+          )
+          # Load in the class parameters
+          object.parameters.each do |param|
+            param_symbol = LanguageServer::DocumentSymbol.create(
+              'name'           => '$' + param.name,
+              'kind'           => LanguageServer::SYMBOLKIND_PROPERTY,
+              'detail'         => '$' + param.name,
+              'range'          => create_range_array(param.offset, param.length, param.locator),
+              'selectionRange' => create_range_array(param.offset, param.length, param.locator),
+              'children'       => []
+            )
+            this_symbol['children'].push(param_symbol)
+          end
         end
 
         object._pcore_contents do |item|

@@ -52,6 +52,15 @@ module PuppetLanguageServer
       end
     end
 
+    # Plan files https://puppet.com/docs/bolt/1.x/writing_plans.html#concept-4485
+    # exist in modules (requires metadata.json) and are in the `/plans` directory
+    def self.module_plan_file?(uri)
+      return false unless store_has_module_metadata?
+      relative_path = PuppetLanguageServer::UriHelper.relative_uri_path(PuppetLanguageServer::UriHelper.build_file_uri(store_root_path), uri, !windows?)
+      return false if relative_path.nil?
+      relative_path.start_with?('/plans/')
+    end
+
     # Workspace management
     WORKSPACE_CACHE_TTL_SECONDS = 60
     def self.initialize_store(options = {})
@@ -150,5 +159,12 @@ module PuppetLanguageServer
       Dir.exist?(path)
     end
     private_class_method :dir_exist?
+
+    def self.windows?
+      # Ruby only sets File::ALT_SEPARATOR on Windows and the Ruby standard
+      # library uses that to test what platform it's on.
+      !!File::ALT_SEPARATOR # rubocop:disable Style/DoubleNegation
+    end
+    private_class_method :windows?
   end
 end

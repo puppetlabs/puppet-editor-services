@@ -72,7 +72,7 @@ describe 'validation_queue' do
         ])
 
         # We only expect the following results to be returned
-        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(file_content2).and_return(validation_result)
+        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(file_content2, Hash).and_return(validation_result)
         expect(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).with(file_content1).and_return(validation_result)
         expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(file_content1).and_return(validation_result)
         expect(connection).to receive(:reply_diagnostics).with(MANIFEST_FILENAME, validation_result)
@@ -93,7 +93,7 @@ describe 'validation_queue' do
         validation_result = [{ 'result' => 'MockResult' }]
 
         before(:each) do
-          expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(FILE_CONTENT).and_return(validation_result)
+          expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(FILE_CONTENT, Hash).and_return(validation_result)
         end
 
         it_should_behave_like "single document which sends validation results", MANIFEST_FILENAME, FILE_CONTENT, validation_result
@@ -155,7 +155,7 @@ describe 'validation_queue' do
       validation_result = [{ 'result' => 'MockResult' }]
 
       before(:each) do
-        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(FILE_CONTENT).and_return(validation_result)
+        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(FILE_CONTENT, Hash).and_return(validation_result)
       end
 
       it_should_behave_like "document which sends validation results", MANIFEST_FILENAME, FILE_CONTENT, validation_result

@@ -58,6 +58,18 @@ EOT
       end
     end
 
+    context 'Given a Puppet Plan', :if => Puppet.tasks_supported? do
+      let(:content) { <<-EOT
+        plan mymodule::my_plan(
+        ) {
+        }
+        EOT
+      }
+      it "should not raise an error" do
+        result = subject.resolve(content, 0, 1, { :tasks_mode => true})
+      end
+    end
+
     describe 'when cursor is in the root of the document' do
       let(:line_num) { 5 }
       let(:char_num) { 3 }
