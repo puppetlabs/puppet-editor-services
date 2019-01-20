@@ -72,9 +72,11 @@ module PuppetLanguageServer
         when :noop
           new_content = content
         when :remove_char
+          next if line_num.zero? && char_num.zero?
           new_content = remove_char_at(content, line_offsets, line_num, char_num)
           move_offset = -1
         when :remove_word
+          next if line_num.zero? && char_num.zero?
           next_char = get_char_at(content, line_offsets, line_num, char_num)
 
           while /[[:word:]]/ =~ next_char
