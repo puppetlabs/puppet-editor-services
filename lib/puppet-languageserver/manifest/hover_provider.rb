@@ -26,6 +26,14 @@ module PuppetLanguageServer
             # We are hovering over the resource name
             content = get_resource_expression_content(path[-2])
           end
+
+        when 'Puppet::Pops::Model::QualifiedReference'
+          # Get the parent resource class
+          parent_klass = path[-1]
+          if parent_klass.class.to_s == 'Puppet::Pops::Model::CallNamedFunctionExpression'
+            content = get_qualified_call_named_function_expression_content(item)
+          end
+
         when 'Puppet::Pops::Model::VariableExpression'
           expr = item.expr.value
 
@@ -148,6 +156,39 @@ module PuppetLanguageServer
         content = "**#{func_name}** Function" # TODO: Do I add in the params from the arity number?
         content += "\n\n" + func_info.doc unless func_info.doc.nil?
 
+        content
+      end
+
+      def self.get_qualified_call_named_function_expression_content(item)
+        case item.value
+        when 'deferred'
+          content = <<-EOT
+**#{item.cased_value}** Function
+
+The Deferred type enables Puppet agents to fetch or calculate data for themselves at catalog application time. One use case for this is to securely retrieve sensitive information like passwords from a secrets store.
+
+Important info about using Deferred
+
+* If an agent is applying a cached catalog, the Deferred function is still called at application time, and the value returned at that time is the value that is used.
+
+* It is the responsibility of the function to handle edge cases such as providing default or cached values in cases where a remote store is unavailable.
+
+* Deferred supports only the Puppet function API for Ruby.
+
+* If a function called on the agent side does not return Sensitive, you can wrap the value returned by Deferred in a Sensitive type if a sensitive value is desired. For example: $d = Sensitive(Deferred("myupcase", ["example value"]))
+EOT
+        when 'sensitive'
+          content = <<-EOT
+**#{item.cased_value}** Function
+
+Sensitive types in the Puppet language are strings marked as sensitive. The value is displayed in plain text in the catalog and manifest, but is redacted from logs and reports. Because the value is currently maintained as plain text, you should only use it as an aid to ensure that sensitive values are not inadvertently disclosed.
+
+The Sensitive type can be written as `Sensitive.new(val)`, or the shortform `Sensitive(val)`
+
+EOT
+        else
+          raise "#{item.value} is not a known qualified named function expression"
+        end
         content
       end
 

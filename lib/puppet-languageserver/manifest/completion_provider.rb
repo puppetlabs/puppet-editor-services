@@ -30,8 +30,23 @@ module PuppetLanguageServer
         end
 
         item = result[:model]
-
         case item.class.to_s
+        when 'Puppet::Pops::Model::AssignmentExpression'
+          # On the right hand side of an assignment e.g.  $x =
+
+          all_returning_functions { |x| items << x }
+
+          # Add Puppet Data types
+          keywords_function_kind(%w[deferred sensitive]) { |x| items << x }
+
+        when 'Puppet::Pops::Model::AttributeOperation'
+          # On the right hand side of resource attribute assignment e.g.  $x =>
+
+          all_returning_functions { |x| items << x }
+
+          # Add Puppet Data types
+          keywords_function_kind(%w[deferred sensitive]) { |x| items << x }
+
         when 'Puppet::Pops::Model::VariableExpression'
           expr = item.expr.value
 
@@ -107,6 +122,17 @@ module PuppetLanguageServer
         end
       end
 
+      def self.keywords_function_kind(keywords = [], &block)
+        keywords.each do |keyword|
+          item = LanguageServer::CompletionItem.create('label'  => keyword,
+                                                       'kind'   => LanguageServer::COMPLETIONITEMKIND_FUNCTION,
+                                                       'detail' => 'Keyword',
+                                                       'data'   => { 'type' => 'keyword',
+                                                                     'name' => keyword })
+          block.call(item) if block
+        end
+      end
+
       def self.all_facts(&block)
         PuppetLanguageServer::FacterHelper.facts.each_key do |name|
           item = LanguageServer::CompletionItem.create('label'      => name.to_s,
@@ -143,6 +169,18 @@ module PuppetLanguageServer
       def self.all_statement_functions(&block)
         # Find functions which don't return values i.e. statements
         PuppetLanguageServer::PuppetHelper.filtered_function_names { |_name, data| data.type == :statement }.each do |name|
+          item = LanguageServer::CompletionItem.create('label'  => name.to_s,
+                                                       'kind'   => LanguageServer::COMPLETIONITEMKIND_FUNCTION,
+                                                       'detail' => 'Function',
+                                                       'data'   => { 'type' => 'function',
+                                                                     'name' => name.to_s })
+          block.call(item) if block
+        end
+      end
+
+      def self.all_returning_functions(&block)
+        # Find functions which do return values
+        PuppetLanguageServer::PuppetHelper.filtered_function_names { |_name, data| data.type == :rvalue }.each do |name|
           item = LanguageServer::CompletionItem.create('label'  => name.to_s,
                                                        'kind'   => LanguageServer::COMPLETIONITEMKIND_FUNCTION,
                                                        'detail' => 'Function',
@@ -195,6 +233,14 @@ module PuppetLanguageServer
             result['documentation'] = 'Within the site block, applications are declared like defined types. They can be declared any ' \
                                                 'number of times, but their type and title combination must be unique within an environment.'
             result['insertText'] = "site ${1:name} () {\n\t${2:# applications}\n}$0"
+            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+          when 'deferred'
+            result['documentation'] = 'The Deferred type enables Puppet agents to fetch or calculate data for themselves at catalog application time. One use case for this is to securely retrieve sensitive information like passwords from a secrets store.'
+            result['insertText'] = "Deferred(${1:function})"
+            result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
+          when 'sensitive'
+            result['documentation'] = 'Sensitive types in the Puppet language are strings marked as sensitive. The value is displayed in plain text in the catalog and manifest, but is redacted from logs and reports.'
+            result['insertText'] = "Sensitive(${1:function})"
             result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
           end
 
