@@ -56,13 +56,19 @@ module PuppetLanguageServer
       end
     end
 
-    def self.object_under_cursor(content, line_num, char_num, multiple_attempts = false, disallowed_classes = [])
+    def self.object_under_cursor(content, line_num, char_num, options)
+      options = {
+        :multiple_attempts  => false,
+        :disallowed_classes => [],
+        :tasks_mode         => false
+      }.merge(options)
+
       # Use Puppet to generate the AST
       parser = Puppet::Pops::Parser::Parser.new
 
       # Calculating the line offsets can be expensive and is only required
       # if we're doing mulitple passes of parsing
-      line_offsets = line_offsets(content) if multiple_attempts
+      line_offsets = line_offsets(content) if options[:multiple_attempts]
 
       result = nil
       move_offset = 0
@@ -72,9 +78,11 @@ module PuppetLanguageServer
         when :noop
           new_content = content
         when :remove_char
+          next if line_num.zero? && char_num.zero?
           new_content = remove_char_at(content, line_offsets, line_num, char_num)
           move_offset = -1
         when :remove_word
+          next if line_num.zero? && char_num.zero?
           next_char = get_char_at(content, line_offsets, line_num, char_num)
 
           while /[[:word:]]/ =~ next_char
@@ -106,10 +114,10 @@ module PuppetLanguageServer
         next if new_content.nil?
 
         begin
-          result = parser.parse_string(new_content, '')
+          result = parser.singleton_parse_string(new_content, options[:tasks_mode], '')
           break
         rescue Puppet::ParseErrorWithIssue => _exception
-          next if multiple_attempts
+          next if options[:multiple_attempts]
           raise
         end
       end
@@ -138,14 +146,14 @@ module PuppetLanguageServer
       valid_models = []
       if result.model.respond_to? :eAllContents
         valid_models = result.model.eAllContents.select do |item|
-          check_for_valid_item(item, abs_offset, disallowed_classes)
+          check_for_valid_item(item, abs_offset, options[:disallowed_classes])
         end
 
         valid_models.sort! { |a, b| a.length - b.length }
       else
         path = []
         result.model._pcore_all_contents(path) do |item|
-          if check_for_valid_item(item, abs_offset, disallowed_classes) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
+          if check_for_valid_item(item, abs_offset, options[:disallowed_classes]) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
             valid_models.push(model_path_struct.new(item, path.dup))
           end
         end

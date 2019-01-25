@@ -1,9 +1,13 @@
 module PuppetLanguageServer
   module Manifest
     module DefinitionProvider
-      def self.find_definition(content, line_num, char_num)
-        result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num, false, [Puppet::Pops::Model::BlockExpression])
-
+      def self.find_definition(content, line_num, char_num, options = {})
+        options = {
+          :tasks_mode => false
+        }.merge(options)
+        result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
+                                                                              :disallowed_classes => [Puppet::Pops::Model::BlockExpression],
+                                                                              :tasks_mode         => options[:tasks_mode])
         return nil if result.nil?
 
         path = result[:path]

@@ -28,7 +28,12 @@ module PuppetLanguageServer
         [problems_fixed, linter.manifest]
       end
 
-      def self.validate(content, _max_problems = 100)
+      def self.validate(content, options = {})
+        options = {
+          :max_problems => 100,
+          :tasks_mode   => false
+        }.merge(options)
+
         result = []
         # TODO: Need to implement max_problems
         problems = 0
@@ -89,8 +94,16 @@ module PuppetLanguageServer
         Puppet.override({ loaders: loaders }, 'For puppet parser validate') do
           begin
             validation_environment = env
-            validation_environment.check_for_reparse
-            validation_environment.known_resource_types.clear
+            $PuppetParserMutex.synchronize do # rubocop:disable Style/GlobalVars
+              begin
+                original_taskmode = Puppet[:tasks] if Puppet.tasks_supported?
+                Puppet[:tasks] = options[:tasks_mode] if Puppet.tasks_supported?
+                validation_environment.check_for_reparse
+                validation_environment.known_resource_types.clear
+              ensure
+                Puppet[:tasks] = original_taskmode if Puppet.tasks_supported?
+              end
+            end
           rescue StandardError => detail
             # Sometimes the error is in the cause not the root object itself
             detail = detail.cause if !detail.respond_to?(:line) && detail.respond_to?(:cause)

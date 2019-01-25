@@ -161,6 +161,36 @@ describe 'PuppetLanguageServer::DocumentStore' do
     it_should_behave_like 'a metadata.json workspace', expected_root
     it_should_behave_like 'a cached workspace'
     it_should_behave_like 'a terminating file finder', 3, 1
+
+    ['/plans/test.pp', '/plans/a/b/c/something.pp'].each do |testcase|
+      it "should detect '#{testcase}' as a plan file" do
+        file_uri = PuppetLanguageServer::UriHelper.build_file_uri(subject.store_root_path) + testcase
+        expect(subject.module_plan_file?(file_uri)).to be(true)
+      end
+    end
+
+    ['/plan__s/test.pp', 'plans/something.txt', '/plantest.pp', ].each do |testcase|
+      it "should not detect '#{testcase}' as a plan file" do
+        file_uri = PuppetLanguageServer::UriHelper.build_file_uri(subject.store_root_path) + testcase
+        expect(subject.module_plan_file?(file_uri)).to be(false)
+      end
+    end
+
+    it 'should detect plan files as case insensitive on Windows' do
+      allow(subject).to receive(:windows?).and_return(true)
+      file_uri = PuppetLanguageServer::UriHelper.build_file_uri(subject.store_root_path) + '/plans/test.pp'
+      expect(subject.module_plan_file?(file_uri)).to be(true)
+      file_uri = PuppetLanguageServer::UriHelper.build_file_uri(subject.store_root_path.upcase) + '/plans/test.pp'
+      expect(subject.module_plan_file?(file_uri)).to be(true)
+    end
+
+    it 'should detect plan files as case sensitive not on Windows' do
+      allow(subject).to receive(:windows?).and_return(false)
+      file_uri = PuppetLanguageServer::UriHelper.build_file_uri(subject.store_root_path) + '/plans/test.pp'
+      expect(subject.module_plan_file?(file_uri)).to be(true)
+      file_uri = PuppetLanguageServer::UriHelper.build_file_uri(subject.store_root_path).upcase + '/plans/test.pp'
+      expect(subject.module_plan_file?(file_uri.upcase)).to be(false)
+    end
   end
 
   context 'given a workspace option which has a parent directory with metadata.json' do

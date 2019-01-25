@@ -51,6 +51,18 @@ describe 'definition_provider' do
       wait_for_puppet_loading
     end
 
+    context 'Given a Puppet Plan', :if => Puppet.tasks_supported? do
+      let(:content) { <<-EOT
+        plan mymodule::my_plan(
+        ) {
+        }
+        EOT
+      }
+      it "should not raise an error" do
+        result = subject.find_definition(content, 0, 1, { :tasks_mode => true})
+      end
+    end
+
     context 'When cursor is on a function name' do
       let(:content) { <<-EOT
 class Test::NoParams {

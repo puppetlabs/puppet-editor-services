@@ -1,8 +1,13 @@
 module PuppetLanguageServer
   module Manifest
     module HoverProvider
-      def self.resolve(content, line_num, char_num)
-        result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num, false, [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression])
+      def self.resolve(content, line_num, char_num, options = {})
+        options = {
+          :tasks_mode => false
+        }.merge(options)
+        result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
+                                                                              :disallowed_classes => [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression],
+                                                                              :tasks_mode         => options[:tasks_mode])
         return LanguageServer::Hover.create_nil_response if result.nil?
 
         path = result[:path]

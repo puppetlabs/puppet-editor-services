@@ -109,6 +109,18 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       end
     end
 
+    context 'Given a Puppet Plan', :if => Puppet.tasks_supported? do
+      let(:manifest) { <<-EOT
+        plan mymodule::my_plan(
+        ) {
+        }
+        EOT
+      }
+      it "should not raise an error" do
+        result = subject.validate(manifest, { :tasks_mode => true})
+      end
+    end
+
     describe "Given a complete manifest with no validation errors" do
       let(:manifest) { "user { 'Bob': ensure => 'present' }" }
 

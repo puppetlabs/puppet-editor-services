@@ -293,7 +293,7 @@ describe 'message_router' do
       end
     end
 
-    # textDocument/completion - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#completion-request
+    # textDocument/completion - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#completion-request-leftwards_arrow_with_hook
     context 'given a textDocument/completion request' do
       let(:request_rpc_method) { 'textDocument/completion' }
       let(:line_num) { 1 }
@@ -327,7 +327,14 @@ describe 'message_router' do
       context 'for a puppet manifest file' do
         let(:file_uri) { MANIFEST_FILENAME }
         it 'should call complete method on the Completion Provider' do
-          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object,line_num,char_num).and_return('something')
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
+
+          subject.receive_request(request)
+        end
+
+        it 'should set tasks_mode option if the file is Puppet plan file' do
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
+          allow(PuppetLanguageServer::DocumentStore).to receive(:module_plan_file?).and_return true
 
           subject.receive_request(request)
         end
@@ -352,7 +359,7 @@ describe 'message_router' do
       end
     end
 
-    # completionItem/resolve - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#completion-request
+    # completionItem/resolve - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#completion-item-resolve-request-leftwards_arrow_with_hook
     context 'given a completionItem/resolve request' do
       let(:request_rpc_method) { 'completionItem/resolve' }
       let(:request_params) {{
@@ -386,7 +393,7 @@ describe 'message_router' do
       end
     end
 
-    # textDocument/hover - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#textDocument_hover
+    # textDocument/hover - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#hover-request-leftwards_arrow_with_hook
     context 'given a textDocument/hover request' do
       let(:request_rpc_method) { 'textDocument/hover' }
       let(:line_num) { 1 }
@@ -421,7 +428,14 @@ describe 'message_router' do
         let(:file_uri) { MANIFEST_FILENAME }
 
         it 'should call resolve method on the Hover Provider' do
-          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num).and_return('something')
+          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
+
+          subject.receive_request(request)
+        end
+
+        it 'should set tasks_mode option if the file is Puppet plan file' do
+          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
+          allow(PuppetLanguageServer::DocumentStore).to receive(:module_plan_file?).and_return true
 
           subject.receive_request(request)
         end
@@ -439,6 +453,138 @@ describe 'message_router' do
 
           it 'should reply with nil for the contents' do
             expect(request).to receive(:reply_result).with(hash_including('contents' => nil))
+
+            subject.receive_request(request)
+          end
+        end
+      end
+    end
+
+    # textDocument/definition - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#goto-definition-request-leftwards_arrow_with_hook
+    context 'given a textDocument/definition request' do
+      let(:request_rpc_method) { 'textDocument/definition' }
+      let(:line_num) { 1 }
+      let(:char_num) { 2 }
+      let(:request_params) {{
+        'textDocument' => {
+          'uri' => file_uri
+        },
+        'position' => {
+          'line' => line_num,
+          'character' => char_num,
+        },
+      }}
+
+      context 'for a file the server does not understand' do
+        let(:file_uri) { UNKNOWN_FILENAME }
+
+        it 'should log an error message' do
+          expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to provide definition/)
+
+          subject.receive_request(request)
+        end
+
+        it 'should reply with nil' do
+          expect(request).to receive(:reply_result).with(nil)
+
+          subject.receive_request(request)
+        end
+      end
+
+      context 'for a puppet manifest file' do
+        let(:file_uri) { MANIFEST_FILENAME }
+
+        it 'should call find_definition method on the Definition Provider' do
+          expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition)
+            .with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
+
+          subject.receive_request(request)
+        end
+
+        it 'should set tasks_mode option if the file is Puppet plan file' do
+          expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition)
+            .with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
+          allow(PuppetLanguageServer::DocumentStore).to receive(:module_plan_file?).and_return true
+
+          subject.receive_request(request)
+        end
+
+        context 'and an error occurs during definition' do
+          before(:each) do
+            expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition).and_raise('MockError')
+          end
+
+          it 'should log an error message' do
+            expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
+
+            subject.receive_request(request)
+          end
+
+          it 'should reply with nil' do
+            expect(request).to receive(:reply_result).with(nil)
+
+            subject.receive_request(request)
+          end
+        end
+      end
+    end
+
+    # textDocument/documentSymbol - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#document-symbols-request-leftwards_arrow_with_hook
+    context 'given a textDocument/documentSymbol request' do
+      let(:request_rpc_method) { 'textDocument/documentSymbol' }
+      let(:request_params) {{
+        'textDocument' => {
+          'uri' => file_uri
+        }
+      }}
+
+      context 'for a file the server does not understand' do
+        let(:file_uri) { UNKNOWN_FILENAME }
+
+        it 'should log an error message' do
+          expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to provide definition/)
+
+          subject.receive_request(request)
+        end
+
+        it 'should reply with nil' do
+          expect(request).to receive(:reply_result).with(nil)
+
+          subject.receive_request(request)
+        end
+      end
+
+      context 'for a puppet manifest file' do
+        let(:file_uri) { MANIFEST_FILENAME }
+
+        it 'should call extract_document_symbols method on the Document Symbol Provider' do
+          expect(PuppetLanguageServer::Manifest::DocumentSymbolProvider).to receive(:extract_document_symbols)
+            .with(Object,{:tasks_mode=>false}).and_return('something')
+
+          subject.receive_request(request)
+        end
+
+        it 'should set tasks_mode option if the file is Puppet plan file' do
+          expect(PuppetLanguageServer::Manifest::DocumentSymbolProvider).to receive(:extract_document_symbols)
+            .with(Object,{:tasks_mode=>true}).and_return('something')
+          allow(PuppetLanguageServer::DocumentStore).to receive(:module_plan_file?).and_return true
+
+          subject.receive_request(request)
+        end
+
+        context 'and an error occurs during extraction' do
+          before(:each) do
+            expect(PuppetLanguageServer::Manifest::DocumentSymbolProvider).to receive(:extract_document_symbols).and_raise('MockError')
+          end
+
+          it 'should log an error message' do
+            expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
+
+            subject.receive_request(request)
+          end
+
+          it 'should reply with nil' do
+            expect(request).to receive(:reply_result).with(nil)
 
             subject.receive_request(request)
           end

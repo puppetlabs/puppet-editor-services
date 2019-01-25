@@ -50,7 +50,7 @@ module PuppetLanguageServer
       document_type = PuppetLanguageServer::DocumentStore.document_type(file_uri)
       content = documents.document(file_uri, doc_version)
       return nil if content.nil?
-      result = validate(document_type, content)
+      result = validate(file_uri, document_type, content)
 
       # Send the response
       connection_object.reply_diagnostics(file_uri, result)
@@ -78,11 +78,11 @@ module PuppetLanguageServer
     end
 
     # Validate a document
-    def self.validate(document_type, content)
+    def self.validate(document_uri, document_type, content)
       # Perform validation
       case document_type
       when :manifest
-        PuppetLanguageServer::Manifest::ValidationProvider.validate(content)
+        PuppetLanguageServer::Manifest::ValidationProvider.validate(content, :tasks_mode => PuppetLanguageServer::DocumentStore.module_plan_file?(document_uri))
       when :epp
         PuppetLanguageServer::Epp::ValidationProvider.validate(content)
       when :puppetfile
@@ -117,7 +117,7 @@ module PuppetLanguageServer
         end
 
         # Perform validation
-        result = validate(document_type, content)
+        result = validate(file_uri, document_type, content)
 
         # Check if the document is still latest version
         current_version = documents.document_version(file_uri)
