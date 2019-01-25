@@ -16,7 +16,7 @@ module Puppet
           # Append the caller information
           result[:source_location] = {
             :source => caller.absolute_path,
-            :line   => caller.lineno - 1, # Convert to a zero based line number system
+            :line   => caller.lineno - 1 # Convert to a zero based line number system
           }
           monkey_append_function_info(name, result)
 
@@ -69,7 +69,7 @@ module Puppet
         if block_given? && !block.source_location.nil?
           result._source_location = {
             :source => block.source_location[0],
-            :line   => block.source_location[1] - 1, # Convert to a zero based line number system
+            :line   => block.source_location[1] - 1 # Convert to a zero based line number system
           }
         end
         result
