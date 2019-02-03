@@ -69,9 +69,11 @@ describe 'PuppetLanguageServerSidecar::Protocol' do
     let(:puppet_funcname) { :rspec_function }
     let(:puppet_func) {
       {
+        :key             => puppet_funcname,
         :doc             => 'function documentation',
-        :arity           => 0,
         :type            => :statement,
+        :signatures      => ['sig1', 'sig2'],
+        :version         => 3,
         :source_location => {
           :source => 'source',
           :line   => 1,
@@ -85,14 +87,20 @@ describe 'PuppetLanguageServerSidecar::Protocol' do
       it 'should populate from a Puppet function object' do
         result = subject_klass.from_puppet(puppet_funcname, puppet_func)
 
+        expect(result.key).to eq(puppet_func[:key])
+        expect(result.calling_source).to eq(puppet_func[:source_location][:source])
+        expect(result.source).to eq(puppet_func[:source_location][:source])
+        expect(result.line).to eq(puppet_func[:source_location][:line])
+
         expect(result.doc).to eq(puppet_func[:doc])
-        expect(result.arity).to eq(puppet_func[:arity])
         expect(result.type).to eq(puppet_func[:type])
+        expect(result.version).to eq(puppet_func[:version])
+        expect(result.signatures).to eq(puppet_func[:signatures])
       end
     end
 
     describe '#from_json' do
-      [:doc, :arity, :type].each do |testcase|
+      [:doc, :type, :version, :signatures].each do |testcase|
         it "should deserialize a serialized #{testcase} value" do
           serial = subject_klass.from_puppet(puppet_funcname, puppet_func)
           deserial = subject_klass.new.from_json!(serial.to_json)

@@ -202,11 +202,13 @@ module PuppetLanguageServer
           item_type = PuppetLanguageServer::PuppetHelper.function(data['name'])
           return LanguageServer::CompletionItem.create(result) if item_type.nil?
           result['documentation'] = item_type.doc unless item_type.doc.nil?
-          result['insertText'] = "#{data['name']}(${1:value}"
-          (2..item_type.arity).each do |index|
-            result['insertText'] += ", ${#{index}:value}"
-          end
-          result['insertText'] += ')'
+          # TODO: Add signatures?
+          result['insertText'] = item_type.signatures[0] unless item_type.signatures.empty?
+          # result['insertText'] = "#{data['name']}(${1:value}"
+          # (2..item_type.arity).each do |index|
+          #   result['insertText'] += ", ${#{index}:value}"
+          # end
+          # result['insertText'] += ')'
           result['insertTextFormat'] = LanguageServer::INSERTTEXTFORMAT_SNIPPET
 
         when 'resource_type'

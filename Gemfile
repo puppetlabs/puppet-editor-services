@@ -22,6 +22,7 @@ group :development do
     gem 'puppet', ENV['PUPPET_GEM_VERSION'], :require => false
   else
     gem 'puppet',                            :require => false
+    #gem "puppet", path: "C:/source/puppet", :require => false
   end
 
   case RUBY_PLATFORM

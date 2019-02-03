@@ -79,8 +79,13 @@ end
 def random_sidecar_puppet_function
   result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetFunction.new())
   result.doc = 'doc' + rand(1000).to_s
-  result.arity = rand(1000)
   result.type = ('type' + rand(1000).to_s).intern
+  result.version = rand(1000)
+  result.signatures = [
+    "#{result.key}([Object]Param#{rand(1000)},[Object]Param#{rand(1000)})",
+    "#{result.key}([String]Param#{rand(1000)},[Optional]Param#{rand(1000)})",
+    "#{result.key}([Object]Param#{rand(1000)},[Object]Param#{rand(1000)})"
+  ]
   result
 end
 

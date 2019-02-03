@@ -41,10 +41,10 @@ module PuppetLanguageServerSidecar
         obj.source         = item[:source_location][:source]
         obj.calling_source = obj.source
         obj.line           = item[:source_location][:line]
-        # TODO: name ?
-        obj.doc   = item[:doc]
-        obj.arity = item[:arity]
-        obj.type  = item[:type]
+        obj.doc            = item[:doc]
+        obj.signatures     = item[:signatures]
+        obj.type           = item[:type]
+        obj.version        = item[:version]
         obj
       end
     end

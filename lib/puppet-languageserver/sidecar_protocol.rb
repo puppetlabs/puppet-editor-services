@@ -114,6 +114,18 @@ module PuppetLanguageServer
         end
       end
 
+      class CompiledPuppetInformation
+        include Base
+
+        attr_accessor :functions
+
+        # def to_json(*options)
+        # end
+
+        # def from_json!(json_string)
+        # end
+      end
+
       class PuppetClass < BasePuppetObject
         attr_accessor :parameters
         attr_accessor :doc
@@ -150,14 +162,16 @@ module PuppetLanguageServer
 
       class PuppetFunction < BasePuppetObject
         attr_accessor :doc
-        attr_accessor :arity
         attr_accessor :type
+        attr_accessor :version
+        attr_accessor :signatures
 
         def to_h
           super.to_h.merge(
-            'doc'   => doc,
-            'arity' => arity,
-            'type'  => type
+            'doc'        => doc,
+            'type'       => type,
+            'version'    => version,
+            'signatures' => signatures
           )
         end
 
@@ -165,8 +179,9 @@ module PuppetLanguageServer
           super
 
           self.doc = value['doc']
-          self.arity = value['arity']
           self.type = value['type'].intern
+          self.version = value['version']
+          self.signatures = value['signatures']
           self
         end
       end

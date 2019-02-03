@@ -55,7 +55,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
   basepuppetobject_properties = [:key, :calling_source, :source, :line, :char, :length]
   nodegraph_properties = [:dot_content, :error_content]
   puppetclass_properties = [:doc, :parameters]
-  puppetfunction_properties = [:doc, :arity, :type]
+  puppetfunction_properties = [:doc, :type, :version, :signatures]
   puppettype_properties = [:doc, :attributes]
   resource_properties = [:manifest]
 
@@ -190,8 +190,9 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
     let(:subject) {
       value = subject_klass.new
       value.doc = 'doc'
-      value.arity = 'arity'
       value.type = :type
+      value.version = 3
+      value.signatures = ['abc', 'def']
       add_default_basepuppetobject_values!(value)
     }
 

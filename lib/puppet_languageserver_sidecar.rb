@@ -17,7 +17,18 @@ begin
     end
   end
 
-  %w[
+  module PuppetLanguageServerSidecar
+    # This method needs to be declared before requiring 'puppet_pal', but after 'puppet' is required.
+    def self.puppet_pal_supported?
+      # puppet_pal was introduced in Puppet 5.4.0
+      # https://github.com/puppetlabs/puppet/commit/a0ce59a96e589b0b2c51aa5aea17b4f11839d034
+      # But the compilers weren't introduced into Puppet 6.0.0
+      # https://github.com/puppetlabs/puppet/commit/462237d54677b8913f02070de04ada4f09d58962
+      Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
+    end
+  end
+
+  lib_list = %w[
     cache/base
     cache/null
     cache/filesystem
@@ -26,7 +37,10 @@ begin
     puppet_monkey_patches
     sidecar_protocol_extensions
     workspace
-  ].each do |lib|
+  ]
+  lib_list << 'puppet_pal' if PuppetLanguageServerSidecar.puppet_pal_supported?
+
+  lib_list.each do |lib|
     begin
       require "puppet-languageserver-sidecar/#{lib}"
     rescue LoadError
@@ -40,6 +54,15 @@ end
 module PuppetLanguageServerSidecar
   def self.version
     PuppetEditorServices.version
+  end
+
+  def self.configure_featureflags(flags)
+    @flags = flags
+  end
+
+  def self.featureflag?(flagname)
+    return false if @flags.nil? || @flags.empty?
+    @flags.include?(flagname)
   end
 
   ACTION_LIST = %w[
@@ -137,6 +160,18 @@ module PuppetLanguageServerSidecar
     log_message(:info, "Language Server Sidecar is v#{PuppetLanguageServerSidecar.version}")
     log_message(:info, "Using Puppet v#{Puppet.version}")
 
+    # Validate the feature flags
+    unless options[:flags].nil? || options[:flags].empty?
+      flags = options[:flags]
+      log_message(:debug, "Detected feature flags [#{options[:flags].join(', ')}]")
+      # Check if Puppet PAL is supported
+      if flags.include?('pup4api') && !PuppetLanguageServerSidecar.puppet_pal_supported?
+        PuppetEditorServices.log_message(:error, "The feature flag 'pup4api' has been specified but it is not capable due to missing Puppet PAL. Turning off the flag.")
+        flags = flags - ['pup4api']
+      end
+      configure_featureflags(flags)
+    end
+
     log_message(:debug, "Detected additional puppet settings #{options[:puppet_settings]}")
     options[:puppet_settings].nil? ? Puppet.initialize_settings : Puppet.initialize_settings(options[:puppet_settings])
 
@@ -154,7 +189,8 @@ module PuppetLanguageServerSidecar
   def self.inject_workspace_as_module
     return false unless PuppetLanguageServerSidecar::Workspace.has_module_metadata?
 
-    Puppet.settings[:basemodulepath] = Puppet.settings[:basemodulepath] + ';' + PuppetLanguageServerSidecar::Workspace.root_path
+    # TODO: Is this really needed?
+    # Puppet.settings[:basemodulepath] = Puppet.settings[:basemodulepath] + ';' + PuppetLanguageServerSidecar::Workspace.root_path
 
     %w[puppet_modulepath_monkey_patches].each do |lib|
       begin
@@ -186,6 +222,19 @@ module PuppetLanguageServerSidecar
   end
 
   def self.execute(options)
+    use_pup4api = featureflag?('pup4api')
+
+    if use_pup4api
+      # These need to be latebound as the flag needs to be set
+      %w[puppet_monkey_patches_pup4api].each do |lib|
+        begin
+          require "puppet-languageserver-sidecar/#{lib}"
+        rescue LoadError
+          require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
+        end
+      end
+    end
+
     case options[:action].downcase
     when 'noop'
       []
@@ -196,7 +245,11 @@ module PuppetLanguageServerSidecar
 
     when 'default_functions'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache)
+      if use_pup4api
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_pup4_api(cache, :object_types => [:function]).functions
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache)
+      end
 
     when 'default_types'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
@@ -236,8 +289,14 @@ module PuppetLanguageServerSidecar
     when 'workspace_functions'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(null_cache,
-                                                                   :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+      if use_pup4api
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_pup4_api(null_cache,
+                                                                        :root_path    => PuppetLanguageServerSidecar::Workspace.root_path,
+                                                                        :object_types => [:function]).functions
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(null_cache,
+                                                                     :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+      end
 
     when 'workspace_types'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new

@@ -40,14 +40,16 @@ module PuppetLanguageServer
 
     class PuppetFunction < BasePuppetObject
       attr_accessor :doc
-      attr_accessor :arity
       attr_accessor :type
+      attr_accessor :version
+      attr_accessor :signatures
 
       def from_sidecar!(value)
         super
         @doc = value.doc
-        @arity = value.arity
         @type = value.type
+        @version = value.version
+        @signatures = value.signatures
         self
       end
     end

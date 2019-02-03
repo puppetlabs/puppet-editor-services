@@ -63,6 +63,77 @@ module PuppetLanguageServerSidecar
       classes
     end
 
+    def self.available_object_types
+      [:function]
+    end
+
+    def self.retrieve_via_pup4_api(_cache, options = {})
+      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::load_functions] Starting')
+
+      object_types = options[:object_types].nil? ? available_object_types : options[:object_types]
+      object_types.select! { |i| available_object_types.include?(i) }
+
+      compilation = PuppetLanguageServer::Sidecar::Protocol::CompiledPuppetInformation.new
+      return compilation if object_types.empty?
+
+      compilation.functions = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new if object_types.include?(:function)
+
+      current_env = current_environment
+      for_agent = options[:for_agent].nil? ? true : options[:for_agent]
+
+      # Load all the functions
+      Puppet::PalV2.in_environment(
+        Puppet.settings[:environment],
+        envpath: Puppet.settings[:environmentpath],
+        modulepath: current_env.modulepath,
+        pre_modulepath: [],
+        facts: {}
+      ) do |pal|
+        pal.with_script_compiler(for_agent: for_agent) do |c|
+          # Force all of the functions to be discovered
+          c.public_compiler.loaders.private_environment_loader.discover(:function) if object_types.include?(:function)
+
+          # when :function
+          # when :plan
+          # when :task
+          # when :type
+          # when :resource_type_pp
+        end
+      end
+
+      if object_types.include?(:function)
+        # Enumerate V3 Functions from the monkey patching
+        Puppet::Parser::Functions.monkey_function_list
+                                 .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
+                                 .each do |name, item|
+          obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
+          compilation.functions << obj
+        end
+        # Enumerate V4 Functions from the monkey patching
+        Puppet::Functions.monkey_function_list
+                         .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
+                         .each do |name, item|
+          obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
+          compilation.functions << obj
+        end
+      end
+
+      # filelist = []
+      # Puppet::Parser::Functions.monkey_function_list.values.each { |i| filelist << i[:source_location][:source] }
+      # Puppet::Functions.monkey_function_list.values.each { |i| filelist << i[:source_location][:source] }
+      # filelist.compact!
+      # filelist.uniq!
+      # filelist.sort!
+
+      # puts "----"
+      # puts "function files"
+      # filelist.each { |i| puts i }
+      # puts "---"
+
+      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_pup4_api] Finished loading #{compilation.functions.count} functions") if object_types.include?(:function)
+      compilation
+    end
+
     # Function loading
     def self.retrieve_functions(cache, options = {})
       PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::load_functions] Starting')
