@@ -6,6 +6,17 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.18.0 - 2019-02-05
+
+### Added
+
+- ([GH-24](https://github.com/lingua-pupuli/puppet-editor-services/issues/24)) Allow parsing of manifests in tasks mode
+
+### Fixed
+
+- ([Commit](https://github.com/lingua-pupuli/puppet-editor-services/commit/1a294920702dc95ff11e50c68e4fa12e5da09d98)) Fix validation of puppetfiles
+- ([Commit](https://github.com/lingua-pupuli/puppet-editor-services/commit/6758afaefcde90809a7b2457c23c72fa487a2dd7)) Fix parsing at beginning of a document
+
 ## 0.17.0 - 2018-12-14
 
 ### Added
