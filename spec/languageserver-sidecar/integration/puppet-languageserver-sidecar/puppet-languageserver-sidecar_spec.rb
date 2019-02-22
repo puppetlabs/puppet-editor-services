@@ -2,49 +2,49 @@ require 'spec_helper'
 require 'open3'
 require 'tempfile'
 
-def run_sidecar(cmd_options)
-  cmd_options << '--no-cache'
-
-  # Append the puppet test-fixtures
-  cmd_options << '--puppet-settings'
-  cmd_options << "--vardir,#{File.join($fixtures_dir, 'real_agent', 'cache')},--confdir,#{File.join($fixtures_dir, 'real_agent', 'confdir')}"
-
-  cmd = ['ruby', 'puppet-languageserver-sidecar'].concat(cmd_options)
-  stdout, _stderr, status = Open3.capture3(*cmd)
-
-  raise "Expected exit code of 0, but got #{status.exitstatus} #{_stderr}" unless status.exitstatus.zero?
-  return stdout.bytes.pack('U*')
-end
-
-def child_with_key(array, key)
-  idx = array.index { |item| item.key == key }
-  return idx.nil? ? nil : array[idx]
-end
-
-def with_temporary_file(content)
-  tempfile = Tempfile.new("langserver-sidecar")
-  tempfile.open
-
-  tempfile.write(content)
-
-  tempfile.close
-
-  yield tempfile.path
-ensure
-  tempfile.delete if tempfile
-end
-
-RSpec::Matchers.define :contain_child_with_key do |key|
-  match do |actual|
-    !(actual.index { |item| item.key == key }).nil?
-  end
-
-  failure_message do |actual|
-    "expected that #{actual.class.to_s} would contain a child with key #{key}"
-  end
-end
-
 describe 'PuppetLanguageServerSidecar' do
+  def run_sidecar(cmd_options)
+    cmd_options << '--no-cache'
+
+    # Append the puppet test-fixtures
+    cmd_options << '--puppet-settings'
+    cmd_options << "--vardir,#{File.join($fixtures_dir, 'real_agent', 'cache')},--confdir,#{File.join($fixtures_dir, 'real_agent', 'confdir')}"
+
+    cmd = ['ruby', 'puppet-languageserver-sidecar'].concat(cmd_options)
+    stdout, _stderr, status = Open3.capture3(*cmd)
+
+    raise "Expected exit code of 0, but got #{status.exitstatus} #{_stderr}" unless status.exitstatus.zero?
+    return stdout.bytes.pack('U*')
+  end
+
+  def child_with_key(array, key)
+    idx = array.index { |item| item.key == key }
+    return idx.nil? ? nil : array[idx]
+  end
+
+  def with_temporary_file(content)
+    tempfile = Tempfile.new("langserver-sidecar")
+    tempfile.open
+
+    tempfile.write(content)
+
+    tempfile.close
+
+    yield tempfile.path
+  ensure
+    tempfile.delete if tempfile
+  end
+
+  RSpec::Matchers.define :contain_child_with_key do |key|
+    match do |actual|
+      !(actual.index { |item| item.key == key }).nil?
+    end
+
+    failure_message do |actual|
+      "expected that #{actual.class.to_s} would contain a child with key #{key}"
+    end
+  end
+
   describe 'when running default_classes action' do
     let (:cmd_options) { ['--action', 'default_classes'] }
 
