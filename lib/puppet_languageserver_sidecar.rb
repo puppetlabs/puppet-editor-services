@@ -254,7 +254,7 @@ module PuppetLanguageServerSidecar
       STDOUT.binmode
       STDOUT.write(result.to_json)
     else
-      File.open(options[:output], 'wb:UTF8') do |f|
+      File.open(options[:output], 'wb:UTF-8') do |f|
         f.write result.to_json
       end
     end
