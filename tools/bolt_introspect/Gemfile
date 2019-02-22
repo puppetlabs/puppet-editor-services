@@ -1,0 +1,37 @@
+source ENV['GEM_SOURCE'] || "https://rubygems.org"
+
+this_dir = File.expand_path(__dir__)
+
+# Extact the component versions
+readme_path = File.join(this_dir, 'README.md')
+raise "Readme #{readme_path} does not exist" unless File.exist?(readme_path)
+content = File.open(readme_path, 'rb:utf-8') { |f| f.read }
+components = {}
+[
+  'Bolt',
+  'Editor Services'
+].each do |component_name|
+  result = content.match(/\|\s+#{component_name}\s+\|\s+([\d\.]+)\s+\|/)
+  raise "Could not find the #{component_name} component in #{readme_path}" if result.nil?
+  components[component_name] = result[1]
+end
+
+# Ensure that it's the same version of Editor Services
+require_relative File.join(this_dir, '..', '..', 'lib', 'puppet_editor_services', 'version.rb')
+raise "Expected Editor Services version #{components['Editor Services']} but found #{PuppetEditorServices.version}" unless components['Editor Services'] == PuppetEditorServices.version
+
+# Ensure that it's the required version of bolt
+gem "bolt", components['Bolt'], :require => false
+
+# Language Server Sidecar requirements
+gem "puppet-strings", "~> 2.0", :require => false
+
+# Evaluate Gemfile.local if it exists
+if File.exists? "#{__FILE__}.local"
+  eval(File.read("#{__FILE__}.local"), binding)
+end
+
+# Evaluate ~/.gemfile if it exists
+if File.exists?(File.join(Dir.home, '.gemfile'))
+  eval(File.read(File.join(Dir.home, '.gemfile')), binding)
+end
