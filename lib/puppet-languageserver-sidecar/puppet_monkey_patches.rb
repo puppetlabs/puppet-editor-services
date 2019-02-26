@@ -37,7 +37,7 @@ module Puppet
           # incremented by one. For example, a function with an arity of `-4` is expected to receive at minimum 3 arguments. A function with the default arity of `-1`
           # accepts zero or more arguments. A function with an arity of 2 must be provided with exactly two arguments, no more and no less. Added in Puppet 3.1.0.
           arg_count = value[:arity] < 0 ? (value[:arity] + 1) * -1 : value[:arity]
-          signature = name.to_s + '(' + (1..arg_count).map { |i| "Param#{i}" }.join(', ') + ')'
+          signature = name.to_s + '(' + (1..arg_count).map { |i| "param#{i}" }.join(', ') + ')'
 
           @monkey_function_list[name] = {
             :name            => value[:name],
@@ -67,6 +67,41 @@ end
 #     end
 #   end
 # end
+
+module PuppetLanguageServerSidecar
+  module PuppetHelper
+
+    V3_FUNCTION = :v3_function
+    V4_FUNCTION = :v4_function
+
+    def self.function_to_signature_hash(func_version, func)
+      result = []
+      # Generate the signature information
+      # TODO What about params with no name? e.g. no param specified
+      # TODO What about blocks?
+
+      func.signatures.each do |signature|
+        require 'pry'; binding.pry
+        return_type = signature.type.return_type.nil? ? '' : "[#{signature.type.return_type}] "
+        params = []
+        signature.type.param_types.each_with_index do |param_type, idx|
+          # The default formatter expands aliases and makes type names HUGE. Just use the shorter `string` method
+          param_type_string = Puppet::Pops::Types::TypeFormatter.singleton.string(param_type)
+          # It is possible to have no param name, just substitute one in.
+          param_name_string = signature.param_names[idx].nil? ? " param#{idx + 1}" : " #{signature.param_names[idx]}"
+
+          #require 'pry'; binding.pry if name == 'default_pup4_function'
+
+          params << "[#{param_type_string}]#{param_name_string}"
+        end
+
+        result << "#{return_type}#{func.name}(#{params.join(', ')})"
+      end
+
+      result
+    end
+  end
+end
 
 module Puppet
   module Functions
@@ -99,14 +134,19 @@ module Puppet
     def self.monkey_append_function_info(name, value, options = {})
       @monkey_function_list = {} if @monkey_function_list.nil?
 
-      # Generate the signature information
-      # TODO What about really long signatures?
-      # TODO What about params with no name? e.g. no param specified
+
       signatures = value.signatures.map do |signature|
         return_type = signature.type.return_type.nil? ? '' : "[#{signature.type.return_type}] "
         params = []
         signature.type.param_types.each_with_index do |param_type, idx|
-          params << "[#{param_type}] #{signature.param_names[idx]}"
+          # The default formatter expands aliases and makes type names HUGE.  Just use the shorter `string` method
+          param_type_string = Puppet::Pops::Types::TypeFormatter.singleton.string(param_type)
+          # It is possible to have no param name, just substitute one in.
+          param_name_string = signature.param_names[idx].nil? ? " param#{idx + 1}" : " #{signature.param_names[idx]}"
+
+          #require 'pry'; binding.pry if name == 'default_pup4_function'
+
+          params << "[#{param_type_string}]#{param_name_string}"
         end
 
         "#{return_type}#{name}(#{params.join(', ')})"
@@ -114,7 +154,7 @@ module Puppet
 
       @monkey_function_list[name] = {
         :name       => value.name,
-        :signatures => signatures,
+        :signatures => signatures, # PuppetLanguageServerSidecar::PuppetHelper.function_to_signature_hash(PuppetLanguageServerSidecar::PuppetHelper::V4_FUNCTION, value),
         :type       => :rvalue, # All Puppet 4 functions will return a value
         :doc        => nil, # Docs are filled in post processing via Yard
         :version    => 4
