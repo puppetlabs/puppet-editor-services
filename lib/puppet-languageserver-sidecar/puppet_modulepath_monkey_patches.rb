@@ -57,13 +57,23 @@ class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
     begin
       metadata = workspace_load_json(File.read(md_file, :encoding => 'utf-8'))
       return nil if metadata['name'].nil?
-      # TODO : Need to rip out the module name
+      # Extract the actual module name
+      if Puppet::Module.is_module_directory_name?(metadata['name'])
+        module_name = metadata['name']
+      elsif Puppet::Module.is_module_namespaced_name?(metadata['name'])
+        # Based on regex at https://github.com/puppetlabs/puppet/blob/f5ca8c05174c944f783cfd0b18582e2160b77d0e/lib/puppet/module.rb#L54
+        result = /^[a-zA-Z0-9]+[-]([a-z][a-z0-9_]*)$/.match(metadata['name'])
+        module_name = result[1]
+      else
+        # TODO: This is an invalid puppet module name in the metadata.json.  Should we log an error/warning?
+        return nil
+      end
 
       # The Puppet::Module initializer was changed in
       # https://github.com/puppetlabs/puppet/commit/935c0311dbaf1df03937822525c36b26de5390ef
       # We need to switch the creation based on whether the modules_strict_semver? method is available
-      return Puppet::Module.new(metadata['name'], path, self, modules_strict_semver?) if respond_to?('modules_strict_semver?')
-      return Puppet::Module.new(metadata['name'], path, self)
+      return Puppet::Module.new(module_name, path, self, modules_strict_semver?) if respond_to?('modules_strict_semver?')
+      return Puppet::Module.new(module_name, path, self)
     rescue StandardError
       return nil
     end
