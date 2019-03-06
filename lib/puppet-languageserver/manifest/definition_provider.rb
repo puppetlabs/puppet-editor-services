@@ -73,12 +73,9 @@ module PuppetLanguageServer
         item = PuppetLanguageServer::PuppetHelper.get_type(resource_name)
         item = PuppetLanguageServer::PuppetHelper.get_class(resource_name) if item.nil?
         unless item.nil?
-          return LanguageServer::Location.create(
-            'uri'      => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
-            'fromline' => item.line,
-            'fromchar' => 0,
-            'toline'   => item.line,
-            'tochar'   => 1024
+          return LSP::Location.new(
+            'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+            'range' => LSP.create_range(item.line, 0, item.line, 1024)
           )
         end
         nil
@@ -88,12 +85,9 @@ module PuppetLanguageServer
       def self.function_name(func_name)
         item = PuppetLanguageServer::PuppetHelper.function(func_name)
         return nil if item.nil? || item.source.nil? || item.line.nil?
-        LanguageServer::Location.create(
-          'uri'      => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
-          'fromline' => item.line,
-          'fromchar' => 0,
-          'toline'   => item.line,
-          'tochar'   => 1024
+        LSP::Location.new(
+          'uri'   => 'file:///' + item.source,
+          'range' => LSP.create_range(item.line, 0, item.line, 1024)
         )
       end
       private_class_method :function_name

@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe 'hover_provider' do
   let(:subject) { PuppetLanguageServer::Manifest::HoverProvider }
-  let(:nil_response) { LanguageServer::Hover.create_nil_response }
 
   before(:all) do
     wait_for_puppet_loading
@@ -77,7 +76,7 @@ EOT
       it 'should return nil' do
         result = subject.resolve(content, line_num, char_num)
 
-        expect(result).to eq(nil_response)
+        expect(result.contents).to eq(nil)
       end
     end
 
@@ -107,7 +106,7 @@ EOT
           pending('Not implemented')
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**class** keyword\n")
+          expect(result.contents).to start_with("**class** keyword\n")
         end
       end
 
@@ -119,7 +118,7 @@ EOT
           pending('Not implemented')
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**class** keyword\n")
+          expect(result.contents).to start_with("**class** keyword\n")
         end
       end
 
@@ -131,7 +130,7 @@ EOT
           pending('Not implemented')
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**String** keyword\n")
+          expect(result.contents).to start_with("**String** keyword\n")
         end
       end
 
@@ -143,7 +142,7 @@ EOT
           pending('Not implemented')
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to eq('')
+          expect(result.contents).to eq('')
         end
       end
 
@@ -155,7 +154,7 @@ EOT
           pending('Not implemented')
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to eq('')
+          expect(result.contents).to eq('')
         end
       end
     end
@@ -176,7 +175,7 @@ EOT
         it 'should return resource description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**user** Resource\n")
+          expect(result.contents).to start_with("**user** Resource\n")
         end
       end
 
@@ -187,7 +186,7 @@ EOT
         it 'should return resource description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**user** Resource\n")
+          expect(result.contents).to start_with("**user** Resource\n")
         end
       end
 
@@ -198,7 +197,7 @@ EOT
         it 'should return resource description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**user** Resource\n")
+          expect(result.contents).to start_with("**user** Resource\n")
         end
       end
 
@@ -209,7 +208,7 @@ EOT
         it 'should return property description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**ensure** Property\n")
+          expect(result.contents).to start_with("**ensure** Property\n")
         end
       end
 
@@ -220,7 +219,7 @@ EOT
         it 'should return property description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**ensure** Property\n")
+          expect(result.contents).to start_with("**ensure** Property\n")
         end
       end
 
@@ -231,7 +230,7 @@ EOT
         it 'should return parameter description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**name** Parameter\n")
+          expect(result.contents).to start_with("**name** Parameter\n")
         end
       end
 
@@ -242,7 +241,7 @@ EOT
         it 'should return parameter description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**name** Parameter\n")
+          expect(result.contents).to start_with("**name** Parameter\n")
         end
       end
     end
@@ -263,7 +262,7 @@ EOT
         it 'should return resource description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**mock_workspace_class** Resource\n")
+          expect(result.contents).to start_with("**mock_workspace_class** Resource\n")
         end
       end
 
@@ -274,7 +273,7 @@ EOT
         it 'should return resource description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**mock_workspace_class** Resource\n")
+          expect(result.contents).to start_with("**mock_workspace_class** Resource\n")
         end
       end
 
@@ -285,7 +284,7 @@ EOT
         it 'should return resource description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**mock_workspace_class** Resource\n")
+          expect(result.contents).to start_with("**mock_workspace_class** Resource\n")
         end
       end
 
@@ -296,7 +295,7 @@ EOT
         it 'should return parameter description' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**attr_name1** Parameter\n")
+          expect(result.contents).to start_with("**attr_name1** Parameter\n")
         end
       end
 
@@ -306,8 +305,7 @@ EOT
 
         it 'should return parameter description' do
           result = subject.resolve(content, line_num, char_num)
-
-          expect(result['contents']).to start_with("**attr_name1** Parameter\n")
+          expect(result.contents).to start_with("**attr_name1** Parameter\n")
         end
       end
     end
@@ -327,7 +325,7 @@ EOT
         it 'should return fact information' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**operatingsystem** Fact\n")
+          expect(result.contents).to start_with("**operatingsystem** Fact\n")
         end
       end
 
@@ -338,7 +336,7 @@ EOT
         it 'should return fact information' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**operatingsystem** Fact\n")
+          expect(result.contents).to start_with("**operatingsystem** Fact\n")
         end
       end
 
@@ -349,7 +347,7 @@ EOT
         it 'should return fact information' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**operatingsystem** Fact\n")
+          expect(result.contents).to start_with("**operatingsystem** Fact\n")
         end
       end
 
@@ -360,7 +358,7 @@ EOT
         it 'should return fact information' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**operatingsystem** Fact\n")
+          expect(result.contents).to start_with("**operatingsystem** Fact\n")
         end
       end
     end
@@ -379,7 +377,7 @@ EOT
         it 'should return function information' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**split** Function\n")
+          expect(result.contents).to start_with("**split** Function\n")
         end
       end
     end
@@ -404,7 +402,7 @@ class firewall {
           pending("(PUP-7668) parser is assigning an incorrect offset")
 
           result = subject.resolve(content, line_num, char_num)
-          expect(result['contents']).not_to start_with("**service** Resource\n")
+          expect(result.contents).not_to start_with("**service** Resource\n")
         end
       end
 
@@ -414,7 +412,7 @@ class firewall {
         it 'should complete to service resource documentation' do
           result = subject.resolve(content, line_num, char_num)
 
-          expect(result['contents']).to start_with("**service** Resource\n")
+          expect(result.contents).to start_with("**service** Resource\n")
         end
       end
     end

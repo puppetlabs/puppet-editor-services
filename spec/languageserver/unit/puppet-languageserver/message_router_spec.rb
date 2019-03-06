@@ -74,32 +74,32 @@ describe 'message_router' do
     context 'given a puppet/getVersion request' do
       let(:request_rpc_method) { 'puppet/getVersion' }
       it 'should reply with the Puppet Version' do
-        expect(request).to receive(:reply_result).with(hash_including('puppetVersion'))
+        expect(request).to receive(:reply_result).with(duck_type(:puppetVersion))
 
         subject.receive_request(request)
       end
       it 'should reply with the Facter Version' do
-        expect(request).to receive(:reply_result).with(hash_including('facterVersion'))
+        expect(request).to receive(:reply_result).with(duck_type(:facterVersion))
 
         subject.receive_request(request)
       end
       it 'should reply with the Language Server version' do
-        expect(request).to receive(:reply_result).with(hash_including('languageServerVersion'))
+        expect(request).to receive(:reply_result).with(duck_type(:languageServerVersion))
 
         subject.receive_request(request)
       end
       it 'should reply with whether the facts are loaded' do
-        expect(request).to receive(:reply_result).with(hash_including('factsLoaded'))
+        expect(request).to receive(:reply_result).with(duck_type(:factsLoaded))
 
         subject.receive_request(request)
       end
       it 'should reply with whether the functions are loaded' do
-        expect(request).to receive(:reply_result).with(hash_including('functionsLoaded'))
+        expect(request).to receive(:reply_result).with(duck_type(:functionsLoaded))
 
         subject.receive_request(request)
       end
       it 'should reply with whether the types are loaded' do
-        expect(request).to receive(:reply_result).with(hash_including('typesLoaded'))
+        expect(request).to receive(:reply_result).with(duck_type(:typesLoaded))
 
         subject.receive_request(request)
       end
@@ -113,7 +113,7 @@ describe 'message_router' do
       context 'and missing the typename' do
         let(:request_params) { {} }
         it 'should return an error string' do
-          expect(request).to receive(:reply_result).with(hash_including('error'))
+          expect(request).to receive(:reply_result).with(duck_type(:error))
 
           subject.receive_request(request)
         end
@@ -126,7 +126,7 @@ describe 'message_router' do
 
         it 'should return data with an empty string' do
           expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).and_return(nil)
-          expect(request).to receive(:reply_result).with(hash_including('data' => ''))
+          expect(request).to receive(:reply_result).with(having_attributes(:data => ''))
 
           subject.receive_request(request)
         end
@@ -145,7 +145,7 @@ describe 'message_router' do
         context 'and resource face returns empty array' do
           it 'should return data with an empty string' do
             expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).and_return([])
-            expect(request).to receive(:reply_result).with(hash_including('data' => ''))
+            expect(request).to receive(:reply_result).with(having_attributes(:data => ''))
 
             subject.receive_request(request)
           end
@@ -161,7 +161,7 @@ describe 'message_router' do
           end
 
           it 'should return data containing the type name' do
-            expect(request).to receive(:reply_result).with(hash_including('data' => /#{type_name}/))
+            expect(request).to receive(:reply_result).with(having_attributes(:data => /#{type_name}/))
 
             subject.receive_request(request)
           end
@@ -181,7 +181,7 @@ describe 'message_router' do
         context 'and resource face returns nil' do
           it 'should return data with an empty string' do
             expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).and_return(nil)
-            expect(request).to receive(:reply_result).with(hash_including('data' => ''))
+            expect(request).to receive(:reply_result).with(having_attributes(:data => ''))
 
             subject.receive_request(request)
           end
@@ -197,13 +197,13 @@ describe 'message_router' do
           end
 
           it 'should return data containing the type name' do
-            expect(request).to receive(:reply_result).with(hash_including('data' => /#{type_name}/))
+            expect(request).to receive(:reply_result).with(having_attributes(:data => /#{type_name}/))
 
             subject.receive_request(request)
           end
 
           it 'should return data containing the title' do
-            expect(request).to receive(:reply_result).with(hash_including('data' => /#{title}/))
+            expect(request).to receive(:reply_result).with(having_attributes(:data => /#{title}/))
 
             subject.receive_request(request)
           end
@@ -230,13 +230,13 @@ describe 'message_router' do
         let(:file_uri) { UNKNOWN_FILENAME }
 
         it 'should reply with the error text' do
-          expect(request).to receive(:reply_result).with(hash_including('error' => /Files of this type/))
+          expect(request).to receive(:reply_result).with(having_attributes(:error => /Files of this type/))
 
           subject.receive_request(request)
         end
 
         it 'should not reply with dotContent' do
-          expect(request).to_not receive(:reply_result).with(hash_including('dotContent'))
+          expect(request).to_not receive(:reply_result).with(having_attributes(:dotContent => /.+/))
 
           subject.receive_request(request)
         end
@@ -255,13 +255,13 @@ describe 'message_router' do
         end
 
         it 'should reply with the error text' do
-          expect(request).to receive(:reply_result).with(hash_including('error' => /MockError/))
+          expect(request).to receive(:reply_result).with(having_attributes(:error => /MockError/))
 
           subject.receive_request(request)
         end
 
         it 'should not reply with dotContent' do
-          expect(request).to receive(:reply_result).with(hash_including('dotContent' => ''))
+          expect(request).to receive(:reply_result).with(having_attributes(:dotContent => ''))
 
           subject.receive_request(request)
         end
@@ -280,20 +280,208 @@ describe 'message_router' do
         end
 
         it 'should reply with dotContent' do
-          expect(request).to receive(:reply_result).with(hash_including('dotContent' => /success/))
+          expect(request).to receive(:reply_result).with(having_attributes(:dotContent => /success/))
 
           subject.receive_request(request)
         end
 
         it 'should not reply with error' do
-          expect(request).to receive(:reply_result).with(hash_including('error' => ''))
+          expect(request).to receive(:reply_result).with(having_attributes(:error => ''))
 
           subject.receive_request(request)
         end
       end
     end
 
-    # textDocument/completion - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#completion-request-leftwards_arrow_with_hook
+    context 'given a puppet/fixDiagnosticErrors request' do
+      let(:request_rpc_method) { 'puppet/fixDiagnosticErrors' }
+      let(:file_uri) { MANIFEST_FILENAME }
+      let(:return_content) { true }
+      let(:file_content) { 'some file content' }
+      let(:file_new_content) { 'some new file content' }
+      let(:request_params) {{
+        'documentUri' => file_uri,
+        'alwaysReturnContent' => return_content
+      }}
+
+      before(:each) do
+        # Create fake document store
+        subject.documents.clear
+        subject.documents.set_document(file_uri,file_content, 0)
+      end
+
+      context 'and a file which is not a puppet manifest' do
+        let(:file_uri) { UNKNOWN_FILENAME }
+
+        it 'should log an error message' do
+          expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to fixDiagnosticErrors/)
+
+          subject.receive_request(request)
+        end
+
+        it 'should reply with the document uri' do
+          expect(request).to receive(:reply_result).with(having_attributes(:documentUri => file_uri))
+
+          subject.receive_request(request)
+        end
+
+        it 'should reply with no fixes applied' do
+          expect(request).to receive(:reply_result).with(having_attributes(:fixesApplied => 0))
+
+          subject.receive_request(request)
+        end
+
+        context 'and return_content set to true' do
+          let(:return_content) { true }
+
+          it 'should reply with document content' do
+            expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_content))
+
+            subject.receive_request(request)
+          end
+        end
+
+        context 'and return_content set to false' do
+          let(:return_content) { false }
+
+          it 'should reply with no document content' do
+            expect(request).to receive(:reply_result).with(having_attributes(:newContent => nil))
+
+            subject.receive_request(request)
+          end
+        end
+      end
+
+      context 'for a puppet manifest file' do
+        let(:file_uri) { MANIFEST_FILENAME }
+
+        context 'and an error during fixing the validation' do
+          before(:each) do
+            expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:fix_validate_errors).with(file_content).and_raise('MockError')
+          end
+
+          it 'should log an error message' do
+            expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
+
+            subject.receive_request(request)
+          end
+
+          it 'should reply with the document uri' do
+            expect(request).to receive(:reply_result).with(having_attributes(:documentUri => file_uri))
+
+            subject.receive_request(request)
+          end
+
+          it 'should reply with no fixes applied' do
+            expect(request).to receive(:reply_result).with(having_attributes(:fixesApplied => 0))
+
+            subject.receive_request(request)
+          end
+
+          context 'and return_content set to true' do
+            let(:return_content) { true }
+
+            it 'should reply with document content' do
+              expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_content))
+
+              subject.receive_request(request)
+            end
+          end
+
+          context 'and return_content set to false' do
+            let(:return_content) { false }
+
+            it 'should reply with no document content' do
+              expect(request).to receive(:reply_result).with(having_attributes(:newContent => nil))
+
+              subject.receive_request(request)
+            end
+          end
+        end
+
+        context 'and succesfully fixes one or more validation errors' do
+          let(:applied_fixes) { 1 }
+
+          before(:each) do
+            expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:fix_validate_errors).with(file_content).and_return([applied_fixes, file_new_content])
+          end
+
+          it 'should reply with the document uri' do
+            expect(request).to receive(:reply_result).with(having_attributes(:documentUri => file_uri))
+
+            subject.receive_request(request)
+          end
+
+          it 'should reply with the number of fixes applied' do
+            expect(request).to receive(:reply_result).with(having_attributes(:fixesApplied => applied_fixes))
+
+            subject.receive_request(request)
+          end
+
+          context 'and return_content set to true' do
+            let(:return_content) { true }
+
+            it 'should reply with document content' do
+              expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_new_content))
+
+              subject.receive_request(request)
+            end
+          end
+
+          context 'and return_content set to false' do
+            let(:return_content) { false }
+
+            it 'should reply with document content' do
+              expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_new_content))
+
+              subject.receive_request(request)
+            end
+          end
+        end
+
+        context 'and succesfully fixes zero validation errors' do
+          let(:applied_fixes) { 0 }
+
+          before(:each) do
+            expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:fix_validate_errors).with(file_content).and_return([applied_fixes, file_content])
+          end
+
+          it 'should reply with the document uri' do
+            expect(request).to receive(:reply_result).with(having_attributes(:documentUri => file_uri))
+
+            subject.receive_request(request)
+          end
+
+          it 'should reply with the number of fixes applied' do
+            expect(request).to receive(:reply_result).with(having_attributes(:fixesApplied => applied_fixes))
+
+            subject.receive_request(request)
+          end
+
+          context 'and return_content set to true' do
+            let(:return_content) { true }
+
+            it 'should reply with document content' do
+              expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_content))
+
+              subject.receive_request(request)
+            end
+          end
+
+          context 'and return_content set to false' do
+            let(:return_content) { false }
+
+            it 'should reply with no document content' do
+              expect(request).to receive(:reply_result).with(having_attributes(:newContent => nil))
+
+              subject.receive_request(request)
+            end
+          end
+        end
+      end
+    end
+
+    # textDocument/completion - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#completion-request
     context 'given a textDocument/completion request' do
       let(:request_rpc_method) { 'textDocument/completion' }
       let(:line_num) { 1 }
@@ -318,7 +506,7 @@ describe 'message_router' do
         end
 
         it 'should reply with a complete, empty response' do
-          expect(request).to receive(:reply_result).with(hash_including('isIncomplete' => false, 'items' => []))
+          expect(request).to receive(:reply_result).with(having_attributes(:isIncomplete => false, :items => []))
 
           subject.receive_request(request)
         end
@@ -351,7 +539,7 @@ describe 'message_router' do
           end
 
           it 'should reply with a complete, empty response' do
-            expect(request).to receive(:reply_result).with(hash_including('isIncomplete' => false, 'items' => []))
+            expect(request).to receive(:reply_result).with(having_attributes(:isIncomplete => false, :items => []))
 
             subject.receive_request(request)
           end
@@ -418,7 +606,7 @@ describe 'message_router' do
         end
 
         it 'should reply with nil for the contents' do
-          expect(request).to receive(:reply_result).with(hash_including('contents' => nil))
+          expect(request).to receive(:reply_result).with(having_attributes(:contents => nil))
 
           subject.receive_request(request)
         end
@@ -452,7 +640,7 @@ describe 'message_router' do
           end
 
           it 'should reply with nil for the contents' do
-            expect(request).to receive(:reply_result).with(hash_including('contents' => nil))
+            expect(request).to receive(:reply_result).with(having_attributes(:contents => nil))
 
             subject.receive_request(request)
           end

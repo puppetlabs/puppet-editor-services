@@ -20,50 +20,51 @@ module PuppetLanguageServer
         request.reply_result(nil)
 
       when 'puppet/getVersion'
-        request.reply_result(LanguageServer::PuppetVersion.create('puppetVersion'   => Puppet.version,
-                                                                  'facterVersion'   => Facter.version,
-                                                                  'factsLoaded'     => PuppetLanguageServer::FacterHelper.facts_loaded?,
-                                                                  'functionsLoaded' => PuppetLanguageServer::PuppetHelper.default_functions_loaded?,
-                                                                  'typesLoaded'     => PuppetLanguageServer::PuppetHelper.default_types_loaded?,
-                                                                  'classesLoaded'   => PuppetLanguageServer::PuppetHelper.default_classes_loaded?))
+        request.reply_result(LSP::PuppetVersion.new(
+                               'puppetVersion'   => Puppet.version,
+                               'facterVersion'   => Facter.version,
+                               'factsLoaded'     => PuppetLanguageServer::FacterHelper.facts_loaded?,
+                               'functionsLoaded' => PuppetLanguageServer::PuppetHelper.default_functions_loaded?,
+                               'typesLoaded'     => PuppetLanguageServer::PuppetHelper.default_types_loaded?,
+                               'classesLoaded'   => PuppetLanguageServer::PuppetHelper.default_classes_loaded?
+                             ))
 
       when 'puppet/getResource'
         type_name = request.params['typename']
         title = request.params['title']
         if type_name.nil?
-          request.reply_result(LanguageServer::PuppetCompilation.create('error' => 'Missing Typename'))
+          request.reply_result(LSP::PuppetResourceResponse.new('error' => 'Missing Typename'))
           return
         end
         resource_list = PuppetLanguageServer::PuppetHelper.get_puppet_resource(type_name, title, documents.store_root_path)
-
         if resource_list.nil? || resource_list.length.zero?
-          request.reply_result(LanguageServer::PuppetCompilation.create('data' => ''))
+          request.reply_result(LSP::PuppetResourceResponse.new('data' => ''))
           return
         end
         content = resource_list.map(&:manifest).join("\n\n") + "\n"
-        request.reply_result(LanguageServer::PuppetCompilation.create('data' => content))
+        request.reply_result(LSP::PuppetResourceResponse.new('data' => content))
 
       when 'puppet/compileNodeGraph'
         file_uri = request.params['external']
         unless documents.document_type(file_uri) == :manifest
-          request.reply_result(LanguageServer::PuppetCompilation.create('error' => 'Files of this type can not be used to create a node graph.'))
+          request.reply_result(LSP::CompileNodeGraphResponse.new('error' => 'Files of this type can not be used to create a node graph.'))
           return
         end
         content = documents.document(file_uri)
 
         begin
           node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(content, documents.store_root_path)
-          request.reply_result(LanguageServer::PuppetCompilation.create('dotContent' => node_graph.dot_content,
-                                                                        'error'      => node_graph.error_content))
+          request.reply_result(LSP::CompileNodeGraphResponse.new('dotContent' => node_graph.dot_content,
+                                                                 'error'      => node_graph.error_content))
         rescue StandardError => e
           PuppetLanguageServer.log_message(:error, "(puppet/compileNodeGraph) Error generating node graph. #{e}")
-          request.reply_result(LanguageServer::PuppetCompilation.create('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.'))
+          request.reply_result(LSP::CompileNodeGraphResponse.new('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.'))
         end
 
       when 'puppet/fixDiagnosticErrors'
         begin
-          formatted_request = LanguageServer::PuppetFixDiagnosticErrorsRequest.create(request.params)
-          file_uri = formatted_request['documentUri']
+          formatted_request = LSP::PuppetFixDiagnosticErrorsRequest.new(request.params)
+          file_uri = formatted_request.documentUri
           content = documents.document(file_uri)
 
           case documents.document_type(file_uri)
@@ -73,18 +74,18 @@ module PuppetLanguageServer
             raise "Unable to fixDiagnosticErrors on #{file_uri}"
           end
 
-          request.reply_result(LanguageServer::PuppetFixDiagnosticErrorsResponse.create(
-                                 'documentUri'  => formatted_request['documentUri'],
+          request.reply_result(LSP::PuppetFixDiagnosticErrorsResponse.new(
+                                 'documentUri'  => formatted_request.documentUri,
                                  'fixesApplied' => changes,
-                                 'newContent'   => changes > 0 || formatted_request['alwaysReturnContent'] ? new_content : nil
+                                 'newContent'   => changes > 0 || formatted_request.alwaysReturnContent ? new_content : nil
                                ))
         rescue StandardError => exception
           PuppetLanguageServer.log_message(:error, "(puppet/fixDiagnosticErrors) #{exception}")
           unless formatted_request.nil?
-            request.reply_result(LanguageServer::PuppetFixDiagnosticErrorsResponse.create(
-                                   'documentUri'  => formatted_request['documentUri'],
+            request.reply_result(LSP::PuppetFixDiagnosticErrorsResponse.new(
+                                   'documentUri'  => formatted_request.documentUri,
                                    'fixesApplied' => 0,
-                                   'newContent'   => formatted_request['alwaysReturnContent'] ? content : nil # rubocop:disable Metrics/BlockNesting
+                                   'newContent'   => formatted_request.alwaysReturnContent ? content : nil # rubocop:disable Metrics/BlockNesting
                                  ))
           end
         end
@@ -103,12 +104,14 @@ module PuppetLanguageServer
           end
         rescue StandardError => exception
           PuppetLanguageServer.log_message(:error, "(textDocument/completion) #{exception}")
-          request.reply_result(LanguageServer::CompletionList.create_nil_response)
+          request.reply_result(LSP::CompletionList.new('isIncomplete' => false, 'items' => []))
         end
 
       when 'completionItem/resolve'
         begin
-          request.reply_result(PuppetLanguageServer::Manifest::CompletionProvider.resolve(request.params.clone))
+          request.reply_result(PuppetLanguageServer::Manifest::CompletionProvider.resolve(
+                                 LSP::CompletionItem.new(request.params)
+                               ))
         rescue StandardError => exception
           PuppetLanguageServer.log_message(:error, "(completionItem/resolve) #{exception}")
           # Spit back the same params if an error happens
@@ -129,7 +132,7 @@ module PuppetLanguageServer
           end
         rescue StandardError => exception
           PuppetLanguageServer.log_message(:error, "(textDocument/hover) #{exception}")
-          request.reply_result(LanguageServer::Hover.create_nil_response)
+          request.reply_result(LSP::Hover.new)
         end
 
       when 'textDocument/definition'

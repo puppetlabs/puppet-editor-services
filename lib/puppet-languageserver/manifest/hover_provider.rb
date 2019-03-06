@@ -8,7 +8,7 @@ module PuppetLanguageServer
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
                                                                               :disallowed_classes => [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression],
                                                                               :tasks_mode         => options[:tasks_mode])
-        return LanguageServer::Hover.create_nil_response if result.nil?
+        return LSP::Hover.new if result.nil?
 
         path = result[:path]
         item = result[:model]
@@ -65,11 +65,7 @@ module PuppetLanguageServer
           raise "Unable to generate Hover information for object of type #{item.class}"
         end
 
-        if content.nil?
-          LanguageServer::Hover.create_nil_response
-        else
-          LanguageServer::Hover.create('contents' => content)
-        end
+        LSP::Hover.new('contents' => content)
       end
 
       def self.get_hover_content_for_access_expression(path, expr)

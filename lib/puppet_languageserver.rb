@@ -2,7 +2,7 @@ begin
   original_verbose = $VERBOSE
   $VERBOSE = nil
 
-  require 'languageserver/languageserver'
+  require 'lsp/lsp'
   require 'puppet_editor_services'
   require 'puppet'
 

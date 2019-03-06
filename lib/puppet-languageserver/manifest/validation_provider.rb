@@ -61,24 +61,21 @@ module PuppetLanguageServer
 
               severity = case problem[:kind]
                          when :error
-                           LanguageServer::DIAGNOSTICSEVERITY_ERROR
+                           LSP::DiagnosticSeverity::ERROR
                          when :warning
-                           LanguageServer::DIAGNOSTICSEVERITY_WARNING
+                           LSP::DiagnosticSeverity::WARNING
                          else
-                           LanguageServer::DIAGNOSTICSEVERITY_HINT
+                           LSP::DiagnosticSeverity::HINT
                          end
 
               endpos = problem[:column] - 1
               endpos = problem[:column] - 1 + problem[:token].to_manifest.length unless problem[:token].nil? || problem[:token].value.nil?
 
-              result << LanguageServer::Diagnostic.create('severity' => severity,
-                                                          'code'     => problem[:check].to_s,
-                                                          'fromline' => problem[:line] - 1, # Line numbers from puppet are base 1
-                                                          'toline'   => problem[:line] - 1, # Line numbers from puppet are base 1
-                                                          'fromchar' => problem[:column] - 1, # Pos numbers from puppet are base 1
-                                                          'tochar'   => endpos,
-                                                          'source'   => 'Puppet',
-                                                          'message'  => problem[:message])
+              result << LSP::Diagnostic.new('severity' => severity,
+                                            'code'     => problem[:check].to_s,
+                                            'range'    => LSP.create_range(problem[:line] - 1, problem[:column] - 1, problem[:line] - 1, endpos),
+                                            'source'   => 'Puppet',
+                                            'message'  => problem[:message])
             end
           end
         # rubocop:disable Lint/HandleExceptions
@@ -114,13 +111,10 @@ module PuppetLanguageServer
             message = detail.basic_message if message.nil? && detail.respond_to?(:basic_message)
 
             unless ex_line.nil? || ex_pos.nil? || message.nil?
-              result << LanguageServer::Diagnostic.create('severity' => LanguageServer::DIAGNOSTICSEVERITY_ERROR,
-                                                          'fromline' => ex_line,
-                                                          'toline'   => ex_line,
-                                                          'fromchar' => ex_pos,
-                                                          'tochar'   => ex_pos + 1,
-                                                          'source'   => 'Puppet',
-                                                          'message'  => message)
+              result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
+                                            'range'    => LSP.create_range(ex_line, ex_pos, ex_line, ex_pos + 1),
+                                            'source'   => 'Puppet',
+                                            'message'  => message)
             end
           end
         end

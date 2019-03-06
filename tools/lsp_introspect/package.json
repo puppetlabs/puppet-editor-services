@@ -1,0 +1,19 @@
+{
+  "name": "lsp_introspect",
+  "version": "1.0.0",
+  "description": "Fake npm module to export LSP modules to ruby",
+  "main": "index.ts",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "introspect": "node index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "vscode-languageserver-protocol": "3.14.1",
+    "vscode-languageserver-types": "3.14.0",
+    "typescript-parser": "2.6.1",
+    "typescript": "^3.0.3"
+  }
+}

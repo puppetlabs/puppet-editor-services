@@ -34,17 +34,6 @@ def wait_for_puppet_loading
   end
 end
 
-# Custom RSpec Matchers
-RSpec::Matchers.define :be_completion_item_with_type do |value|
-  value = [value] unless value.is_a?(Array)
-
-  match { |actual| value.include?(actual['data']['type']) }
-
-  description do
-    "be a Completion Item with a data type in the list of #{value}"
-  end
-end
-
 # Sidecar Protocol Helpers
 def add_default_basepuppetobject_values!(value)
   value.key = :key
