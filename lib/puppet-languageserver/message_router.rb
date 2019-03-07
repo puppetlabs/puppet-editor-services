@@ -1,8 +1,10 @@
 module PuppetLanguageServer
   class MessageRouter
+    attr_reader :server_options
     attr_accessor :json_rpc_handler
 
-    def initialize(_options = {})
+    def initialize(options = {})
+      @server_options = options.nil? ? {} : options
     end
 
     def documents
@@ -14,6 +16,14 @@ module PuppetLanguageServer
       when 'initialize'
         PuppetLanguageServer.log_message(:debug, 'Received initialize method')
         request.reply_result('capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities)
+        unless server_options[:puppet_version].nil? || server_options[:puppet_version] == Puppet.version
+          # Add a minor delay before sending the notification to give the client some processing time
+          sleep(0.5)
+          @json_rpc_handler.send_show_message_notification(
+            LSP::MessageType::WARNING,
+            "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
+          )
+        end
 
       when 'shutdown'
         PuppetLanguageServer.log_message(:debug, 'Received shutdown method')

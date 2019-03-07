@@ -8,7 +8,7 @@ module PuppetEditorServices
     when :info
       @logger.info(message)
     when :warn
-      @logger.info(message)
+      @logger.warn(message)
     when :error
       @logger.error(message)
     when :fatal
