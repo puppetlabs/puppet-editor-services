@@ -2,33 +2,7 @@ begin
   original_verbose = $VERBOSE
   $VERBOSE = nil
 
-  require 'lsp/lsp'
   require 'puppet_editor_services'
-  require 'puppet'
-
-  %w[
-    json_rpc_handler
-    document_store
-    crash_dump
-    message_router
-    validation_queue
-    server_capabilities
-    sidecar_protocol
-    sidecar_queue
-    puppet_parser_helper
-    puppet_helper
-    facter_helper
-    uri_helper
-    puppet_monkey_patches
-    providers
-  ].each do |lib|
-    begin
-      require "puppet_languageserver/#{lib}"
-    rescue LoadError
-      require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
-    end
-  end
-
   require 'optparse'
   require 'logger'
 ensure
@@ -38,6 +12,51 @@ end
 module PuppetLanguageServer
   def self.version
     PuppetEditorServices.version
+  end
+
+  def self.require_gems(options)
+    original_verbose = $VERBOSE
+    $VERBOSE = nil
+
+    # Use specific Puppet Gem version if possible
+    unless options[:puppet_version].nil?
+      available_puppet_gems = Gem::Specification
+                              .select { |item| item.name.casecmp('puppet').zero? }
+                              .map { |item| item.version.to_s }
+      if available_puppet_gems.include?(options[:puppet_version])
+        gem 'puppet', options[:puppet_version]
+      else
+        log_message(:warn, "Unable to use puppet version #{options[:puppet_version]}, as only the following versions are available [#{available_puppet_gems.join(', ')}]")
+      end
+    end
+
+    require 'lsp/lsp'
+    require 'puppet'
+
+    %w[
+      json_rpc_handler
+      document_store
+      crash_dump
+      message_router
+      validation_queue
+      server_capabilities
+      sidecar_protocol
+      sidecar_queue
+      puppet_parser_helper
+      puppet_helper
+      facter_helper
+      uri_helper
+      puppet_monkey_patches
+      providers
+    ].each do |lib|
+      begin
+        require "puppet-languageserver/#{lib}"
+      rescue LoadError
+        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
+      end
+    end
+  ensure
+    $VERBOSE = original_verbose
   end
 
   class CommandLineParser
@@ -51,6 +70,7 @@ module PuppetLanguageServer
         flags: [],
         ipaddress: 'localhost',
         port: nil,
+        puppet_version: nil,
         puppet_settings: [],
         preload_puppet: true,
         stdio: false,
@@ -110,6 +130,10 @@ module PuppetLanguageServer
           args[:puppet_settings] = text
         end
 
+        opts.on('--puppet-version=TEXT', String, 'The version of the Puppet Gem to use (defaults to latest version if not specified or the version does not exist) e.g. --puppet-version=5.4.0') do |text|
+          args[:puppet_version] = text
+        end
+
         opts.on('--local-workspace=PATH', 'The workspace or file path that will be used to provide module-specific functionality. Default is no workspace path.') do |path|
           args[:workspace] = path
         end
@@ -137,6 +161,8 @@ module PuppetLanguageServer
   def self.init_puppet(options)
     PuppetEditorServices.init_logging(options)
     log_message(:info, "Language Server is v#{PuppetEditorServices.version}")
+    log_message(:debug, 'Loading gems...')
+    require_gems(options)
     log_message(:info, "Using Puppet v#{Puppet.version}")
 
     log_message(:debug, "Detected additional puppet settings #{options[:puppet_settings]}")

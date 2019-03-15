@@ -3,9 +3,9 @@ begin
   $VERBOSE = nil
 
   require 'puppet_editor_services'
-  require 'puppet'
   require 'optparse'
   require 'logger'
+  require 'json'
 
   %w[
     sidecar_protocol
@@ -16,23 +16,6 @@ begin
       require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
     end
   end
-
-  %w[
-    cache/base
-    cache/null
-    cache/filesystem
-    puppet_helper
-    puppet_parser_helper
-    puppet_monkey_patches
-    sidecar_protocol_extensions
-    workspace
-  ].each do |lib|
-    begin
-      require "puppet-languageserver-sidecar/#{lib}"
-    rescue LoadError
-      require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
-    end
-  end
 ensure
   $VERBOSE = original_verbose
 end
@@ -40,6 +23,44 @@ end
 module PuppetLanguageServerSidecar
   def self.version
     PuppetEditorServices.version
+  end
+
+  def self.require_gems(options)
+    original_verbose = $VERBOSE
+    $VERBOSE = nil
+
+    # Use specific Puppet Gem version if possible
+    unless options[:puppet_version].nil?
+      available_puppet_gems = Gem::Specification
+                              .select { |item| item.name.casecmp('puppet').zero? }
+                              .map { |item| item.version.to_s }
+      if available_puppet_gems.include?(options[:puppet_version])
+        gem 'puppet', options[:puppet_version]
+      else
+        log_message(:warn, "Unable to use puppet version #{options[:puppet_version]}, as only the following versions are available [#{available_puppet_gems.join(', ')}]")
+      end
+    end
+
+    require 'puppet'
+
+    %w[
+      cache/base
+      cache/null
+      cache/filesystem
+      puppet_helper
+      puppet_parser_helper
+      puppet_monkey_patches
+      sidecar_protocol_extensions
+      workspace
+    ].each do |lib|
+      begin
+        require "puppet-languageserver-sidecar/#{lib}"
+      rescue LoadError
+        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
+      end
+    end
+  ensure
+    $VERBOSE = original_verbose
   end
 
   ACTION_LIST = %w[
@@ -65,6 +86,7 @@ module PuppetLanguageServerSidecar
         flags: [],
         output: nil,
         puppet_settings: [],
+        puppet_version: nil,
         workspace: nil
       }
 
@@ -95,6 +117,10 @@ module PuppetLanguageServerSidecar
 
         opts.on('-p', '--puppet-settings=TEXT', Array, 'Comma delimited list of settings to pass into Puppet e.g. --vardir,/opt/test-fixture') do |text|
           args[:puppet_settings] = text
+        end
+
+        opts.on('--puppet-version=TEXT', String, 'The version of the Puppet Gem to use (defaults to latest version if not specified or the version does not exist) e.g. --puppet-version=5.4.0') do |text|
+          args[:puppet_version] = text
         end
 
         opts.on('-f', '--feature-flags=FLAGS', Array, 'A list of comma delimited feature flags to pass the the sidecar') do |flags|
@@ -135,6 +161,8 @@ module PuppetLanguageServerSidecar
   def self.init_puppet_sidecar(options)
     PuppetEditorServices.init_logging(options)
     log_message(:info, "Language Server Sidecar is v#{PuppetLanguageServerSidecar.version}")
+    log_message(:debug, 'Loading gems...')
+    require_gems(options)
     log_message(:info, "Using Puppet v#{Puppet.version}")
 
     log_message(:debug, "Detected additional puppet settings #{options[:puppet_settings]}")

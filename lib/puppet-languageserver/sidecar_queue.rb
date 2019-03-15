@@ -159,7 +159,8 @@ module PuppetLanguageServer
       return [] if @queue_options.nil?
       result = []
       result << '--no-cache' if @queue_options[:disable_sidecar_cache]
-      result << "--feature-flags=#{@queue_options[:flags].join(',')}" if @queue_options[:flags]
+      result << "--puppet-version=#{Puppet.version}"
+      result << "--feature-flags=#{@queue_options[:flags].join(',')}" if @queue_options[:flags] && !@queue_options[:flags].empty?
       result << "--puppet-settings=#{@queue_options[:puppet_settings].join(',')}" if @queue_options[:puppet_settings] && !@queue_options[:puppet_settings].empty?
       result
     end
