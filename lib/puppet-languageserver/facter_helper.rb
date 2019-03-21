@@ -44,8 +44,15 @@ module PuppetLanguageServer
 
     def self._load_facts
       _reset
-      Facter.loadfacts
-      @fact_hash = Facter.to_hash
+      @fact_hash = {}
+      begin
+        Facter.loadfacts
+        @fact_hash = Facter.to_hash
+      rescue StandardError => ex
+        PuppetLanguageServer.log_message(:error, "[FacterHelper::_load_facts] Error loading facts #{ex.message} #{ex.backtrace}")
+      rescue LoadError => ex
+        PuppetLanguageServer.log_message(:error, "[FacterHelper::_load_facts] Error loading facts (LoadError) #{ex.message} #{ex.backtrace}")
+      end
       PuppetLanguageServer.log_message(:debug, "[FacterHelper::_load_facts] Finished loading #{@fact_hash.keys.count} facts")
       @facts_loaded = true
     end
