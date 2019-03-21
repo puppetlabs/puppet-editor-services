@@ -6,6 +6,21 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.19.0 - 2019-03-24
+
+### Added
+
+- ([GH-111](https://github.com/lingua-pupuli/puppet-editor-services/issues/111)) Add puppet-version command line argument
+
+### Fixed
+
+- ([Commit](https://github.com/lingua-pupuli/puppet-editor-services/commit/7d14081eaa793a0382321391ba234db8126c5916)) Use UTF8 for JSON files in the Language Server Sidecar
+- ([GH-113](https://github.com/lingua-pupuli/puppet-editor-services/issues/113)) Rescue errors when running Facter 2.x
+
+### Changed
+
+- ([GH-110](https://github.com/lingua-pupuli/puppet-editor-services/issues/110)) Autogenerate Ruby Language Server Protocol files from Typescript
+
 ## 0.18.0 - 2019-02-05
 
 ### Added
