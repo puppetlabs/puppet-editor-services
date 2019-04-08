@@ -212,7 +212,8 @@ module PuppetLanguageServerSidecar
   def self.inject_workspace_as_module
     return false unless PuppetLanguageServerSidecar::Workspace.has_module_metadata?
 
-    Puppet.settings[:basemodulepath] = Puppet.settings[:basemodulepath] + ';' + PuppetLanguageServerSidecar::Workspace.root_path
+    # TODO: Is this really needed?
+    # Puppet.settings[:basemodulepath] = Puppet.settings[:basemodulepath] + ';' + PuppetLanguageServerSidecar::Workspace.root_path
 
     %w[puppet_modulepath_monkey_patches].each do |lib|
       begin
@@ -244,6 +245,8 @@ module PuppetLanguageServerSidecar
   end
 
   def self.execute(options)
+    use_pup4api = featureflag?('pup4api')
+
     case options[:action].downcase
     when 'noop'
       []
@@ -254,7 +257,11 @@ module PuppetLanguageServerSidecar
 
     when 'default_functions'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache)
+      if use_pup4api
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_pup4_api(cache, :object_types => [:function])[:functions]
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache)
+      end
 
     when 'default_types'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
@@ -294,8 +301,14 @@ module PuppetLanguageServerSidecar
     when 'workspace_functions'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(null_cache,
-                                                                   :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+      if use_pup4api
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_pup4_api(null_cache,
+                                                                        :root_path    => PuppetLanguageServerSidecar::Workspace.root_path,
+                                                                        :object_types => [:function])[:functions]
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(null_cache,
+                                                                     :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+      end
 
     when 'workspace_types'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new

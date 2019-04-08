@@ -63,57 +63,6 @@ module PuppetLanguageServerSidecar
       classes
     end
 
-    # Function loading
-    def self.retrieve_functions(cache, options = {})
-      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::load_functions] Starting')
-
-      autoloader = Puppet::Util::Autoload.new(self, 'puppet/parser/functions')
-      current_env = current_environment
-      funcs = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-
-      # Functions that are already loaded (e.g. system default functions like alert)
-      # should already be populated so insert them into the function results
-      #
-      # Find the unique filename list
-      filenames = []
-      Puppet::Parser::Functions.monkey_function_list.each_value do |data|
-        filenames << data[:source_location][:source] unless data[:source_location].nil? || data[:source_location][:source].nil?
-      end
-      # Now add the functions in each file to the cache
-      filenames.uniq.compact.each do |filename|
-        Puppet::Parser::Functions.monkey_function_list
-                                 .select { |_k, i| filename.casecmp(i[:source_location][:source].to_s).zero? }
-                                 .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
-                                 .each do |name, item|
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
-          funcs << obj
-        end
-      end
-
-      # Now we can load functions from the default locations
-      if autoloader.method(:files_to_load).arity.zero?
-        params = []
-      else
-        params = [current_env]
-      end
-      autoloader.files_to_load(*params).each do |file|
-        name = file.gsub(autoloader.path + '/', '')
-        begin
-          expanded_name = autoloader.expand(name)
-          absolute_name = Puppet::Util::Autoload.get_file(expanded_name, current_env)
-          raise("Could not find absolute path of function #{name}") if absolute_name.nil?
-          if path_has_child?(options[:root_path], absolute_name) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-            funcs.concat(load_function_file(cache, name, absolute_name, autoloader, current_env))
-          end
-        rescue StandardError => err
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_functions] Error loading function #{file}: #{err} #{err.backtrace}")
-        end
-      end
-
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::load_functions] Finished loading #{funcs.count} functions")
-      funcs
-    end
-
     def self.retrieve_types(cache, options = {})
       PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_types] Starting')
 
@@ -145,6 +94,52 @@ module PuppetLanguageServerSidecar
       PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_types] Finished loading #{types.count} type/s")
 
       types
+    end
+
+    # Loading via the Puppet 4 Language API
+    def self.available_object_types
+      [:function]
+    end
+
+    # Retrieve objects via the Puppet 4 API loaders
+    def self.retrieve_via_pup4_api(_cache, options = {})
+      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_via_pup4_api] Starting')
+
+      object_types = options[:object_types].nil? ? available_object_types : options[:object_types]
+      object_types.select! { |i| available_object_types.include?(i) }
+
+      result = {}
+      return compilation if object_types.empty?
+
+      result[:functions] = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new if object_types.include?(:function)
+
+      current_env = current_environment
+      for_agent = options[:for_agent].nil? ? true : options[:for_agent]
+      loaders = Puppet::Pops::Loaders.new(current_env, for_agent)
+
+      context_overrides = {
+        :current_environment => current_env,
+        :loaders             => loaders,
+        :rich_data           => true
+      }
+
+      # TODO: Needed? Puppet[:tasks] = true
+      Puppet.override(context_overrides, 'LanguageServer Sidecar') do
+        current_env.loaders.private_environment_loader.discover(:function) if object_types.include?(:function)
+      end
+
+      if object_types.include?(:function)
+        # Enumerate V3 Functions from the monkey patching
+        Puppet::Parser::Functions.monkey_function_list
+                                 .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
+                                 .each do |name, item|
+          obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
+          result[:functions] << obj
+        end
+        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_pup4_api] Finished loading #{result[:functions].count} functions")
+      end
+
+      result
     end
 
     # Private functions
@@ -249,44 +244,6 @@ module PuppetLanguageServerSidecar
       class_info
     end
     private_class_method :load_classes_from_manifest
-
-    def self.load_function_file(cache, name, absolute_name, autoloader, env)
-      funcs = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-
-      if cache.active?
-        cached_result = cache.load(absolute_name, PuppetLanguageServerSidecar::Cache::FUNCTIONS_SECTION)
-        unless cached_result.nil?
-          begin
-            funcs.from_json!(cached_result)
-            return funcs
-          rescue StandardError => e
-            PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_function_file] Error while deserializing #{absolute_name} from cache: #{e}")
-            funcs = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-          end
-        end
-      end
-
-      unless autoloader.loaded?(name)
-        # This is an expensive call
-        unless autoloader.load(name, env) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_function_file] function #{absolute_name} did not load")
-        end
-      end
-
-      # Find the functions that were loaded based on source file name (case insensitive)
-      Puppet::Parser::Functions.monkey_function_list
-                               .select { |_k, i| absolute_name.casecmp(i[:source_location][:source].to_s).zero? }
-                               .each do |func_name, item|
-        obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(func_name, item)
-        obj.calling_source = absolute_name
-        funcs << obj
-      end
-      PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_function_file] file #{absolute_name} did load any functions") if funcs.count.zero?
-      cache.save(absolute_name, PuppetLanguageServerSidecar::Cache::FUNCTIONS_SECTION, funcs.to_json) if cache.active?
-
-      funcs
-    end
-    private_class_method :load_function_file
 
     def self.load_type_file(cache, name, absolute_name, autoloader, env)
       types = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
