@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'open3'
 require 'tempfile'
 
-describe 'PuppetLanguageServerSidecar with Feature Flag pup4api' do
+describe 'PuppetLanguageServerSidecar with Feature Flag pup4api', :if => Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0') do
   def run_sidecar(cmd_options)
     cmd_options << '--no-cache'
 
@@ -81,6 +81,12 @@ describe 'PuppetLanguageServerSidecar with Feature Flag pup4api' do
 
       # These are defined in the fixtures/real_agent/cache/lib/puppet/parser/functions
       expect(deserial).to contain_child_with_key(:default_cache_function)
+      # These are defined in the fixtures/real_agent/cache/lib/puppet/functions
+      expect(deserial).to contain_child_with_key(:default_pup4_function)
+      # These are defined in the fixtures/real_agent/cache/lib/puppet/functions/environment (Special environent namespace)
+      expect(deserial).to contain_child_with_key(:'environment::default_env_pup4_function')
+      # These are defined in the fixtures/real_agent/cache/lib/puppet/functions/modname (module namespaced function)
+      expect(deserial).to contain_child_with_key(:'modname::default_mod_pup4_function')
     end
   end
 
@@ -153,13 +159,26 @@ describe 'PuppetLanguageServerSidecar with Feature Flag pup4api' do
         deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new()
         expect { deserial.from_json!(result) }.to_not raise_error
 
+        # Puppet 3 API Functions
         expect(deserial).to_not contain_child_with_key(:badfile)
         expect(deserial).to contain_child_with_key(:bad_function)
         expect(deserial).to contain_child_with_key(:fixture_function)
 
+        # Puppet 4 API Functions
+        expect(deserial).to_not contain_child_with_key(:fixture_pup4_badfile)
+        expect(deserial).to_not contain_child_with_key(:'badname::fixture_pup4_badname_function')
+        expect(deserial).to contain_child_with_key(:fixture_pup4_function)
+        expect(deserial).to contain_child_with_key(:'valid::fixture_pup4_mod_function')
+        expect(deserial).to contain_child_with_key(:fixture_pup4_badfunction)
+
         # Make sure the function has the right properties
         func = child_with_key(deserial, :fixture_function)
         expect(func.doc).to eq('doc_fixture_function')
+        expect(func.source).to match(/valid_module_workspace/)
+
+        # Make sure the function has the right properties
+        func = child_with_key(deserial, :fixture_pup4_function)
+        expect(func.doc).to be_nil  # Currently we can't get the documentation for v4 functions
         expect(func.source).to match(/valid_module_workspace/)
       end
     end
@@ -246,11 +265,21 @@ describe 'PuppetLanguageServerSidecar with Feature Flag pup4api' do
         deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new()
         expect { deserial.from_json!(result) }.to_not raise_error
 
+        expect(deserial).to_not contain_child_with_key(:pup4_env_badfile)
+        expect(deserial).to_not contain_child_with_key(:'badname::pup4_function')
         expect(deserial).to contain_child_with_key(:env_function)
+        expect(deserial).to contain_child_with_key(:pup4_env_function)
+        expect(deserial).to contain_child_with_key(:pup4_env_badfunction)
+        expect(deserial).to contain_child_with_key(:'profile::pup4_envprofile_function')
 
         # Make sure the function has the right properties
         func = child_with_key(deserial, :env_function)
         expect(func.doc).to eq('doc_env_function')
+        expect(func.source).to match(/valid_environment_workspace/)
+
+        # Make sure the function has the right properties
+        func = child_with_key(deserial, :pup4_env_function)
+        expect(func.doc).to be_nil  # Currently we can't get the documentation for v4 functions
         expect(func.source).to match(/valid_environment_workspace/)
       end
     end
