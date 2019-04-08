@@ -173,8 +173,8 @@ module PuppetDebugServer
       @puppet_thread = Thread.new do
         begin
           PuppetDebugServer::PuppetDebugSession.start_puppet
-        rescue => err # rubocop:disable Style/RescueStandardError
-          PuppetDebugServer.log_message(:error, "Error in Puppet Thread: #{err}")
+        rescue => e # rubocop:disable Style/RescueStandardError
+          PuppetDebugServer.log_message(:error, "Error in Puppet Thread: #{e}")
           raise
         end
       end
@@ -184,8 +184,8 @@ module PuppetDebugServer
       @watcher_thread = Thread.new do
         begin
           PuppetDebugServer::PuppetDebugSession.debug_session_watcher
-        rescue => err # rubocop:disable Style/RescueStandardError
-          PuppetDebugServer.log_message(:error, "Error in Watcher Thread: #{err}")
+        rescue => e # rubocop:disable Style/RescueStandardError
+          PuppetDebugServer.log_message(:error, "Error in Watcher Thread: #{e}")
           raise
         end
       end

@@ -116,7 +116,7 @@ module PuppetLanguageServer
         begin
           result = parser.singleton_parse_string(new_content, options[:tasks_mode], '')
           break
-        rescue Puppet::ParseErrorWithIssue => _exception
+        rescue Puppet::ParseErrorWithIssue
           next if options[:multiple_attempts]
           raise
         end
@@ -130,7 +130,7 @@ module PuppetLanguageServer
       #   If during paring we modified the source we may need to change the cursor location
       begin
         line_offset = result.line_offsets[line_num]
-      rescue StandardError => _e
+      rescue StandardError
         line_offset = result['locator'].line_index[line_num]
       end
       # Typically we're completing after something was typed, so go back one char

@@ -35,8 +35,8 @@ module PuppetLanguageServer
           @queue_threads << Thread.new do
             begin
               worker
-            rescue => err # rubocop:disable Style/RescueStandardError
-              PuppetLanguageServer.log_message(:error, "Error in SidecarQueue Thread: #{err}")
+            rescue => e # rubocop:disable Style/RescueStandardError
+              PuppetLanguageServer.log_message(:error, "Error in SidecarQueue Thread: #{e}")
               raise
             end
           end

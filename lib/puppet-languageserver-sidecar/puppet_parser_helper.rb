@@ -17,8 +17,8 @@ module PuppetLanguageServerSidecar
         else
           result.dot_content = node_graph.to_dot(options)
         end
-      rescue StandardError => exception
-        result.set_error("Error while parsing the file. #{exception}")
+      rescue StandardError => e
+        result.set_error("Error while parsing the file. #{e}")
       end
 
       result

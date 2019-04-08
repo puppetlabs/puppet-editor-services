@@ -48,10 +48,10 @@ module PuppetLanguageServer
       begin
         Facter.loadfacts
         @fact_hash = Facter.to_hash
-      rescue StandardError => ex
-        PuppetLanguageServer.log_message(:error, "[FacterHelper::_load_facts] Error loading facts #{ex.message} #{ex.backtrace}")
-      rescue LoadError => ex
-        PuppetLanguageServer.log_message(:error, "[FacterHelper::_load_facts] Error loading facts (LoadError) #{ex.message} #{ex.backtrace}")
+      rescue StandardError => e
+        PuppetLanguageServer.log_message(:error, "[FacterHelper::_load_facts] Error loading facts #{e.message} #{e.backtrace}")
+      rescue LoadError => e
+        PuppetLanguageServer.log_message(:error, "[FacterHelper::_load_facts] Error loading facts (LoadError) #{e.message} #{e.backtrace}")
       end
       PuppetLanguageServer.log_message(:debug, "[FacterHelper::_load_facts] Finished loading #{@fact_hash.keys.count} facts")
       @facts_loaded = true

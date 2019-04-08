@@ -49,20 +49,20 @@ module Puppet
           PuppetDebugServer::PuppetDebugSession.hooks.exec_hook(:hook_after_compile, [result])
 
           result
-        rescue Puppet::ParseErrorWithIssue => detail
-          detail.node = node.name
-          Puppet.log_exception(detail)
+        rescue Puppet::ParseErrorWithIssue => e
+          e.node = node.name
+          Puppet.log_exception(e)
           raise
-        rescue => detail # rubocop:disable Style/RescueStandardError
-          message = "#{detail} on node #{node.name}"
-          Puppet.log_exception(detail, message)
-          raise Puppet::Error, message, detail.backtrace
+        rescue => e # rubocop:disable Style/RescueStandardError
+          message = "#{e} on node #{node.name}"
+          Puppet.log_exception(e, message)
+          raise Puppet::Error, message, e.backtrace
         end
-      rescue Puppet::ParseErrorWithIssue => detail
+      rescue Puppet::ParseErrorWithIssue => e
         # TODO: Potential issue here with 4.10.x not implementing .file on the Positioned class
         # Just re-raise if there is no Puppet manifest file associated with the error
-        raise if detail.file.nil? || detail.line.nil? || detail.pos.nil?
-        PuppetDebugServer::PuppetDebugSession.hooks.exec_hook(:hook_exception, [detail])
+        raise if e.file.nil? || e.line.nil? || e.pos.nil?
+        PuppetDebugServer::PuppetDebugSession.hooks.exec_hook(:hook_exception, [e])
         raise
       end
     end

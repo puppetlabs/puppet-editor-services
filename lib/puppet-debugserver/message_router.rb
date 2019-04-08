@@ -272,11 +272,11 @@ module PuppetDebugServer
             }, request
           )
           @json_handler.send_response response
-        rescue => exception # rubocop:disable Style/RescueStandardError
+        rescue => e # rubocop:disable Style/RescueStandardError
           response = PuppetDebugServer::Protocol::Response.create_from_request(
             {
               'success' => false,
-              'message' => exception.to_s
+              'message' => e.to_s
             }, request
           )
           @json_handler.send_response response
