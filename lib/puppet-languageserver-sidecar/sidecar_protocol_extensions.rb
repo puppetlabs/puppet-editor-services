@@ -47,6 +47,15 @@ module PuppetLanguageServerSidecar
         obj.type  = item[:type]
         obj
       end
+
+      # Populates a Puppet Function protocol object from a FunctionDocumentation object
+      #
+      # @param [PuppetLanguageServerSidecar::PuppetStringsHelper::FunctionDocumentation] func_doc Documentation object used to populate this object
+      # @return [void]
+      def populate_documentation!(func_doc)
+        return if func_doc.nil?
+        @doc = func_doc.doc
+      end
     end
 
     class PuppetType < PuppetLanguageServer::Sidecar::Protocol::PuppetType

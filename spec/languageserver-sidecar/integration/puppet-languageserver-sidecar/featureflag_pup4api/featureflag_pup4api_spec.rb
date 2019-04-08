@@ -178,7 +178,7 @@ describe 'PuppetLanguageServerSidecar with Feature Flag pup4api', :if => Gem::Ve
 
         # Make sure the function has the right properties
         func = child_with_key(deserial, :fixture_pup4_function)
-        expect(func.doc).to be_nil  # Currently we can't get the documentation for v4 functions
+        expect(func.doc).to match(/Example function using the Puppet 4 API in a module/)
         expect(func.source).to match(/valid_module_workspace/)
       end
     end
@@ -279,7 +279,7 @@ describe 'PuppetLanguageServerSidecar with Feature Flag pup4api', :if => Gem::Ve
 
         # Make sure the function has the right properties
         func = child_with_key(deserial, :pup4_env_function)
-        expect(func.doc).to be_nil  # Currently we can't get the documentation for v4 functions
+        expect(func.doc).to match(/Example function using the Puppet 4 API in a module/)
         expect(func.source).to match(/valid_environment_workspace/)
       end
     end

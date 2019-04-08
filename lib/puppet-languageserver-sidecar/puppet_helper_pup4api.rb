@@ -140,6 +140,9 @@ module PuppetLanguageServerSidecar
         Puppet::Functions.monkey_function_list
                          .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
                          .each do |name, item|
+          file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(item[:source_location][:source])
+
+          item.populate_documentation!(file_doc.fetch_function(name))
           obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
           result[:functions] << obj
         end

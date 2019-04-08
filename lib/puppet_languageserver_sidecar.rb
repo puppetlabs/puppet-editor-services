@@ -77,6 +77,7 @@ module PuppetLanguageServerSidecar
     if featureflag?('pup4api')
       require_list << 'puppet_helper_pup4api'
       require_list << 'puppet_monkey_patches_pup4api'
+      require_list << 'puppet_strings_helper'
     else
       require_list << 'puppet_helper'
       require_list << 'puppet_monkey_patches'
