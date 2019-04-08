@@ -47,6 +47,51 @@ module Puppet
   end
 end
 
+# Monkey Patch 4.x functions so where know where they were loaded from
+module Puppet
+  module Functions
+    class << self
+      alias_method :original_create_function, :create_function
+    end
+
+    def self.create_function(func_name, function_base = Function, &block)
+      # See if we've hooked elsewhere. This can happen while in debuggers (pry). If we're not in the previous caller
+      # stack then just use the last caller
+      monkey_index = Kernel.caller_locations.find_index { |loc| loc.label == 'create_function' && loc.path.match(/puppet_monkey_patches_pup4api\.rb/) }
+      monkey_index = -1 if monkey_index.nil?
+      caller = Kernel.caller_locations[monkey_index + 1]
+      # Call the original new function method
+      result = original_create_function(func_name, function_base, &block)
+      monkey_append_function_info(result.name, result,
+                                  :source_location => {
+                                    :source => caller.absolute_path,
+                                    :line   => caller.lineno - 1 # Convert to a zero based line number system
+                                  })
+
+      result
+    end
+
+    def self.monkey_clear_function_info
+      @monkey_function_list = {}
+    end
+
+    def self.monkey_append_function_info(name, func, options = {})
+      @monkey_function_list = {} if @monkey_function_list.nil?
+      @monkey_function_list[name] = {
+        :arity => func.signatures.empty? ? -1 : func.signatures[0].args_range[0], # Fake the arity parameter
+        :name  => name,
+        :type  => :rvalue, # All Puppet 4 functions return a value
+        :doc   => nil # Docs are filled in post processing via Yard
+      }.merge(options)
+    end
+
+    def self.monkey_function_list
+      @monkey_function_list = {} if @monkey_function_list.nil?
+      @monkey_function_list.clone
+    end
+  end
+end
+
 # Add an additional method on Puppet Types to store their source location
 require 'puppet/type'
 module Puppet

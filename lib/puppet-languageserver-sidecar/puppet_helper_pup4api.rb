@@ -136,6 +136,13 @@ module PuppetLanguageServerSidecar
           obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
           result[:functions] << obj
         end
+        # Enumerate V4 Functions from the monkey patching
+        Puppet::Functions.monkey_function_list
+                         .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
+                         .each do |name, item|
+          obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
+          result[:functions] << obj
+        end
         PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_pup4_api] Finished loading #{result[:functions].count} functions")
       end
 
