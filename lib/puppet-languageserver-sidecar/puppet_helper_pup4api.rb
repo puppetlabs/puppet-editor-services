@@ -102,7 +102,7 @@ module PuppetLanguageServerSidecar
     end
 
     # Retrieve objects via the Puppet 4 API loaders
-    def self.retrieve_via_pup4_api(_cache, options = {})
+    def self.retrieve_via_pup4_api(options = {})
       PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_via_pup4_api] Starting')
 
       object_types = options[:object_types].nil? ? available_object_types : options[:object_types]
@@ -123,6 +123,11 @@ module PuppetLanguageServerSidecar
         :rich_data           => true
       }
 
+      # Mark currently loaded functions as pre-loaded. This can happen because a handful of functions are pre-loaded by puppet as they
+      # are critical and loaded before our caching takes place e.g. debug or warn
+      Puppet::Parser::Functions.monkey_function_list.each { |_k, item| item.was_preloaded = true }
+      Puppet::Functions.monkey_function_list.each { |_k, item| item.was_preloaded = true }
+
       # TODO: Needed? Puppet[:tasks] = true
       Puppet.override(context_overrides, 'LanguageServer Sidecar') do
         current_env.loaders.private_environment_loader.discover(:function) if object_types.include?(:function)
@@ -130,22 +135,19 @@ module PuppetLanguageServerSidecar
 
       if object_types.include?(:function)
         # Enumerate V3 Functions from the monkey patching
-        Puppet::Parser::Functions.monkey_function_list
-                                 .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
-                                 .each do |name, item|
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
-          result[:functions] << obj
-        end
+        result[:functions].concat(Puppet::Parser::Functions.monkey_function_list.select { |_k, i| path_has_child?(options[:root_path], i.source) }.values)
         # Enumerate V4 Functions from the monkey patching
-        Puppet::Functions.monkey_function_list
-                         .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
-                         .each do |name, item|
-          file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(item[:source_location][:source])
+        result[:functions].concat(Puppet::Functions.monkey_function_list.select { |_k, i| path_has_child?(options[:root_path], i.source) }.values)
 
-          item.populate_documentation!(file_doc.fetch_function(name))
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
-          result[:functions] << obj
+        # Generate the documentation for the function if it didn't come from cache and not already resolved
+        result[:functions].each do |item|
+          next if item.was_cached || !item.doc.nil?
+          file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(item.source)
+          next if file_doc.nil?
+          item.populate_documentation!(file_doc.fetch_function(item.key))
         end
+
+        save_objects_to_cache(result[:functions], PuppetLanguageServerSidecar::Cache::FUNCTIONS_SECTION) if PuppetLanguageServerSidecar.cache.active? && !result[:functions].empty?
         PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_pup4_api] Finished loading #{result[:functions].count} functions")
       end
 
@@ -153,6 +155,17 @@ module PuppetLanguageServerSidecar
     end
 
     # Private functions
+
+    # Assumes the cache is active and object_list is not empty
+    def self.save_objects_to_cache(object_list, cache_section)
+      cache = PuppetLanguageServerSidecar.cache
+
+      object_list.select { |item| !item.was_cached && !item.was_preloaded }.map(&:source).uniq.each do |source_file|
+        next if source_file.nil?
+        cache.save(source_file, cache_section, object_list.select { |item| !item.was_cached && !item.was_preloaded && item.source == source_file }.to_json)
+      end
+    end
+    private_class_method :save_objects_to_cache
 
     def self.prune_resource_parameters(resources)
       # From https://github.com/puppetlabs/puppet/blob/488661d84e54904124514ab9e4500e81b10f84d1/lib/puppet/application/resource.rb#L146-L148

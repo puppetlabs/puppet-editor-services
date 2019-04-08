@@ -34,9 +34,18 @@ module PuppetLanguageServerSidecar
       end
     end
 
+    class PuppetFunctionList < PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList
+      def child_type
+        PuppetLanguageServerSidecar::Protocol::PuppetFunction
+      end
+    end
+
     class PuppetFunction < PuppetLanguageServer::Sidecar::Protocol::PuppetFunction
+      attr_accessor :was_cached    # Whether this function's metadata was loaded from the cache
+      attr_accessor :was_preloaded # Whether this function's was pre-loaded by puppet at startup, which avoids our caching layer
+
       def self.from_puppet(name, item)
-        obj = PuppetLanguageServer::Sidecar::Protocol::PuppetFunction.new
+        obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.new
         obj.key            = name
         obj.source         = item[:source_location][:source]
         obj.calling_source = obj.source
@@ -45,6 +54,8 @@ module PuppetLanguageServerSidecar
         obj.doc   = item[:doc]
         obj.arity = item[:arity]
         obj.type  = item[:type]
+        obj.was_cached = false
+        obj.was_preloaded = false
         obj
       end
 

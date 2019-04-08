@@ -13,12 +13,11 @@ module Puppet
           caller = Kernel.caller_locations[monkey_index + 1]
           # Call the original new function method
           result = original_newfunction(name, options, &block)
-          # Append the caller information
-          result[:source_location] = {
-            :source => caller.absolute_path,
-            :line   => caller.lineno - 1 # Convert to a zero based line number system
-          }
-          monkey_append_function_info(name, result)
+          monkey_append_function_info(name.to_s, result,
+                                      :source_location => {
+                                        :source => caller.absolute_path,
+                                        :line   => caller.lineno - 1 # Convert to a zero based line number system
+                                      })
 
           result
         end
@@ -27,20 +26,23 @@ module Puppet
           @monkey_function_list = {}
         end
 
-        def monkey_append_function_info(name, value)
+        def monkey_append_function_info(name, value, options = {})
+          return unless @monkey_function_list.nil? || @monkey_function_list[name].nil?
           @monkey_function_list = {} if @monkey_function_list.nil?
-          @monkey_function_list[name] = {
-            :arity           => value[:arity],
-            :name            => value[:name],
-            :type            => value[:type],
-            :doc             => value[:doc],
-            :source_location => value[:source_location]
-          }
+          func_hash = {
+            :arity => value[:arity],
+            :name  => name,
+            :type  => value[:type],
+            :doc   => value[:doc]
+          }.merge(options)
+
+          @monkey_function_list = {} if @monkey_function_list.nil?
+          @monkey_function_list[name] = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, func_hash)
         end
 
         def monkey_function_list
           @monkey_function_list = {} if @monkey_function_list.nil?
-          @monkey_function_list.clone
+          @monkey_function_list
         end
       end
     end
@@ -76,18 +78,20 @@ module Puppet
     end
 
     def self.monkey_append_function_info(name, func, options = {})
-      @monkey_function_list = {} if @monkey_function_list.nil?
-      @monkey_function_list[name] = {
+      return unless @monkey_function_list.nil? || @monkey_function_list[name].nil?
+      func_hash = {
         :arity => func.signatures.empty? ? -1 : func.signatures[0].args_range[0], # Fake the arity parameter
         :name  => name,
         :type  => :rvalue, # All Puppet 4 functions return a value
         :doc   => nil # Docs are filled in post processing via Yard
       }.merge(options)
+      @monkey_function_list = {} if @monkey_function_list.nil?
+      @monkey_function_list[name] = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, func_hash)
     end
 
     def self.monkey_function_list
       @monkey_function_list = {} if @monkey_function_list.nil?
-      @monkey_function_list.clone
+      @monkey_function_list
     end
   end
 end
@@ -123,8 +127,6 @@ module Puppet
   end
 end
 
-# The Ruby Legacy Function Instantiator doesn't have any error catching upon loading and would normally cause the entire puppet
-# run to fail. However as we're a bit special, we can wrap the loader in rescue block and just continue on
 require 'puppet/pops/loader/ruby_legacy_function_instantiator'
 module Puppet
   module Pops
@@ -134,7 +136,32 @@ module Puppet
           alias_method :original_create, :create
         end
 
+        # The Ruby Legacy Function Instantiator doesn't have any error catching upon loading and would normally cause the entire puppet
+        # run to fail. However as we're a bit special, we can wrap the loader in rescue block and just continue on
         def self.create(loader, typed_name, source_ref, ruby_code_string)
+          cache = PuppetLanguageServerSidecar.cache
+          if cache.active?
+            cached_result = cache.load(source_ref, PuppetLanguageServerSidecar::Cache::FUNCTIONS_SECTION)
+            unless cached_result.nil?
+              begin
+                funcs = PuppetLanguageServerSidecar::Protocol::PuppetFunctionList.new
+                funcs.from_json!(cached_result)
+
+                # Put the cached objects into the monkey patched list
+                funcs.each do |item|
+                  item.was_cached = true
+                  Puppet::Parser::Functions.monkey_function_list[item.key.to_s] = item unless Puppet::Parser::Functions.monkey_function_list.include?(item.key.to_s)
+                end
+              rescue StandardError => e
+                PuppetLanguageServerSidecar.log_message(:warn, "[MonkeyPatch::Puppet::Pops::Loader::RubyFunctionInstantiator] Error while deserializing #{source_ref} from cache: #{e}")
+              end
+            end
+          end
+
+          # Even if we load the metadata from the cache, we still need _actually_ load the function in Puppet as it keeps track
+          # of function loading and will attempt reloads if it's not seen. Fortunately loading functions is quick and the user won't
+          # really see any slow downs. The slow part of the process is the puppet string documentation which is not processed when
+          # `.was_cached` is set to true
           original_create(loader, typed_name, source_ref, ruby_code_string)
         rescue LoadError, StandardError => err
           PuppetLanguageServerSidecar.log_message(:error, "[MonkeyPatch::Puppet::Pops::Loader::RubyLegacyFunctionInstantiator] Error loading legacy function #{typed_name.name}: #{err} #{err.backtrace}")
@@ -144,8 +171,6 @@ module Puppet
   end
 end
 
-# The Ruby Function Instantiator doesn't have any error catching upon loading and would normally cause the entire puppet
-# run to fail. However as we're a bit special, we can wrap the loader in rescue block and just continue on
 require 'puppet/pops/loader/ruby_function_instantiator'
 module Puppet
   module Pops
@@ -155,7 +180,32 @@ module Puppet
           alias_method :original_create, :create
         end
 
+        # The Ruby Function Instantiator doesn't have any error catching upon loading and would normally cause the entire puppet
+        # run to fail. However as we're a bit special, we can wrap the loader in rescue block and just continue on
         def self.create(loader, typed_name, source_ref, ruby_code_string)
+          cache = PuppetLanguageServerSidecar.cache
+          if cache.active?
+            cached_result = cache.load(source_ref, PuppetLanguageServerSidecar::Cache::FUNCTIONS_SECTION)
+            unless cached_result.nil?
+              begin
+                funcs = PuppetLanguageServerSidecar::Protocol::PuppetFunctionList.new
+                funcs.from_json!(cached_result)
+
+                # Put the cached objects into the monkey patched list
+                funcs.each do |item|
+                  item.was_cached = true
+                  Puppet::Functions.monkey_function_list[item.key.to_s] = item unless Puppet::Functions.monkey_function_list.include?(item.key.to_s)
+                end
+              rescue StandardError => e
+                PuppetLanguageServerSidecar.log_message(:warn, "[MonkeyPatch::Puppet::Pops::Loader::RubyFunctionInstantiator] Error while deserializing #{source_ref} from cache: #{e}")
+              end
+            end
+          end
+
+          # Even if we load the metadata from the cache, we still need _actually_ load the function in Puppet as it keeps track
+          # of function loading and will attempt reloads if it's not seen. Fortunately loading functions is quick and the user won't
+          # really see any slow downs. The slow part of the process is the puppet string documentation which is not processed when
+          # `.was_cached` is set to true
           original_create(loader, typed_name, source_ref, ruby_code_string)
         rescue LoadError, StandardError => err
           PuppetLanguageServerSidecar.log_message(:error, "[MonkeyPatch::Puppet::Pops::Loader::RubyLegacyFunctionInstantiator] Error loading function #{typed_name.name}: #{err} #{err.backtrace}")
