@@ -9,14 +9,14 @@ module PuppetLanguageServer
         begin
           parser = Puppet::Pops::Parser::EvaluatingParser::EvaluatingEppParser.new
           parser.parse_string(content, nil)
-        rescue StandardError => detail
+        rescue StandardError => e
           # Sometimes the error is in the cause not the root object itself
-          detail = detail.cause if !detail.respond_to?(:line) && detail.respond_to?(:cause)
-          ex_line = detail.respond_to?(:line) && !detail.line.nil? ? detail.line - 1 : nil # Line numbers from puppet exceptions are base 1
-          ex_pos = detail.respond_to?(:pos) && !detail.pos.nil? ? detail.pos : nil # Pos numbers from puppet are base 1
+          e = e.cause if !e.respond_to?(:line) && e.respond_to?(:cause)
+          ex_line = e.respond_to?(:line) && !e.line.nil? ? e.line - 1 : nil # Line numbers from puppet exceptions are base 1
+          ex_pos = e.respond_to?(:pos) && !e.pos.nil? ? e.pos : nil # Pos numbers from puppet are base 1
 
-          message = detail.respond_to?(:message) ? detail.message : nil
-          message = detail.basic_message if message.nil? && detail.respond_to?(:basic_message)
+          message = e.respond_to?(:message) ? e.message : nil
+          message = e.basic_message if message.nil? && e.respond_to?(:basic_message)
 
           unless ex_line.nil? || ex_pos.nil? || message.nil?
             result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,

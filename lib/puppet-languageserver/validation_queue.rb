@@ -35,8 +35,8 @@ module PuppetLanguageServer
         @queue_thread = Thread.new do
           begin
             worker
-          rescue => err # rubocop:disable Style/RescueStandardError
-            PuppetLanguageServer.log_message(:error, "Error in ValidationQueue Thread: #{err}")
+          rescue => e # rubocop:disable Style/RescueStandardError
+            PuppetLanguageServer.log_message(:error, "Error in ValidationQueue Thread: #{e}")
             raise
           end
         end

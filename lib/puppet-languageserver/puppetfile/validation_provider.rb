@@ -16,18 +16,18 @@ module PuppetLanguageServer
         begin
           puppetfile = PuppetLanguageServer::Puppetfile::R10K::Puppetfile.new
           puppetfile.load!(content)
-        rescue StandardError, SyntaxError, LoadError => detail
+        rescue StandardError, SyntaxError, LoadError => e
           # Find the originating error from within the puppetfile
-          loc = detail.backtrace_locations
-                      .select { |item| item.absolute_path == PuppetLanguageServer::Puppetfile::R10K::PUPPETFILE_MONIKER }
-                      .first
+          loc = e.backtrace_locations
+                 .select { |item| item.absolute_path == PuppetLanguageServer::Puppetfile::R10K::PUPPETFILE_MONIKER }
+                 .first
           start_line_number = loc.nil? ? 0 : loc.lineno - 1 # Line numbers from ruby are base 1
           end_line_number = loc.nil? ? content.lines.count - 1 : loc.lineno - 1 # Line numbers from ruby are base 1
           # Note - Ruby doesn't give a character position so just highlight the entire line
           result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
                                         'range'    => LSP.create_range(start_line_number, 0, end_line_number, max_line_length),
                                         'source'   => 'Puppet',
-                                        'message'  => detail.to_s)
+                                        'message'  => e.to_s)
 
           puppetfile = nil
         end

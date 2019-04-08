@@ -53,8 +53,8 @@ module PuppetLanguageServerSidecar
             if path_has_child?(options[:root_path], manifest_file) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
               classes.concat(load_classes_from_manifest(cache, manifest_file))
             end
-          rescue StandardError => err
-            PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::retrieve_classes] Error loading manifest #{manifest_file}: #{err} #{err.backtrace}")
+          rescue StandardError => e
+            PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::retrieve_classes] Error loading manifest #{manifest_file}: #{e} #{e.backtrace}")
           end
         end
       end

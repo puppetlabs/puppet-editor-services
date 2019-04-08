@@ -80,3 +80,6 @@ Style/HashSyntax:
 
 Layout/AlignHash:
   EnforcedHashRocketStyle: table
+
+Naming/RescuedExceptionsVariableName:
+  PreferredName: e

@@ -102,8 +102,8 @@ module PuppetLanguageServerSidecar
           begin
             ap.from_json!(json_string)
             args[:action_parameters] = ap
-          rescue StandardError => ex
-            raise "Unable to parse the action parameters: #{ex}"
+          rescue StandardError => e
+            raise "Unable to parse the action parameters: #{e}"
           end
         end
 
