@@ -25,6 +25,15 @@ module PuppetLanguageServerSidecar
     PuppetEditorServices.version
   end
 
+  def self.configure_featureflags(flags)
+    @flags = flags
+  end
+
+  def self.featureflag?(flagname)
+    return false if @flags.nil? || @flags.empty?
+    @flags.include?(flagname)
+  end
+
   def self.require_gems(options)
     original_verbose = $VERBOSE
     $VERBOSE = nil
@@ -43,16 +52,37 @@ module PuppetLanguageServerSidecar
 
     require 'puppet'
 
-    %w[
+    # Validate the feature flags
+    unless options[:flags].nil? || options[:flags].empty?
+      flags = options[:flags]
+      log_message(:debug, "Detected feature flags [#{options[:flags].join(', ')}]")
+      if flags.include?('pup4api') && Gem::Version.new(Puppet.version) < Gem::Version.new('6.0.0')
+        # The pup4api flag is only valid on Puppet 6.0.0+
+        PuppetEditorServices.log_message(:error, "The feature flag 'pup4api' has been specified but it is not capable due to low Puppet version. Turning off the flag.")
+        flags -= ['pup4api']
+      end
+      configure_featureflags(flags)
+    end
+
+    require_list = %w[
       cache/base
       cache/null
       cache/filesystem
-      puppet_helper
       puppet_parser_helper
-      puppet_monkey_patches
       sidecar_protocol_extensions
       workspace
-    ].each do |lib|
+    ]
+
+    # Load files based on feature flags
+    if featureflag?('pup4api')
+      require_list << 'puppet_helper_pup4api'
+      require_list << 'puppet_monkey_patches_pup4api'
+    else
+      require_list << 'puppet_helper'
+      require_list << 'puppet_monkey_patches'
+    end
+
+    require_list.each do |lib|
       begin
         require "puppet-languageserver-sidecar/#{lib}"
       rescue LoadError
