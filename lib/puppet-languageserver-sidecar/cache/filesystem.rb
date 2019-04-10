@@ -101,7 +101,11 @@ module PuppetLanguageServerSidecar
       end
 
       def calculate_hash(filepath)
-        Digest::SHA256.hexdigest(read_file(filepath))
+        if PuppetLanguageServerSidecar.featureflag?('pup4api')
+          File.mtime(filepath).iso8601
+        else
+          Digest::SHA256.hexdigest(read_file(filepath))
+        end
       end
     end
   end
