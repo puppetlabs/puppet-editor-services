@@ -47,8 +47,8 @@ module PuppetLanguageServerSidecar
         PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::load] Loading #{absolute_path} from cache")
 
         json_obj['data']
-      rescue RuntimeError => detail
-        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::load] Error loading #{absolute_path}: #{detail}")
+      rescue RuntimeError => e
+        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::load] Error loading #{absolute_path}: #{e}")
         raise
       end
 

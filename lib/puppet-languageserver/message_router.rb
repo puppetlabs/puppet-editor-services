@@ -89,8 +89,8 @@ module PuppetLanguageServer
                                  'fixesApplied' => changes,
                                  'newContent'   => changes > 0 || formatted_request.alwaysReturnContent ? new_content : nil
                                ))
-        rescue StandardError => exception
-          PuppetLanguageServer.log_message(:error, "(puppet/fixDiagnosticErrors) #{exception}")
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(puppet/fixDiagnosticErrors) #{e}")
           unless formatted_request.nil?
             request.reply_result(LSP::PuppetFixDiagnosticErrorsResponse.new(
                                    'documentUri'  => formatted_request.documentUri,
@@ -112,8 +112,8 @@ module PuppetLanguageServer
           else
             raise "Unable to provide completion on #{file_uri}"
           end
-        rescue StandardError => exception
-          PuppetLanguageServer.log_message(:error, "(textDocument/completion) #{exception}")
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(textDocument/completion) #{e}")
           request.reply_result(LSP::CompletionList.new('isIncomplete' => false, 'items' => []))
         end
 
@@ -122,8 +122,8 @@ module PuppetLanguageServer
           request.reply_result(PuppetLanguageServer::Manifest::CompletionProvider.resolve(
                                  LSP::CompletionItem.new(request.params)
                                ))
-        rescue StandardError => exception
-          PuppetLanguageServer.log_message(:error, "(completionItem/resolve) #{exception}")
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(completionItem/resolve) #{e}")
           # Spit back the same params if an error happens
           request.reply_result(request.params)
         end
@@ -140,8 +140,8 @@ module PuppetLanguageServer
           else
             raise "Unable to provide hover on #{file_uri}"
           end
-        rescue StandardError => exception
-          PuppetLanguageServer.log_message(:error, "(textDocument/hover) #{exception}")
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(textDocument/hover) #{e}")
           request.reply_result(LSP::Hover.new)
         end
 
@@ -157,8 +157,8 @@ module PuppetLanguageServer
           else
             raise "Unable to provide definition on #{file_uri}"
           end
-        rescue StandardError => exception
-          PuppetLanguageServer.log_message(:error, "(textDocument/definition) #{exception}")
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(textDocument/definition) #{e}")
           request.reply_result(nil)
         end
 
@@ -172,8 +172,8 @@ module PuppetLanguageServer
           else
             raise "Unable to provide definition on #{file_uri}"
           end
-        rescue StandardError => exception
-          PuppetLanguageServer.log_message(:error, "(textDocument/documentSymbol) #{exception}")
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(textDocument/documentSymbol) #{e}")
           request.reply_result(nil)
         end
 
@@ -182,16 +182,16 @@ module PuppetLanguageServer
           result = []
           result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(request.params['query']))
           request.reply_result(result)
-        rescue StandardError => exception
-          PuppetLanguageServer.log_message(:error, "(workspace/symbol) #{exception}")
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(workspace/symbol) #{e}")
           request.reply_result([])
         end
 
       else
         PuppetLanguageServer.log_message(:error, "Unknown RPC method #{request.rpc_method}")
       end
-    rescue StandardError => err
-      PuppetLanguageServer::CrashDump.write_crash_file(err, nil, 'request' => request.rpc_method, 'params' => request.params)
+    rescue StandardError => e
+      PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'request' => request.rpc_method, 'params' => request.params)
       raise
     end
 
@@ -240,8 +240,8 @@ module PuppetLanguageServer
       else
         PuppetLanguageServer.log_message(:error, "Unknown RPC notification #{method}")
       end
-    rescue StandardError => err
-      PuppetLanguageServer::CrashDump.write_crash_file(err, nil, 'notification' => method, 'params' => params)
+    rescue StandardError => e
+      PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'notification' => method, 'params' => params)
       raise
     end
   end
