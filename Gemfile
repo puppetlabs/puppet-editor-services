@@ -18,10 +18,14 @@ group :development do
     gem "rubocop", ">= 0.60.0", :require => false, :platforms => [:ruby, :x64_mingw]
   end
 
-  if ENV['PUPPET_GEM_VERSION']
-    gem 'puppet', ENV['PUPPET_GEM_VERSION'], :require => false
+  if ENV['USERDOMAIN'] == 'GLENNS'
+    gem 'puppet', :path => 'C:\\Source\\puppet',                           :require => false
   else
-    gem 'puppet',                            :require => false
+    if ENV['PUPPET_GEM_VERSION']
+      gem 'puppet', ENV['PUPPET_GEM_VERSION'], :require => false
+    else
+      gem 'puppet',                            :require => false
+    end
   end
   # TODO Should this be vendored into Editor Services?
   # The puppet-strings gem is not available in the Puppet Agent, but is in the PDK. We add it to the
