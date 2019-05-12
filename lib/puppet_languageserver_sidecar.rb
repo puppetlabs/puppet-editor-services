@@ -27,6 +27,15 @@ module PuppetLanguageServerSidecar
     PuppetEditorServices.version
   end
 
+  def self.configure_featureflags(flags)
+    @flags = flags
+  end
+
+  def self.featureflag?(flagname)
+    return false if @flags.nil? || @flags.empty?
+    @flags.include?(flagname)
+  end
+
   def self.require_gems(options)
     original_verbose = $VERBOSE
     $VERBOSE = nil
@@ -45,16 +54,39 @@ module PuppetLanguageServerSidecar
 
     require 'puppet'
 
-    %w[
+    # Validate the feature flags
+    unless options[:flags].nil? || options[:flags].empty?
+      flags = options[:flags]
+      log_message(:debug, "Detected feature flags [#{options[:flags].join(', ')}]")
+
+      strings_gem = Gem::Specification.select { |item| item.name.casecmp('puppet-strings').zero? }
+      if flags.include?('puppetstrings') && strings_gem.count.zero?
+        # The puppetstrings flag is only valid when the puppet-strings gem is available
+        PuppetEditorServices.log_message(:error, "The feature flag 'puppetstrings' has been specified but it is not capable due to Puppet Strings being unavailable. Turning off the flag.")
+        flags -= ['puppetstrings']
+      end
+      configure_featureflags(flags)
+    end
+
+    require_list = %w[
       cache/base
       cache/null
       cache/filesystem
-      puppet_helper
       puppet_parser_helper
-      puppet_monkey_patches
       sidecar_protocol_extensions
       workspace
-    ].each do |lib|
+    ]
+
+    # Load files based on feature flags
+    if featureflag?('puppetstrings')
+      require_list << 'puppet_helper_puppetstrings'
+      require_list << 'puppet_monkey_patches_puppetstrings'
+    else
+      require_list << 'puppet_helper'
+      require_list << 'puppet_monkey_patches'
+    end
+
+    require_list.each do |lib|
       begin
         require "puppet-languageserver-sidecar/#{lib}"
       rescue LoadError
