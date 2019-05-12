@@ -2,9 +2,12 @@ require 'spec_helper'
 require 'open3'
 require 'tempfile'
 
-describe 'PuppetLanguageServerSidecar' do
+describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings' do
   def run_sidecar(cmd_options)
     cmd_options << '--no-cache'
+
+    # Append the feature flag
+    cmd_options << '--feature-flag=puppetstrings'
 
     # Append the puppet test-fixtures
     cmd_options << '--puppet-settings'
