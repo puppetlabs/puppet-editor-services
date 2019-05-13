@@ -105,8 +105,8 @@ module PuppetLanguageServerSidecar
           if path_has_child?(options[:root_path], absolute_name) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
             funcs.concat(load_function_file(cache, name, absolute_name, autoloader, current_env))
           end
-        rescue StandardError => err
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_functions] Error loading function #{file}: #{err} #{err.backtrace}")
+        rescue StandardError => e
+          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_functions] Error loading function #{file}: #{e} #{e.backtrace}")
         end
       end
 
@@ -137,8 +137,8 @@ module PuppetLanguageServerSidecar
           if path_has_child?(options[:root_path], absolute_name) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
             types.concat(load_type_file(cache, name, absolute_name, autoloader, current_env))
           end
-        rescue StandardError => err
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::retrieve_types] Error loading type #{file}: #{err} #{err.backtrace}")
+        rescue StandardError => e
+          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::retrieve_types] Error loading type #{file}: #{e} #{e.backtrace}")
         end
       end
 
@@ -165,8 +165,8 @@ module PuppetLanguageServerSidecar
         return env unless env.nil?
       rescue Puppet::Environments::EnvironmentNotFound
         PuppetLanguageServerSidecar.log_message(:warning, "[PuppetHelper::current_environment] Unable to load environment #{Puppet.settings[:environment]}")
-      rescue StandardError => ex
-        PuppetLanguageServerSidecar.log_message(:warning, "[PuppetHelper::current_environment] Error loading environment #{Puppet.settings[:environment]}: #{ex}")
+      rescue StandardError => e
+        PuppetLanguageServerSidecar.log_message(:warning, "[PuppetHelper::current_environment] Error loading environment #{Puppet.settings[:environment]}: #{e}")
       end
       Puppet.lookup(:current_environment)
     end
@@ -194,7 +194,7 @@ module PuppetLanguageServerSidecar
       result = nil
       begin
         result = parser.parse_string(file_content, '')
-      rescue Puppet::ParseErrorWithIssue => _exception
+      rescue Puppet::ParseErrorWithIssue
         # Any parsing errors means we can't inspect the document
         return class_info
       end
@@ -309,12 +309,12 @@ module PuppetLanguageServerSidecar
       # will throw instead of not yielding.
       begin
         Puppet::Type.eachtype { |item| loaded_types << item.name }
-      rescue NoMethodError => detail
+      rescue NoMethodError => e
         # Detect PUP-8301
-        if detail.respond_to?(:receiver)
-          raise unless detail.name == :each && detail.receiver.nil?
+        if e.respond_to?(:receiver)
+          raise unless e.name == :each && e.receiver.nil?
         else
-          raise unless detail.name == :each && detail.message =~ /nil:NilClass/
+          raise unless e.name == :each && e.message =~ /nil:NilClass/
         end
       end
 
@@ -339,12 +339,12 @@ module PuppetLanguageServerSidecar
           obj.calling_source = absolute_name
           types << obj
         end
-      rescue NoMethodError => detail
+      rescue NoMethodError => e
         # Detect PUP-8301
-        if detail.respond_to?(:receiver)
-          raise unless detail.name == :each && detail.receiver.nil?
+        if e.respond_to?(:receiver)
+          raise unless e.name == :each && e.receiver.nil?
         else
-          raise unless detail.name == :each && detail.message =~ /nil:NilClass/
+          raise unless e.name == :each && e.message =~ /nil:NilClass/
         end
       end
       PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_type_file] type #{absolute_name} did not load any types") if types.empty?

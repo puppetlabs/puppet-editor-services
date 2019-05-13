@@ -191,7 +191,7 @@ module PuppetEditorServices
       return false unless event
       begin
         event[0].call(*event[1])
-      rescue OpenSSL::SSL::SSLError => _
+      rescue OpenSSL::SSL::SSLError
         log('SSL Bump - SSL Certificate refused?')
       # rubocop:disable RescueException
       rescue Exception => e
@@ -220,7 +220,7 @@ module PuppetEditorServices
             if self.class.services[io]
               begin
                 callback(self, :add_connection, io.accept_nonblock, self.class.services[io])
-              rescue Errno::EWOULDBLOCK => _ # rubocop:disable Lint/HandleExceptions
+              rescue Errno::EWOULDBLOCK # rubocop:disable Lint/HandleExceptions
                 # There's nothing to handle. Swallow the error
               rescue StandardError => e
                 log(e.message)
