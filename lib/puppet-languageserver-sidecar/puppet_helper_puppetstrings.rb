@@ -5,6 +5,7 @@ require 'puppet/indirector/face'
 module PuppetLanguageServerSidecar
   module PuppetHelper
     SIDECAR_PUPPET_ENVIRONMENT = 'sidecarenvironment'
+    DISCOVERER_LOADER = 'path-discoverer-null-loader'
 
     def self.path_has_child?(path, child)
       # Doesn't matter what the child is, if the path is nil it's true.
@@ -36,7 +37,7 @@ module PuppetLanguageServerSidecar
 
     # Puppet Strings loading
     def self.available_documentation_types
-      [:function]
+      %I[function type]
     end
 
     # Retrieve objects via the Puppet 4 API loaders
@@ -50,13 +51,18 @@ module PuppetLanguageServerSidecar
       return result if object_types.empty?
 
       result[:functions] = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new if object_types.include?(:function)
+      result[:types]     = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new if object_types.include?(:type)
 
       current_env = current_environment
       for_agent = options[:for_agent].nil? ? true : options[:for_agent]
       loaders = Puppet::Pops::Loaders.new(current_env, for_agent)
+      # Add any custom loaders
+      path_discoverer_loader = Puppet::Pops::Loader::PathDiscoveryNullLoader.new(nil, DISCOVERER_LOADER)
+      loaders.add_loader_by_name(path_discoverer_loader)
 
       paths = []
       paths.concat(discover_type_paths(:function, loaders)) if object_types.include?(:function)
+      paths.concat(discover_type_paths(:type, loaders)) if object_types.include?(:type)
 
       paths.each do |path|
         next unless path_has_child?(options[:root_path], path)
@@ -65,6 +71,11 @@ module PuppetLanguageServerSidecar
 
         if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better
           file_doc.functions.each { |_name, item| result[:functions] << item }
+        end
+        if object_types.include?(:type)
+          file_doc.types.each do |name, item|
+            result[:types] << item unless name == 'whit' || name == 'component' # rubocop:disable Style/MultipleComparison
+          end
         end
       end
 
@@ -78,7 +89,10 @@ module PuppetLanguageServerSidecar
     end
 
     def self.discover_type_paths(type, loaders)
-      loaders.private_environment_loader.discover_paths(type)
+      [].concat(
+        loaders.private_environment_loader.discover_paths(type),
+        loaders[DISCOVERER_LOADER].discover_paths(type)
+      )
     end
 
     # Class and Defined Type loading
@@ -110,39 +124,6 @@ module PuppetLanguageServerSidecar
 
       PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_classes] Finished loading #{classes.count} classes")
       classes
-    end
-
-    def self.retrieve_types(cache, options = {})
-      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_types] Starting')
-
-      # From https://github.com/puppetlabs/puppet/blob/ebd96213cab43bb2a8071b7ac0206c3ed0be8e58/lib/puppet/metatype/manager.rb#L182-L189
-      autoloader = Puppet::Util::Autoload.new(self, 'puppet/type')
-      current_env = current_environment
-      types = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
-
-      # This is an expensive call
-      if autoloader.method(:files_to_load).arity.zero?
-        params = []
-      else
-        params = [current_env]
-      end
-      autoloader.files_to_load(*params).each do |file|
-        name = file.gsub(autoloader.path + '/', '')
-        begin
-          expanded_name = autoloader.expand(name)
-          absolute_name = Puppet::Util::Autoload.get_file(expanded_name, current_env)
-          raise("Could not find absolute path of type #{name}") if absolute_name.nil?
-          if path_has_child?(options[:root_path], absolute_name) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-            types.concat(load_type_file(cache, name, absolute_name, autoloader, current_env))
-          end
-        rescue StandardError => e
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::retrieve_types] Error loading type #{file}: #{e} #{e.backtrace}")
-        end
-      end
-
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_types] Finished loading #{types.count} type/s")
-
-      types
     end
 
     # Private functions
@@ -247,71 +228,5 @@ module PuppetLanguageServerSidecar
       class_info
     end
     private_class_method :load_classes_from_manifest
-
-    def self.load_type_file(cache, name, absolute_name, autoloader, env)
-      types = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
-      if cache.active?
-        cached_result = cache.load(absolute_name, PuppetLanguageServerSidecar::Cache::TYPES_SECTION)
-        unless cached_result.nil?
-          begin
-            types.from_json!(cached_result)
-            return types
-          rescue StandardError => e
-            PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_type_file] Error while deserializing #{absolute_name} from cache: #{e}")
-            types = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-          end
-        end
-      end
-
-      # Get the list of currently loaded types
-      loaded_types = []
-      # Due to PUP-8301, if no types have been loaded yet then Puppet::Type.eachtype
-      # will throw instead of not yielding.
-      begin
-        Puppet::Type.eachtype { |item| loaded_types << item.name }
-      rescue NoMethodError => e
-        # Detect PUP-8301
-        if e.respond_to?(:receiver)
-          raise unless e.name == :each && e.receiver.nil?
-        else
-          raise unless e.name == :each && e.message =~ /nil:NilClass/
-        end
-      end
-
-      unless autoloader.loaded?(name)
-        # This is an expensive call
-        unless autoloader.load(name, env) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_type_file] type #{absolute_name} did not load")
-        end
-      end
-
-      # Find the types that were loaded
-      # Due to PUP-8301, if no types have been loaded yet then Puppet::Type.eachtype
-      # will throw instead of not yielding.
-      begin
-        Puppet::Type.eachtype do |item|
-          next if loaded_types.include?(item.name)
-          # Ignore the internal only Puppet Types
-          next if item.name == :component || item.name == :whit
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetType.from_puppet(item.name, item)
-          # TODO: Need to use calling_source in the cache backing store
-          # Perhaps I should be incrementally adding items to the cache instead of batch mode?
-          obj.calling_source = absolute_name
-          types << obj
-        end
-      rescue NoMethodError => e
-        # Detect PUP-8301
-        if e.respond_to?(:receiver)
-          raise unless e.name == :each && e.receiver.nil?
-        else
-          raise unless e.name == :each && e.message =~ /nil:NilClass/
-        end
-      end
-      PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_type_file] type #{absolute_name} did not load any types") if types.empty?
-      cache.save(absolute_name, PuppetLanguageServerSidecar::Cache::TYPES_SECTION, types.to_json) if cache.active?
-
-      types
-    end
-    private_class_method :load_type_file
   end
 end

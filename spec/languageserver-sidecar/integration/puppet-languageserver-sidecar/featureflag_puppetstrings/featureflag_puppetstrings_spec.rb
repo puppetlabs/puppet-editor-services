@@ -215,16 +215,15 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
         # Make sure the type has the right properties
         obj = child_with_key(deserial, :fixture)
         expect(obj.doc).to eq('doc_type_fixture')
-        expect(obj.source).to match(/valid_module_workspace/)
+        expect(obj.source).to match(/valid_module_workspace/)  # TODO THIS IS BROKEN!
         # Make sure the type attributes are correct
         expect(obj.attributes.key?(:name)).to be true
         expect(obj.attributes.key?(:when)).to be true
         expect(obj.attributes[:name][:type]).to eq(:param)
-        expect(obj.attributes[:name][:doc]).to eq("name_parameter\n\n")
-        expect(obj.attributes[:name][:required?]).to be true
+        expect(obj.attributes[:name][:doc]).to eq("name_parameter")
+        expect(obj.attributes[:name][:isnamevar?]).to be true
         expect(obj.attributes[:when][:type]).to eq(:property)
-        expect(obj.attributes[:when][:doc]).to eq("when_property\n\n")
-        expect(obj.attributes[:when][:required?]).to be_nil
+        expect(obj.attributes[:when][:doc]).to eq("when_property")
       end
     end
   end
@@ -327,11 +326,10 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
         expect(obj.attributes.key?(:name)).to be true
         expect(obj.attributes.key?(:when)).to be true
         expect(obj.attributes[:name][:type]).to eq(:param)
-        expect(obj.attributes[:name][:doc]).to eq("name_env_parameter\n\n")
-        expect(obj.attributes[:name][:required?]).to be true
+        expect(obj.attributes[:name][:doc]).to eq("name_env_parameter")
+        expect(obj.attributes[:name][:isnamevar?]).to be true
         expect(obj.attributes[:when][:type]).to eq(:property)
-        expect(obj.attributes[:when][:doc]).to eq("when_env_property\n\n")
-        expect(obj.attributes[:when][:required?]).to be_nil
+        expect(obj.attributes[:when][:doc]).to eq("when_env_property")
       end
     end
   end
