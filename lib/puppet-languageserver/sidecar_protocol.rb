@@ -154,12 +154,15 @@ module PuppetLanguageServer
         attr_accessor :doc
         attr_accessor :arity
         attr_accessor :type
+        # The version of this function, typically 3 or 4.
+        attr_accessor :function_version
 
         def to_h
           super.to_h.merge(
-            'doc'   => doc,
-            'arity' => arity,
-            'type'  => type
+            'doc'              => doc,
+            'arity'            => arity,
+            'type'             => type,
+            'function_version' => function_version
           )
         end
 
@@ -169,6 +172,7 @@ module PuppetLanguageServer
           self.doc = value['doc']
           self.arity = value['arity']
           self.type = value['type'].intern
+          self.function_version = value['function_version']
           self
         end
       end

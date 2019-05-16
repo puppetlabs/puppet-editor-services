@@ -70,6 +70,7 @@ def random_sidecar_puppet_function
   result.doc = 'doc' + rand(1000).to_s
   result.arity = rand(1000)
   result.type = ('type' + rand(1000).to_s).intern
+  result.function_version = rand(1) + 3
   result
 end
 
