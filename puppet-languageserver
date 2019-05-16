@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 # Add the language server into the load path
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'lib'))

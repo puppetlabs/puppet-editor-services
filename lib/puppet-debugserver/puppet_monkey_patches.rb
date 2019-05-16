@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Monkey patch the Apply application (puppet apply) so that we route the exit
 # statement into the debugger first and then exit the puppet thread
 require 'puppet/application/apply'

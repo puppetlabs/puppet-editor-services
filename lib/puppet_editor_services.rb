@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 %w[logging version simple_base simple_tcp_server simple_stdio_server].each do |lib|
   begin
     require "puppet-editor-services/#{lib}"

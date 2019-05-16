@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetEditorServices
   class SimpleServerConnectionBase
     # Override this method

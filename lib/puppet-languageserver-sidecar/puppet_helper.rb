@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'puppet/indirector/face'
 
 module PuppetLanguageServerSidecar
   module PuppetHelper
-    SIDECAR_PUPPET_ENVIRONMENT = 'sidecarenvironment'.freeze
+    SIDECAR_PUPPET_ENVIRONMENT = 'sidecarenvironment'
 
     def self.path_has_child?(path, child)
       # Doesn't matter what the child is, if the path is nil it's true.

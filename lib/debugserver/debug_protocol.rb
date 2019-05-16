@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Original JSON Schema for the protocol
 # https://github.com/Microsoft/vscode-debugadapter-node/blob/master/debugProtocol.json
 #

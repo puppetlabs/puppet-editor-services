@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetLanguageServer
   # Module for enqueing and running document level validation asynchronously
   # When adding a document to be validation, it will remove any validation requests for the same

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'puppet-languageserver/sidecar_protocol'
 
 module PuppetLanguageServerSidecar

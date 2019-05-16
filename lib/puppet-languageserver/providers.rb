@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 %w[
   epp/validation_provider
   manifest/completion_provider

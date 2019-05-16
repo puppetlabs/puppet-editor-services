@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Puppet::Environments # rubocop:disable Style/ClassAndModuleChildren
   class Directories
     # Monkey patch the environment loader.  When it attempts to load the special sidecar

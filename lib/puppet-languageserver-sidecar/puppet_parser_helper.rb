@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetLanguageServerSidecar
   module PuppetParserHelper
     def self.compile_node_graph(content)

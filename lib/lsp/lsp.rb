@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 %w[lsp_base lsp_enums lsp_protocol lsp_types lsp_custom].each do |lib|
   begin
     require "lsp/#{lib}"

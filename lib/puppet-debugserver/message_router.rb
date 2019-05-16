@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetDebugServer
   class MessageRouter
     attr_accessor :json_handler

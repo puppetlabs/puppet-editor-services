@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 begin
   original_verbose = $VERBOSE
   $VERBOSE = nil

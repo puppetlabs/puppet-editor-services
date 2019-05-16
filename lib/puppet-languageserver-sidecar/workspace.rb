@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetLanguageServerSidecar
   module Workspace
     @root_path = nil
