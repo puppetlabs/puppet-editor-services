@@ -91,6 +91,7 @@ module PuppetLanguageServerSidecar
     def populate_from_yard_registry!
       # Extract all of the information
       # Ref - https://github.com/puppetlabs/puppet-strings/blob/87a8e10f45bfeb7b6b8e766324bfb126de59f791/lib/puppet-strings/json.rb#L10-L16
+      populate_classes_from_yard_registry!
       populate_functions_from_yard_registry!
       populate_types_from_yard_registry!
     end
@@ -112,6 +113,35 @@ module PuppetLanguageServerSidecar
     end
 
     private
+
+    def populate_classes_from_yard_registry!
+      %I[puppet_class puppet_defined_type].each do |yard_type|
+        YARD::Registry.all(yard_type).map(&:to_hash).each do |item|
+          source_path = item[:file]
+          class_name = item[:name].to_s
+          @cache[source_path] = FileDocumentation.new(source_path) if @cache[source_path].nil?
+
+          obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new
+          obj.key            = class_name
+          obj.source         = item[:file]
+          obj.calling_source = obj.source
+          obj.line           = item[:line]
+
+          obj.doc            = item[:docstring][:text]
+          obj.parameters     = {}
+          # Extract the class parameters
+          item[:docstring][:tags]&.select { |tag| tag[:tag_name] == 'param' }&.each do |tag|
+            param_name = tag[:name]
+            obj.parameters[param_name] = {
+              :doc  => tag[:text],
+              :type => tag[:types].join(', ')
+            }
+          end
+
+          @cache[source_path].classes << obj
+        end
+      end
+    end
 
     def populate_functions_from_yard_registry!
       ::YARD::Registry.all(:puppet_function).map(&:to_hash).each do |item|
@@ -190,6 +220,9 @@ module PuppetLanguageServerSidecar
     # The path to file that has been documented
     attr_accessor :path
 
+    # PuppetLanguageServer::Sidecar::Protocol::PuppetClassList object holding all classes
+    attr_accessor :classes
+
     # PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList object holding all functions
     attr_accessor :functions
 
@@ -198,6 +231,7 @@ module PuppetLanguageServerSidecar
 
     def initialize(path = nil)
       @path = path
+      @classes   = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
       @functions = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
       @types     = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
     end
@@ -206,6 +240,7 @@ module PuppetLanguageServerSidecar
     def to_h
       {
         'path'      => path,
+        'classes'   => classes,
         'functions' => functions,
         'types'     => types
       }
