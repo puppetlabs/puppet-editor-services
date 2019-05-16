@@ -10,6 +10,7 @@ module PuppetLanguageServerSidecar
       return nil unless require_puppet_strings
       @helper_cache = FileDocumentationCache.new if @helper_cache.nil?
       return @helper_cache.document(path) if @helper_cache.path_exists?(path)
+
       PuppetLanguageServerSidecar.log_message(:debug, "[PuppetStringsHelper::file_documentation] Fetching documentation for #{path}")
 
       setup_yard!
@@ -80,16 +81,62 @@ module PuppetLanguageServerSidecar
     def populate_from_yard_registry!
       # Extract all of the information
       # Ref - https://github.com/puppetlabs/puppet-strings/blob/87a8e10f45bfeb7b6b8e766324bfb126de59f791/lib/puppet-strings/json.rb#L10-L16
+      populate_functions_from_yard_registry!
     end
 
     private
 
+    def populate_functions_from_yard_registry!
+      ::YARD::Registry.all(:puppet_function).map(&:to_hash).each do |item|
+        source_path = item[:file]
+        func_name = item[:name].to_s
+        @cache[source_path] = FileDocumentation.new(source_path) if @cache[source_path].nil?
+
+        obj                  = PuppetLanguageServer::Sidecar::Protocol::PuppetFunction.new
+        obj.key              = func_name
+        obj.source           = item[:file]
+        obj.calling_source   = obj.source
+        obj.line             = item[:line]
+        obj.doc              = item[:docstring][:text]
+        obj.arity            = -1 # We don't care about arity
+        obj.function_version = item[:type] == 'ruby4x' ? 4 : 3
+
+        # Try and determine the function call site from the source file
+        char = item[:source].index(":#{func_name}")
+        unless char.nil?
+          obj.char = char
+          obj.length = func_name.length + 1
+        end
+
+        case item[:type]
+        when 'ruby3x'
+          obj.function_version = 3
+          # This is a bit hacky but it works (probably).  Puppet-Strings doesn't rip this information out, but you do have the
+          # the source to query
+          obj.type = item[:source].match(/:rvalue/) ? :rvalue : :statement
+        when 'ruby4x'
+          obj.function_version = 4
+          # All ruby functions are statements
+          obj.type = :statement
+        else
+          PuppetLanguageServerSidecar.log_message(:error, "[#{self.class}] Unknown function type #{item[:type]}")
+        end
+
+        @cache[source_path].functions << obj
+      end
+    end
+  end
+
   class FileDocumentation
     # The path to file that has been documented
-    attr_reader :path
+    attr_accessor :path
 
-    def initialize(path)
+    # PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList object holding all functions
+    attr_accessor :functions
+
+    def initialize(path = nil)
       @path = path
+      @functions = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
     end
   end
 end

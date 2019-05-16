@@ -55,7 +55,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
   basepuppetobject_properties = [:key, :calling_source, :source, :line, :char, :length]
   nodegraph_properties = [:dot_content, :error_content]
   puppetclass_properties = [:doc, :parameters]
-  puppetfunction_properties = [:doc, :arity, :type]
+  puppetfunction_properties = [:doc, :arity, :type, :function_version]
   puppettype_properties = [:doc, :attributes]
   resource_properties = [:manifest]
 

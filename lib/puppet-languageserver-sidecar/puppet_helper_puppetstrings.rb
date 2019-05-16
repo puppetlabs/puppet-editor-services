@@ -34,6 +34,54 @@ module PuppetLanguageServerSidecar
       result
     end
 
+    # Puppet Strings loading
+    def self.available_documentation_types
+      [:function]
+    end
+
+    # Retrieve objects via the Puppet 4 API loaders
+    def self.retrieve_via_puppet_strings(_cache, options = {})
+      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_via_puppet_strings] Starting')
+
+      object_types = options[:object_types].nil? ? available_documentation_types : options[:object_types]
+      object_types.select! { |i| available_documentation_types.include?(i) }
+
+      result = {}
+      return result if object_types.empty?
+
+      result[:functions] = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new if object_types.include?(:function)
+
+      current_env = current_environment
+      for_agent = options[:for_agent].nil? ? true : options[:for_agent]
+      loaders = Puppet::Pops::Loaders.new(current_env, for_agent)
+
+      paths = []
+      paths.concat(discover_type_paths(:function, loaders)) if object_types.include?(:function)
+
+      paths.each do |path|
+        next unless path_has_child?(options[:root_path], path)
+        file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path)
+        next if file_doc.nil?
+
+        if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better
+          file_doc.functions.each { |item| result[:functions] << item }
+        end
+      end
+
+      # Remove Puppet3 functions which have a Puppet4 function already loaded
+      if object_types.include?(:function)
+        pup4_functions = result[:functions].select { |i| i.function_version == 4 }.map { |i| i.key }
+        result[:functions].reject! { |i| i.function_version == 3 && pup4_functions.include?(i.key) }
+      end
+
+      result.each { |key, item| PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_puppet_strings] Finished loading #{item.count} #{key}") }
+      result
+    end
+
+    def self.discover_type_paths(type, loaders)
+      loaders.private_environment_loader.discover_paths(type)
+    end
+
     # Class and Defined Type loading
     def self.retrieve_classes(cache, options = {})
       PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_classes] Starting')
@@ -63,57 +111,6 @@ module PuppetLanguageServerSidecar
 
       PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_classes] Finished loading #{classes.count} classes")
       classes
-    end
-
-    # Function loading
-    def self.retrieve_functions(cache, options = {})
-      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::load_functions] Starting')
-
-      autoloader = Puppet::Util::Autoload.new(self, 'puppet/parser/functions')
-      current_env = current_environment
-      funcs = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-
-      # Functions that are already loaded (e.g. system default functions like alert)
-      # should already be populated so insert them into the function results
-      #
-      # Find the unique filename list
-      filenames = []
-      Puppet::Parser::Functions.monkey_function_list.each_value do |data|
-        filenames << data[:source_location][:source] unless data[:source_location].nil? || data[:source_location][:source].nil?
-      end
-      # Now add the functions in each file to the cache
-      filenames.uniq.compact.each do |filename|
-        Puppet::Parser::Functions.monkey_function_list
-                                 .select { |_k, i| filename.casecmp(i[:source_location][:source].to_s).zero? }
-                                 .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
-                                 .each do |name, item|
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
-          funcs << obj
-        end
-      end
-
-      # Now we can load functions from the default locations
-      if autoloader.method(:files_to_load).arity.zero?
-        params = []
-      else
-        params = [current_env]
-      end
-      autoloader.files_to_load(*params).each do |file|
-        name = file.gsub(autoloader.path + '/', '')
-        begin
-          expanded_name = autoloader.expand(name)
-          absolute_name = Puppet::Util::Autoload.get_file(expanded_name, current_env)
-          raise("Could not find absolute path of function #{name}") if absolute_name.nil?
-          if path_has_child?(options[:root_path], absolute_name) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-            funcs.concat(load_function_file(cache, name, absolute_name, autoloader, current_env))
-          end
-        rescue StandardError => e
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_functions] Error loading function #{file}: #{e} #{e.backtrace}")
-        end
-      end
-
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::load_functions] Finished loading #{funcs.count} functions")
-      funcs
     end
 
     def self.retrieve_types(cache, options = {})
@@ -251,44 +248,6 @@ module PuppetLanguageServerSidecar
       class_info
     end
     private_class_method :load_classes_from_manifest
-
-    def self.load_function_file(cache, name, absolute_name, autoloader, env)
-      funcs = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-
-      if cache.active?
-        cached_result = cache.load(absolute_name, PuppetLanguageServerSidecar::Cache::FUNCTIONS_SECTION)
-        unless cached_result.nil?
-          begin
-            funcs.from_json!(cached_result)
-            return funcs
-          rescue StandardError => e
-            PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_function_file] Error while deserializing #{absolute_name} from cache: #{e}")
-            funcs = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-          end
-        end
-      end
-
-      unless autoloader.loaded?(name)
-        # This is an expensive call
-        unless autoloader.load(name, env) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_function_file] function #{absolute_name} did not load")
-        end
-      end
-
-      # Find the functions that were loaded based on source file name (case insensitive)
-      Puppet::Parser::Functions.monkey_function_list
-                               .select { |_k, i| absolute_name.casecmp(i[:source_location][:source].to_s).zero? }
-                               .each do |func_name, item|
-        obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(func_name, item)
-        obj.calling_source = absolute_name
-        funcs << obj
-      end
-      PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_function_file] file #{absolute_name} did load any functions") if funcs.count.zero?
-      cache.save(absolute_name, PuppetLanguageServerSidecar::Cache::FUNCTIONS_SECTION, funcs.to_json) if cache.active?
-
-      funcs
-    end
-    private_class_method :load_function_file
 
     def self.load_type_file(cache, name, absolute_name, autoloader, env)
       types = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new

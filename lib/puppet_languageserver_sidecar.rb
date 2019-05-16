@@ -65,6 +65,11 @@ module PuppetLanguageServerSidecar
         PuppetEditorServices.log_message(:error, "The feature flag 'puppetstrings' has been specified but it is not capable due to Puppet Strings being unavailable. Turning off the flag.")
         flags -= ['puppetstrings']
       end
+      if flags.include?('puppetstrings') && Gem::Version.new(Puppet.version) < Gem::Version.new('6.0.0')
+        # The puppetstrings flag is only valid on Puppet 6.0.0+
+        PuppetEditorServices.log_message(:error, "The feature flag 'puppetstrings' has been specified but it is not capable due to low Puppet version (< 6). Turning off the flag.")
+        flags -= ['puppetstrings']
+      end
       configure_featureflags(flags)
     end
 
@@ -81,6 +86,7 @@ module PuppetLanguageServerSidecar
     if featureflag?('puppetstrings')
       require_list << 'puppet_helper_puppetstrings'
       require_list << 'puppet_monkey_patches_puppetstrings'
+      require_list << 'puppet_strings_helper'
     else
       require_list << 'puppet_helper'
       require_list << 'puppet_monkey_patches'
@@ -248,6 +254,8 @@ module PuppetLanguageServerSidecar
   end
 
   def self.execute(options)
+    use_puppet_strings = featureflag?('puppetstrings')
+
     case options[:action].downcase
     when 'noop'
       []
@@ -258,7 +266,11 @@ module PuppetLanguageServerSidecar
 
     when 'default_functions'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache)
+      if use_puppet_strings
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:function])[:functions]
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache)
+      end
 
     when 'default_types'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
@@ -298,8 +310,16 @@ module PuppetLanguageServerSidecar
     when 'workspace_functions'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(null_cache,
-                                                                   :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+
+      if use_puppet_strings
+        cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                              :object_types => [:function],
+                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)[:functions]
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(null_cache,
+                                                                     :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+      end
 
     when 'workspace_types'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
