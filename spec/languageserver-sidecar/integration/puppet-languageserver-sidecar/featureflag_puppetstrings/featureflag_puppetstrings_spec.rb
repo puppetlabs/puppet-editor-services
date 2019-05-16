@@ -145,7 +145,9 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
   describe 'when running default_types action' do
     let (:cmd_options) { ['--action', 'default_types'] }
 
-    it 'should return a deserializable type list with default types' do
+    it 'should return a cachable deserializable type list with default types' do
+      expect_empty_cache
+
       result = run_sidecar(cmd_options)
       deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new()
       expect { deserial.from_json!(result) }.to_not raise_error
@@ -160,6 +162,16 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
 
       # These are defined in the fixtures/real_agent/cache/lib/puppet/type
       expect(deserial).to contain_child_with_key(:default_type)
+
+      # Now run using cached information
+      expect_populated_cache
+
+      result2 = run_sidecar(cmd_options)
+      deserial2 = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new()
+      expect { deserial2.from_json!(result2) }.to_not raise_error
+
+      # The second result should be the same as the first
+      expect_same_array_content(deserial, deserial2)
     end
   end
 
@@ -259,11 +271,10 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
         expect(obj.attributes.key?(:name)).to be true
         expect(obj.attributes.key?(:when)).to be true
         expect(obj.attributes[:name][:type]).to eq(:param)
-        expect(obj.attributes[:name][:doc]).to eq("name_parameter\n\n")
-        expect(obj.attributes[:name][:required?]).to be true
+        expect(obj.attributes[:name][:doc]).to eq("name_parameter")
+        expect(obj.attributes[:name][:isnamevar?]).to be true
         expect(obj.attributes[:when][:type]).to eq(:property)
-        expect(obj.attributes[:when][:doc]).to eq("when_property\n\n")
-        expect(obj.attributes[:when][:required?]).to be_nil
+        expect(obj.attributes[:when][:doc]).to eq("when_property")
       end
     end
   end
@@ -366,11 +377,10 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
         expect(obj.attributes.key?(:name)).to be true
         expect(obj.attributes.key?(:when)).to be true
         expect(obj.attributes[:name][:type]).to eq(:param)
-        expect(obj.attributes[:name][:doc]).to eq("name_env_parameter\n\n")
-        expect(obj.attributes[:name][:required?]).to be true
+        expect(obj.attributes[:name][:doc]).to eq("name_env_parameter")
+        expect(obj.attributes[:name][:isnamevar?]).to be true
         expect(obj.attributes[:when][:type]).to eq(:property)
-        expect(obj.attributes[:when][:doc]).to eq("when_env_property\n\n")
-        expect(obj.attributes[:when][:required?]).to be_nil
+        expect(obj.attributes[:when][:doc]).to eq("when_env_property")
       end
     end
   end
