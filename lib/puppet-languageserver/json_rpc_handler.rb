@@ -1,41 +1,43 @@
+# frozen_string_literal: true
+
 require 'json'
 
 module PuppetLanguageServer
   CODE_INVALID_JSON       = -32700
-  MSG_INVALID_JSON        = 'invalid JSON'.freeze
+  MSG_INVALID_JSON        = 'invalid JSON'
 
   CODE_INVALID_REQUEST    = -32600
-  MSG_INVALID_REQ_JSONRPC = "invalid request: doesn't include \"jsonrpc\": \"2.0\"".freeze
-  MSG_INVALID_REQ_ID      = 'invalid request: wrong id'.freeze
-  MSG_INVALID_REQ_METHOD  = 'invalid request: wrong method'.freeze
-  MSG_INVALID_REQ_PARAMS  = 'invalid request: wrong params'.freeze
+  MSG_INVALID_REQ_JSONRPC = "invalid request: doesn't include \"jsonrpc\": \"2.0\""
+  MSG_INVALID_REQ_ID      = 'invalid request: wrong id'
+  MSG_INVALID_REQ_METHOD  = 'invalid request: wrong method'
+  MSG_INVALID_REQ_PARAMS  = 'invalid request: wrong params'
 
   CODE_METHOD_NOT_FOUND   = -32601
-  MSG_METHOD_NOT_FOUND    = 'method not found'.freeze
+  MSG_METHOD_NOT_FOUND    = 'method not found'
 
   CODE_INVALID_PARAMS     = -32602
-  MSG_INVALID_PARAMS      = 'invalid parameter(s)'.freeze
+  MSG_INVALID_PARAMS      = 'invalid parameter(s)'
 
   CODE_INTERNAL_ERROR     = -32603
-  MSG_INTERNAL_ERROR      = 'internal error'.freeze
+  MSG_INTERNAL_ERROR      = 'internal error'
 
   PARSING_ERROR_RESPONSE  = '{"jsonrpc":"2.0","id":null,"error":{' \
                             "\"code\":#{CODE_INVALID_JSON}," \
-                            "\"message\":\"#{MSG_INVALID_JSON}\"}}".freeze
+                            "\"message\":\"#{MSG_INVALID_JSON}\"}}"
 
   BATCH_NOT_SUPPORTED_RESPONSE = '{"jsonrpc":"2.0","id":null,"error":{' \
                                   '"code":-32099,' \
-                                  '"message":"batch mode not implemented"}}'.freeze
+                                  '"message":"batch mode not implemented"}}'
 
-  KEY_JSONRPC   = 'jsonrpc'.freeze
-  VALUE_VERSION = '2.0'.freeze
-  KEY_ID        = 'id'.freeze
-  KEY_METHOD    = 'method'.freeze
-  KEY_PARAMS    = 'params'.freeze
-  KEY_RESULT    = 'result'.freeze
-  KEY_ERROR     = 'error'.freeze
-  KEY_CODE      = 'code'.freeze
-  KEY_MESSAGE   = 'message'.freeze
+  KEY_JSONRPC   = 'jsonrpc'
+  VALUE_VERSION = '2.0'
+  KEY_ID        = 'id'
+  KEY_METHOD    = 'method'
+  KEY_PARAMS    = 'params'
+  KEY_RESULT    = 'result'
+  KEY_ERROR     = 'error'
+  KEY_CODE      = 'code'
+  KEY_MESSAGE   = 'message'
 
   class JSONRPCHandler < PuppetEditorServices::SimpleServerConnectionHandler
     attr_accessor :message_router

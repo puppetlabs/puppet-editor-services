@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetLanguageServer
   module Puppetfile
     module R10K

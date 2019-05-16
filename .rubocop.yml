@@ -83,3 +83,11 @@ Layout/AlignHash:
 
 Naming/RescuedExceptionsVariableName:
   PreferredName: e
+
+# There's no benefit to this and can make things harder to read.
+Style/NumericPredicate:
+  Enabled: false
+
+# This is not valid on Ruby 2.1
+Style/SafeNavigation:
+  Enabled: false

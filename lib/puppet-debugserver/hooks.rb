@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetDebugServer
   # This code was inspired from Puppet-Debugger (https://raw.githubusercontent.com/nwops/puppet-debugger/master/lib/puppet-debugger/hooks.rb) which was borrowed from Pry hooks file
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetLanguageServerSidecar
   module Cache
     class Null < Base

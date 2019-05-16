@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # DO NOT MODIFY. This file is built automatically
 # LSP Enumerations
 
@@ -14,8 +16,8 @@ module LSP
   end
 
   module MarkupKind
-    PLAINTEXT = 'plaintext'.freeze
-    MARKDOWN = 'markdown'.freeze
+    PLAINTEXT = 'plaintext'
+    MARKDOWN = 'markdown'
   end
 
   module CompletionItemKind
@@ -87,13 +89,13 @@ module LSP
   end
 
   module CodeActionKind
-    QUICKFIX = 'quickfix'.freeze
-    REFACTOR = 'refactor'.freeze
-    REFACTOREXTRACT = 'refactor.extract'.freeze
-    REFACTORINLINE = 'refactor.inline'.freeze
-    REFACTORREWRITE = 'refactor.rewrite'.freeze
-    SOURCE = 'source'.freeze
-    SOURCEORGANIZEIMPORTS = 'source.organizeImports'.freeze
+    QUICKFIX = 'quickfix'
+    REFACTOR = 'refactor'
+    REFACTOREXTRACT = 'refactor.extract'
+    REFACTORINLINE = 'refactor.inline'
+    REFACTORREWRITE = 'refactor.rewrite'
+    SOURCE = 'source'
+    SOURCEORGANIZEIMPORTS = 'source.organizeImports'
   end
 
   module TextDocumentSaveReason
@@ -103,16 +105,16 @@ module LSP
   end
 
   module ResourceOperationKind
-    CREATE = 'create'.freeze
-    RENAME = 'rename'.freeze
-    DELETE = 'delete'.freeze
+    CREATE = 'create'
+    RENAME = 'rename'
+    DELETE = 'delete'
   end
 
   module FailureHandlingKind
-    ABORT = 'abort'.freeze
-    TRANSACTIONAL = 'transactional'.freeze
-    TEXTONLYTRANSACTIONAL = 'textOnlyTransactional'.freeze
-    UNDO = 'undo'.freeze
+    ABORT = 'abort'
+    TRANSACTIONAL = 'transactional'
+    TEXTONLYTRANSACTIONAL = 'textOnlyTransactional'
+    UNDO = 'undo'
   end
 
   module TextDocumentSyncKind

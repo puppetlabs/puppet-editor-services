@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Inject the workspace libdir on the fly
 require 'puppet/util/autoload'
 module Puppet

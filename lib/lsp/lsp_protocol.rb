@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # DO NOT MODIFY. This file is built automatically
 # LSP Protocol: vscode-languageserver-protocol/lib/protocol.d.ts
 

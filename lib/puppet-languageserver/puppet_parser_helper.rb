@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetLanguageServer
   module PuppetParserHelper
     def self.remove_chars_starting_at(content, line_offsets, line_num, char_num, num_chars_to_remove)

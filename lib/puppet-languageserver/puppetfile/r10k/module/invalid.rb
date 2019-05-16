@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This is a special module definition.  It's the catchall when no other module type can handle it
 
 module PuppetLanguageServer

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetEditorServices
   class SimpleSTDIOServerConnection < SimpleServerConnectionBase
     attr_accessor :simple_stdio_server

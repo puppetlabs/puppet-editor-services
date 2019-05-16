@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'debugserver/debug_protocol'
 require 'puppet_editor_services'
 

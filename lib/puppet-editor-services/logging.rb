@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetEditorServices
   def self.log_message(severity, message)
     return if @logger.nil?

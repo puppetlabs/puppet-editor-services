@@ -1,7 +1,9 @@
+# frozen_string_literal: true
+
 module PuppetLanguageServer
   module Puppetfile
     module R10K
-      PUPPETFILE_MONIKER ||= 'Puppetfile'.freeze
+      PUPPETFILE_MONIKER ||= 'Puppetfile'
 
       class Puppetfile
         attr_reader :modules

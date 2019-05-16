@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 module PuppetLanguageServerSidecar
   module Cache
-    CLASSES_SECTION = 'classes'.freeze
-    FUNCTIONS_SECTION = 'functions'.freeze
-    TYPES_SECTION = 'types'.freeze
+    CLASSES_SECTION = 'classes'
+    FUNCTIONS_SECTION = 'functions'
+    TYPES_SECTION = 'types'
 
     class Base
       attr_reader :cache_options

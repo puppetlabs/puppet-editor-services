@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PuppetLanguageServer
   module PuppetHelper
     # key            => Unique name of the object

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Monkey Patch the Puppet language parser so we can globally lock any changes to the
 # global setting Puppet[:tasks].  We need to manage this so we can switch between
 # parsing modes.  Unfortunately we can't do this as method parameter, only via the
