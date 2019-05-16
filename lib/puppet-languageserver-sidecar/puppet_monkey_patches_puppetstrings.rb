@@ -147,6 +147,12 @@ module Puppet
             end
           end
 
+          if type == :sidecar_manifest
+            current_environment.modules.each do |mod|
+              result.concat(mod.all_manifests)
+            end
+          end
+
           result.concat(super)
           result.uniq
         end

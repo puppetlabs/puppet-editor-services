@@ -37,7 +37,7 @@ module PuppetLanguageServerSidecar
 
     # Puppet Strings loading
     def self.available_documentation_types
-      %I[function type]
+      %I[class function type]
     end
 
     # Retrieve objects via the Puppet 4 API loaders
@@ -50,6 +50,7 @@ module PuppetLanguageServerSidecar
       result = {}
       return result if object_types.empty?
 
+      result[:classes]   = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new if object_types.include?(:class)
       result[:functions] = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new if object_types.include?(:function)
       result[:types]     = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new if object_types.include?(:type)
 
@@ -61,6 +62,9 @@ module PuppetLanguageServerSidecar
       loaders.add_loader_by_name(path_discoverer_loader)
 
       paths = []
+      # :sidecar_manifest isn't technically a Loadable thing. This is useful because we know that any type
+      # of loader will just ignore it.
+      paths.concat(discover_type_paths(:sidecar_manifest, loaders)) if object_types.include?(:class)
       paths.concat(discover_type_paths(:function, loaders)) if object_types.include?(:function)
       paths.concat(discover_type_paths(:type, loaders)) if object_types.include?(:type)
 
@@ -69,6 +73,9 @@ module PuppetLanguageServerSidecar
         file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path)
         next if file_doc.nil?
 
+        if object_types.include?(:class) # rubocop:disable Style/IfUnlessModifier   This reads better
+          file_doc.classes.each { |_name, item| result[:classes] << item }
+        end
         if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better
           file_doc.functions.each { |_name, item| result[:functions] << item }
         end
@@ -95,37 +102,6 @@ module PuppetLanguageServerSidecar
       )
     end
 
-    # Class and Defined Type loading
-    def self.retrieve_classes(cache, options = {})
-      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_classes] Starting')
-
-      # TODO: Can probably do this better, but this works.
-      current_env = current_environment
-      module_path_list = current_env
-                         .modules
-                         .select { |mod| Dir.exist?(File.join(mod.path, 'manifests')) }
-                         .map { |mod| mod.path }
-      manifest_path_list = module_path_list.map { |mod_path| File.join(mod_path, 'manifests') }
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_classes] Loading classes from #{module_path_list}")
-
-      # Find and parse all manifests in the manifest paths
-      classes = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
-      manifest_path_list.each do |manifest_path|
-        Dir.glob("#{manifest_path}/**/*.pp").each do |manifest_file|
-          begin
-            if path_has_child?(options[:root_path], manifest_file) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-              classes.concat(load_classes_from_manifest(cache, manifest_file))
-            end
-          rescue StandardError => e
-            PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::retrieve_classes] Error loading manifest #{manifest_file}: #{e} #{e.backtrace}")
-          end
-        end
-      end
-
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_classes] Finished loading #{classes.count} classes")
-      classes
-    end
-
     # Private functions
 
     def self.prune_resource_parameters(resources)
@@ -150,83 +126,5 @@ module PuppetLanguageServerSidecar
       Puppet.lookup(:current_environment)
     end
     private_class_method :current_environment
-
-    def self.load_classes_from_manifest(cache, manifest_file)
-      class_info = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
-
-      if cache.active?
-        cached_result = cache.load(manifest_file, PuppetLanguageServerSidecar::Cache::CLASSES_SECTION)
-        unless cached_result.nil?
-          begin
-            class_info.from_json!(cached_result)
-            return class_info
-          rescue StandardError => e
-            PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_classes_from_manifest] Error while deserializing #{manifest_file} from cache: #{e}")
-            class_info = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
-          end
-        end
-      end
-
-      file_content = File.open(manifest_file, 'r:UTF-8') { |f| f.read }
-
-      parser = Puppet::Pops::Parser::Parser.new
-      result = nil
-      begin
-        result = parser.parse_string(file_content, '')
-      rescue Puppet::ParseErrorWithIssue
-        # Any parsing errors means we can't inspect the document
-        return class_info
-      end
-
-      # Enumerate the entire AST looking for classes and defined types
-      # TODO: Need to learn how to read the help/docs for hover support
-      if result.model.respond_to? :eAllContents
-        # Puppet 4 AST
-        result.model.eAllContents.select do |item|
-          puppet_class = {}
-          case item.class.to_s
-          when 'Puppet::Pops::Model::HostClassDefinition'
-            puppet_class['type'] = :class
-          when 'Puppet::Pops::Model::ResourceTypeDefinition'
-            puppet_class['type'] = :typedefinition
-          else
-            next
-          end
-          puppet_class['name']       = item.name
-          puppet_class['doc']        = nil
-          puppet_class['parameters'] = item.parameters
-          puppet_class['source']     = manifest_file
-          puppet_class['line']       = result.locator.line_for_offset(item.offset) - 1
-          puppet_class['char']       = result.locator.offset_on_line(item.offset)
-
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetClass.from_puppet(item.name, puppet_class, result.locator)
-          class_info << obj
-        end
-      else
-        result.model._pcore_all_contents([]) do |item|
-          puppet_class = {}
-          case item.class.to_s
-          when 'Puppet::Pops::Model::HostClassDefinition'
-            puppet_class['type'] = :class
-          when 'Puppet::Pops::Model::ResourceTypeDefinition'
-            puppet_class['type'] = :typedefinition
-          else
-            next
-          end
-          puppet_class['name']       = item.name
-          puppet_class['doc']        = nil
-          puppet_class['parameters'] = item.parameters
-          puppet_class['source']     = manifest_file
-          puppet_class['line']       = item.line
-          puppet_class['char']       = item.pos
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetClass.from_puppet(item.name, puppet_class, item.locator)
-          class_info << obj
-        end
-      end
-      cache.save(manifest_file, PuppetLanguageServerSidecar::Cache::CLASSES_SECTION, class_info.to_json) if cache.active?
-
-      class_info
-    end
-    private_class_method :load_classes_from_manifest
   end
 end

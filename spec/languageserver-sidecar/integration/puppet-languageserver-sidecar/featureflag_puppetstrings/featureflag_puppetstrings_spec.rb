@@ -73,6 +73,25 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
       # These are defined in the fixtures/real_agent/environments/testfixtures/modules/defaultmodule
       expect(deserial).to contain_child_with_key(:defaultdefinedtype)
       expect(deserial).to contain_child_with_key(:defaultmodule)
+
+      # Make sure the classes have the right properties
+      obj = child_with_key(deserial, :defaultdefinedtype)
+      expect(obj.doc).to match(/This is an example of how to document a defined type/)
+      expect(obj.source).to match(/defaultmodule/)
+      expect(obj.parameters.count).to eq 2
+      expect(obj.parameters['ensure'][:type]).to eq 'Any'
+      expect(obj.parameters['ensure'][:doc]).to match(/Ensure parameter documentation/)
+      expect(obj.parameters['param2'][:type]).to eq 'String'
+      expect(obj.parameters['param2'][:doc]).to match(/param2 documentation/)
+
+      obj = child_with_key(deserial, :defaultmodule)
+      expect(obj.doc).to match(/This is an example of how to document a Puppet class/)
+      expect(obj.source).to match(/defaultmodule/)
+      expect(obj.parameters.count).to eq 2
+      expect(obj.parameters['first'][:type]).to eq 'String'
+      expect(obj.parameters['first'][:doc]).to match(/The first parameter for this class/)
+      expect(obj.parameters['second'][:type]).to eq 'Integer'
+      expect(obj.parameters['second'][:doc]).to match(/The second parameter for this class/)
     end
   end
 
@@ -265,13 +284,6 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
         expect(deserial).to contain_child_with_key(:"profile::main")
         # Defined Types
         expect(deserial).to contain_child_with_key(:envdeftype)
-
-        # Make sure the class has the right properties
-        obj = child_with_key(deserial, :envdeftype)
-        expect(obj.doc).to be_nil # We don't yet get documentation for classes or defined types
-        expect(obj.parameters['ensure']).to_not be_nil
-        expect(obj.parameters['ensure'][:type]).to eq('String')
-        expect(obj.source).to match(/valid_environment_workspace/)
       end
     end
 
