@@ -222,8 +222,6 @@ module PuppetLanguageServerSidecar
   def self.inject_workspace_as_module
     return false unless PuppetLanguageServerSidecar::Workspace.has_module_metadata?
 
-    Puppet.settings[:basemodulepath] = Puppet.settings[:basemodulepath] + ';' + PuppetLanguageServerSidecar::Workspace.root_path
-
     %w[puppet_modulepath_monkey_patches].each do |lib|
       begin
         require "puppet-languageserver-sidecar/#{lib}"
