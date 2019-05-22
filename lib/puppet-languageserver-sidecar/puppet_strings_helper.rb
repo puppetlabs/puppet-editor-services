@@ -5,10 +5,15 @@ module PuppetLanguageServerSidecar
     # Returns a FileDocumentation object for a given path
     #
     # @param [String] path The absolute path to the file that will be documented
+    # @param [PuppetLanguageServerSidecar::Cache] cache A Sidecar cache which stores already parsed documents as serialised FileDocumentation objects
     # @return [FileDocumentation, nil] Returns the documentation for the path, or nil if it cannot be extracted
-    def self.file_documentation(path)
+    def self.file_documentation(path, cache = nil)
       return nil unless require_puppet_strings
       @helper_cache = FileDocumentationCache.new if @helper_cache.nil?
+      return @helper_cache.document(path) if @helper_cache.path_exists?(path)
+
+      # Load from the permanent cache
+      @helper_cache.populate_from_sidecar_cache!(path, cache) unless cache.nil? || !cache.active?
       return @helper_cache.document(path) if @helper_cache.path_exists?(path)
 
       PuppetLanguageServerSidecar.log_message(:debug, "[PuppetStringsHelper::file_documentation] Fetching documentation for #{path}")
@@ -35,6 +40,9 @@ module PuppetLanguageServerSidecar
 
       # Populate the documentation cache from the YARD information
       @helper_cache.populate_from_yard_registry!
+
+      # Save to the permanent cache
+      @helper_cache.save_to_sidecar_cache(path, cache) unless cache.nil? || !cache.active?
 
       # Return the documentation details
       @helper_cache.document(path)
@@ -82,6 +90,22 @@ module PuppetLanguageServerSidecar
       # Extract all of the information
       # Ref - https://github.com/puppetlabs/puppet-strings/blob/87a8e10f45bfeb7b6b8e766324bfb126de59f791/lib/puppet-strings/json.rb#L10-L16
       populate_functions_from_yard_registry!
+    end
+
+    def populate_from_sidecar_cache!(path, cache)
+      cached_result = cache.load(path, PuppetLanguageServerSidecar::Cache::PUPPETSTRINGS_SECTION)
+      unless cached_result.nil? # rubocop:disable Style/GuardClause    Reads better this way
+        begin
+          obj = FileDocumentation.new.from_json!(cached_result)
+          @cache[path] = obj
+        rescue StandardError => e
+          PuppetLanguageServerSidecar.log_message(:warn, "[FileDocumentationCache::populate_from_sidecar_cache!] Error while deserializing #{path} from cache: #{e}")
+        end
+      end
+    end
+
+    def save_to_sidecar_cache(path, cache)
+      cache.save(path, PuppetLanguageServerSidecar::Cache::PUPPETSTRINGS_SECTION, document(path).to_json) if cache.active?
     end
 
     private
@@ -137,6 +161,41 @@ module PuppetLanguageServerSidecar
     def initialize(path = nil)
       @path = path
       @functions = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
+    end
+
+    # Serialisation
+    def to_h
+      {
+        'path'      => path,
+        'functions' => functions
+      }
+    end
+
+    def to_json(*options)
+      JSON.generate(to_h, options)
+    end
+
+    # Deserialisation
+    def from_json!(json_string)
+      obj = JSON.parse(json_string)
+
+      obj.keys.each do |key|
+        case key
+        when 'path'
+          # Simple deserialised object types
+          self.instance_variable_set("@#{key}", obj[key]) # rubocop:disable Style/RedundantSelf   Reads better this way
+        else
+          # Sidecar protocol list object types
+          prop = self.instance_variable_get("@#{key}") # rubocop:disable Style/RedundantSelf   Reads better this way
+
+          obj[key].each do |child_hash|
+            child = prop.child_type.new
+            # Let the sidecar deserialise for us
+            prop << child.from_h!(child_hash)
+          end
+        end
+      end
+      self
     end
   end
 end

@@ -40,7 +40,7 @@ module PuppetLanguageServerSidecar
     end
 
     # Retrieve objects via the Puppet 4 API loaders
-    def self.retrieve_via_puppet_strings(_cache, options = {})
+    def self.retrieve_via_puppet_strings(cache, options = {})
       PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_via_puppet_strings] Starting')
 
       object_types = options[:object_types].nil? ? available_documentation_types : options[:object_types]
@@ -60,7 +60,7 @@ module PuppetLanguageServerSidecar
 
       paths.each do |path|
         next unless path_has_child?(options[:root_path], path)
-        file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path)
+        file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path, cache)
         next if file_doc.nil?
 
         if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better

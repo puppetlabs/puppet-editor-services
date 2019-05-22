@@ -15,7 +15,7 @@ module PuppetLanguageServerSidecar
         begin
           Dir.mkdir(@cache_dir) unless Dir.exist?(@cache_dir)
         rescue Errno::ENOENT => e
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetLanguageServerSidecar::Cache::File] An error occured while creating file cache.  Disabling cache: #{e}")
+          PuppetLanguageServerSidecar.log_message(:error, "[PuppetLanguageServerSidecar::Cache::FileSystem] An error occured while creating file cache.  Disabling cache: #{e}")
           @cache_dir = nil
         end
       end
@@ -37,20 +37,20 @@ module PuppetLanguageServerSidecar
 
         # Check that this is from the same language server version
         unless json_obj['sidecar_version'] == PuppetLanguageServerSidecar.version
-          PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::load] Error loading #{absolute_path}: Expected sidecar_version version #{PuppetLanguageServerSidecar.version} but found #{json_obj['sidecar_version']}")
+          PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::Cache::FileSystem.load] Error loading #{absolute_path}: Expected sidecar_version version #{PuppetLanguageServerSidecar.version} but found #{json_obj['sidecar_version']}")
           return nil
         end
         # Check that the source file hash matches
         content_hash = calculate_hash(absolute_path)
         if json_obj['file_hash'] != content_hash
-          PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::load] Error loading #{absolute_path}: Expected file_hash of #{content_hash} but found #{json_obj['file_hash']}")
+          PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::Cache::FileSystem.load] Error loading #{absolute_path}: Expected file_hash of #{content_hash} but found #{json_obj['file_hash']}")
           return nil
         end
-        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::load] Loading #{absolute_path} from cache")
+        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::Cache::FileSystem.load] Loading #{absolute_path} from cache")
 
         json_obj['data']
       rescue RuntimeError => e
-        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::load] Error loading #{absolute_path}: #{e}")
+        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::Cache::FileSystem.load] Error loading #{absolute_path}: #{e}")
         raise
       end
 
@@ -67,7 +67,14 @@ module PuppetLanguageServerSidecar
         content['path'] = absolute_path
         content['section'] = section
 
+        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetLanguageServerSidecar::Cache::FileSystem.save] Saving #{absolute_path} to cache")
         save_file(cache_file, content.to_json)
+      end
+
+      def clear!
+        return unless active?
+        PuppetLanguageServerSidecar.log_message(:warn, '[PuppetLanguageServerSidecar::Cache::FileSystem.clear] Filesystem based cache is being cleared')
+        FileUtils.rm(Dir.glob(File.join(cache_dir, '*')), :force => true)
       end
 
       private

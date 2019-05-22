@@ -4,8 +4,6 @@ require 'tempfile'
 
 describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0') do
   def run_sidecar(cmd_options)
-    cmd_options << '--no-cache'
-
     # Append the feature flag
     cmd_options << '--feature-flag=puppetstrings'
 
@@ -59,6 +57,37 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
     expect(deserial).to_not contain_child_with_key(:'modname::default_mod_pup4_function')
   end
 
+  before(:each) do
+    # Purge the File Cache
+    cache = PuppetLanguageServerSidecar::Cache::FileSystem.new
+    cache.clear!
+  end
+
+  after(:all) do
+    # Purge the File Cache
+    cache = PuppetLanguageServerSidecar::Cache::FileSystem.new
+    cache.clear!
+  end
+
+  def expect_empty_cache
+    cache = PuppetLanguageServerSidecar::Cache::FileSystem.new
+    expect(Dir.exists?(cache.cache_dir)).to eq(true), "Expected the cache directory #{cache.cache_dir} to exist"
+    expect(Dir.glob(File.join(cache.cache_dir,'*')).count).to eq(0), "Expected the cache directory #{cache.cache_dir} to be empty"
+  end
+
+  def expect_populated_cache
+    cache = PuppetLanguageServerSidecar::Cache::FileSystem.new
+    expect(Dir.glob(File.join(cache.cache_dir,'*')).count).to be > 0, "Expected the cache directory #{cache.cache_dir} to be populated"
+  end
+
+  def expect_same_array_content(a, b)
+    expect(a.count).to eq(b.count), "Expected array with #{b.count} items to have #{a.count} items"
+
+    a.each_with_index do |item, index|
+      expect(item.to_json).to eq(b[index].to_json), "Expected item at index #{index} to have content #{item.to_json} but got #{b[index].to_json}"
+    end
+  end
+
   describe 'when running default_classes action' do
     let (:cmd_options) { ['--action', 'default_classes'] }
 
@@ -79,7 +108,9 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
   describe 'when running default_functions action' do
     let (:cmd_options) { ['--action', 'default_functions'] }
 
-    it 'should return a deserializable function list with default functions' do
+    it 'should return a cachable deserializable function list with default functions' do
+      expect_empty_cache
+
       result = run_sidecar(cmd_options)
       deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new()
       expect { deserial.from_json!(result) }.to_not raise_error
@@ -98,6 +129,16 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
       expect(deserial).to contain_child_with_key(:'environment::default_env_pup4_function')
       # These are defined in the fixtures/real_agent/cache/lib/puppet/functions/modname (module namespaced function)
       expect(deserial).to contain_child_with_key(:'modname::default_mod_pup4_function')
+
+      # Now run using cached information
+      expect_populated_cache
+
+      result2 = run_sidecar(cmd_options)
+      deserial2 = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new()
+      expect { deserial2.from_json!(result2) }.to_not raise_error
+
+      # The second result should be the same as the first
+      expect_same_array_content(deserial, deserial2)
     end
   end
 
