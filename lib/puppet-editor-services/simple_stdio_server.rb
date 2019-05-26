@@ -9,12 +9,12 @@ module PuppetEditorServices
     end
 
     def send_data(data)
-      $stdout.write(data)
+      $editor_services_stdout.write(data) # rubocop:disable Style/GlobalVars  We need this global var
       true
     end
 
     def close_connection_after_writing
-      $stdout.flush
+      $editor_services_stdout.flush # rubocop:disable Style/GlobalVars  We need this global var
       @simple_stdio_server.close_connection
       true
     end
@@ -40,10 +40,14 @@ module PuppetEditorServices
       connection_options[:servicename] = 'LANGUAGE SERVER' if connection_options[:servicename].nil?
       # This is a little heavy handed but we need to suppress writes to STDOUT and STDERR
       $VERBOSE = nil
+      # Some libraries use $stdout to write to the console. Suppress all of that too!
+      # Copy the existing $stdout variable and then reassign to NUL to suppress it
+      $editor_services_stdout = $stdout # rubocop:disable Style/GlobalVars  We need this global var
+      $stdout = File.open(File::NULL, 'w')
 
-      $stdout.sync = true
+      $editor_services_stdout.sync = true # rubocop:disable Style/GlobalVars  We need this global var
       # Stop the stupid CRLF injection when on Windows
-      $stdout.binmode unless $stdout.binmode
+      $editor_services_stdout.binmode unless $editor_services_stdout.binmode # rubocop:disable Style/GlobalVars  We need this global var
 
       handler = handler_klass.new(connection_options)
       client_connection = PuppetEditorServices::SimpleSTDIOServerConnection.new(self)
