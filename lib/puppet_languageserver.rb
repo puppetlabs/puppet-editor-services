@@ -16,9 +16,18 @@ module PuppetLanguageServer
     PuppetEditorServices.version
   end
 
+  # Whether the language server is actually in a state that can be used.
+  # Typically this is false when a catastrophic error occurs during startup e.g. Puppet is missing.
+  #
+  # @return [Bool] Whether the language server is actually in a state that can be used
+  def self.active?
+    @server_is_active
+  end
+
   def self.require_gems(options)
     original_verbose = $VERBOSE
     $VERBOSE = nil
+    @server_is_active = false
 
     # Use specific Puppet Gem version if possible
     unless options[:puppet_version].nil?
@@ -32,16 +41,33 @@ module PuppetLanguageServer
       end
     end
 
-    require 'lsp/lsp'
-    require 'puppet'
-
+    # These libraries do not require the puppet gem and required for the
+    # server to respond to clients.
     %w[
       json_rpc_handler
       document_store
       crash_dump
       message_router
-      validation_queue
       server_capabilities
+    ].each do |lib|
+      begin
+        require "puppet-languageserver/#{lib}"
+      rescue LoadError
+        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
+      end
+    end
+
+    begin
+      require 'lsp/lsp'
+      require 'puppet'
+    rescue LoadError => e
+      log_message(:error, "Error while loading a critical gem: #{e} #{e.backtrace}")
+      return
+    end
+
+    # These libraries require the puppet and LSP gems.
+    %w[
+      validation_queue
       sidecar_protocol
       sidecar_queue
       puppet_parser_helper
@@ -57,6 +83,7 @@ module PuppetLanguageServer
         require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
       end
     end
+    @server_is_active = true
   ensure
     $VERBOSE = original_verbose
   end
@@ -165,6 +192,7 @@ module PuppetLanguageServer
     log_message(:info, "Language Server is v#{PuppetEditorServices.version}")
     log_message(:debug, 'Loading gems...')
     require_gems(options)
+    return unless active?
     log_message(:info, "Using Puppet v#{Puppet.version}")
 
     log_message(:debug, "Detected additional puppet settings #{options[:puppet_settings]}")
@@ -219,6 +247,11 @@ module PuppetLanguageServer
   def self.rpc_server(options)
     log_message(:info, 'Starting RPC Server...')
     options[:servicename] = 'LANGUAGE SERVER'
+
+    unless active?
+      options[:message_router] = @message_router = PuppetLanguageServer::DisabledMessageRouter.new(options)
+      log_message(:info, 'Configured the Language Server to use the Disabled Message Router')
+    end
 
     if options[:stdio]
       log_message(:debug, 'Using STDIO')

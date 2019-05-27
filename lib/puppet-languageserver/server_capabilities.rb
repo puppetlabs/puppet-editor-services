@@ -17,5 +17,11 @@ module PuppetLanguageServer
         'workspaceSymbolProvider' => true
       }
     end
+
+    def self.no_capabilities
+      # Any empty hash denotes no capabilities at all
+      {
+      }
+    end
   end
 end
