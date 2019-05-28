@@ -278,7 +278,7 @@ module PuppetLanguageServer
       end
 
       def reply_internal_error(message = nil)
-        return nil if @json_rpc_handler.error?
+        return nil if @json_rpc_handler.connection_error?
         @json_rpc_handler.reply_error(@id, CODE_INTERNAL_ERROR, message || MSG_INTERNAL_ERROR)
       end
 

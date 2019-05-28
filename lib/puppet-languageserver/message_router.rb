@@ -247,4 +247,68 @@ module PuppetLanguageServer
       raise
     end
   end
+
+  class DisabledMessageRouter
+    attr_accessor :json_rpc_handler
+
+    def initialize(_options)
+    end
+
+    def receive_request(request)
+      case request.rpc_method
+      when 'initialize'
+        PuppetLanguageServer.log_message(:debug, 'Received initialize method')
+        # If the Language Server is not active then we can not respond to any capability. We also
+        # send a warning to the user telling them this
+        request.reply_result('capabilities' => PuppetLanguageServer::ServerCapabilites.no_capabilities)
+        # Add a minor delay before sending the notification to give the client some processing time
+        sleep(0.5)
+        @json_rpc_handler.send_show_message_notification(
+          LSP::MessageType::WARNING,
+          'An error occured while the Language Server was starting. The server has been disabled.'
+        )
+
+      when 'shutdown'
+        PuppetLanguageServer.log_message(:debug, 'Received shutdown method')
+        request.reply_result(nil)
+
+      when 'puppet/getVersion'
+        # Clients may use the getVersion request to figure out when the server has "finished" loading. In this
+        # case just fake the response that we are fully loaded with unknown gem versions
+        request.reply_result(LSP::PuppetVersion.new(
+                               'puppetVersion'   => 'Unknown',
+                               'facterVersion'   => 'Unknown',
+                               'factsLoaded'     => true,
+                               'functionsLoaded' => true,
+                               'typesLoaded'     => true,
+                               'classesLoaded'   => true
+                             ))
+
+      else
+        # For any request return an internal error.
+        request.reply_internal_error('Puppet Language Server is not active')
+        PuppetLanguageServer.log_message(:error, "Unknown RPC method #{request.rpc_method}")
+      end
+    rescue StandardError => e
+      PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'request' => request.rpc_method, 'params' => request.params)
+      raise
+    end
+
+    def receive_notification(method, params)
+      case method
+      when 'initialized'
+        PuppetLanguageServer.log_message(:info, 'Client has received initialization')
+
+      when 'exit'
+        PuppetLanguageServer.log_message(:info, 'Received exit notification.  Closing connection to client...')
+        @json_rpc_handler.close_connection
+
+      else
+        PuppetLanguageServer.log_message(:error, "Unknown RPC notification #{method}")
+      end
+    rescue StandardError => e
+      PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'notification' => method, 'params' => params)
+      raise
+    end
+  end
 end
