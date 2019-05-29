@@ -6,6 +6,13 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.19.1 - 2019-05-31
+
+### Fixed
+
+- ([GH-132](https://github.com/lingua-pupuli/puppet-editor-services/issues/132)) Suppress $stdout usage for STDIO transport
+- ([GH-118](https://github.com/lingua-pupuli/puppet-editor-services/issues/118)) Fail gracefully when critical gems cannot load
+
 ## 0.19.0 - 2019-03-24
 
 ### Added
