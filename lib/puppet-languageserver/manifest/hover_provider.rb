@@ -142,8 +142,7 @@ module PuppetLanguageServer
         func_info = PuppetLanguageServer::PuppetHelper.function(func_name)
         raise "Function #{func_name} does not exist" if func_info.nil?
 
-        # TODO: what about rvalue?
-        content = "**#{func_name}** Function" # TODO: Do I add in the params from the arity number?
+        content = "**#{func_name}** Function"
         content += "\n\n" + func_info.doc unless func_info.doc.nil?
 
         content
