@@ -179,6 +179,23 @@ module PuppetLanguageServer
           request.reply_result(nil)
         end
 
+      when 'textDocument/signatureHelp'
+        file_uri = request.params['textDocument']['uri']
+        line_num = request.params['position']['line']
+        char_num = request.params['position']['character']
+        content  = documents.document(file_uri)
+        begin
+          case documents.document_type(file_uri)
+          when :manifest
+            request.reply_result(PuppetLanguageServer::Manifest::SignatureProvider.signature_help(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.module_plan_file?(file_uri)))
+          else
+            raise "Unable to provide signatures on #{file_uri}"
+          end
+        rescue StandardError => e
+          PuppetLanguageServer.log_message(:error, "(textDocument/signatureHelp) #{e}")
+          request.reply_result(nil)
+        end
+
       when 'workspace/symbol'
         begin
           result = []
