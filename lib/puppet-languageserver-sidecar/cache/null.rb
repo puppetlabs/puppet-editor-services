@@ -18,6 +18,10 @@ module PuppetLanguageServerSidecar
       def save(*)
         true
       end
+
+      def clear!
+        nil
+      end
     end
   end
 end
