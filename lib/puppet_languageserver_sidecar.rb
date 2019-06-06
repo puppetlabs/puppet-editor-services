@@ -260,7 +260,11 @@ module PuppetLanguageServerSidecar
 
     when 'default_classes'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(cache)
+      if use_puppet_strings
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:class])[:classes]
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(cache)
+      end
 
     when 'default_functions'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
@@ -272,7 +276,11 @@ module PuppetLanguageServerSidecar
 
     when 'default_types'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(cache)
+      if use_puppet_strings
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:type])[:types]
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(cache)
+      end
 
     when 'node_graph'
       inject_workspace_as_module || inject_workspace_as_environment
@@ -302,8 +310,15 @@ module PuppetLanguageServerSidecar
     when 'workspace_classes'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(null_cache,
-                                                                 :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+      if use_puppet_strings
+        cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                              :object_types => [:class],
+                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)[:classes]
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(null_cache,
+                                                                   :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+      end
 
     when 'workspace_functions'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
@@ -322,8 +337,15 @@ module PuppetLanguageServerSidecar
     when 'workspace_types'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(null_cache,
-                                                               :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+      if use_puppet_strings
+        cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                              :object_types => [:type],
+                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)[:types]
+      else
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(null_cache)
+      end
+
     else
       log_message(:error, "Unknown action #{options[:action]}. Expected one of #{ACTION_LIST}")
     end

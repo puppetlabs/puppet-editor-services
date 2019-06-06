@@ -69,6 +69,63 @@ module Puppet
   end
 end
 
+# While this is not a monkey patch, but a new class, this class is used purely to
+# enumerate the paths of puppet "things" that aren't already covered as part of the
+# usual loaders. It is implemented as a null loader as it can't actually _load_
+# anything.
+module Puppet
+  module Pops
+    module Loader
+      class PathDiscoveryNullLoader < Puppet::Pops::Loader::NullLoader
+        def discover_paths(type, name_authority = Pcore::RUNTIME_NAME_AUTHORITY)
+          result = []
+
+          if type == :type
+            autoloader = Puppet::Util::Autoload.new(self, 'puppet/type')
+            current_env = current_environment
+
+            # This is an expensive call
+            if autoloader.method(:files_to_load).arity.zero?
+              params = []
+            else
+              params = [current_env]
+            end
+            autoloader.files_to_load(*params).each do |file|
+              name = file.gsub(autoloader.path + '/', '')
+              expanded_name = autoloader.expand(name)
+              absolute_name = Puppet::Util::Autoload.get_file(expanded_name, current_env)
+              result << absolute_name unless absolute_name.nil?
+            end
+          end
+
+          if type == :sidecar_manifest
+            current_environment.modules.each do |mod|
+              result.concat(mod.all_manifests)
+            end
+          end
+
+          result.concat(super)
+          result.uniq
+        end
+
+        private
+
+        def current_environment
+          begin
+            env = Puppet.lookup(:environments).get!(Puppet.settings[:environment])
+            return env unless env.nil?
+          rescue Puppet::Environments::EnvironmentNotFound
+            PuppetLanguageServerSidecar.log_message(:warning, "[Puppet::Pops::Loader::PathDiscoveryNullLoader::current_environment] Unable to load environment #{Puppet.settings[:environment]}")
+          rescue StandardError => e
+            PuppetLanguageServerSidecar.log_message(:warning, "[Puppet::Pops::Loader::PathDiscoveryNullLoader::current_environment] Error loading environment #{Puppet.settings[:environment]}: #{e}")
+          end
+          Puppet.lookup(:current_environment)
+        end
+      end
+    end
+  end
+end
+
 module Puppet
   module Pops
     module Loader

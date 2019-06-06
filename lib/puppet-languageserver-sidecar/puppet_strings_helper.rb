@@ -54,6 +54,8 @@ module PuppetLanguageServerSidecar
         require 'puppet-strings'
         require 'puppet-strings/yard'
         require 'puppet-strings/json'
+
+        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet_strings_monkey_patches'))
         @puppet_strings_loaded = true
       rescue LoadError => e
         PuppetLanguageServerSidecar.log_message(:error, "[PuppetStringsHelper::require_puppet_strings] Unable to load puppet-strings gem: #{e}")
@@ -89,7 +91,9 @@ module PuppetLanguageServerSidecar
     def populate_from_yard_registry!
       # Extract all of the information
       # Ref - https://github.com/puppetlabs/puppet-strings/blob/87a8e10f45bfeb7b6b8e766324bfb126de59f791/lib/puppet-strings/json.rb#L10-L16
+      populate_classes_from_yard_registry!
       populate_functions_from_yard_registry!
+      populate_types_from_yard_registry!
     end
 
     def populate_from_sidecar_cache!(path, cache)
@@ -109,6 +113,35 @@ module PuppetLanguageServerSidecar
     end
 
     private
+
+    def populate_classes_from_yard_registry!
+      %I[puppet_class puppet_defined_type].each do |yard_type|
+        YARD::Registry.all(yard_type).map(&:to_hash).each do |item|
+          source_path = item[:file]
+          class_name = item[:name].to_s
+          @cache[source_path] = FileDocumentation.new(source_path) if @cache[source_path].nil?
+
+          obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new
+          obj.key            = class_name
+          obj.source         = item[:file]
+          obj.calling_source = obj.source
+          obj.line           = item[:line]
+
+          obj.doc            = item[:docstring][:text]
+          obj.parameters     = {}
+          # Extract the class parameters
+          item[:docstring][:tags]&.select { |tag| tag[:tag_name] == 'param' }&.each do |tag|
+            param_name = tag[:name]
+            obj.parameters[param_name] = {
+              :doc  => tag[:text],
+              :type => tag[:types].join(', ')
+            }
+          end
+
+          @cache[source_path].classes << obj
+        end
+      end
+    end
 
     def populate_functions_from_yard_registry!
       ::YARD::Registry.all(:puppet_function).map(&:to_hash).each do |item|
@@ -149,25 +182,67 @@ module PuppetLanguageServerSidecar
         @cache[source_path].functions << obj
       end
     end
+
+    def populate_types_from_yard_registry!
+      ::YARD::Registry.all(:puppet_type).map(&:to_hash).each do |item|
+        source_path = item[:file]
+        type_name = item[:name].to_s
+        @cache[source_path] = FileDocumentation.new(source_path) if @cache[source_path].nil?
+
+        obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetType.new
+        obj.key            = type_name
+        obj.source         = item[:file]
+        obj.calling_source = obj.source
+        obj.line           = item[:line]
+        obj.doc            = item[:docstring][:text]
+
+        obj.attributes = {}
+        item[:properties]&.each do |prop|
+          obj.attributes[prop[:name]] = {
+            :type => :property,
+            :doc  => prop[:description]
+          }
+        end
+        item[:parameters]&.each do |prop|
+          obj.attributes[prop[:name]] = {
+            :type       => :param,
+            :doc        => prop[:description],
+            :isnamevar? => prop[:isnamevar]
+          }
+        end
+
+        @cache[source_path].types << obj
+      end
+    end
   end
 
   class FileDocumentation
     # The path to file that has been documented
     attr_accessor :path
 
+    # PuppetLanguageServer::Sidecar::Protocol::PuppetClassList object holding all classes
+    attr_accessor :classes
+
     # PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList object holding all functions
     attr_accessor :functions
 
+    # PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList object holding all types
+    attr_accessor :types
+
     def initialize(path = nil)
       @path = path
+      @classes   = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
       @functions = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
+      @types     = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
     end
 
     # Serialisation
     def to_h
       {
         'path'      => path,
-        'functions' => functions
+        'classes'   => classes,
+        'functions' => functions,
+        'types'     => types
       }
     end
 
