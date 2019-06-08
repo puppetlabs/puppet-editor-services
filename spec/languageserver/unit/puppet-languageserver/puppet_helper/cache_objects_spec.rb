@@ -19,11 +19,11 @@ describe 'PuppetLanguageServer::PuppetHelper' do
     it_should_behave_like 'a base Puppet object'
 
     # No additional methods to test
-    # [:doc].each do |testcase|
-    #   it "instance should respond to #{testcase}" do
-    #     expect(subject).to respond_to(testcase)
-    #   end
-    # end
+    [:doc, :parameters].each do |testcase|
+      it "instance should respond to #{testcase}" do
+        expect(subject).to respond_to(testcase)
+      end
+    end
 
     describe '#from_sidecar!' do
       it 'should populate from a sidecar function object' do
