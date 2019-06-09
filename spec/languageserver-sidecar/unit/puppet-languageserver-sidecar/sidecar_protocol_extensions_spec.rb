@@ -84,15 +84,19 @@ describe 'PuppetLanguageServerSidecar::Protocol' do
     describe '.from_puppet' do
       it 'should populate from a Puppet function object' do
         result = subject_klass.from_puppet(puppet_funcname, puppet_func)
+        # This method is only called for V3 API functions.
+        # Therefore we need to assert the V3 function into V4 metadata
 
-        expect(result.doc).to eq(puppet_func[:doc])
-        expect(result.arity).to eq(puppet_func[:arity])
-        expect(result.type).to eq(puppet_func[:type])
+        expect(result.doc).to match(puppet_func[:doc])
+        expect(result.function_version).to eq(3)
+        expect(result.signatures.count).to eq(1)
+        expect(result.signatures[0].doc).to match(puppet_func[:doc])
+        expect(result.signatures[0].key).to eq("#{puppet_funcname}()")
       end
     end
 
     describe '#from_json' do
-      [:doc, :arity, :type].each do |testcase|
+      [:doc, :function_version, :signatures].each do |testcase|
         it "should deserialize a serialized #{testcase} value" do
           serial = subject_klass.from_puppet(puppet_funcname, puppet_func)
           deserial = subject_klass.new.from_json!(serial.to_json)

@@ -155,8 +155,8 @@ module PuppetLanguageServerSidecar
         obj.calling_source   = obj.source
         obj.line             = item[:line]
         obj.doc              = item[:docstring][:text]
-        obj.arity            = -1 # We don't care about arity
-        obj.function_version = item[:type] == 'ruby4x' ? 4 : 3
+        # 'ruby3x' functions are version 3.  'ruby4x' and 'puppet' are version 4
+        obj.function_version = item[:type] == 'ruby3x' ? 3 : 4
 
         # Try and determine the function call site from the source file
         char = item[:source].index(":#{func_name}")
@@ -165,19 +165,35 @@ module PuppetLanguageServerSidecar
           obj.length = func_name.length + 1
         end
 
-        case item[:type]
-        when 'ruby3x'
-          obj.function_version = 3
-          # This is a bit hacky but it works (probably).  Puppet-Strings doesn't rip this information out, but you do have the
-          # the source to query
-          obj.type = item[:source].match(/:rvalue/) ? :rvalue : :statement
-        when 'ruby4x'
-          obj.function_version = 4
-          # All ruby functions are statements
-          obj.type = :statement
-        else
-          PuppetLanguageServerSidecar.log_message(:error, "[#{self.class}] Unknown function type #{item[:type]}")
+        # Note that puppet strings doesn't populate the method signatures for V3 functions
+        # Also, we don't have access to the arity of V3 functions so we can't reverse engineer the signature
+        item[:signatures].each do |signature|
+          sig = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignature.new
+
+          sig.key = signature[:signature]
+          sig.doc = signature[:docstring][:text]
+          signature[:docstring][:tags].each do |tag|
+            case tag[:tag_name]
+            when 'param'
+              sig.parameters << PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureParameter.new.from_h!(
+                'name'  => tag[:name],
+                'types' => tag[:types],
+                'doc'   => tag[:text]
+              )
+            when 'return'
+              sig.return_types = tag[:types]
+            end
+          end
+          obj.signatures << sig
         end
+
+        # Extract other common information
+        # TODO: Other common tags include `example`, `overload`
+        pre_docs = ''
+        pre_docs += "This uses the legacy Ruby function API\n" if item[:type] == 'ruby3x'
+        since_tag = item[:docstring][:tags].find { |tag| tag[:tag_name] == 'since' }
+        pre_docs += "Since #{since_tag[:text]}\n" unless since_tag.nil?
+        obj.doc = pre_docs + "\n" + obj.doc unless pre_docs.empty?
 
         @cache[source_path].functions << obj
       end

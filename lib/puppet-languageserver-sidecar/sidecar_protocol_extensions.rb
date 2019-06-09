@@ -43,10 +43,52 @@ module PuppetLanguageServerSidecar
         obj.source         = item[:source_location][:source]
         obj.calling_source = obj.source
         obj.line           = item[:source_location][:line]
-        # TODO: name ?
-        obj.doc   = item[:doc]
-        obj.arity = item[:arity]
-        obj.type  = item[:type]
+        # This method is only called for V3 API functions. Therefore we need to transform this V3 function into V4 metadata
+        obj.doc = 'This uses the legacy Ruby function API'
+        obj.doc += "\n\n" + item[:doc] unless item[:doc].nil?
+        obj.function_version = 3
+
+        # V3 functions don't explicitly define signatures.  We can craft an approximation using arity
+        # From - https://github.com/puppetlabs/puppet/blob/904023ffc59bc6771c0c7abf2a1d2c4acf941b09/lib/puppet/parser/functions.rb#L159-L168
+        #
+        # @option options [Integer] :arity (-1) the
+        #   [arity](https://en.wikipedia.org/wiki/Arity) of the function.  When
+        #   specified as a positive integer the function is expected to receive
+        #   _exactly_ the specified number of arguments.  When specified as a
+        #   negative number, the function is expected to receive _at least_ the
+        #   absolute value of the specified number of arguments incremented by one.
+        #   For example, a function with an arity of `-4` is expected to receive at
+        #   minimum 3 arguments.  A function with the default arity of `-1` accepts
+        #   zero or more arguments.  A function with an arity of 2 must be provided
+        #   with exactly two arguments, no more and no less.  Added in Puppet 3.1.0.
+        #
+        # Find the number of required parameters
+        sig_params = []
+        param_text = []
+        required_params = item[:arity] < 0 ? -item[:arity] - 1 : item[:arity]
+        (1..required_params).each do |index|
+          sig_params << {
+            'name'  => "param#{index}",
+            'types' => ['Any']
+          }
+          param_text << "Any $param#{index}"
+        end
+        # Add optional parameters if needed
+        if item[:arity] < 0
+          sig_params << {
+            'name'  => '*args',
+            'types' => ['Optional[Any]']
+          }
+          param_text << 'Optional[Any] *args'
+        end
+
+        # V3 functions only have a single signature
+        obj.signatures << PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignature.new.from_h!(
+          'key'          => "#{name}(#{param_text.join(', ')})",
+          'doc'          => item[:doc],
+          'parameters'   => sig_params,
+          'return_types' => item[:type] == :rvalue ? ['Any'] : ['Undef'] # :rvalue type functions return something. :statement type functions don't return anything so Undef
+        )
         obj
       end
     end
