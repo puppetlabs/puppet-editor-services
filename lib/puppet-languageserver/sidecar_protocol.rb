@@ -29,14 +29,61 @@ module PuppetLanguageServer
         end
       end
 
+      class BaseClass
+        include Base
+
+        def to_json(*options)
+          to_h.to_json(options)
+        end
+
+        def from_json!(json_string)
+          from_h!(JSON.parse(json_string))
+        end
+
+        def ==(other)
+          return false unless other.class == self.class
+          self.class
+              .instance_methods(false)
+              .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+              .reject { |name| %i[to_h to_json].include?(name) }
+              .each do |method_name|
+            return false unless send(method_name) == other.send(method_name)
+          end
+          true
+        end
+
+        def eql?(other)
+          return false unless other.class == self.class
+          self.class
+              .instance_methods(false)
+              .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+              .reject { |name| %i[to_h to_json].include?(name) }
+              .each do |method_name|
+            return false unless send(method_name).eql?(other.send(method_name))
+          end
+          true
+        end
+
+        def hash
+          props = []
+          self.class
+              .instance_methods(false)
+              .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+              .reject { |name| %i[to_h to_json].include?(name) }
+              .each do |method_name|
+            props << send(method_name).hash
+          end
+          props.hash
+        end
+      end
+
       # key            => Unique name of the object
       # calling_source => The file that was invoked to create the object
       # source         => The file that _actually_ created the object
       # line           => The line number in the source file where the object was created
       # char           => The character number in the source file where the object was created
       # length         => The length of characters from `char` in the source file where the object was created
-      class BasePuppetObject
-        include Base
+      class BasePuppetObject < BaseClass
         attr_accessor :key
         attr_accessor :calling_source
         attr_accessor :source
@@ -63,14 +110,6 @@ module PuppetLanguageServer
           self.char           = value['char']
           self.length         = value['length']
           self
-        end
-
-        def to_json(*options)
-          to_h.to_json(options)
-        end
-
-        def from_json!(json_string)
-          from_h!(JSON.parse(json_string))
         end
       end
 
