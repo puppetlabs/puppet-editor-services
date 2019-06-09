@@ -191,17 +191,20 @@ module PuppetLanguageServer
 
       class PuppetFunction < BasePuppetObject
         attr_accessor :doc
-        attr_accessor :arity
-        attr_accessor :type
         # The version of this function, typically 3 or 4.
         attr_accessor :function_version
+        attr_accessor :signatures
+
+        def initialize
+          super
+          self.signatures = PuppetFunctionSignatureList.new
+        end
 
         def to_h
           super.to_h.merge(
             'doc'              => doc,
-            'arity'            => arity,
-            'type'             => type,
-            'function_version' => function_version
+            'function_version' => function_version,
+            'signatures'       => signatures
           )
         end
 
@@ -209,9 +212,8 @@ module PuppetLanguageServer
           super
 
           self.doc = value['doc']
-          self.arity = value['arity']
-          self.type = value['type'].intern
           self.function_version = value['function_version']
+          value['signatures'].each { |sig| signatures << PuppetFunctionSignature.new.from_h!(sig) } unless value['signatures'].nil?
           self
         end
       end
@@ -219,6 +221,68 @@ module PuppetLanguageServer
       class PuppetFunctionList < BasePuppetObjectList
         def child_type
           PuppetFunction
+        end
+      end
+
+      class PuppetFunctionSignature < BaseClass
+        attr_accessor :key
+        attr_accessor :doc
+        attr_accessor :return_types
+        attr_accessor :parameters
+
+        def initialize
+          super
+          self.parameters = PuppetFunctionSignatureParameterList.new
+        end
+
+        def to_h
+          {
+            'key'          => key,
+            'doc'          => doc,
+            'return_types' => return_types,
+            'parameters'   => parameters
+          }
+        end
+
+        def from_h!(value)
+          self.key = value['key']
+          self.doc = value['doc']
+          self.return_types = value['return_types']
+          value['parameters'].each { |param| parameters << PuppetFunctionSignatureParameter.new.from_h!(param) } unless value['parameters'].nil?
+          self
+        end
+      end
+
+      class PuppetFunctionSignatureList < BasePuppetObjectList
+        def child_type
+          PuppetFunctionSignature
+        end
+      end
+
+      class PuppetFunctionSignatureParameter < BaseClass
+        attr_accessor :name
+        attr_accessor :types
+        attr_accessor :doc
+
+        def to_h
+          {
+            'name'  => name,
+            'doc'   => doc,
+            'types' => types
+          }
+        end
+
+        def from_h!(value)
+          self.name = value['name']
+          self.doc = value['doc']
+          self.types = value['types']
+          self
+        end
+      end
+
+      class PuppetFunctionSignatureParameterList < BasePuppetObjectList
+        def child_type
+          PuppetFunctionSignatureParameter
         end
       end
 

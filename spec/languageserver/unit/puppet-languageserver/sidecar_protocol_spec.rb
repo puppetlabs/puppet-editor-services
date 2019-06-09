@@ -55,7 +55,9 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
   basepuppetobject_properties = [:key, :calling_source, :source, :line, :char, :length]
   nodegraph_properties = [:dot_content, :error_content]
   puppetclass_properties = [:doc, :parameters]
-  puppetfunction_properties = [:doc, :arity, :type, :function_version]
+  puppetfunction_properties = [:doc, :function_version, :signatures]
+  puppetfunctionsignature_properties = [:key, :doc, :return_types, :parameters]
+  puppetfunctionsignatureparameter_properties = [:name, :types, :doc]
   puppettype_properties = [:doc, :attributes]
   resource_properties = [:manifest]
 
@@ -190,8 +192,11 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
     let(:subject) {
       value = subject_klass.new
       value.doc = 'doc'
-      value.arity = 'arity'
-      value.type = :type
+      value.function_version = 4
+      value.signatures = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureList.new
+      value.signatures << random_sidecar_puppet_function_signature
+      value.signatures << random_sidecar_puppet_function_signature
+      value.signatures << random_sidecar_puppet_function_signature
       add_default_basepuppetobject_values!(value)
     }
 
@@ -231,6 +236,102 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
 
     it "instance should have a childtype of PuppetFunction" do
       expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::PuppetFunction)
+    end
+  end
+
+  describe 'PuppetFunctionSignature' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignature }
+    let(:subject) {
+      value = subject_klass.new
+      value.key = 'something(Any a, String[1,1] b'
+      value.doc = 'doc'
+      value.return_types = ['Any', 'Undef']
+      value.parameters << random_sidecar_puppet_function_signature_parameter
+      value.parameters << random_sidecar_puppet_function_signature_parameter
+      value
+    }
+
+    puppetfunctionsignature_properties.each do |testcase|
+      it "instance should respond to #{testcase}" do
+        expect(subject).to respond_to(testcase)
+      end
+    end
+
+    describe '#from_json!' do
+      (puppetfunctionsignature_properties).each do |testcase|
+        it "should deserialize a serialized #{testcase} value" do
+          serial = subject.to_json
+          deserial = subject_klass.new.from_json!(serial)
+
+          expect(deserial.send(testcase)).to eq(subject.send(testcase))
+        end
+      end
+    end
+  end
+
+  describe 'PuppetFunctionSignatureList' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureList }
+    let(:subject) {
+      value = subject_klass.new
+      value << random_sidecar_puppet_function_signature
+      value << random_sidecar_puppet_function_signature
+      value << random_sidecar_puppet_function_signature
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol Puppet object list'
+
+    it_should_behave_like 'a serializable object list'
+
+    it "instance should have a childtype of PuppetFunctionSignature" do
+      expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignature)
+    end
+  end
+
+  describe 'PuppetFunctionSignatureParameter' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureParameter }
+    let(:subject) {
+      value = subject_klass.new
+      value.name = 'param1'
+      value.types = ['Undef']
+      value.doc = 'doc'
+      value
+    }
+
+    puppetfunctionsignatureparameter_properties.each do |testcase|
+      it "instance should respond to #{testcase}" do
+        expect(subject).to respond_to(testcase)
+      end
+    end
+
+    describe '#from_json!' do
+      (puppetfunctionsignatureparameter_properties).each do |testcase|
+        it "should deserialize a serialized #{testcase} value" do
+          serial = subject.to_json
+          deserial = subject_klass.new.from_json!(serial)
+
+          expect(deserial.send(testcase)).to eq(subject.send(testcase))
+        end
+      end
+    end
+  end
+
+  describe 'PuppetFunctionSignatureParameterList' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureParameterList }
+    let(:subject) {
+      value = subject_klass.new
+      value << random_sidecar_puppet_function_signature_parameter
+      value << random_sidecar_puppet_function_signature_parameter
+      value << random_sidecar_puppet_function_signature_parameter
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol Puppet object list'
+
+    it_should_behave_like 'a serializable object list'
+
+    it "instance should have a childtype of PuppetFunctionSignatureParameter" do
+      expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureParameter)
     end
   end
 
