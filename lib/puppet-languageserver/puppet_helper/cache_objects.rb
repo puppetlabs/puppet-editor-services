@@ -2,61 +2,31 @@
 
 module PuppetLanguageServer
   module PuppetHelper
-    # key            => Unique name of the object
-    # calling_source => The file that was invoked to create the object
-    # source         => The file that _actually_ created the object
-    # line           => The line number in the source file where the object was created
-    # char           => The character number in the source file where the object was created
-    # length         => The length of characters from `char` in the source file where the object was created
-    class BasePuppetObject
-      attr_accessor :key
-      attr_accessor :calling_source
-      attr_accessor :source
-      attr_accessor :line
-      attr_accessor :char
-      attr_accessor :length
+    module CacheExtensions
+      # origin is used to store where this cache entry came from, for example, workspace or
+      # default environment
       attr_accessor :origin
 
       def from_sidecar!(value)
-        @key = value.key
-        @calling_source = value.calling_source
-        @source = value.source
-        @line = value.line
-        @char = value.char
-        @length = value.length
+        (value.class.instance_methods - Object.instance_methods).reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+                                                                .reject { |name| %i[to_h to_json].include?(name) }
+                                                                .each do |method_name|
+          send("#{method_name}=", value.send(method_name))
+        end
         self
       end
     end
 
-    class PuppetClass < BasePuppetObject
-      attr_accessor :doc
-      attr_accessor :parameters
-
-      def from_sidecar!(value)
-        super
-        @doc = value.doc
-        @parameters = value.parameters
-        self
-      end
+    class PuppetClass < PuppetLanguageServer::Sidecar::Protocol::PuppetClass
+      include CacheExtensions
     end
 
-    class PuppetFunction < BasePuppetObject
-      attr_accessor :doc
-      attr_accessor :arity
-      attr_accessor :type
-
-      def from_sidecar!(value)
-        super
-        @doc = value.doc
-        @arity = value.arity
-        @type = value.type
-        self
-      end
+    class PuppetFunction < PuppetLanguageServer::Sidecar::Protocol::PuppetFunction
+      include CacheExtensions
     end
 
-    class PuppetType < BasePuppetObject
-      attr_accessor :doc
-      attr_accessor :attributes
+    class PuppetType < PuppetLanguageServer::Sidecar::Protocol::PuppetType
+      include CacheExtensions
 
       def allattrs
         @attributes.keys
@@ -72,13 +42,6 @@ module PuppetLanguageServer
 
       def meta_parameters
         @attributes.select { |_name, data| data[:type] == :meta }
-      end
-
-      def from_sidecar!(value)
-        super
-        @doc = value.doc
-        @attributes = value.attributes
-        self
       end
     end
   end
