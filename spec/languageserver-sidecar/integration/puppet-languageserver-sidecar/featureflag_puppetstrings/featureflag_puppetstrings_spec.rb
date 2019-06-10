@@ -55,6 +55,7 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
     expect(deserial).to_not contain_child_with_key(:default_pup4_function)
     expect(deserial).to_not contain_child_with_key(:'environment::default_env_pup4_function')
     expect(deserial).to_not contain_child_with_key(:'modname::default_mod_pup4_function')
+    expect(deserial).to_not contain_child_with_key(:'defaultmodule::puppetfunc')
   end
 
   before(:each) do
@@ -160,6 +161,8 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
       expect(deserial).to contain_child_with_key(:'environment::default_env_pup4_function')
       # These are defined in the fixtures/real_agent/cache/lib/puppet/functions/modname (module namespaced function)
       expect(deserial).to contain_child_with_key(:'modname::default_mod_pup4_function')
+      # These are defined in the fixtures/real_agent/environments/testfixtures/modules/defaultmodules/functions/puppetfunc.pp
+      expect(deserial).to contain_child_with_key(:'defaultmodule::puppetfunc')
 
       # Now run using cached information
       expect_populated_cache
@@ -271,6 +274,7 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
         expect(deserial).to contain_child_with_key(:fixture_pup4_function)
         expect(deserial).to contain_child_with_key(:'valid::fixture_pup4_mod_function')
         expect(deserial).to contain_child_with_key(:fixture_pup4_badfunction)
+        expect(deserial).to contain_child_with_key(:'valid::modulefunc')
 
         # Make sure the function has the right properties
         func = child_with_key(deserial, :fixture_function)
@@ -281,6 +285,13 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
         func = child_with_key(deserial, :fixture_pup4_function)
         expect(func.doc).to match(/Example function using the Puppet 4 API in a module/)
         expect(func.source).to match(/valid_module_workspace/)
+
+        # Make sure the function has the right properties
+        func = child_with_key(deserial, :'valid::modulefunc')
+        expect(func.function_version).to eq(4) # Puppet Langauge functions are V4
+        expect(func.doc).to match(/An example puppet function in a module, as opposed to a ruby custom function/)
+        expect(func.source).to match(/valid_module_workspace/)
+        expect(func.signatures.count).to be > 0
       end
     end
 
