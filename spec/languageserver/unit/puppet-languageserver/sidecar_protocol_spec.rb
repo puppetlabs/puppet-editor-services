@@ -229,7 +229,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
 
     it_should_behave_like 'a serializable object list'
 
-    it "instance should have a childtype of PuppetClass" do
+    it "instance should have a childtype of PuppetFunction" do
       expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::PuppetFunction)
     end
   end
@@ -280,7 +280,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
 
     it_should_behave_like 'a serializable object list'
 
-    it "instance should have a childtype of PuppetClass" do
+    it "instance should have a childtype of PuppetType" do
       expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::PuppetType)
     end
   end
