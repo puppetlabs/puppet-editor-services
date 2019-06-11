@@ -130,9 +130,9 @@ module PuppetLanguageServer
       #     [0, 14, 34, 36]  means line number 2 starts at absolute offset 34
       #   Once we know the line offset, we can simply add on the char_num to get the absolute offset
       #   If during paring we modified the source we may need to change the cursor location
-      begin
+      if result.respond_to?(:line_offsets)
         line_offset = result.line_offsets[line_num]
-      rescue StandardError
+      else
         line_offset = result['locator'].line_index[line_num]
       end
       # Typically we're completing after something was typed, so go back one char
@@ -187,5 +187,20 @@ module PuppetLanguageServer
     def self.check_for_valid_item(item, abs_offset, disallowed_classes)
       item.respond_to?(:offset) && !item.offset.nil? && !item.length.nil? && abs_offset >= item.offset && abs_offset <= item.offset + item.length && !disallowed_classes.include?(item.class)
     end
+
+    # This method is only required during development or debugging.  Visualising the AST tree can be difficult
+    # so this method just prints it to the console.
+    # def self.recurse_showast(item, abs_offset, disallowed_classes, depth = 0)
+    #   output = "  " * depth
+    #   output += check_for_valid_item(item, abs_offset, disallowed_classes) ? 'X ' : '  '
+    #   output += "#{item.class.to_s} (#{item.object_id})"
+    #   if item.respond_to?(:offset)
+    #     output += " (Off-#{item.offset}:#{item.offset + item.length} Pos-#{item.line}:#{item.pos} Len-#{item.length}) ~#{item.locator.extract_text(item.offset, item.length)}~"
+    #   end
+    #   puts output
+    #   item._pcore_contents do |child|
+    #     recurse_showast(child, abs_offset, disallowed_classes, depth + 1)
+    #   end
+    # end
   end
 end
