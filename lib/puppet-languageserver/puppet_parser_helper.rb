@@ -144,7 +144,8 @@ module PuppetLanguageServer
       #
       # TODO: Should probably walk the AST and only look for the deepest child, but integer sorting
       #       is so much easier and faster.
-      model_path_struct = Struct.new(:model, :path)
+      model_path_locator_struct = Struct.new(:model, :path, :locator)
+
       valid_models = []
       if result.model.respond_to? :eAllContents
         valid_models = result.model.eAllContents.select do |item|
@@ -156,7 +157,7 @@ module PuppetLanguageServer
         path = []
         result.model._pcore_all_contents(path) do |item|
           if check_for_valid_item(item, abs_offset, options[:disallowed_classes]) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-            valid_models.push(model_path_struct.new(item, path.dup))
+            valid_models.push(model_path_locator_struct.new(item, path.dup))
           end
         end
 
@@ -164,13 +165,14 @@ module PuppetLanguageServer
       end
       # nil means the root of the document
       return nil if valid_models.empty?
-      item = valid_models[0]
+      response = valid_models[0]
 
-      if item.respond_to? :eAllContents # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-        item = model_path_struct.new(item, construct_path(item))
+      if response.respond_to? :eAllContents # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
+        response = model_path_locator_struct.new(response, construct_path(response))
       end
 
-      item
+      response.locator = result.model.locator
+      response
     end
 
     def self.construct_path(item)
