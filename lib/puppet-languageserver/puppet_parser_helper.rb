@@ -60,9 +60,10 @@ module PuppetLanguageServer
 
     def self.object_under_cursor(content, line_num, char_num, options)
       options = {
-        :multiple_attempts  => false,
-        :disallowed_classes => [],
-        :tasks_mode         => false
+        :multiple_attempts   => false,
+        :disallowed_classes  => [],
+        :tasks_mode          => false,
+        :remove_trigger_char => true
       }.merge(options)
 
       # Use Puppet to generate the AST
@@ -135,8 +136,9 @@ module PuppetLanguageServer
       else
         line_offset = result['locator'].line_index[line_num]
       end
-      # Typically we're completing after something was typed, so go back one char
-      abs_offset = line_offset + char_num + move_offset - 1
+      abs_offset = line_offset + char_num + move_offset
+      # Typically we're completing after something was typed, so go back one char by default
+      abs_offset -= 1 if options[:remove_trigger_char]
 
       # Enumerate the AST looking for items that span the line/char we want.
       # Once we have all valid items, sort them by the smallest span.  Typically the smallest span
