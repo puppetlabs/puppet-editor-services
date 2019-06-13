@@ -4,12 +4,26 @@ describe 'PuppetLanguageServerSidecar::PuppetParserHelper' do
   let (:subject) { PuppetLanguageServerSidecar::PuppetParserHelper }
 
   describe '#compile_node_graph' do
+    def tasks_supported?
+      Gem::Version.new(Puppet.version) >= Gem::Version.new('5.4.0')
+    end
+
+    before(:each) do
+      @original_taskmode = Puppet[:tasks] if tasks_supported?
+      Puppet[:tasks] = false if tasks_supported?
+    end
+
+    after(:each) do
+      Puppet[:tasks] = @original_taskmode if tasks_supported?
+    end
+
     context 'a valid manifest' do
       let(:manifest) { "user { 'test':\nensure => present\n}\n "}
 
       it 'should compile succesfully' do
         result = subject.compile_node_graph(manifest)
         expect(result).to_not be_nil
+
         # Make sure it's a DOT graph file
         expect(result.dot_content).to match(/digraph/)
         # Make sure the resource is there
