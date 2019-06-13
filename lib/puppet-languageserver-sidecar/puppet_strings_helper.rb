@@ -192,6 +192,7 @@ module PuppetLanguageServerSidecar
               sig.return_types = tag[:types]
             end
           end
+          calculate_signature_parameter_locations!(sig)
           obj.signatures << sig
         end
 
@@ -236,6 +237,33 @@ module PuppetLanguageServerSidecar
         end
 
         @cache[source_path].types << obj
+      end
+    end
+
+    def calculate_signature_parameter_locations!(sig)
+      # When Puppet Strings extracts the parameter name it differs from how it appears in the signature key
+      # This makes it hard for clients to determine where in the signature, the parameter actually is.  So
+      # We need to calculate where in the signature key a parameter is
+
+      sig.parameters.each do |param|
+        name = param.name.dup # Don't want to modify the original object
+        # Munge the parameter name to what it appears in the signature key
+        # Ref - https://github.com/puppetlabs/puppet-strings/blob/2987558bb3170bc37e6077aab1b60efb17161eff/lib/puppet-strings/yard/handlers/ruby/function_handler.rb#L293-L317
+        if name.start_with?('*') || name.start_with?('&')
+          name.insert(1, '$')
+        else
+          name = '$' + name
+        end
+
+        # We need to use terminating characters here due to substring matching e.g. $abc will incorrectly match in
+        # function([String] $abc123, [String] $abc)
+        idx = sig.key.index(name + ',')
+        idx = sig.key.index(name + ')') if idx.nil?
+
+        unless idx.nil?
+          param.signature_key_offset = idx
+          param.signature_key_length = name.length
+        end
       end
     end
   end

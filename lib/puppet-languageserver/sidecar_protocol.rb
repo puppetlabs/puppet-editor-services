@@ -263,12 +263,16 @@ module PuppetLanguageServer
         attr_accessor :name
         attr_accessor :types
         attr_accessor :doc
+        attr_accessor :signature_key_offset # Zero based offset where this parameter exists in the signature key
+        attr_accessor :signature_key_length # The length of text where this parameter exists in the signature key
 
         def to_h
           {
-            'name'  => name,
-            'doc'   => doc,
-            'types' => types
+            'name'                 => name,
+            'doc'                  => doc,
+            'types'                => types,
+            'signature_key_offset' => signature_key_offset,
+            'signature_key_length' => signature_key_length
           }
         end
 
@@ -276,6 +280,8 @@ module PuppetLanguageServer
           self.name = value['name']
           self.doc = value['doc']
           self.types = value['types']
+          self.signature_key_offset = value['signature_key_offset']
+          self.signature_key_length = value['signature_key_length']
           self
         end
       end

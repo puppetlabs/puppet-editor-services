@@ -137,10 +137,14 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings' do
         expect(sig_param.name).to eq('a_string')
         expect(sig_param.doc).to eq('')
         expect(sig_param.types).to eq(['String'])
+        expect(sig_param.signature_key_offset).to eq(29)
+        expect(sig_param.signature_key_length).to eq(9)
         sig_param = sig.parameters[1]
         expect(sig_param.name).to eq('&block')
         expect(sig_param.doc).to eq('')
         expect(sig_param.types).to eq(['Optional[Callable]'])
+        expect(sig_param.signature_key_offset).to eq(59)
+        expect(sig_param.signature_key_length).to eq(7)
 
         # Second signature - Full yard documentation
         sig = item.signatures[1]
@@ -153,10 +157,14 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings' do
         expect(sig_param.name).to eq('an_integer')
         expect(sig_param.doc).to eq('The first number.')
         expect(sig_param.types).to eq(['Integer'])
+        expect(sig_param.signature_key_offset).to eq(30)
+        expect(sig_param.signature_key_length).to eq(11)
         sig_param = sig.parameters[1]
         expect(sig_param.name).to eq('*values_to_average')
         expect(sig_param.doc).to eq('Zero or more additional numbers.')
         expect(sig_param.types).to eq(['Optional[Numeric]'])
+        expect(sig_param.signature_key_offset).to eq(61)
+        expect(sig_param.signature_key_length).to eq(19)
       end
     end
 
@@ -190,6 +198,8 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings' do
         expect(sig_param.name).to eq('p1')
         expect(sig_param.doc).to eq('The first parameter for this function.')
         expect(sig_param.types).to eq(['Variant[String, Boolean]'])
+        expect(sig_param.signature_key_offset).to eq(43)
+        expect(sig_param.signature_key_length).to eq(3)
       end
     end
 

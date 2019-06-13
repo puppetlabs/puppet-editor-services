@@ -91,6 +91,8 @@ def random_sidecar_puppet_function_signature_parameter
   result.name = 'param' + rand(1000).to_s
   result.types = [rand(1000).to_s, rand(1000).to_s]
   result.doc = result.name + ' documentation'
+  result.signature_key_offset = rand(1000)
+  result.signature_key_length = rand(1000)
   result
 end
 

@@ -57,7 +57,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
   puppetclass_properties = [:doc, :parameters]
   puppetfunction_properties = [:doc, :function_version, :signatures]
   puppetfunctionsignature_properties = [:key, :doc, :return_types, :parameters]
-  puppetfunctionsignatureparameter_properties = [:name, :types, :doc]
+  puppetfunctionsignatureparameter_properties = [:name, :types, :doc, :signature_key_offset, :signature_key_length ]
   puppettype_properties = [:doc, :attributes]
   resource_properties = [:manifest]
 
@@ -295,6 +295,8 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
       value.name = 'param1'
       value.types = ['Undef']
       value.doc = 'doc'
+      value.signature_key_offset = nil
+      value.signature_key_length = 5
       value
     }
 
