@@ -2,50 +2,12 @@
 
 module PuppetLanguageServerSidecar
   module PuppetStringsHelper
-    # Returns a FileDocumentation object for a given path
-    #
-    # @param [String] path The absolute path to the file that will be documented
-    # @param [PuppetLanguageServerSidecar::Cache] cache A Sidecar cache which stores already parsed documents as serialised FileDocumentation objects
-    # @return [FileDocumentation, nil] Returns the documentation for the path, or nil if it cannot be extracted
+    def self.instance
+      @instance ||= Helper.new
+    end
+
     def self.file_documentation(path, cache = nil)
-      return nil unless require_puppet_strings
-      @helper_cache = FileDocumentationCache.new if @helper_cache.nil?
-      return @helper_cache.document(path) if @helper_cache.path_exists?(path)
-
-      # Load from the permanent cache
-      @helper_cache.populate_from_sidecar_cache!(path, cache) unless cache.nil? || !cache.active?
-      return @helper_cache.document(path) if @helper_cache.path_exists?(path)
-
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetStringsHelper::file_documentation] Fetching documentation for #{path}")
-
-      setup_yard!
-
-      # For now, assume a single file path
-      search_patterns = [path]
-
-      # Format the arguments to YARD
-      args = ['doc']
-      args << '--no-output'
-      args << '--quiet'
-      args << '--no-stats'
-      args << '--no-progress'
-      args << '--no-save'
-      args << '--api public'
-      args << '--api private'
-      args << '--no-api'
-      args += search_patterns
-
-      # Run YARD
-      ::YARD::CLI::Yardoc.run(*args)
-
-      # Populate the documentation cache from the YARD information
-      @helper_cache.populate_from_yard_registry!
-
-      # Save to the permanent cache
-      @helper_cache.save_to_sidecar_cache(path, cache) unless cache.nil? || !cache.active?
-
-      # Return the documentation details
-      @helper_cache.document(path)
+      instance.file_documentation(path, cache)
     end
 
     def self.require_puppet_strings
@@ -63,7 +25,6 @@ module PuppetLanguageServerSidecar
       end
       @puppet_strings_loaded
     end
-    private_class_method :require_puppet_strings
 
     def self.setup_yard!
       unless @yard_setup # rubocop:disable Style/GuardClause
@@ -71,7 +32,54 @@ module PuppetLanguageServerSidecar
         @yard_setup = true
       end
     end
-    private_class_method :setup_yard!
+
+    class Helper
+      # Returns a FileDocumentation object for a given path
+      #
+      # @param [String] path The absolute path to the file that will be documented
+      # @param [PuppetLanguageServerSidecar::Cache] cache A Sidecar cache which stores already parsed documents as serialised FileDocumentation objects
+      # @return [FileDocumentation, nil] Returns the documentation for the path, or nil if it cannot be extracted
+      def file_documentation(path, cache = nil)
+        return nil unless PuppetLanguageServerSidecar::PuppetStringsHelper.require_puppet_strings
+        @helper_cache = FileDocumentationCache.new if @helper_cache.nil?
+        return @helper_cache.document(path) if @helper_cache.path_exists?(path)
+
+        # Load from the permanent cache
+        @helper_cache.populate_from_sidecar_cache!(path, cache) unless cache.nil? || !cache.active?
+        return @helper_cache.document(path) if @helper_cache.path_exists?(path)
+
+        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetStringsHelper::file_documentation] Fetching documentation for #{path}")
+
+        PuppetLanguageServerSidecar::PuppetStringsHelper.setup_yard!
+
+        # For now, assume a single file path
+        search_patterns = [path]
+
+        # Format the arguments to YARD
+        args = ['doc']
+        args << '--no-output'
+        args << '--quiet'
+        args << '--no-stats'
+        args << '--no-progress'
+        args << '--no-save'
+        args << '--api public'
+        args << '--api private'
+        args << '--no-api'
+        args += search_patterns
+
+        # Run YARD
+        ::YARD::CLI::Yardoc.run(*args)
+
+        # Populate the documentation cache from the YARD information
+        @helper_cache.populate_from_yard_registry!
+
+        # Save to the permanent cache
+        @helper_cache.save_to_sidecar_cache(path, cache) unless cache.nil? || !cache.active?
+
+        # Return the documentation details
+        @helper_cache.document(path)
+      end
+    end
   end
 
   class FileDocumentationCache

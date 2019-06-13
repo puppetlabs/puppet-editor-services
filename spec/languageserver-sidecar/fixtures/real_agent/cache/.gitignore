@@ -1,0 +1,8 @@
+# These can be accidentally created during testing/development
+client_data/
+client_yaml/
+clientbucket/
+locales/
+preview/
+reports/
+state/
