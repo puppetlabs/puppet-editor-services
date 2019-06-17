@@ -7,6 +7,14 @@ module PuppetLanguageServerSidecar
     SIDECAR_PUPPET_ENVIRONMENT = 'sidecarenvironment'
     DISCOVERER_LOADER = 'path-discoverer-null-loader'
 
+    IGNORE_TYPEFACTORY_METHODS = %i[clear].freeze
+    # Ignore certain data types. For more information see https://tickets.puppetlabs.com/browse/DOCUMENT-1020
+    # TypeReference - Internal to the Puppet Data Type system
+    # TypeAlias - Internal to the Puppet Data Type system
+    # Object - While useful, typically only needed when extended the type system as opposed to general use
+    # TypeSet - While useful, typically only needed when extended the type system as opposed to general use
+    IGNORE_DATATYPE_NAMES = %w[TypeReference TypeAlias Object TypeSet].freeze
+
     def self.path_has_child?(path, child)
       # Doesn't matter what the child is, if the path is nil it's true.
       return true if path.nil?
@@ -37,8 +45,46 @@ module PuppetLanguageServerSidecar
 
     # Puppet Strings loading
     def self.available_documentation_types
-      %I[class function type]
+      %I[class datatype function type]
     end
+
+    def self.retrieve_default_data_types(loaders)
+      # This is global. Need to be very careful using this.
+      Puppet.push_context(:loaders => loaders)
+      default_types = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
+      # There's no actual record of all available types, but we can use the TypeFactory to implicitly get their names
+      name_list = []
+      Puppet::Pops::Types::TypeFactory.singleton_methods.each do |method_name|
+        # Don't even try on known method names
+        next if IGNORE_TYPEFACTORY_METHODS.include?(method_name)
+        actual_method = Puppet::Pops::Types::TypeFactory.method(method_name)
+        # We can't call methods that require parameters so ignore them too
+        next unless actual_method.arity == 0 || actual_method.arity == -1
+        data_type = Puppet::Pops::Types::TypeFactory.send(method_name)
+        # If the returned object doesn't inherit from PAnyType "this isn't the type we're looking for"
+        next unless data_type.is_a?(Puppet::Pops::Types::PAnyType)
+        # Ignore certain data types
+        next if IGNORE_DATATYPE_NAMES.include?(data_type.simple_name)
+        # Don't need duplicates
+        next if name_list.include?(data_type.simple_name)
+        name_list << data_type.simple_name
+
+        obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new
+        obj.key            = data_type.simple_name
+        obj.source         = nil
+        obj.calling_source = nil
+        obj.line           = nil
+        obj.doc            = "The #{data_type.simple_name} core data type"
+        obj.is_type_alias  = false
+        obj.alias_of       = nil
+        # So far, no core data types have attributes
+        obj.attributes     = []
+        default_types << obj
+      end
+
+      default_types
+    end
+    private_class_method :retrieve_default_data_types
 
     # Retrieve objects via the Puppet 4 API loaders
     def self.retrieve_via_puppet_strings(cache, options = {})
@@ -62,8 +108,8 @@ module PuppetLanguageServerSidecar
       # of loader will just ignore it.
       paths.concat(discover_type_paths(:sidecar_manifest, loaders)) if object_types.include?(:class)
       paths.concat(discover_type_paths(:function, loaders)) if object_types.include?(:function)
-      paths.concat(discover_type_paths(:type, loaders)) if object_types.include?(:type)
-
+      # The :type loader includes puppet types and datatypes
+      paths.concat(discover_type_paths(:type, loaders)) if object_types.include?(:datatype) || object_types.include?(:type)
       paths.each do |path|
         next unless path_has_child?(options[:root_path], path)
         file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path, cache)
@@ -71,6 +117,9 @@ module PuppetLanguageServerSidecar
 
         if object_types.include?(:class) # rubocop:disable Style/IfUnlessModifier   This reads better
           file_doc.classes.each { |item| result.append!(item) }
+        end
+        if object_types.include?(:datatype) # rubocop:disable Style/IfUnlessModifier   This reads better
+          file_doc.datatypes.each { |item| result.append!(item) }
         end
         if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better
           file_doc.functions.each { |item| result.append!(item) }
@@ -87,6 +136,9 @@ module PuppetLanguageServerSidecar
         pup4_functions = result.functions.select { |i| i.function_version == 4 }.map { |i| i.key }
         result.functions.reject! { |i| i.function_version == 3 && pup4_functions.include?(i.key) }
       end
+
+      # Add the inbuilt data types if there's no root path
+      result.datatypes.concat(retrieve_default_data_types(loaders)) if object_types.include?(:datatype) && options[:root_path].nil?
 
       result.each_list { |key, item| PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_puppet_strings] Finished loading #{item.count} #{key}") }
       result

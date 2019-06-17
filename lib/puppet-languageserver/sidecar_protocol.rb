@@ -195,6 +195,73 @@ module PuppetLanguageServer
         end
       end
 
+      class PuppetDataType < BasePuppetObject
+        attr_accessor :doc
+        attr_accessor :alias_of
+        attr_accessor :attributes
+        attr_accessor :is_type_alias
+
+        def initialize
+          super
+          self.attributes = PuppetDataTypeAttributeList.new
+        end
+
+        def to_h
+          super.to_h.merge(
+            'doc'           => doc,
+            'alias_of'      => alias_of,
+            'attributes'    => attributes.map(&:to_h),
+            'is_type_alias' => is_type_alias
+          )
+        end
+
+        def from_h!(value)
+          super
+
+          self.doc = value['doc']
+          self.alias_of = value['alias_of']
+          value['attributes'].each { |attr| attributes << PuppetDataTypeAttribute.new.from_h!(attr) } unless value['attributes'].nil?
+          self.is_type_alias = value['is_type_alias']
+          self
+        end
+      end
+
+      class PuppetDataTypeList < BasePuppetObjectList
+        def child_type
+          PuppetDataType
+        end
+      end
+
+      class PuppetDataTypeAttribute < BaseClass
+        attr_accessor :key
+        attr_accessor :doc
+        attr_accessor :default_value
+        attr_accessor :types
+
+        def to_h
+          {
+            'key'           => key,
+            'default_value' => default_value,
+            'doc'           => doc,
+            'types'         => types
+          }
+        end
+
+        def from_h!(value)
+          self.key           = value['key']
+          self.default_value = value['default_value']
+          self.doc           = value['doc']
+          self.types         = value['types']
+          self
+        end
+      end
+
+      class PuppetDataTypeAttributeList < BasePuppetObjectList
+        def child_type
+          PuppetDataTypeAttribute
+        end
+      end
+
       class PuppetFunction < BasePuppetObject
         attr_accessor :doc
         # The version of this function, typically 3 or 4.
@@ -377,6 +444,10 @@ module PuppetLanguageServer
           @aggregate[:classes]
         end
 
+        def datatypes
+          @aggregate[:datatypes]
+        end
+
         def functions
           @aggregate[:functions]
         end
@@ -423,6 +494,10 @@ module PuppetLanguageServer
           :classes   => {
             :item_class => PuppetClass,
             :list_class => PuppetClassList
+          },
+          :datatypes => {
+            :item_class => PuppetDataType,
+            :list_class => PuppetDataTypeList
           },
           :functions => {
             :item_class => PuppetFunction,
