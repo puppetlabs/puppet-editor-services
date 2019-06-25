@@ -156,7 +156,7 @@ describe 'PuppetLanguageServerSidecar' do
 
         # Make sure the function has the right properties
         func = child_with_key(deserial, :fixture_function)
-        expect(func.doc).to eq('doc_fixture_function')
+        expect(func.doc).to match(/doc_fixture_function/)
         expect(func.source).to match(/valid_module_workspace/)
       end
     end
@@ -247,7 +247,7 @@ describe 'PuppetLanguageServerSidecar' do
 
         # Make sure the function has the right properties
         func = child_with_key(deserial, :env_function)
-        expect(func.doc).to eq('doc_env_function')
+        expect(func.doc).to match(/doc_env_function/)
         expect(func.source).to match(/valid_environment_workspace/)
       end
     end

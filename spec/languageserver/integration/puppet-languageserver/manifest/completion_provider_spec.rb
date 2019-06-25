@@ -458,10 +458,10 @@ EOT
           expect(result.documentation).to match(/.+/)
         end
 
-        it 'should return a text snippet' do
+        it 'should return plain text' do
           result = subject.resolve(@resolve_request)
           expect(result.insertText).to match(/.+/)
-          expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::SNIPPET)
+          expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::PLAINTEXT)
         end
       end
     end

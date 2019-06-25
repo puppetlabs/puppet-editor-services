@@ -24,8 +24,7 @@ module PuppetLanguageServer
           # Add resources
           all_resources { |x| items << x }
 
-          # Find functions which don't return values i.e. statements
-          all_statement_functions { |x| items << x }
+          all_functions { |x| items << x }
 
           response = LSP::CompletionList.new
           response.items = items
@@ -170,9 +169,8 @@ module PuppetLanguageServer
         end
       end
 
-      def self.all_statement_functions(&block)
-        # Find functions which don't return values i.e. statements
-        PuppetLanguageServer::PuppetHelper.filtered_function_names { |_name, data| data.type == :statement }.each do |name|
+      def self.all_functions(&block)
+        PuppetLanguageServer::PuppetHelper.function_names.each do |name|
           item = LSP::CompletionItem.new(
             'label'  => name.to_s,
             'kind'   => LSP::CompletionItemKind::FUNCTION,
@@ -232,12 +230,12 @@ module PuppetLanguageServer
           item_type = PuppetLanguageServer::PuppetHelper.function(data['name'])
           return result if item_type.nil?
           result.documentation = item_type.doc unless item_type.doc.nil?
-          result.insertText = "#{data['name']}(${1:value}"
-          (2..item_type.arity).each do |index|
-            result.insertText += ", ${#{index}:value}"
+          unless item_type.nil? || item_type.signatures.count.zero?
+            result.detail = item_type.signatures.map(&:key).join("\n\n")
+            # The signature provider should handle suggestions after this, so just place the cursor ready for an opening bracket
+            result.insertText = data['name'].to_s
+            result.insertTextFormat = LSP::InsertTextFormat::PLAINTEXT
           end
-          result.insertText += ')'
-          result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
 
         when 'resource_type'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(data['name'])

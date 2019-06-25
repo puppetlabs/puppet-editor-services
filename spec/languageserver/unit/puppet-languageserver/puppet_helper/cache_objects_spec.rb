@@ -46,7 +46,7 @@ describe 'PuppetLanguageServer::PuppetHelper' do
 
     it_should_behave_like 'a base Puppet object'
 
-    [:doc, :arity, :type].each do |testcase|
+    [:doc, :function_version, :signatures].each do |testcase|
       it "instance should respond to #{testcase}" do
         expect(subject).to respond_to(testcase)
       end
@@ -63,8 +63,8 @@ describe 'PuppetLanguageServer::PuppetHelper' do
         expect(subject.char).to eq(sidecar_puppet_func.char)
         expect(subject.length).to eq(sidecar_puppet_func.length)
         expect(subject.doc).to eq(sidecar_puppet_func.doc)
-        expect(subject.arity).to eq(sidecar_puppet_func.arity)
-        expect(subject.type).to eq(sidecar_puppet_func.type)
+        expect(subject.function_version).to eq(sidecar_puppet_func.function_version)
+        expect(subject.signatures).to eq(sidecar_puppet_func.signatures)
       end
     end
   end

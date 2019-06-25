@@ -68,9 +68,31 @@ end
 def random_sidecar_puppet_function
   result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetFunction.new())
   result.doc = 'doc' + rand(1000).to_s
-  result.arity = rand(1000)
-  result.type = ('type' + rand(1000).to_s).intern
   result.function_version = rand(1) + 3
+  result.signatures << random_sidecar_puppet_function_signature
+  result.signatures << random_sidecar_puppet_function_signature
+  result.signatures << random_sidecar_puppet_function_signature
+  result
+end
+
+def random_sidecar_puppet_function_signature
+  result = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignature.new
+  result.key = 'key' + rand(1000).to_s + '(a,b,c)'
+  result.doc = 'doc' + rand(1000).to_s
+  result.return_types = [rand(1000).to_s, rand(1000).to_s, rand(1000).to_s]
+  result.parameters << random_sidecar_puppet_function_signature_parameter
+  result.parameters << random_sidecar_puppet_function_signature_parameter
+  result.parameters << random_sidecar_puppet_function_signature_parameter
+  result
+end
+
+def random_sidecar_puppet_function_signature_parameter
+  result = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureParameter.new
+  result.name = 'param' + rand(1000).to_s
+  result.types = [rand(1000).to_s, rand(1000).to_s]
+  result.doc = result.name + ' documentation'
+  result.signature_key_offset = rand(1000)
+  result.signature_key_length = rand(1000)
   result
 end
 

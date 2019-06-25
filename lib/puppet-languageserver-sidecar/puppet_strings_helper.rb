@@ -2,50 +2,12 @@
 
 module PuppetLanguageServerSidecar
   module PuppetStringsHelper
-    # Returns a FileDocumentation object for a given path
-    #
-    # @param [String] path The absolute path to the file that will be documented
-    # @param [PuppetLanguageServerSidecar::Cache] cache A Sidecar cache which stores already parsed documents as serialised FileDocumentation objects
-    # @return [FileDocumentation, nil] Returns the documentation for the path, or nil if it cannot be extracted
+    def self.instance
+      @instance ||= Helper.new
+    end
+
     def self.file_documentation(path, cache = nil)
-      return nil unless require_puppet_strings
-      @helper_cache = FileDocumentationCache.new if @helper_cache.nil?
-      return @helper_cache.document(path) if @helper_cache.path_exists?(path)
-
-      # Load from the permanent cache
-      @helper_cache.populate_from_sidecar_cache!(path, cache) unless cache.nil? || !cache.active?
-      return @helper_cache.document(path) if @helper_cache.path_exists?(path)
-
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetStringsHelper::file_documentation] Fetching documentation for #{path}")
-
-      setup_yard!
-
-      # For now, assume a single file path
-      search_patterns = [path]
-
-      # Format the arguments to YARD
-      args = ['doc']
-      args << '--no-output'
-      args << '--quiet'
-      args << '--no-stats'
-      args << '--no-progress'
-      args << '--no-save'
-      args << '--api public'
-      args << '--api private'
-      args << '--no-api'
-      args += search_patterns
-
-      # Run YARD
-      ::YARD::CLI::Yardoc.run(*args)
-
-      # Populate the documentation cache from the YARD information
-      @helper_cache.populate_from_yard_registry!
-
-      # Save to the permanent cache
-      @helper_cache.save_to_sidecar_cache(path, cache) unless cache.nil? || !cache.active?
-
-      # Return the documentation details
-      @helper_cache.document(path)
+      instance.file_documentation(path, cache)
     end
 
     def self.require_puppet_strings
@@ -63,7 +25,6 @@ module PuppetLanguageServerSidecar
       end
       @puppet_strings_loaded
     end
-    private_class_method :require_puppet_strings
 
     def self.setup_yard!
       unless @yard_setup # rubocop:disable Style/GuardClause
@@ -71,7 +32,54 @@ module PuppetLanguageServerSidecar
         @yard_setup = true
       end
     end
-    private_class_method :setup_yard!
+
+    class Helper
+      # Returns a FileDocumentation object for a given path
+      #
+      # @param [String] path The absolute path to the file that will be documented
+      # @param [PuppetLanguageServerSidecar::Cache] cache A Sidecar cache which stores already parsed documents as serialised FileDocumentation objects
+      # @return [FileDocumentation, nil] Returns the documentation for the path, or nil if it cannot be extracted
+      def file_documentation(path, cache = nil)
+        return nil unless PuppetLanguageServerSidecar::PuppetStringsHelper.require_puppet_strings
+        @helper_cache = FileDocumentationCache.new if @helper_cache.nil?
+        return @helper_cache.document(path) if @helper_cache.path_exists?(path)
+
+        # Load from the permanent cache
+        @helper_cache.populate_from_sidecar_cache!(path, cache) unless cache.nil? || !cache.active?
+        return @helper_cache.document(path) if @helper_cache.path_exists?(path)
+
+        PuppetLanguageServerSidecar.log_message(:debug, "[PuppetStringsHelper::file_documentation] Fetching documentation for #{path}")
+
+        PuppetLanguageServerSidecar::PuppetStringsHelper.setup_yard!
+
+        # For now, assume a single file path
+        search_patterns = [path]
+
+        # Format the arguments to YARD
+        args = ['doc']
+        args << '--no-output'
+        args << '--quiet'
+        args << '--no-stats'
+        args << '--no-progress'
+        args << '--no-save'
+        args << '--api public'
+        args << '--api private'
+        args << '--no-api'
+        args += search_patterns
+
+        # Run YARD
+        ::YARD::CLI::Yardoc.run(*args)
+
+        # Populate the documentation cache from the YARD information
+        @helper_cache.populate_from_yard_registry!
+
+        # Save to the permanent cache
+        @helper_cache.save_to_sidecar_cache(path, cache) unless cache.nil? || !cache.active?
+
+        # Return the documentation details
+        @helper_cache.document(path)
+      end
+    end
   end
 
   class FileDocumentationCache
@@ -155,8 +163,8 @@ module PuppetLanguageServerSidecar
         obj.calling_source   = obj.source
         obj.line             = item[:line]
         obj.doc              = item[:docstring][:text]
-        obj.arity            = -1 # We don't care about arity
-        obj.function_version = item[:type] == 'ruby4x' ? 4 : 3
+        # 'ruby3x' functions are version 3.  'ruby4x' and 'puppet' are version 4
+        obj.function_version = item[:type] == 'ruby3x' ? 3 : 4
 
         # Try and determine the function call site from the source file
         char = item[:source].index(":#{func_name}")
@@ -165,19 +173,36 @@ module PuppetLanguageServerSidecar
           obj.length = func_name.length + 1
         end
 
-        case item[:type]
-        when 'ruby3x'
-          obj.function_version = 3
-          # This is a bit hacky but it works (probably).  Puppet-Strings doesn't rip this information out, but you do have the
-          # the source to query
-          obj.type = item[:source].match(/:rvalue/) ? :rvalue : :statement
-        when 'ruby4x'
-          obj.function_version = 4
-          # All ruby functions are statements
-          obj.type = :statement
-        else
-          PuppetLanguageServerSidecar.log_message(:error, "[#{self.class}] Unknown function type #{item[:type]}")
+        # Note that puppet strings doesn't populate the method signatures for V3 functions
+        # Also, we don't have access to the arity of V3 functions so we can't reverse engineer the signature
+        item[:signatures].each do |signature|
+          sig = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignature.new
+
+          sig.key = signature[:signature]
+          sig.doc = signature[:docstring][:text]
+          signature[:docstring][:tags].each do |tag|
+            case tag[:tag_name]
+            when 'param'
+              sig.parameters << PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureParameter.new.from_h!(
+                'name'  => tag[:name],
+                'types' => tag[:types],
+                'doc'   => tag[:text]
+              )
+            when 'return'
+              sig.return_types = tag[:types]
+            end
+          end
+          calculate_signature_parameter_locations!(sig)
+          obj.signatures << sig
         end
+
+        # Extract other common information
+        # TODO: Other common tags include `example`, `overload`
+        pre_docs = ''
+        pre_docs += "This uses the legacy Ruby function API\n" if item[:type] == 'ruby3x'
+        since_tag = item[:docstring][:tags].find { |tag| tag[:tag_name] == 'since' }
+        pre_docs += "Since #{since_tag[:text]}\n" unless since_tag.nil?
+        obj.doc = pre_docs + "\n" + obj.doc unless pre_docs.empty?
 
         @cache[source_path].functions << obj
       end
@@ -212,6 +237,33 @@ module PuppetLanguageServerSidecar
         end
 
         @cache[source_path].types << obj
+      end
+    end
+
+    def calculate_signature_parameter_locations!(sig)
+      # When Puppet Strings extracts the parameter name it differs from how it appears in the signature key
+      # This makes it hard for clients to determine where in the signature, the parameter actually is.  So
+      # We need to calculate where in the signature key a parameter is
+
+      sig.parameters.each do |param|
+        name = param.name.dup # Don't want to modify the original object
+        # Munge the parameter name to what it appears in the signature key
+        # Ref - https://github.com/puppetlabs/puppet-strings/blob/2987558bb3170bc37e6077aab1b60efb17161eff/lib/puppet-strings/yard/handlers/ruby/function_handler.rb#L293-L317
+        if name.start_with?('*') || name.start_with?('&')
+          name.insert(1, '$')
+        else
+          name = '$' + name
+        end
+
+        # We need to use terminating characters here due to substring matching e.g. $abc will incorrectly match in
+        # function([String] $abc123, [String] $abc)
+        idx = sig.key.index(name + ',')
+        idx = sig.key.index(name + ')') if idx.nil?
+
+        unless idx.nil?
+          param.signature_key_offset = idx
+          param.signature_key_length = name.length
+        end
       end
     end
   end

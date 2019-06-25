@@ -29,14 +29,61 @@ module PuppetLanguageServer
         end
       end
 
+      class BaseClass
+        include Base
+
+        def to_json(*options)
+          to_h.to_json(options)
+        end
+
+        def from_json!(json_string)
+          from_h!(JSON.parse(json_string))
+        end
+
+        def ==(other)
+          return false unless other.class == self.class
+          self.class
+              .instance_methods(false)
+              .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+              .reject { |name| %i[to_h to_json].include?(name) }
+              .each do |method_name|
+            return false unless send(method_name) == other.send(method_name)
+          end
+          true
+        end
+
+        def eql?(other)
+          return false unless other.class == self.class
+          self.class
+              .instance_methods(false)
+              .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+              .reject { |name| %i[to_h to_json].include?(name) }
+              .each do |method_name|
+            return false unless send(method_name).eql?(other.send(method_name))
+          end
+          true
+        end
+
+        def hash
+          props = []
+          self.class
+              .instance_methods(false)
+              .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+              .reject { |name| %i[to_h to_json].include?(name) }
+              .each do |method_name|
+            props << send(method_name).hash
+          end
+          props.hash
+        end
+      end
+
       # key            => Unique name of the object
       # calling_source => The file that was invoked to create the object
       # source         => The file that _actually_ created the object
       # line           => The line number in the source file where the object was created
       # char           => The character number in the source file where the object was created
       # length         => The length of characters from `char` in the source file where the object was created
-      class BasePuppetObject
-        include Base
+      class BasePuppetObject < BaseClass
         attr_accessor :key
         attr_accessor :calling_source
         attr_accessor :source
@@ -63,14 +110,6 @@ module PuppetLanguageServer
           self.char           = value['char']
           self.length         = value['length']
           self
-        end
-
-        def to_json(*options)
-          to_h.to_json(options)
-        end
-
-        def from_json!(json_string)
-          from_h!(JSON.parse(json_string))
         end
       end
 
@@ -152,17 +191,20 @@ module PuppetLanguageServer
 
       class PuppetFunction < BasePuppetObject
         attr_accessor :doc
-        attr_accessor :arity
-        attr_accessor :type
         # The version of this function, typically 3 or 4.
         attr_accessor :function_version
+        attr_accessor :signatures
+
+        def initialize
+          super
+          self.signatures = PuppetFunctionSignatureList.new
+        end
 
         def to_h
           super.to_h.merge(
             'doc'              => doc,
-            'arity'            => arity,
-            'type'             => type,
-            'function_version' => function_version
+            'function_version' => function_version,
+            'signatures'       => signatures
           )
         end
 
@@ -170,9 +212,8 @@ module PuppetLanguageServer
           super
 
           self.doc = value['doc']
-          self.arity = value['arity']
-          self.type = value['type'].intern
           self.function_version = value['function_version']
+          value['signatures'].each { |sig| signatures << PuppetFunctionSignature.new.from_h!(sig) } unless value['signatures'].nil?
           self
         end
       end
@@ -180,6 +221,74 @@ module PuppetLanguageServer
       class PuppetFunctionList < BasePuppetObjectList
         def child_type
           PuppetFunction
+        end
+      end
+
+      class PuppetFunctionSignature < BaseClass
+        attr_accessor :key
+        attr_accessor :doc
+        attr_accessor :return_types
+        attr_accessor :parameters
+
+        def initialize
+          super
+          self.parameters = PuppetFunctionSignatureParameterList.new
+        end
+
+        def to_h
+          {
+            'key'          => key,
+            'doc'          => doc,
+            'return_types' => return_types,
+            'parameters'   => parameters
+          }
+        end
+
+        def from_h!(value)
+          self.key = value['key']
+          self.doc = value['doc']
+          self.return_types = value['return_types']
+          value['parameters'].each { |param| parameters << PuppetFunctionSignatureParameter.new.from_h!(param) } unless value['parameters'].nil?
+          self
+        end
+      end
+
+      class PuppetFunctionSignatureList < BasePuppetObjectList
+        def child_type
+          PuppetFunctionSignature
+        end
+      end
+
+      class PuppetFunctionSignatureParameter < BaseClass
+        attr_accessor :name
+        attr_accessor :types
+        attr_accessor :doc
+        attr_accessor :signature_key_offset # Zero based offset where this parameter exists in the signature key
+        attr_accessor :signature_key_length # The length of text where this parameter exists in the signature key
+
+        def to_h
+          {
+            'name'                 => name,
+            'doc'                  => doc,
+            'types'                => types,
+            'signature_key_offset' => signature_key_offset,
+            'signature_key_length' => signature_key_length
+          }
+        end
+
+        def from_h!(value)
+          self.name = value['name']
+          self.doc = value['doc']
+          self.types = value['types']
+          self.signature_key_offset = value['signature_key_offset']
+          self.signature_key_length = value['signature_key_length']
+          self
+        end
+      end
+
+      class PuppetFunctionSignatureParameterList < BasePuppetObjectList
+        def child_type
+          PuppetFunctionSignatureParameter
         end
       end
 
