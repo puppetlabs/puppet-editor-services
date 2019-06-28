@@ -3,7 +3,7 @@ require 'spec_helper'
 describe 'PuppetLanguageServer::DocumentStore' do
   let(:subject) { PuppetLanguageServer::DocumentStore }
 
-  describe '#module_plan_file?' do
+  describe '#plan_file?' do
     before(:each) do
       # Assume we are not in any module or control repo. Just a bare file
       allow(subject).to receive(:store_has_module_metadata?).and_return(false)
@@ -32,7 +32,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
         prefixes.each do |prefix|
           it "should detect '#{prefix}#{testcase}' as a plan file" do
             file_uri = PuppetLanguageServer::UriHelper.build_file_uri(prefix + testcase)
-            expect(subject.module_plan_file?(file_uri)).to be(true)
+            expect(subject.plan_file?(file_uri)).to be(true)
           end
         end
       end
@@ -40,15 +40,15 @@ describe 'PuppetLanguageServer::DocumentStore' do
       it 'should detect plan files in a case insensitive way when on Windows' do
         allow(subject).to receive(:windows?).and_return(true)
         file_uri = plan_files[0]
-        expect(subject.module_plan_file?(file_uri)).to be(true)
-        expect(subject.module_plan_file?(file_uri.upcase)).to be(true)
+        expect(subject.plan_file?(file_uri)).to be(true)
+        expect(subject.plan_file?(file_uri.upcase)).to be(true)
       end
 
       it 'should detect plan files in a case sensitive way when not on Windows' do
         allow(subject).to receive(:windows?).and_return(false)
         file_uri = plan_files[0]
-        expect(subject.module_plan_file?(file_uri)).to be(true)
-        expect(subject.module_plan_file?(file_uri.upcase)).to be(false)
+        expect(subject.plan_file?(file_uri)).to be(true)
+        expect(subject.plan_file?(file_uri.upcase)).to be(false)
       end
     end
 
@@ -57,7 +57,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
         prefixes.each do |prefix|
           it "should not detect '#{prefix}#{testcase}' as a plan file" do
             file_uri = PuppetLanguageServer::UriHelper.build_file_uri(prefix + testcase)
-            expect(subject.module_plan_file?(file_uri)).to be(false)
+            expect(subject.plan_file?(file_uri)).to be(false)
           end
         end
       end
@@ -65,15 +65,15 @@ describe 'PuppetLanguageServer::DocumentStore' do
       it 'should detect plan files in a case insensitive way when on Windows' do
         allow(subject).to receive(:windows?).and_return(true)
         file_uri = not_plan_files[0]
-        expect(subject.module_plan_file?(file_uri)).to be(false)
-        expect(subject.module_plan_file?(file_uri.upcase)).to be(false)
+        expect(subject.plan_file?(file_uri)).to be(false)
+        expect(subject.plan_file?(file_uri.upcase)).to be(false)
       end
 
       it 'should detect plan files in a case sensitive way when not on Windows' do
         allow(subject).to receive(:windows?).and_return(false)
         file_uri = not_plan_files[0]
-        expect(subject.module_plan_file?(file_uri)).to be(false)
-        expect(subject.module_plan_file?(file_uri.upcase)).to be(false)
+        expect(subject.plan_file?(file_uri)).to be(false)
+        expect(subject.plan_file?(file_uri.upcase)).to be(false)
       end
     end
   end

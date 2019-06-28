@@ -59,7 +59,7 @@ module PuppetLanguageServer
     # "Given the full path to the .pp file, if it contains a directory called plans, AND that plans is not a sub-directory of manifests, then it is a plan file"
     #
     # See https://github.com/lingua-pupuli/puppet-editor-services/issues/129 for the full discussion
-    def self.module_plan_file?(uri)
+    def self.plan_file?(uri)
       uri_path = PuppetLanguageServer::UriHelper.uri_path(uri)
       return false if uri_path.nil?
       if windows?

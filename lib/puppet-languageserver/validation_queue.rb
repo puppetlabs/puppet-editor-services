@@ -84,7 +84,7 @@ module PuppetLanguageServer
       # Perform validation
       case document_type
       when :manifest
-        PuppetLanguageServer::Manifest::ValidationProvider.validate(content, :tasks_mode => PuppetLanguageServer::DocumentStore.module_plan_file?(document_uri))
+        PuppetLanguageServer::Manifest::ValidationProvider.validate(content, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(document_uri))
       when :epp
         PuppetLanguageServer::Epp::ValidationProvider.validate(content)
       when :puppetfile
