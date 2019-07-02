@@ -522,7 +522,7 @@ describe 'message_router' do
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
-          allow(PuppetLanguageServer::DocumentStore).to receive(:module_plan_file?).and_return true
+          allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
 
           subject.receive_request(request)
         end
@@ -623,7 +623,7 @@ describe 'message_router' do
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
-          allow(PuppetLanguageServer::DocumentStore).to receive(:module_plan_file?).and_return true
+          allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
 
           subject.receive_request(request)
         end
@@ -692,7 +692,7 @@ describe 'message_router' do
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition)
             .with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
-          allow(PuppetLanguageServer::DocumentStore).to receive(:module_plan_file?).and_return true
+          allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
 
           subject.receive_request(request)
         end
@@ -755,7 +755,7 @@ describe 'message_router' do
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::DocumentSymbolProvider).to receive(:extract_document_symbols)
             .with(Object,{:tasks_mode=>true}).and_return('something')
-          allow(PuppetLanguageServer::DocumentStore).to receive(:module_plan_file?).and_return true
+          allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
 
           subject.receive_request(request)
         end

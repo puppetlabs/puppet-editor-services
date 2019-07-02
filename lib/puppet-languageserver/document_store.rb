@@ -54,13 +54,25 @@ module PuppetLanguageServer
       end
     end
 
-    # Plan files https://puppet.com/docs/bolt/1.x/writing_plans.html#concept-4485
-    # exist in modules (requires metadata.json) and are in the `/plans` directory
-    def self.module_plan_file?(uri)
-      return false unless store_has_module_metadata?
-      relative_path = PuppetLanguageServer::UriHelper.relative_uri_path(PuppetLanguageServer::UriHelper.build_file_uri(store_root_path), uri, !windows?)
-      return false if relative_path.nil?
-      relative_path.start_with?('/plans/')
+    # Plan files https://puppet.com/docs/bolt/1.x/writing_plans.html#concept-4485 can exist in many places
+    # The current best detection method is as follows:
+    # "Given the full path to the .pp file, if it contains a directory called plans, AND that plans is not a sub-directory of manifests, then it is a plan file"
+    #
+    # See https://github.com/lingua-pupuli/puppet-editor-services/issues/129 for the full discussion
+    def self.plan_file?(uri)
+      uri_path = PuppetLanguageServer::UriHelper.uri_path(uri)
+      return false if uri_path.nil?
+      if windows?
+        plans_index = uri_path.upcase.index('/PLANS/')
+        manifests_index = uri_path.upcase.index('/MANIFESTS/')
+      else
+        plans_index = uri_path.index('/plans/')
+        manifests_index = uri_path.index('/manifests/')
+      end
+      return false if plans_index.nil?
+      return true if manifests_index.nil?
+
+      plans_index < manifests_index
     end
 
     # Workspace management

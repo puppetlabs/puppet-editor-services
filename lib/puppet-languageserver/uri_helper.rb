@@ -9,6 +9,15 @@ module PuppetLanguageServer
       'file://' + Puppet::Util.uri_encode(path.start_with?('/') ? path : '/' + path)
     end
 
+    def self.uri_path(uri)
+      actual_uri = URI(uri)
+
+      # CGI.unescape doesn't handle space rules properly in uri paths
+      # URI.unescape does, but returns strings in their original encoding
+      # Mostly safe here as we're only worried about file based URIs
+      URI.unescape(actual_uri.path) # rubocop:disable Lint/UriEscapeUnescape
+    end
+
     # Compares two URIs and returns the relative path
     #
     # @param root_uri [String] The root URI to compare to

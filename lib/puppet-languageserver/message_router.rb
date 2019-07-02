@@ -110,7 +110,7 @@ module PuppetLanguageServer
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.module_plan_file?(file_uri)))
+            request.reply_result(PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri)))
           else
             raise "Unable to provide completion on #{file_uri}"
           end
@@ -138,7 +138,7 @@ module PuppetLanguageServer
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.module_plan_file?(file_uri)))
+            request.reply_result(PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri)))
           else
             raise "Unable to provide hover on #{file_uri}"
           end
@@ -155,7 +155,7 @@ module PuppetLanguageServer
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.module_plan_file?(file_uri)))
+            request.reply_result(PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri)))
           else
             raise "Unable to provide definition on #{file_uri}"
           end
@@ -170,7 +170,7 @@ module PuppetLanguageServer
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => PuppetLanguageServer::DocumentStore.module_plan_file?(file_uri)))
+            request.reply_result(PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri)))
           else
             raise "Unable to provide definition on #{file_uri}"
           end
