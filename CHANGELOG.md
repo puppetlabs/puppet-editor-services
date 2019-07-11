@@ -6,6 +6,19 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.20.0 - 2019-07-16
+
+### Added
+
+- ([GH-141](https://github.com/lingua-pupuli/puppet-editor-services/issues/141)) [Puppet4 API Project Task 7] Modify the Puppet Function loading to use all of the new Puppet 4 API features
+- ([GH-137](https://github.com/lingua-pupuli/puppet-editor-services/issues/137)) [Puppet4 API Project Task 4-6] Load Puppet Custom Types, Defined Types and Classes via Puppet API v4
+- ([GH-121](https://github.com/lingua-pupuli/puppet-editor-services/issues/121)) [Puppet4 API Project Task 1-3] Load Puppet Functions via Puppet API v4 and present as Puppet API v3 functions
+
+### Fixed
+
+- ([GH-147](https://github.com/lingua-pupuli/puppet-editor-services/issues/147)) Error generating node graph
+- ([GH-129](https://github.com/lingua-pupuli/puppet-editor-services/issues/129)) Better Bolt/Puppet plan detection
+
 ## 0.19.1 - 2019-05-31
 
 ### Fixed
