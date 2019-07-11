@@ -21,6 +21,8 @@ module PuppetLanguageServerSidecar
         end
       rescue StandardError => e
         result.set_error("Error while parsing the file. #{e}")
+      rescue LoadError => e
+        result.set_error("Load error while parsing the file. #{e}")
       end
 
       result
