@@ -30,6 +30,7 @@ group :development do
   # Due to PDOC-283 we need to pin YARD at 0.9.19 until that issue is resolved and
   # released in a new version of puppet-strings
   gem "yard", "< 0.9.19", :require => false
+  gem "puppet_forge", "2.3.0", :require => false
 
   case RUBY_PLATFORM
   when /darwin/

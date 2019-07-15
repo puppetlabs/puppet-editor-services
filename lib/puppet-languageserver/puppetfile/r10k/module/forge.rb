@@ -20,6 +20,11 @@ module PuppetLanguageServer
             }
           end
 
+          # @return [String] The version of the currently installed module
+          def version
+            @args
+          end
+
           # Version string matching regexes
           # From Semantic Puppet gem
           REGEX_NUMERIC = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)' # Major . Minor . Patch

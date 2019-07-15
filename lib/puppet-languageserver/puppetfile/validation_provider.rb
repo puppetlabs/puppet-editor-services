@@ -45,6 +45,34 @@ module PuppetLanguageServer
                                         'message'  => mod.properties[:error_message])
         end
 
+        # Check for invalid module definitions
+        require 'puppet_forge'
+        puppetfile.modules.each do |puppet_module|
+          if puppet_module.class == R10K::Module::Forge
+
+            module_name       = puppet_module.title.gsub('/', '-')
+            installed_version = puppet_module.version
+
+            begin
+              forge_module      = PuppetForge::Module.find(module_name)
+            rescue StandardError, SyntaxError, LoadError => e
+              PuppetEditorServices.log_message(:debug, e.to_s)
+              next
+            end
+
+            forge_version     = forge_module.current_release.version
+
+            if installed_version != forge_version
+              result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::WARNING,
+                'range'    => LSP.create_range(puppet_module.puppetfile_line_number, 0, puppet_module.puppetfile_line_number, max_line_length),
+                'source'   => 'Puppet',
+                'message'  => "#{puppet_module.title} is OUTDATED: #{installed_version} vs #{forge_version}")
+            end
+
+          end
+
+        end
+
         # Check for duplicate module definitions
         dupes = puppetfile.modules
                           .group_by { |mod| mod.name }
