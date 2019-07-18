@@ -15,6 +15,8 @@ LSP types and enumerations for the Puppet Language Server
 
 2. Run `npm install` to download the required node modules
 
-3. Run `node index.js` to generate the ruby types
+3. Run `node index.js` to generate the Language Server ruby types
 
-4. Commit the changes and raise a Pull Request
+4. Run `node debugprotocol.js` to generate the Debug Server ruby types
+
+5. Commit the changes and raise a Pull Request
