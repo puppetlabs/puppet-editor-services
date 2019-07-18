@@ -38,7 +38,6 @@ describe 'End to End Testing' do
     let(:args) { [] }
 
     it 'should process the manifest and exit with 0' do
-      skip("Puppet 6 is not supported") if Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
       # initialize_request
       @client.send_data(@client.initialize_request(@client.next_seq_id))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
@@ -67,7 +66,6 @@ describe 'End to End Testing' do
     let(:args) { [] }
 
     it 'should process the manifest and exit with 1' do
-      skip("Puppet 6 is not supported") if Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
       # initialize_request
       @client.send_data(@client.initialize_request(@client.next_seq_id))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
@@ -142,7 +140,6 @@ describe 'End to End Testing' do
     # - Launch request can occur during init
 
     it 'should process the manifest and exit with 0' do
-      skip("Puppet 6 is not supported") if Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
       # initialize_request
       @client.send_data(@client.initialize_request(@client.next_seq_id))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
