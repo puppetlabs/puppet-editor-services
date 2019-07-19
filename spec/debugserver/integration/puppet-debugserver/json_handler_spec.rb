@@ -42,7 +42,6 @@ describe 'PuppetDebugServer::JSONHandler' do
     allow(subject).to receive(:close_connection_after_writing).and_return(true)
     allow(subject).to receive(:close_connection).and_return(true)
 
-    PuppetDebugServer::PuppetDebugSession.stop
     @tx_seq_id = 0
   }
 

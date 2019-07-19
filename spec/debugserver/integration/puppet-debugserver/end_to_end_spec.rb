@@ -167,7 +167,7 @@ describe 'End to End Testing' do
       expect(result['success']).to eq(true)
       # Breakpoint on a comment line
       expect(result['body']['breakpoints'][0]['verified']).to be false
-      expect(result['body']['breakpoints'][0]['message']).to match(/Line does not exist or is blank/)
+      expect(result['body']['breakpoints'][0]['message']).to match(/Line is blank/)
       # Breakpoint at root of manifest
       expect(result['body']['breakpoints'][1]['verified']).to be true
       # Breakpoint on a non-existant line
@@ -390,7 +390,7 @@ describe 'End to End Testing' do
       expect(result['success']).to eq(true)
       # Breakpoint on a comment line
       expect(result['body']['breakpoints'][0]['verified']).to be false
-      expect(result['body']['breakpoints'][0]['message']).to match(/Line does not exist or is blank/)
+      expect(result['body']['breakpoints'][0]['message']).to match(/Line is blank/)
       # Breakpoint at root of manifest
       expect(result['body']['breakpoints'][1]['verified']).to be true
 

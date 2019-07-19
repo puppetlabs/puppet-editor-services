@@ -23,11 +23,11 @@ def class_in_catalog(catalog, klass)
 end
 
 describe 'PuppetDebugServer::PuppetDebugSession' do
-  let(:subject) { PuppetDebugServer::PuppetDebugSession }
+  let(:subject) { PuppetDebugServer::PuppetDebugSession.new }
 
   before(:each) {
-    allow(PuppetDebugServer::PuppetDebugSession.hooks).to receive(:exec_hook)
-    PuppetDebugServer::PuppetDebugSession.reset_pops_eval_depth
+    allow(subject).to receive(:execute_hook)
+    subject.puppet_session_state.actual.reset!
   }
 
   describe '#hook_before_pops_evaluate' do
@@ -45,10 +45,10 @@ describe 'PuppetDebugServer::PuppetDebugSession' do
       }
       let(:target_class) { Puppet::Pops::Model::CallNamedFunctionExpression }
 
-      it 'Should raise a function breakpoint hook when the function is hit' do
-        expect(PuppetDebugServer::PuppetDebugSession.hooks).to receive(:exec_hook).with(:hook_function_breakpoint, any_args)
+      it 'should raise a function breakpoint hook when the function is hit' do
+        expect(subject).to receive(:execute_hook).with(:hook_function_breakpoint, any_args)
 
-        result = subject.hook_before_pops_evaluate(subject_args)
+        result = subject.hook_handlers.on_hook_before_pops_evaluate(subject_args)
       end
     end
 
@@ -62,39 +62,39 @@ describe 'PuppetDebugServer::PuppetDebugSession' do
       let(:target_class) { Puppet::Pops::Model::CallNamedFunctionExpression }
 
       # Function Break Points
-      it 'Should not raise a function breakpoint hook when it is not configured as trigger name' do
-        expect(PuppetDebugServer::PuppetDebugSession.hooks).to receive(:exec_hook)
+      it 'should not raise a function breakpoint hook when it is not configured as trigger name' do
+        expect(subject).to receive(:execute_hook)
           .with(:hook_function_breakpoint, any_args)
           .exactly(0).times
 
-        result = subject.hook_before_pops_evaluate(subject_args)
+        result = subject.hook_handlers.on_hook_before_pops_evaluate(subject_args)
       end
 
-      it 'Should raise a function breakpoint hook when it is configured as trigger name' do
-        allow(PuppetDebugServer::PuppetDebugSession).to receive(:function_breakpoints).and_return([{ 'name' => 'testfunc' }])
-        expect(PuppetDebugServer::PuppetDebugSession.hooks).to receive(:exec_hook)
+      it 'should raise a function breakpoint hook when it is configured as trigger name' do
+        allow(subject.breakpoints).to receive(:function_breakpoint_names).and_return(['testfunc'])
+        expect(subject).to receive(:execute_hook)
           .with(:hook_function_breakpoint, any_args)
           .exactly(1).times
 
-        result = subject.hook_before_pops_evaluate(subject_args)
+        result = subject.hook_handlers.on_hook_before_pops_evaluate(subject_args)
       end
 
       # Line Break Points
-      it 'Should not raise a breakpoint hook when it is not configured as line breakpoint' do
-        expect(PuppetDebugServer::PuppetDebugSession.hooks).to receive(:exec_hook)
+      it 'should not raise a breakpoint hook when it is not configured as line breakpoint' do
+        expect(subject).to receive(:execute_hook)
           .with(:hook_breakpoint, any_args)
           .exactly(0).times
 
-        result = subject.hook_before_pops_evaluate(subject_args)
+        result = subject.hook_handlers.on_hook_before_pops_evaluate(subject_args)
       end
 
-      it 'Should raise a breakpoint hook when it is configured as line breakpoint' do
-        allow(PuppetDebugServer::PuppetDebugSession).to receive(:source_breakpoints).and_return([{ 'line' => 2 }])
-        expect(PuppetDebugServer::PuppetDebugSession.hooks).to receive(:exec_hook)
+      it 'should raise a breakpoint hook when it is configured as line breakpoint' do
+        allow(subject.breakpoints).to receive(:line_breakpoints).and_return([2])
+        expect(subject).to receive(:execute_hook)
           .with(:hook_breakpoint, any_args)
           .exactly(1).times
 
-        result = subject.hook_before_pops_evaluate(subject_args)
+        result = subject.hook_handlers.on_hook_before_pops_evaluate(subject_args)
       end
     end
   end
