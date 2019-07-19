@@ -198,7 +198,6 @@ module PuppetEditorServices
       # rubocop:disable RescueException
       rescue Exception => e
         raise if e.is_a?(SignalException) || e.is_a?(SystemExit)
-        error e
       end
       # rubocop:enable RescueException
 
