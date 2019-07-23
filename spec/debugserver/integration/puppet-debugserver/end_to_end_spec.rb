@@ -164,7 +164,7 @@ describe 'End to End Testing' do
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       # Ensure the breakpoint response is as expected
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      expect(result['success']).to eq('true')
+      expect(result['success']).to eq(true)
       # Breakpoint on a comment line
       expect(result['body']['breakpoints'][0]['verified']).to be false
       expect(result['body']['breakpoints'][0]['message']).to match(/Line does not exist or is blank/)
@@ -387,7 +387,7 @@ describe 'End to End Testing' do
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       # Ensure the breakpoint response is as expected
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      expect(result['success']).to eq('true')
+      expect(result['success']).to eq(true)
       # Breakpoint on a comment line
       expect(result['body']['breakpoints'][0]['verified']).to be false
       expect(result['body']['breakpoints'][0]['message']).to match(/Line does not exist or is blank/)
@@ -427,7 +427,7 @@ describe 'End to End Testing' do
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       # Ensure the breakpoint response is as expected
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      expect(result['success']).to eq('true')
+      expect(result['success']).to eq(true)
 
       # -----
       # Now we wait to hit the notice function which is in the root
