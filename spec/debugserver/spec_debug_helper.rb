@@ -34,7 +34,7 @@ RSpec::Matchers.define :receive_message_with_request_id_within_timeout do |reque
     false
   end
 
-  failure_message do |actual|
+  failure_message do |client|
     message =     "expected that client would event with request id '#{request_seq_id}' event within #{timeout} seconds\n"
     message += "Last 5 messages\n"
     client.received_messages.last(5).each { |item| message += "#{item}\n" }
