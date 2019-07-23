@@ -4,15 +4,21 @@
 # By setting the `SPEC_DEBUG` environment variable, it will display debug information to the console
 # while the tests are being run.  This can be useful when figuring out why tests have failed
 
+require 'socket'
+require 'json'
+
 class DebugClient
   attr_reader :received_messages
+  attr_accessor :debug
 
-  def initialize(host, port)
-    @socket = TCPSocket.open(host, port)
+  def initialize(host = nil, port = nil)
+    # TODO: Add connection attempt retries
+    @socket = TCPSocket.open(host, port) unless host.nil? || port.nil?
     @buffer = []
     @received_messages = []
     @new_messages = false
     @tx_seq_id = 0
+    debug = false
   end
 
   # Have any new messages been received since data has been sent to the server
@@ -24,7 +30,7 @@ class DebugClient
   def send_data(json_string)
     size = json_string.bytesize
     @new_messages = false
-    puts "... Sent: #{json_string}" if ENV['SPEC_DEBUG']
+    puts "... Sent: #{json_string}" if self.debug
     @socket.write("Content-Length: #{size}\r\n\r\n" + json_string)
   end
 
@@ -78,10 +84,212 @@ class DebugClient
     @received_messages = []
   end
 
+  def initialize_request(seq_id = 1)
+    ::JSON.generate({
+      'command'   => 'initialize',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'clientID'                     => 'vscode',
+        'adapterID'                    => 'Puppet',
+        'pathFormat'                   => 'path',
+        'linesStartAt1'                => true,
+        'columnsStartAt1'              => true,
+        'supportsVariableType'         => true,
+        'supportsVariablePaging'       => true,
+        'supportsRunInTerminalRequest' => true
+      }
+    })
+  end
+
+  def threads_request(seq_id = 1)
+    ::JSON.generate({
+      'command'   => 'threads',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {}
+    })
+  end
+
+  def stacktrace_request(seq_id = 1, thread_id = 0)
+    ::JSON.generate({
+      'command'   => 'stackTrace',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'threadId' => thread_id
+      }
+    })
+  end
+
+  def scopes_request(seq_id = 1, frame_id = 0)
+    ::JSON.generate({
+      'command'   => 'scopes',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'frameId' => frame_id
+      }
+    })
+  end
+
+  def variables_request(seq_id = 1, variables_reference = 0)
+    ::JSON.generate({
+      'command'   => 'variables',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'variablesReference' => variables_reference
+      }
+    })
+  end
+
+  def evaluate_request(seq_id = 1, expression = '', frameId = nil, context = nil)
+    result = ::JSON.generate({
+      'command'   => 'evaluate',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'expression' => expression,
+        'frameId'    => frameId,
+        'context'    => context
+      }
+    })
+  end
+
+  def stepin_request(seq_id = 1, thread_id = 0)
+    ::JSON.generate({
+      'command'   => 'stepIn',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'threadId' => thread_id
+      }
+    })
+  end
+
+  def stepout_request(seq_id = 1, thread_id = 0)
+    ::JSON.generate({
+      'command'   => 'stepOut',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'threadId' => thread_id
+      }
+    })
+  end
+
+  def next_request(seq_id = 1, thread_id = 0)
+    ::JSON.generate({
+      'command'   => 'next',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'threadId' => thread_id
+      }
+    })
+  end
+
+  def disconnect_request(seq_id = 1)
+    ::JSON.generate({
+      'command'   => 'disconnect',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+      }
+    })
+  end
+
+  def configuration_done_request(seq_id = 1)
+    ::JSON.generate({
+      'command'   => 'configurationDone',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+      }
+    })
+  end
+
+  def launch_request(seq_id = 1, manifest_file, noop, args)
+    ::JSON.generate({
+      'command'   => 'launch',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'manifest' => manifest_file,
+        'noop'     => noop,
+        'args'    => args
+      }
+    })
+  end
+
+  def continue_request(seq_id = 1, thread_id)
+    ::JSON.generate({
+      'command'   => 'continue',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => {
+        'threadId' => thread_id
+      }
+    })
+  end
+
+  def set_breakpoints_request(seq_id = 1, arguments)
+    ::JSON.generate({
+      'command'   => 'setBreakpoints',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => arguments
+    })
+  end
+
+  def set_function_breakpoints_request(seq_id = 1, arguments)
+    ::JSON.generate({
+      'command'   => 'setFunctionBreakpoints',
+      'type'      => 'request',
+      'seq'       => seq_id,
+      'arguments' => arguments
+    })
+  end
+
+  # Synchronously wait for a message with a specific request_id to appear
+  def wait_for_message_with_request_id(request_seq_id, timeout = 5)
+    exit_timeout = timeout
+    while exit_timeout > 0 do
+      puts "... Waiting for message with request id #{request_seq_id} (timeout #{exit_timeout}s)" if self.debug
+      raise 'Client has been closed' if self.closed?
+      self.read_data
+      if self.new_messages?
+        data = self.data_from_request_seq_id(request_seq_id)
+        return true unless data.nil?
+      end
+      sleep(1)
+      exit_timeout -= 1
+    end
+    false
+  end
+
+  # Synchronously wait for a message with a specific event to appear
+  def wait_for_message_with_with_event(event_name, timeout = 5)
+    exit_timeout = timeout
+    while exit_timeout > 0 do
+      puts "... Waiting for message with event '#{event_name}' (timeout #{exit_timeout}s)" if self.debug
+      raise 'Client has been closed' if self.closed?
+      self.read_data
+      if self.new_messages?
+        data = self.data_from_event_name(event_name)
+        return true unless data.nil?
+      end
+      sleep(1)
+      exit_timeout -= 1
+    end
+    false
+  end
+
   private
 
   def parse_data(data)
-    puts "... Received: #{data}" if ENV['SPEC_DEBUG']
+    puts "... Received: #{data}" if self.debug
     @received_messages << JSON.parse(data)
     @new_messages = true
   end

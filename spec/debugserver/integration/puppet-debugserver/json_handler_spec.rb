@@ -1,4 +1,5 @@
 require 'spec_debug_helper'
+require 'spec_debug_client'
 require 'json'
 
 class StubbedSimpleServerConnection < PuppetEditorServices::SimpleServerConnectionBase
@@ -35,6 +36,7 @@ describe 'PuppetDebugServer::JSONHandler' do
     connection: StubbedSimpleServerConnection.new
   }}
   let(:subject) { PuppetDebugServer::JSONHandler.new(subject_options) }
+  let(:client) { DebugClient.new }
 
   before(:each) {
     allow(subject).to receive(:close_connection_after_writing).and_return(true)
@@ -46,7 +48,7 @@ describe 'PuppetDebugServer::JSONHandler' do
 
   context 'During initial session setup' do
     it 'should respond with the correct capabilities' do
-      subject.parse_data(initialize_request)
+      subject.parse_data(client.initialize_request)
 
       response = data_from_request_seq_id(subject.client_connection, 1)
       expect(response['body']['supportsConfigurationDoneRequest']).to be true
@@ -59,22 +61,22 @@ describe 'PuppetDebugServer::JSONHandler' do
     end
 
     it 'should respond with an Initialized event' do
-      subject.parse_data(initialize_request)
+      subject.parse_data(client.initialize_request)
 
       response = data_from_event_name(subject.client_connection, 'initialized')
       expect(response).to_not be nil
     end
 
     it 'should respond with failures for debug session commands' do
-      subject.parse_data(initialize_request)
-      subject.parse_data(threads_request(2))
-      subject.parse_data(stacktrace_request(3))
-      subject.parse_data(scopes_request(4))
-      subject.parse_data(variables_request(5))
-      subject.parse_data(evaluate_request(6))
-      subject.parse_data(stepin_request(7))
-      subject.parse_data(stepout_request(8))
-      subject.parse_data(next_request(9))
+      subject.parse_data(client.initialize_request)
+      subject.parse_data(client.threads_request(2))
+      subject.parse_data(client.stacktrace_request(3))
+      subject.parse_data(client.scopes_request(4))
+      subject.parse_data(client.variables_request(5))
+      subject.parse_data(client.evaluate_request(6))
+      subject.parse_data(client.stepin_request(7))
+      subject.parse_data(client.stepout_request(8))
+      subject.parse_data(client.next_request(9))
 
       {
         2 => 'threads',
@@ -94,10 +96,10 @@ describe 'PuppetDebugServer::JSONHandler' do
     end
 
     it 'should increment the response sequence ID by one' do
-      subject.parse_data(initialize_request)
-      subject.parse_data(threads_request(10))
-      subject.parse_data(stacktrace_request(20))
-      subject.parse_data(scopes_request(30))
+      subject.parse_data(client.initialize_request)
+      subject.parse_data(client.threads_request(10))
+      subject.parse_data(client.stacktrace_request(20))
+      subject.parse_data(client.scopes_request(30))
 
       last_seq_id = nil
       [10, 20, 30].each do |req_seq_id|
@@ -115,8 +117,8 @@ describe 'PuppetDebugServer::JSONHandler' do
   context 'Receiving a disconnect request' do
     it 'should close the connection' do
       expect(subject).to receive(:close_connection)
-      subject.parse_data(initialize_request)
-      subject.parse_data(disconnect_request(2))
+      subject.parse_data(client.initialize_request)
+      subject.parse_data(client.disconnect_request(2))
     end
   end
 end
