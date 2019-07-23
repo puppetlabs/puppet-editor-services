@@ -128,6 +128,7 @@ describe 'End to End Testing' do
     # - Check that dynamic variable evaluation is available in later break points
     # - Dynamic line breakpoints (Adding while in flight)
     # - Step Out
+    # - Next
 
     # From documentation:
     # A session initialisation should look like;
@@ -154,7 +155,7 @@ describe 'End to End Testing' do
           },
           'breakpoints' => [
             { 'line' => 3  }, # This breakpoint is on a comment line and should not be verified
-            { 'line' => 39 }
+            { 'line' => 45 }
           ]
         }
       ))
@@ -192,7 +193,7 @@ describe 'End to End Testing' do
       # -----
       # This breakpoint is in the root of the manifest and has two variables defined
       # a_test_string and a_test_array
-      # Line 39
+      # Line 45
       # -----
 
       # Wait for the breakpoint to be hit
@@ -208,7 +209,7 @@ describe 'End to End Testing' do
       # As we're only in the root, only one frame should be available
       expect(result['success']).to be true
       expect(result['body']['stackFrames'].count).to eq(1)
-      expect(result['body']['stackFrames'][0]).to include('line' => 39)
+      expect(result['body']['stackFrames'][0]).to include('line' => 45)
 
       # Get the available scopes list
       @client.send_data(scopes_request(@client.next_seq_id))
@@ -258,8 +259,8 @@ describe 'End to End Testing' do
       # The stack should be two levels deep (root -> democlass)
       expect(result['success']).to be true
       expect(result['body']['stackFrames'].count).to eq(2)
-      expect(result['body']['stackFrames'][0]).to include('line' => 24)
-      expect(result['body']['stackFrames'][1]).to include('line' => 39)
+      expect(result['body']['stackFrames'][0]).to include('line' => 28)
+      expect(result['body']['stackFrames'][1]).to include('line' => 45)
 
       # -----
       # Now we wait to hit the alert function which is in the nestedclass class
@@ -283,8 +284,8 @@ describe 'End to End Testing' do
       expect(result['success']).to be true
       expect(result['body']['stackFrames'].count).to eq(3)
       expect(result['body']['stackFrames'][0]).to include('line' => 13, 'column' => 3, 'endColumn' => 36)
-      expect(result['body']['stackFrames'][1]).to include('line' => 27)
-      expect(result['body']['stackFrames'][2]).to include('line' => 39)
+      expect(result['body']['stackFrames'][1]).to include('line' => 31)
+      expect(result['body']['stackFrames'][2]).to include('line' => 45)
 
       # Evaluate that $before_var exists but $after_var does not.  Also add $mid_var to check later
       # - Check $democlass::before_var
@@ -304,7 +305,7 @@ describe 'End to End Testing' do
       expect(result['body']['result']).to eq('middle')
 
       # -----
-      # Change the function break points from alert to notice, mid-debug which should be line 43
+      # Change the function break points from alert to notice, mid-debug which should be line 49
       #
       # set_function_breakpoints_request
       @client.send_data(set_function_breakpoints_request(@client.next_seq_id,
@@ -321,7 +322,7 @@ describe 'End to End Testing' do
 
       # -----
       # Step out of nested class, back into democlass
-      # Line 29
+      # Line 35
       #
       @client.clear_messages!
       @client.send_data(stepout_request(@client.next_seq_id, thread_id))
@@ -335,8 +336,33 @@ describe 'End to End Testing' do
       # The stack should be two levels deep (root -> democlass)
       expect(result['success']).to be true
       expect(result['body']['stackFrames'].count).to eq(2)
-      expect(result['body']['stackFrames'][0]).to include('line' => 29)
-      expect(result['body']['stackFrames'][1]).to include('line' => 39)
+      expect(result['body']['stackFrames'][0]).to include('line' => 33)
+      expect(result['body']['stackFrames'][1]).to include('line' => 45)
+
+      # -----
+      # Now we call next twice to execute an include statement and make sure
+      # that we break on the command after it
+      # Line 37
+      # -----
+      @client.clear_messages!
+      @client.send_data(next_request(@client.next_seq_id, thread_id))
+      expect(@client).to receive_event_within_timeout(['stopped', 60])
+
+      @client.clear_messages!
+      @client.send_data(next_request(@client.next_seq_id, thread_id))
+      expect(@client).to receive_event_within_timeout(['stopped', 60])
+
+      # Get the stack trace list
+      @client.send_data(stacktrace_request(@client.next_seq_id, thread_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      result['body']['stackFrames'].each { |item| puts item['line'] }
+
+      # The stack should be two levels deep (root -> democlass)
+      expect(result['success']).to be true
+      expect(result['body']['stackFrames'].count).to eq(2)
+      expect(result['body']['stackFrames'][0]).to include('line' => 37)
+      expect(result['body']['stackFrames'][1]).to include('line' => 45)
 
       # ----
       # Dymically change the breakpoint list
@@ -350,7 +376,7 @@ describe 'End to End Testing' do
           },
           'breakpoints' => [
             { 'line' => 3  }, # This breakpoint is on a comment line and should not be verified
-            { 'line' => 41 }
+            { 'line' => 47 }
           ]
         }
       ))
@@ -379,7 +405,7 @@ describe 'End to End Testing' do
       # As we're only in the root, only one frame should be available
       expect(result['success']).to be true
       expect(result['body']['stackFrames'].count).to eq(1)
-      expect(result['body']['stackFrames'][0]).to include('line' => 41)
+      expect(result['body']['stackFrames'][0]).to include('line' => 47)
 
       # ---
       # Clear all breakpoints
@@ -401,7 +427,7 @@ describe 'End to End Testing' do
 
       # -----
       # Now we wait to hit the notice function which is in the root
-      # Line 43
+      # Line 49
       # -----
 
       # Wait for the breakpoint to be hit
@@ -420,7 +446,7 @@ describe 'End to End Testing' do
       # As we're only in the root, only one frame should be available
       expect(result['success']).to be true
       expect(result['body']['stackFrames'].count).to eq(1)
-      expect(result['body']['stackFrames'][0]).to include('line' => 43)
+      expect(result['body']['stackFrames'][0]).to include('line' => 49)
 
       # Evaluate that $mid_var still exists
       @client.send_data(evaluate_request(@client.next_seq_id, '$mid_var', 0))

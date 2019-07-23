@@ -19,6 +19,10 @@ class nestedclass {
   }
 }
 
+class ignoreclass {
+  notify {'ignoreclass': }
+}
+
 # Class: democlass
 #
 class democlass {
@@ -27,6 +31,8 @@ class democlass {
   include nestedclass
 
   $after_var = 'after'
+
+  include ignoreclass
 
   notify {'demo_notify': }
 }
