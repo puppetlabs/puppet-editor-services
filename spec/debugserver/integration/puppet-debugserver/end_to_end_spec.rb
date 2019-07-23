@@ -156,7 +156,8 @@ describe 'End to End Testing' do
           },
           'breakpoints' => [
             { 'line' => 3  }, # This breakpoint is on a comment line and should not be verified
-            { 'line' => 45 }
+            { 'line' => 45 },
+            { 'line' => 999 }, # This line does not exist
           ]
         }
       ))
@@ -169,6 +170,9 @@ describe 'End to End Testing' do
       expect(result['body']['breakpoints'][0]['message']).to match(/Line does not exist or is blank/)
       # Breakpoint at root of manifest
       expect(result['body']['breakpoints'][1]['verified']).to be true
+      # Breakpoint on a non-existant line
+      expect(result['body']['breakpoints'][2]['verified']).to be false
+      expect(result['body']['breakpoints'][2]['message']).to match(/Line does not exist/)
 
       # set_function_breakpoints_request
       @client.send_data(@client.set_function_breakpoints_request(@client.next_seq_id,
