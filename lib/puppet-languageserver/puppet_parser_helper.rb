@@ -60,9 +60,10 @@ module PuppetLanguageServer
 
     def self.object_under_cursor(content, line_num, char_num, options)
       options = {
-        :multiple_attempts  => false,
-        :disallowed_classes => [],
-        :tasks_mode         => false
+        :multiple_attempts   => false,
+        :disallowed_classes  => [],
+        :tasks_mode          => false,
+        :remove_trigger_char => true
       }.merge(options)
 
       # Use Puppet to generate the AST
@@ -130,13 +131,14 @@ module PuppetLanguageServer
       #     [0, 14, 34, 36]  means line number 2 starts at absolute offset 34
       #   Once we know the line offset, we can simply add on the char_num to get the absolute offset
       #   If during paring we modified the source we may need to change the cursor location
-      begin
+      if result.respond_to?(:line_offsets)
         line_offset = result.line_offsets[line_num]
-      rescue StandardError
+      else
         line_offset = result['locator'].line_index[line_num]
       end
-      # Typically we're completing after something was typed, so go back one char
-      abs_offset = line_offset + char_num + move_offset - 1
+      abs_offset = line_offset + char_num + move_offset
+      # Typically we're completing after something was typed, so go back one char by default
+      abs_offset -= 1 if options[:remove_trigger_char]
 
       # Enumerate the AST looking for items that span the line/char we want.
       # Once we have all valid items, sort them by the smallest span.  Typically the smallest span
@@ -144,7 +146,8 @@ module PuppetLanguageServer
       #
       # TODO: Should probably walk the AST and only look for the deepest child, but integer sorting
       #       is so much easier and faster.
-      model_path_struct = Struct.new(:model, :path)
+      model_path_locator_struct = Struct.new(:model, :path, :locator)
+
       valid_models = []
       if result.model.respond_to? :eAllContents
         valid_models = result.model.eAllContents.select do |item|
@@ -156,7 +159,7 @@ module PuppetLanguageServer
         path = []
         result.model._pcore_all_contents(path) do |item|
           if check_for_valid_item(item, abs_offset, options[:disallowed_classes]) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-            valid_models.push(model_path_struct.new(item, path.dup))
+            valid_models.push(model_path_locator_struct.new(item, path.dup))
           end
         end
 
@@ -164,13 +167,14 @@ module PuppetLanguageServer
       end
       # nil means the root of the document
       return nil if valid_models.empty?
-      item = valid_models[0]
+      response = valid_models[0]
 
-      if item.respond_to? :eAllContents # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-        item = model_path_struct.new(item, construct_path(item))
+      if response.respond_to? :eAllContents # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
+        response = model_path_locator_struct.new(response, construct_path(response))
       end
 
-      item
+      response.locator = result.model.locator
+      response
     end
 
     def self.construct_path(item)
@@ -187,5 +191,20 @@ module PuppetLanguageServer
     def self.check_for_valid_item(item, abs_offset, disallowed_classes)
       item.respond_to?(:offset) && !item.offset.nil? && !item.length.nil? && abs_offset >= item.offset && abs_offset <= item.offset + item.length && !disallowed_classes.include?(item.class)
     end
+
+    # This method is only required during development or debugging.  Visualising the AST tree can be difficult
+    # so this method just prints it to the console.
+    # def self.recurse_showast(item, abs_offset, disallowed_classes, depth = 0)
+    #   output = "  " * depth
+    #   output += check_for_valid_item(item, abs_offset, disallowed_classes) ? 'X ' : '  '
+    #   output += "#{item.class.to_s} (#{item.object_id})"
+    #   if item.respond_to?(:offset)
+    #     output += " (Off-#{item.offset}:#{item.offset + item.length} Pos-#{item.line}:#{item.pos} Len-#{item.length}) ~#{item.locator.extract_text(item.offset, item.length)}~"
+    #   end
+    #   puts output
+    #   item._pcore_contents do |child|
+    #     recurse_showast(child, abs_offset, disallowed_classes, depth + 1)
+    #   end
+    # end
   end
 end

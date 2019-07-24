@@ -14,7 +14,10 @@ module PuppetLanguageServer
         },
         'definitionProvider'      => true,
         'documentSymbolProvider'  => true,
-        'workspaceSymbolProvider' => true
+        'workspaceSymbolProvider' => true,
+        'signatureHelpProvider'   => {
+          'triggerCharacters' => ['(', ',']
+        }
       }
     end
 

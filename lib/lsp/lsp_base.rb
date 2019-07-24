@@ -16,7 +16,7 @@ module LSP
         item_value = send(name)
         if item_value.is_a?(Array)
           # Convert the items in the array .to_h
-          item_value = item_value.map { |item| item.to_h }
+          item_value = item_value.map { |item| item.respond_to?(:to_h) ? item.to_h : item }
         elsif !item_value.nil? && item_value.respond_to?(:to_h)
           item_value = item_value.to_h
         end
