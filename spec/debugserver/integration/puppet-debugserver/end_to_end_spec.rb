@@ -357,7 +357,6 @@ describe 'End to End Testing' do
       @client.send_data(@client.stacktrace_request(@client.next_seq_id, thread_id))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      result['body']['stackFrames'].each { |item| puts item['line'] }
 
       # The stack should be two levels deep (root -> democlass)
       expect(result['success']).to be true
