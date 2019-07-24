@@ -176,6 +176,7 @@ describe 'End to End Testing' do
     # - Dynamic line breakpoints (Adding while in flight)
     # - Step Out
     # - Next
+    # - Threads Request
 
     # From documentation:
     # A session initialisation should look like;
@@ -251,6 +252,15 @@ describe 'End to End Testing' do
       result = @client.data_from_event_name('stopped')
       expect(result['body']['reason']).to eq('breakpoint')
       thread_id = result['body']['threadId']
+
+      # Get the current threads list
+      @client.send_data(@client.threads_request(@client.next_seq_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      # Should only be one thread, and the same value as the previous breakpoint
+      expect(result['body']['threads'].count).to eq(1)
+      expect(result['body']['threads'][0]['name']).to eq('puppet')
+      expect(result['body']['threads'][0]['id']).to eq(thread_id)
 
       # Get the stack trace list
       @client.send_data(@client.stacktrace_request(@client.next_seq_id, thread_id))
