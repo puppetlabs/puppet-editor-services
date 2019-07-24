@@ -110,6 +110,54 @@ describe 'End to End Testing' do
     end
   end
 
+  context 'Processing an empty manifest with puppet-debug statements' do
+    let(:manifest_file) { File.join($fixtures_dir, 'environments', 'testfixtures', 'manifests', 'puppet_debugger.pp') }
+    let(:noop) { true }
+    let(:args) { [] }
+
+    it 'should process the manifest and exit with 0' do
+      # initialize_request
+      @client.send_data(@client.initialize_request(@client.next_seq_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+
+      # launch_request
+      @client.send_data(@client.launch_request(@client.next_seq_id, manifest_file, noop, args))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+
+      # configuration_done_request
+      @client.send_data(@client.configuration_done_request(@client.next_seq_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+
+      # Expect to hit the debug breakpoint on line 3
+      expect(@client).to receive_event_within_timeout(['stopped', 60])
+      result = @client.data_from_event_name('stopped')
+      expect(result['body']['reason']).to eq('function breakpoint')
+      expect(result['body']['description']).to eq('debug::break')
+      thread_id = result['body']['threadId']
+
+      # Get the stack trace list
+      @client.send_data(@client.stacktrace_request(@client.next_seq_id, thread_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      # The stack should be on stack on line 3
+      expect(result['success']).to be true
+      expect(result['body']['stackFrames'].count).to eq(1)
+      expect(result['body']['stackFrames'][0]).to include('line' => 3)
+
+      # Continue the execution
+      @client.clear_messages!
+      @client.send_data(@client.continue_request(@client.next_seq_id, thread_id))
+
+      # Wait for the puppet run to complete
+      expect(@client).to receive_event_within_timeout(['terminated', 60])
+
+      # Make sure we received the exited event
+      result = @client.data_from_event_name('exited')
+      expect(result).to_not be nil
+      expect(result['body']['exitCode']).to eq(0)
+    end
+  end
+
   context 'Processing a manifest with all debug features' do
     let(:manifest_file) { File.join($fixtures_dir, 'environments', 'testfixtures', 'manifests', 'kitchen_sink.pp') }
     let(:noop) { true }

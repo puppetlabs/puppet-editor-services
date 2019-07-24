@@ -36,22 +36,6 @@ describe 'PuppetDebugServer::PuppetDebugSession' do
       [self, class_in_catalog(catalog_text, target_class), nil ]
     }
 
-    context 'with a manifest which contains a function called breakpoint()' do
-      let(:catalog_text) { <<-EOT
-        class classtest {
-          breakpoint()
-        }
-      EOT
-      }
-      let(:target_class) { Puppet::Pops::Model::CallNamedFunctionExpression }
-
-      it 'should raise a function breakpoint hook when the function is hit' do
-        expect(subject).to receive(:execute_hook).with(:hook_function_breakpoint, any_args)
-
-        result = subject.hook_handlers.on_hook_before_pops_evaluate(subject_args)
-      end
-    end
-
     context 'with a manifest which contains a function called testfunc()' do
       let(:catalog_text) { <<-EOT
         class classtest {
