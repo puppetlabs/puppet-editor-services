@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'debugserver/debug_protocol'
+require 'dsp/dsp'
 require 'puppet_editor_services'
 
 require 'optparse'
@@ -34,8 +34,11 @@ module PuppetDebugServer
       message_router
       hooks
       puppet_debug_session
-      debug_hook_handlers
-      puppet_debug_breakpoints
+      debug_session/break_points
+      debug_session/hook_handlers
+      debug_session/flow_control
+      debug_session/puppet_session_run_mode
+      debug_session/puppet_session_state
       puppet_monkey_patches
     ].each do |lib|
       begin
@@ -108,22 +111,47 @@ module PuppetDebugServer
     log_message(:info, "Debug Server is v#{PuppetDebugServer.version}")
     log_message(:debug, 'Loading gems...')
     require_gems(options)
+    require 'puppet'
     log_message(:info, "Using Puppet v#{::Puppet.version}")
 
     true
   end
 
-  def self.rpc_server(options)
-    log_message(:info, 'Starting RPC Server...')
+  def self.rpc_server_async(options)
+    log_message(:info, 'Starting RPC Server (Async)...')
 
-    server = PuppetEditorServices::SimpleTCPServer.new
+    Thread.new do
+      Thread.current.abort_on_exception = true
+      server = PuppetEditorServices::SimpleTCPServer.new
 
-    options[:servicename] = 'DEBUG SERVER'
+      options[:servicename] = 'DEBUG SERVER'
 
-    server.add_service(options[:ipaddress], options[:port])
-    trap('INT') { server.stop_services(true) }
-    server.start(PuppetDebugServer::JSONHandler, options, 2)
+      server.add_service(options[:ipaddress], options[:port])
+      trap('INT') do
+        server.stop_services(true)
+        PuppetDebugServer::PuppetDebugSession.instance.flow_control.assert_flag(:terminate)
+      end
+      server.start(PuppetDebugServer::JSONHandler, options, 2)
 
-    log_message(:info, 'Debug Server exited.')
+      log_message(:info, 'Debug Server exited.')
+
+      # Forcibly kill the Debug Session
+      log_message(:info, 'Signalling Debug Session to terminate with extreme prejudice')
+      PuppetDebugServer::PuppetDebugSession.instance.force_terminate
+    end
+  end
+
+  def self.execute(rpc_thread)
+    debug_session = PuppetDebugServer::PuppetDebugSession.instance
+    debug_session.initialize_session
+
+    # TODO: Can I use a real mutex here? might be hard with the rpc_thread.alive? call
+    sleep(0.5) while !debug_session.flow_control.flag?(:start_puppet) && rpc_thread.alive? && !debug_session.flow_control.terminate?
+    return unless rpc_thread.alive? || debug_session.flow_control.terminate?
+    debug_session.run_puppet
+
+    return unless rpc_thread.alive?
+    debug_session.close
+    rpc_thread.join
   end
 end

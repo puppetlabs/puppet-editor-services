@@ -91,8 +91,8 @@ module PuppetDebugServer
 
     def send_response(response)
       # Modify the response
-      raise('protocol message type was not set to response') unless response['type'] == 'response'
-      response['seq'] = @response_sequence
+      raise('protocol message type was not set to response') unless response.type == 'response'
+      response.seq = @response_sequence
       @response_sequence += 1 # Not thread safe possibly. It's ok on MRI ruby, not jruby
 
       response_json = encode_json(response)
@@ -104,8 +104,8 @@ module PuppetDebugServer
 
     def send_event(response)
       # Modify the response
-      raise('protocol message type was not set to event') unless response['type'] == 'event'
-      response['seq'] = @response_sequence
+      raise('protocol message type was not set to event') unless response.type == 'event'
+      response.seq = @response_sequence
       @response_sequence += 1 # Not thread safe possibly. It's ok on MRI ruby, not jruby
 
       response_json = encode_json(response)
@@ -138,12 +138,11 @@ module PuppetDebugServer
     end
 
     def process(obj)
-      message = PuppetDebugServer::Protocol::ProtocolMessage.create(obj)
-      case message['type']
+      case obj['type']
       when 'request'
-        message_router.receive_request(PuppetDebugServer::Protocol::Request.create(obj), obj)
+        message_router.receive_request(DSP::Request.new.from_h!(obj), obj)
       else
-        PuppetDebugServer.log_message(:error, "Unknown protocol message type #{message['type']}")
+        PuppetDebugServer.log_message(:error, "Unknown protocol message type #{obj['type']}")
       end
     end
 

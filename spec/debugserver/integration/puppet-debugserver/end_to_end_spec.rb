@@ -38,7 +38,6 @@ describe 'End to End Testing' do
     let(:args) { [] }
 
     it 'should process the manifest and exit with 0' do
-      skip("Puppet 6 is not supported") if Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
       # initialize_request
       @client.send_data(@client.initialize_request(@client.next_seq_id))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
@@ -67,7 +66,6 @@ describe 'End to End Testing' do
     let(:args) { [] }
 
     it 'should process the manifest and exit with 1' do
-      skip("Puppet 6 is not supported") if Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
       # initialize_request
       @client.send_data(@client.initialize_request(@client.next_seq_id))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
@@ -112,6 +110,54 @@ describe 'End to End Testing' do
     end
   end
 
+  context 'Processing an empty manifest with puppet-debug statements' do
+    let(:manifest_file) { File.join($fixtures_dir, 'environments', 'testfixtures', 'manifests', 'puppet_debugger.pp') }
+    let(:noop) { true }
+    let(:args) { [] }
+
+    it 'should process the manifest and exit with 0' do
+      # initialize_request
+      @client.send_data(@client.initialize_request(@client.next_seq_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+
+      # launch_request
+      @client.send_data(@client.launch_request(@client.next_seq_id, manifest_file, noop, args))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+
+      # configuration_done_request
+      @client.send_data(@client.configuration_done_request(@client.next_seq_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+
+      # Expect to hit the debug breakpoint on line 3
+      expect(@client).to receive_event_within_timeout(['stopped', 60])
+      result = @client.data_from_event_name('stopped')
+      expect(result['body']['reason']).to eq('function breakpoint')
+      expect(result['body']['description']).to eq('debug::break')
+      thread_id = result['body']['threadId']
+
+      # Get the stack trace list
+      @client.send_data(@client.stacktrace_request(@client.next_seq_id, thread_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      # The stack should be on stack on line 3
+      expect(result['success']).to be true
+      expect(result['body']['stackFrames'].count).to eq(1)
+      expect(result['body']['stackFrames'][0]).to include('line' => 3)
+
+      # Continue the execution
+      @client.clear_messages!
+      @client.send_data(@client.continue_request(@client.next_seq_id, thread_id))
+
+      # Wait for the puppet run to complete
+      expect(@client).to receive_event_within_timeout(['terminated', 60])
+
+      # Make sure we received the exited event
+      result = @client.data_from_event_name('exited')
+      expect(result).to_not be nil
+      expect(result['body']['exitCode']).to eq(0)
+    end
+  end
+
   context 'Processing a manifest with all debug features' do
     let(:manifest_file) { File.join($fixtures_dir, 'environments', 'testfixtures', 'manifests', 'kitchen_sink.pp') }
     let(:noop) { true }
@@ -130,6 +176,7 @@ describe 'End to End Testing' do
     # - Dynamic line breakpoints (Adding while in flight)
     # - Step Out
     # - Next
+    # - Threads Request
 
     # From documentation:
     # A session initialisation should look like;
@@ -142,7 +189,6 @@ describe 'End to End Testing' do
     # - Launch request can occur during init
 
     it 'should process the manifest and exit with 0' do
-      skip("Puppet 6 is not supported") if Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
       # initialize_request
       @client.send_data(@client.initialize_request(@client.next_seq_id))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
@@ -156,19 +202,23 @@ describe 'End to End Testing' do
           },
           'breakpoints' => [
             { 'line' => 3  }, # This breakpoint is on a comment line and should not be verified
-            { 'line' => 45 }
+            { 'line' => 45 },
+            { 'line' => 999 }, # This line does not exist
           ]
         }
       ))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       # Ensure the breakpoint response is as expected
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      expect(result['success']).to eq('true')
+      expect(result['success']).to eq(true)
       # Breakpoint on a comment line
       expect(result['body']['breakpoints'][0]['verified']).to be false
-      expect(result['body']['breakpoints'][0]['message']).to match(/Line does not exist or is blank/)
+      expect(result['body']['breakpoints'][0]['message']).to match(/Line is blank/)
       # Breakpoint at root of manifest
       expect(result['body']['breakpoints'][1]['verified']).to be true
+      # Breakpoint on a non-existant line
+      expect(result['body']['breakpoints'][2]['verified']).to be false
+      expect(result['body']['breakpoints'][2]['message']).to match(/Line does not exist/)
 
       # set_function_breakpoints_request
       @client.send_data(@client.set_function_breakpoints_request(@client.next_seq_id,
@@ -202,6 +252,15 @@ describe 'End to End Testing' do
       result = @client.data_from_event_name('stopped')
       expect(result['body']['reason']).to eq('breakpoint')
       thread_id = result['body']['threadId']
+
+      # Get the current threads list
+      @client.send_data(@client.threads_request(@client.next_seq_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      # Should only be one thread, and the same value as the previous breakpoint
+      expect(result['body']['threads'].count).to eq(1)
+      expect(result['body']['threads'][0]['name']).to eq('puppet')
+      expect(result['body']['threads'][0]['id']).to eq(thread_id)
 
       # Get the stack trace list
       @client.send_data(@client.stacktrace_request(@client.next_seq_id, thread_id))
@@ -288,22 +347,36 @@ describe 'End to End Testing' do
       expect(result['body']['stackFrames'][1]).to include('line' => 31)
       expect(result['body']['stackFrames'][2]).to include('line' => 45)
 
-      # Evaluate that $before_var exists but $after_var does not.  Also add $mid_var to check later
+      # Evaluate that $before_var exists but $after_var does not. Also add $mid_var to check later
+      # These are repl based evaluations
       # - Check $democlass::before_var
-      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::before_var', 0))
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::before_var', 0, 'repl'))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
       expect(result['body']['result']).to eq('before')
       # - Check $democlass::after_var
-      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::after_var', 0))
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::after_var', 0, 'repl'))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      expect(result['body']['result']).to eq('')
+      expect(result['body']['result']).to be_nil
       # - Create $mid_var
-      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$mid_var = \'middle\'', 0))
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$mid_var = \'middle\'', 0, 'repl'))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
       expect(result['body']['result']).to eq('middle')
+
+      # Evaluate using a watch
+      # - Check $democlass::before_var
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::before_var', 0, 'watch'))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      expect(result['body']['result']).to eq('before')
+      # - Check a variable that does not exist
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$does_not_exist', 0, 'watch'))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      expect(result['success']).to be false
+      expect(result['message']).to match(/Unknown.+does_not_exist/)
 
       # -----
       # Change the function break points from alert to notice, mid-debug which should be line 49
@@ -357,7 +430,6 @@ describe 'End to End Testing' do
       @client.send_data(@client.stacktrace_request(@client.next_seq_id, thread_id))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      result['body']['stackFrames'].each { |item| puts item['line'] }
 
       # The stack should be two levels deep (root -> democlass)
       expect(result['success']).to be true
@@ -384,10 +456,10 @@ describe 'End to End Testing' do
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       # Ensure the breakpoint response is as expected
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      expect(result['success']).to eq('true')
+      expect(result['success']).to eq(true)
       # Breakpoint on a comment line
       expect(result['body']['breakpoints'][0]['verified']).to be false
-      expect(result['body']['breakpoints'][0]['message']).to match(/Line does not exist or is blank/)
+      expect(result['body']['breakpoints'][0]['message']).to match(/Line is blank/)
       # Breakpoint at root of manifest
       expect(result['body']['breakpoints'][1]['verified']).to be true
 
@@ -424,7 +496,7 @@ describe 'End to End Testing' do
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       # Ensure the breakpoint response is as expected
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      expect(result['success']).to eq('true')
+      expect(result['success']).to eq(true)
 
       # -----
       # Now we wait to hit the notice function which is in the root

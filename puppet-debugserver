@@ -7,4 +7,5 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'lib'))
 require 'puppet_debugserver'
 
 PuppetDebugServer.init_puppet(PuppetDebugServer::CommandLineParser.parse(ARGV))
-PuppetDebugServer.rpc_server(PuppetDebugServer::CommandLineParser.parse(ARGV))
+rpc_thread = PuppetDebugServer.rpc_server_async(PuppetDebugServer::CommandLineParser.parse(ARGV))
+PuppetDebugServer.execute(rpc_thread)

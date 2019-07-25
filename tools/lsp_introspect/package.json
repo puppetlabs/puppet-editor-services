@@ -13,6 +13,7 @@
   "dependencies": {
     "vscode-languageserver-protocol": "3.14.1",
     "vscode-languageserver-types": "3.14.0",
+    "vscode-debugprotocol": "1.35.0",
     "typescript-parser": "2.6.1",
     "typescript": "^3.0.3"
   }
