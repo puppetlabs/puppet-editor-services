@@ -347,22 +347,36 @@ describe 'End to End Testing' do
       expect(result['body']['stackFrames'][1]).to include('line' => 31)
       expect(result['body']['stackFrames'][2]).to include('line' => 45)
 
-      # Evaluate that $before_var exists but $after_var does not.  Also add $mid_var to check later
+      # Evaluate that $before_var exists but $after_var does not. Also add $mid_var to check later
+      # These are repl based evaluations
       # - Check $democlass::before_var
-      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::before_var', 0))
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::before_var', 0, 'repl'))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
       expect(result['body']['result']).to eq('before')
       # - Check $democlass::after_var
-      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::after_var', 0))
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::after_var', 0, 'repl'))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      expect(result['body']['result']).to eq('')
+      expect(result['body']['result']).to be_nil
       # - Create $mid_var
-      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$mid_var = \'middle\'', 0))
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$mid_var = \'middle\'', 0, 'repl'))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
       expect(result['body']['result']).to eq('middle')
+
+      # Evaluate using a watch
+      # - Check $democlass::before_var
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::before_var', 0, 'watch'))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      expect(result['body']['result']).to eq('before')
+      # - Check a variable that does not exist
+      @client.send_data(@client.evaluate_request(@client.next_seq_id, '$does_not_exist', 0, 'watch'))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      expect(result['success']).to be false
+      expect(result['message']).to match(/Unknown.+does_not_exist/)
 
       # -----
       # Change the function break points from alert to notice, mid-debug which should be line 49
