@@ -3,7 +3,7 @@
 module PuppetLanguageServer
   module PuppetHelper
     class Cache
-      SECTIONS = %i[class type function].freeze
+      SECTIONS = %i[class type function datatype].freeze
       ORIGINS = %i[default workspace].freeze
 
       def initialize(_options = {})
@@ -35,7 +35,7 @@ module PuppetLanguageServer
         nil
       end
 
-      # section => <Type of object in the file :function, :type, :class>
+      # section => <Type of object in the file :function, :type, :class, :datatype>
       def object_by_name(section, name)
         name = name.intern if name.is_a?(String)
         return nil if section.nil?
@@ -50,7 +50,7 @@ module PuppetLanguageServer
         nil
       end
 
-      # section => <Type of object in the file :function, :type, :class>
+      # section => <Type of object in the file :function, :type, :class, :datatype>
       def object_names_by_section(section)
         result = []
         return result if section.nil?
@@ -64,7 +64,7 @@ module PuppetLanguageServer
         result.compact
       end
 
-      # section => <Type of object in the file :function, :type, :class>
+      # section => <Type of object in the file :function, :type, :class, :datatype>
       def objects_by_section(section, &_block)
         return if section.nil?
         @cache_lock.synchronize do

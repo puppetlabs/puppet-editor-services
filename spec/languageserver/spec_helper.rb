@@ -21,7 +21,8 @@ def wait_for_puppet_loading
   loop do
     break if PuppetLanguageServer::PuppetHelper.default_functions_loaded? &&
              PuppetLanguageServer::PuppetHelper.default_types_loaded? &&
-             PuppetLanguageServer::PuppetHelper.default_classes_loaded?
+             PuppetLanguageServer::PuppetHelper.default_classes_loaded? &&
+             PuppetLanguageServer::PuppetHelper.default_datatypes_loaded?
     sleep(1)
     interation += 1
     next if interation < 90
@@ -30,6 +31,7 @@ def wait_for_puppet_loading
             functions_loaded? = #{PuppetLanguageServer::PuppetHelper.default_functions_loaded?}
             types_loaded? = #{PuppetLanguageServer::PuppetHelper.default_types_loaded?}
             classes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_classes_loaded?}
+            datatypes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_datatypes_loaded?}
           ERRORMSG
   end
 end

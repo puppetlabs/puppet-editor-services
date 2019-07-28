@@ -166,6 +166,34 @@ module PuppetLanguageServer
       @inmemory_cache.object_names_by_section(:class).map(&:to_s)
     end
 
+    # DataTypes
+    def self.default_datatypes_loaded?
+      @default_datatypes_loaded.nil? ? false : @default_datatypes_loaded
+    end
+
+    def self.assert_default_datatypes_loaded
+      @default_datatypes_loaded = true
+    end
+
+    def self.load_default_datatypes
+      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
+      @default_datatypes_loaded = false
+      sidecar_queue.execute_sync('default_datatypes', [])
+    end
+
+    def self.load_default_datatypes_async
+      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
+      @default_datatypes_loaded = false
+      sidecar_queue.enqueue('default_datatypes', [])
+    end
+
+    def self.datatype(name)
+      return nil if @default_functions_loaded == false
+      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
+      load_default_datatypes unless @default_functions_loaded
+      @inmemory_cache.object_by_name(:datatype, name)
+    end
+
     def self.cache
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @inmemory_cache

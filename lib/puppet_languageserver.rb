@@ -259,6 +259,9 @@ module PuppetLanguageServer
 
         log_message(:info, 'Preloading Classes (Async)...')
         PuppetLanguageServer::PuppetHelper.load_default_classes_async
+
+        log_message(:info, 'Preloading DataTypes (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_datatypes_async
       end
 
       if PuppetLanguageServer::DocumentStore.store_has_module_metadata? || PuppetLanguageServer::DocumentStore.store_has_environmentconf?

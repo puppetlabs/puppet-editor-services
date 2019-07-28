@@ -66,12 +66,14 @@ module PuppetLanguageServer
       when 'default_aggregate'
         lists = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new.from_json!(result)
         @cache.import_sidecar_list!(lists.classes,   :class, :default)
+        @cache.import_sidecar_list!(lists.datatypes, :datatype, :default)
         @cache.import_sidecar_list!(lists.functions, :function, :default)
         @cache.import_sidecar_list!(lists.types,     :type, :default)
 
         PuppetLanguageServer::PuppetHelper.assert_default_classes_loaded
         PuppetLanguageServer::PuppetHelper.assert_default_functions_loaded
         PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
+        PuppetLanguageServer::PuppetHelper.assert_default_datatypes_loaded
 
         lists.each_list do |k, v|
           if v.nil?
@@ -87,6 +89,13 @@ module PuppetLanguageServer
         PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_classes returned #{list.count} items")
 
         PuppetLanguageServer::PuppetHelper.assert_default_classes_loaded
+
+      when 'default_datatypes'
+        list = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new.from_json!(result)
+        @cache.import_sidecar_list!(list, :datatype, :default)
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_datatypes returned #{list.count} items")
+
+        PuppetLanguageServer::PuppetHelper.assert_default_datatypes_loaded
 
       when 'default_functions'
         list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new.from_json!(result)
@@ -111,6 +120,7 @@ module PuppetLanguageServer
       when 'workspace_aggregate'
         lists = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new.from_json!(result)
         @cache.import_sidecar_list!(lists.classes,   :class, :workspace)
+        @cache.import_sidecar_list!(lists.datatypes, :datatype, :workspace)
         @cache.import_sidecar_list!(lists.functions, :function, :workspace)
         @cache.import_sidecar_list!(lists.types,     :type, :workspace)
 
@@ -126,6 +136,11 @@ module PuppetLanguageServer
         list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new.from_json!(result)
         @cache.import_sidecar_list!(list, :class, :workspace)
         PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: workspace_classes returned #{list.count} items")
+
+      when 'workspace_datatypes'
+        list = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new.from_json!(result)
+        @cache.import_sidecar_list!(list, :datatype, :workspace)
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: workspace_datatypes returned #{list.count} items")
 
       when 'workspace_functions'
         list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new.from_json!(result)
