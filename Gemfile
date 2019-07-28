@@ -27,9 +27,6 @@ group :development do
   # The puppet-strings gem is not available in the Puppet Agent, but is in the PDK. We add it to the
   # Gemfile here for testing and development.
   gem "puppet-strings", "~> 2.0", :require => false
-  # Due to PDOC-283 we need to pin YARD at 0.9.19 until that issue is resolved and
-  # released in a new version of puppet-strings
-  gem "yard", "< 0.9.19", :require => false
 
   case RUBY_PLATFORM
   when /darwin/
