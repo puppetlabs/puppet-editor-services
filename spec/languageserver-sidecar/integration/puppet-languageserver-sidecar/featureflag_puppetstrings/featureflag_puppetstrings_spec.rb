@@ -4,14 +4,17 @@ require 'tempfile'
 
 describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0') do
   def run_sidecar(cmd_options)
+    # Use a new array so we don't affect the original cmd_options)
+    cmd = cmd_options.dup
     # Append the feature flag
-    cmd_options << '--feature-flag=puppetstrings'
+    cmd << '--feature-flag=puppetstrings'
 
     # Append the puppet test-fixtures
-    cmd_options << '--puppet-settings'
-    cmd_options << "--vardir,#{File.join($fixtures_dir, 'real_agent', 'cache')},--confdir,#{File.join($fixtures_dir, 'real_agent', 'confdir')}"
+    cmd << '--puppet-settings'
+    cmd << "--vardir,#{File.join($fixtures_dir, 'real_agent', 'cache')},--confdir,#{File.join($fixtures_dir, 'real_agent', 'confdir')}"
 
-    cmd = ['ruby', 'puppet-languageserver-sidecar'].concat(cmd_options)
+    cmd.unshift('puppet-languageserver-sidecar')
+    cmd.unshift('ruby')
     stdout, _stderr, status = Open3.capture3(*cmd)
 
     raise "Expected exit code of 0, but got #{status.exitstatus} #{_stderr}" unless status.exitstatus.zero?
