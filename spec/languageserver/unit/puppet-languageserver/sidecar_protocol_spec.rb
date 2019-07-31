@@ -22,6 +22,12 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
         expect(subject).to respond_to(testcase)
       end
     end
+
+    it 'should roundtrip to_h to from_h!' do
+      subject_as_hash = subject.to_h
+      copy = subject_klass.new.from_h!(subject_as_hash)
+      expect(subject_as_hash).to eq(copy.to_h)
+    end
   end
 
   shared_examples_for 'a base Sidecar Protocol Puppet object list' do
