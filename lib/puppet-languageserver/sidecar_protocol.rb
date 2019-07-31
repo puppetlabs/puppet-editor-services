@@ -111,6 +111,13 @@ module PuppetLanguageServer
           self.length         = value['length']
           self
         end
+
+        private
+
+        def value_from_hash(hash, key)
+          # The key could be a Symbol or String in the hash
+          hash[key].nil? ? hash[key.to_s] : hash[key]
+        end
       end
 
       class BasePuppetObjectList < Array
@@ -173,9 +180,10 @@ module PuppetLanguageServer
           self.parameters = {}
           unless value['parameters'].nil?
             value['parameters'].each do |attr_name, obj_attr|
+              # TODO: This should be a class, not a hash
               parameters[attr_name] = {
-                :type => obj_attr['type'],
-                :doc  => obj_attr['doc']
+                :type => value_from_hash(obj_attr, :type),
+                :doc  => value_from_hash(obj_attr, :doc)
               }
             end
           end
@@ -204,7 +212,7 @@ module PuppetLanguageServer
           super.to_h.merge(
             'doc'              => doc,
             'function_version' => function_version,
-            'signatures'       => signatures
+            'signatures'       => signatures.map(&:to_h)
           )
         end
 
@@ -240,7 +248,7 @@ module PuppetLanguageServer
             'key'          => key,
             'doc'          => doc,
             'return_types' => return_types,
-            'parameters'   => parameters
+            'parameters'   => parameters.map(&:to_h)
           }
         end
 
@@ -311,10 +319,11 @@ module PuppetLanguageServer
           unless value['attributes'].nil?
             value['attributes'].each do |attr_name, obj_attr|
               attributes[attr_name.intern] = {
-                :type       => obj_attr['type'].intern,
-                :doc        => obj_attr['doc'],
-                :required?  => obj_attr['required?'],
-                :isnamevar? => obj_attr['isnamevar?']
+                # TODO: This should be a class, not a hash
+                :type       => value_from_hash(obj_attr, :type).intern,
+                :doc        => value_from_hash(obj_attr, :doc),
+                :required?  => value_from_hash(obj_attr, :required?),
+                :isnamevar? => value_from_hash(obj_attr, :isnamevar?)
               }
             end
           end
