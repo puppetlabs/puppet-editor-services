@@ -261,7 +261,7 @@ module PuppetLanguageServerSidecar
     when 'default_classes'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       if use_puppet_strings
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:class])[:classes]
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:class]).classes
       else
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(cache)
       end
@@ -269,7 +269,7 @@ module PuppetLanguageServerSidecar
     when 'default_functions'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       if use_puppet_strings
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:function])[:functions]
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:function]).functions
       else
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache)
       end
@@ -277,7 +277,7 @@ module PuppetLanguageServerSidecar
     when 'default_types'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       if use_puppet_strings
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:type])[:types]
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:type]).types
       else
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(cache)
       end
@@ -314,7 +314,7 @@ module PuppetLanguageServerSidecar
         cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
                                                                               :object_types => [:class],
-                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)[:classes]
+                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).classes
       else
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(null_cache,
                                                                    :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
@@ -328,7 +328,7 @@ module PuppetLanguageServerSidecar
         cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
                                                                               :object_types => [:function],
-                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)[:functions]
+                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).functions
       else
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(null_cache,
                                                                      :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
@@ -341,7 +341,7 @@ module PuppetLanguageServerSidecar
         cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
                                                                               :object_types => [:type],
-                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)[:types]
+                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).types
       else
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(null_cache)
       end

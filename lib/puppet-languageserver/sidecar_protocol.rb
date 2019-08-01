@@ -141,9 +141,7 @@ module PuppetLanguageServer
         end
       end
 
-      class NodeGraph
-        include Base
-
+      class NodeGraph < BaseClass
         attr_accessor :dot_content
         attr_accessor :error_content
 
@@ -337,7 +335,7 @@ module PuppetLanguageServer
         end
       end
 
-      class Resource
+      class Resource < BaseClass
         attr_accessor :manifest
 
         def to_h
@@ -363,6 +361,83 @@ module PuppetLanguageServer
       class ResourceList < BasePuppetObjectList
         def child_type
           Resource
+        end
+      end
+
+      # This class is a little special as it contains a lot logic.
+      # In essence this is just wrapping a hash with specific methods for the
+      # the different types of metadata (classes, functions etc.)
+      class AggregateMetadata < BaseClass
+        def initialize
+          super
+          @aggregate = {}
+        end
+
+        def classes
+          @aggregate[:classes]
+        end
+
+        def functions
+          @aggregate[:functions]
+        end
+
+        def types
+          @aggregate[:types]
+        end
+
+        def append!(obj)
+          list_for_object_class(obj.class) << obj
+        end
+
+        def to_json(*options)
+          @aggregate.to_json(options)
+        end
+
+        def from_json!(json_string)
+          obj = JSON.parse(json_string)
+          obj.each do |key, value|
+            info = METADATA_LIST[key.intern]
+            next if info.nil?
+            list = list_for_object_class(info[:item_class])
+            value.each { |i| list << info[:item_class].new.from_h!(i) }
+          end
+          self
+        end
+
+        def each_list
+          return unless block_given?
+          @aggregate.each { |k, v| yield k, v }
+        end
+
+        private
+
+        # When adding a new metadata item:
+        # - Add to the information to this hash
+        # - Add a method to access the aggregate
+        METADATA_LIST = {
+          :classes   => {
+            :item_class => PuppetClass,
+            :list_class => PuppetClassList
+          },
+          :functions => {
+            :item_class => PuppetFunction,
+            :list_class => PuppetFunctionList
+          },
+          :types     => {
+            :item_class => PuppetType,
+            :list_class => PuppetTypeList
+          }
+        }.freeze
+
+        def list_for_object_class(klass)
+          METADATA_LIST.each do |name, info|
+            if klass == info[:item_class]
+              @aggregate[name] = info[:list_class].new if @aggregate[name].nil?
+              return @aggregate[name]
+            end
+          end
+
+          raise "Unknown object class #{klass.name}"
         end
       end
     end
