@@ -45,6 +45,16 @@ describe 'PuppetLanguageServerSidecar' do
     end
   end
 
+  describe 'when running default_aggregate action' do
+    let (:cmd_options) { ['--action', 'default_aggregate'] }
+
+    it 'should return an empty hash' do
+      result = run_sidecar(cmd_options)
+
+      expect(result).to eq('{}')
+    end
+  end
+
   describe 'when running default_classes action' do
     let (:cmd_options) { ['--action', 'default_classes'] }
 
@@ -123,6 +133,16 @@ describe 'PuppetLanguageServerSidecar' do
           expect(deserial.dot_content).to match(/Fixture\[test\]/)
           expect(deserial.error_content.to_s).to eq('')
         end
+      end
+    end
+
+    describe 'when running workspace_aggregate action' do
+      let (:cmd_options) { ['--action', 'workspace_aggregate', '--local-workspace', workspace] }
+
+      it 'should return an empty hash' do
+        result = run_sidecar(cmd_options)
+
+        expect(result).to eq('{}')
       end
     end
 
@@ -209,6 +229,16 @@ describe 'PuppetLanguageServerSidecar' do
           expect(deserial.dot_content).to match(/Envtype\[test\]/)
           expect(deserial.error_content.to_s).to eq('')
         end
+      end
+    end
+
+    describe 'when running workspace_aggregate action' do
+      let (:cmd_options) { ['--action', 'workspace_aggregate', '--local-workspace', workspace] }
+
+      it 'should return an empty hash' do
+        result = run_sidecar(cmd_options)
+
+        expect(result).to eq('{}')
       end
     end
 

@@ -105,11 +105,13 @@ module PuppetLanguageServerSidecar
 
   ACTION_LIST = %w[
     noop
+    default_aggregate
     default_classes
     default_functions
     default_types
     node_graph
     resource_list
+    workspace_aggregate
     workspace_classes
     workspace_functions
     workspace_types
@@ -258,6 +260,15 @@ module PuppetLanguageServerSidecar
     when 'noop'
       []
 
+    when 'default_aggregate'
+      cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+      if use_puppet_strings
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types)
+      else
+        log_message(:warn, 'The default_aggregate action is only supported with the puppetstrings feature flag')
+        {}
+      end
+
     when 'default_classes'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       if use_puppet_strings
@@ -306,6 +317,18 @@ module PuppetLanguageServerSidecar
         return []
       end
       PuppetLanguageServerSidecar::PuppetHelper.get_puppet_resource(typename, title)
+
+    when 'workspace_aggregate'
+      return nil unless inject_workspace_as_module || inject_workspace_as_environment
+      cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+      if use_puppet_strings
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                              :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types,
+                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)
+      else
+        log_message(:warn, 'The workspace_aggregate action is only supported with the puppetstrings feature flag')
+        {}
+      end
 
     when 'workspace_classes'
       null_cache = PuppetLanguageServerSidecar::Cache::Null.new
