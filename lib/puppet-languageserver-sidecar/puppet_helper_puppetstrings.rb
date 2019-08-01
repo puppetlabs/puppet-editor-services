@@ -47,12 +47,8 @@ module PuppetLanguageServerSidecar
       object_types = options[:object_types].nil? ? available_documentation_types : options[:object_types]
       object_types.select! { |i| available_documentation_types.include?(i) }
 
-      result = {}
+      result = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
       return result if object_types.empty?
-
-      result[:classes]   = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new if object_types.include?(:class)
-      result[:functions] = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new if object_types.include?(:function)
-      result[:types]     = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new if object_types.include?(:type)
 
       current_env = current_environment
       for_agent = options[:for_agent].nil? ? true : options[:for_agent]
@@ -74,25 +70,25 @@ module PuppetLanguageServerSidecar
         next if file_doc.nil?
 
         if object_types.include?(:class) # rubocop:disable Style/IfUnlessModifier   This reads better
-          file_doc.classes.each { |item| result[:classes] << item }
+          file_doc.classes.each { |item| result.append!(item) }
         end
         if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better
-          file_doc.functions.each { |item| result[:functions] << item }
+          file_doc.functions.each { |item| result.append!(item) }
         end
         if object_types.include?(:type)
           file_doc.types.each do |item|
-            result[:types] << item unless name == 'whit' || name == 'component' # rubocop:disable Style/MultipleComparison
+            result.append!(item) unless name == 'whit' || name == 'component' # rubocop:disable Style/MultipleComparison
           end
         end
       end
 
       # Remove Puppet3 functions which have a Puppet4 function already loaded
       if object_types.include?(:function)
-        pup4_functions = result[:functions].select { |i| i.function_version == 4 }.map { |i| i.key }
-        result[:functions].reject! { |i| i.function_version == 3 && pup4_functions.include?(i.key) }
+        pup4_functions = result.functions.select { |i| i.function_version == 4 }.map { |i| i.key }
+        result.functions.reject! { |i| i.function_version == 3 && pup4_functions.include?(i.key) }
       end
 
-      result.each { |key, item| PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_puppet_strings] Finished loading #{item.count} #{key}") }
+      result.each_list { |key, item| PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_puppet_strings] Finished loading #{item.count} #{key}") }
       result
     end
 

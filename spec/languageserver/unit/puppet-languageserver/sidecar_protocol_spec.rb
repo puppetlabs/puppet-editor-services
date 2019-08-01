@@ -14,6 +14,13 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
 
       expect(serial).to be_a(String)
     end
+
+    it 'should roundtrip to_json to from_json!' do
+      subject_as_json = subject.to_json
+      copy = subject_klass.new.from_json!(subject_as_json)
+      expect(copy.to_json).to eq(subject_as_json)
+      expect(copy.hash).to eq(subject.hash)
+    end
   end
 
   shared_examples_for 'a base Sidecar Protocol Puppet object' do
@@ -435,5 +442,20 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
     it "instance should have a childtype of Resource" do
       expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::Resource)
     end
+  end
+
+  describe 'AggregateMetadata' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata }
+    let(:subject) {
+      value = subject_klass.new
+      (1..3).each do |_|
+        value.append!(random_sidecar_puppet_class)
+        value.append!(random_sidecar_puppet_function)
+        value.append!(random_sidecar_puppet_type)
+      end
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol object'
   end
 end

@@ -92,6 +92,37 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
     end
   end
 
+  describe 'when running default_aggregate action' do
+    let (:cmd_options) { ['--action', 'default_aggregate'] }
+
+    it 'should return a cachable deserializable aggregate object with all default metadata' do
+      expect_empty_cache
+
+      result = run_sidecar(cmd_options)
+      deserial = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+      expect { deserial.from_json!(result) }.to_not raise_error
+
+      # The contents of the result are tested later
+
+      # Now run using cached information
+      expect_populated_cache
+
+      result2 = run_sidecar(cmd_options)
+      deserial2 = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new()
+      expect { deserial2.from_json!(result2) }.to_not raise_error
+
+      deserial.class
+              .instance_methods(false)
+              .reject { |name| %i[to_json from_json! each_list append!].include?(name) }
+              .each do |method_name|
+        # There should be at least one item
+        expect(deserial.send(method_name).count).to be > 0
+        # Before and after should be the same
+        expect_same_array_content(deserial.send(method_name), deserial2.send(method_name))
+      end
+    end
+  end
+
   describe 'when running default_classes action' do
     let (:cmd_options) { ['--action', 'default_classes'] }
 
@@ -236,6 +267,37 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
       end
     end
 
+    describe 'when running workspace_aggregate action' do
+      let (:cmd_options) { ['--action', 'workspace_aggregate', '--local-workspace', workspace] }
+
+      it 'should return a cachable deserializable aggregate object with all default metadata' do
+        expect_empty_cache
+
+        result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        # The contents of the result are tested later
+
+        # Now run using cached information
+        expect_populated_cache
+
+        result2 = run_sidecar(cmd_options)
+        deserial2 = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new()
+        expect { deserial2.from_json!(result2) }.to_not raise_error
+
+        deserial.class
+                .instance_methods(false)
+                .reject { |name| %i[to_json from_json! each_list append!].include?(name) }
+                .each do |method_name|
+          # There should be at least one item
+          expect(deserial.send(method_name).count).to be > 0
+          # Before and after should be the same
+          expect_same_array_content(deserial.send(method_name), deserial2.send(method_name))
+        end
+      end
+    end
+
     describe 'when running workspace_classes action' do
       let (:cmd_options) { ['--action', 'workspace_classes', '--local-workspace', workspace] }
 
@@ -344,6 +406,37 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
 
           expect(deserial.dot_content).to match(/Envtype\[test\]/)
           expect(deserial.error_content.to_s).to eq('')
+        end
+      end
+    end
+
+    describe 'when running workspace_aggregate action' do
+      let (:cmd_options) { ['--action', 'workspace_aggregate', '--local-workspace', workspace] }
+
+      it 'should return a cachable deserializable aggregate object with all default metadata' do
+        expect_empty_cache
+
+        result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        # The contents of the result are tested later
+
+        # Now run using cached information
+        expect_populated_cache
+
+        result2 = run_sidecar(cmd_options)
+        deserial2 = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new()
+        expect { deserial2.from_json!(result2) }.to_not raise_error
+
+        deserial.class
+                .instance_methods(false)
+                .reject { |name| %i[to_json from_json! each_list append!].include?(name) }
+                .each do |method_name|
+          # There should be at least one item
+          expect(deserial.send(method_name).count).to be > 0
+          # Before and after should be the same
+          expect_same_array_content(deserial.send(method_name), deserial2.send(method_name))
         end
       end
     end
