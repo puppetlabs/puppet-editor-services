@@ -282,7 +282,7 @@ module PuppetLanguageServerSidecar
     attr_accessor :types
 
     def initialize(path = nil)
-      @path = path
+      @path      = path
       @classes   = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
       @functions = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
       @types     = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
