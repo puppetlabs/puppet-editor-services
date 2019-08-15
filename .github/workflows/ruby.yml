@@ -14,10 +14,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        ruby: [ '2.X' ]
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        ruby: [ '2.x' ]
+        os: [ ubuntu-latest ]
         include:
-          - ruby: '2.X'
+          - ruby: '2.x'
             env:
               PUPPET_GEM_VERSION: "~> 4.0"
               RAKE_TASK: "test_languageserver test_languageserver_sidecar test_debugserver"
