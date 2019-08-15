@@ -3,20 +3,32 @@ name: Ruby
 on:
   pull_request:
     branches:
-    - master
+      - master
+  push:
+    branches:
+      - master
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
+  test:
+    name: Test on node ${{ matrix.ruby_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - ruby_version: 2.1.9
+            env:
+              PUPPET_GEM_VERSION: "~> 4.0"
+              RAKE_TASK: "test_languageserver test_languageserver_sidecar test_debugserver"
+              BUNDLER_VERSION: 1.17.3
 
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Ruby 2.6
+    - name: Use Ruby ${{ matrix.ruby_version }}
       uses: actions/setup-ruby@v1
       with:
-        ruby-version: 2.6.x
-    - name: Build and test with Rake
+        version: ${{ matrix.ruby_version }}
+
+    - name: ruby install, build and test
       run: |
         gem install bundler
         bundle install --jobs 4 --retry 3
