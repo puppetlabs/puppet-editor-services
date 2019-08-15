@@ -14,6 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - ruby_version: 2.1.9
             env:
