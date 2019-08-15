@@ -10,14 +10,14 @@ on:
 
 jobs:
   test:
-    name: Test on node ${{ matrix.ruby_version }} and ${{ matrix.os }}
+    name: Test on node ${{ matrix.ruby }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        ruby_version: [ 2.1.9 ]
+        ruby: [ '2.X' ]
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
-          - ruby_version: 2.1.9
+          - ruby: '2.X'
             env:
               PUPPET_GEM_VERSION: "~> 4.0"
               RAKE_TASK: "test_languageserver test_languageserver_sidecar test_debugserver"
@@ -25,10 +25,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Use Ruby ${{ matrix.ruby_version }}
+    - name: Use Ruby ${{ matrix.ruby }}
       uses: actions/setup-ruby@v1
       with:
-        version: ${{ matrix.ruby_version }}
+        version: ${{ matrix.ruby }}
 
     - name: ruby install, build and test
       run: |
