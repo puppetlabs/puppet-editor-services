@@ -256,6 +256,7 @@ module PuppetLanguageServerSidecar
   def self.execute(options)
     use_puppet_strings = featureflag?('puppetstrings')
 
+    log_message(:debug, "Executing #{options[:action]} action")
     case options[:action].downcase
     when 'noop'
       []
@@ -265,8 +266,7 @@ module PuppetLanguageServerSidecar
       if use_puppet_strings
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types)
       else
-        log_message(:warn, 'The default_aggregate action is only supported with the puppetstrings feature flag')
-        {}
+        create_aggregate(cache)
       end
 
     when 'default_classes'
@@ -326,8 +326,7 @@ module PuppetLanguageServerSidecar
                                                                               :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types,
                                                                               :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)
       else
-        log_message(:warn, 'The workspace_aggregate action is only supported with the puppetstrings feature flag')
-        {}
+        create_aggregate(PuppetLanguageServerSidecar::Cache::Null.new, PuppetLanguageServerSidecar::Workspace.root_path)
       end
 
     when 'workspace_classes'
@@ -373,6 +372,15 @@ module PuppetLanguageServerSidecar
       log_message(:error, "Unknown action #{options[:action]}. Expected one of #{ACTION_LIST}")
     end
   end
+
+  def self.create_aggregate(cache, root_path = nil)
+    result = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+    result.concat!(PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(cache, :root_path => root_path))
+    result.concat!(PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache, :root_path => root_path))
+    result.concat!(PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(cache, :root_path => root_path))
+    result
+  end
+  private_class_method :create_aggregate
 
   def self.output(result, options)
     if options[:output].nil? || options[:output].empty?
