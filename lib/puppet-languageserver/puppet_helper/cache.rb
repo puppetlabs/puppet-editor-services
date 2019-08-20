@@ -12,6 +12,7 @@ module PuppetLanguageServer
       def import_sidecar_list!(list, section, origin = nil)
         section_object = section_to_object(section)
         return if section_object.nil?
+        list = [] if list.nil?
 
         @cache_lock.synchronize do
           # Remove the existing items

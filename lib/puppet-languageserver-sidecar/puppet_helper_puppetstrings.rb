@@ -83,7 +83,7 @@ module PuppetLanguageServerSidecar
       end
 
       # Remove Puppet3 functions which have a Puppet4 function already loaded
-      if object_types.include?(:function)
+      if object_types.include?(:function) && !result.functions.nil?
         pup4_functions = result.functions.select { |i| i.function_version == 4 }.map { |i| i.key }
         result.functions.reject! { |i| i.function_version == 3 && pup4_functions.include?(i.key) }
       end

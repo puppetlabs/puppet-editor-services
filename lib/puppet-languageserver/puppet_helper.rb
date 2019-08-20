@@ -181,6 +181,11 @@ module PuppetLanguageServer
 
     # Workspace Loading
     def self.load_workspace_async
+      if PuppetLanguageServer.featureflag?('puppetstrings')
+        return true if PuppetLanguageServer::DocumentStore.store_root_path.nil?
+        sidecar_queue.enqueue('workspace_aggregate', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path])
+        return true
+      end
       load_workspace_classes_async
       load_workspace_functions_async
       load_workspace_types_async
@@ -226,5 +231,12 @@ module PuppetLanguageServer
       tempfile.delete if tempfile
     end
     private_class_method :with_temporary_file
+
+    def self.load_default_aggregate_async
+      @default_classes_loaded   = false if @default_classes_loaded.nil?
+      @default_functions_loaded = false if @default_functions_loaded.nil?
+      @default_types_loaded     = false if @default_types_loaded.nil?
+      sidecar_queue.enqueue('default_aggregate', [])
+    end
   end
 end
