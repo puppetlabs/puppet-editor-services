@@ -62,6 +62,28 @@ describe 'sidecar_queue' do
   end
 
   describe '#execute_sync' do
+    context 'default_aggregate action' do
+      let(:action) { 'default_aggregate' }
+
+      it 'should deserialize the json, import into the cache and assert default classes are loaded' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+        fixture.append!(random_sidecar_puppet_class)
+        fixture.append!(random_sidecar_puppet_function)
+        fixture.append!(random_sidecar_puppet_type)
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+        expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_classes_loaded)
+        expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_functions_loaded)
+        expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_types_loaded)
+
+        subject.execute_sync(action, [])
+        expect(cache.object_by_name(:class, fixture.classes[0].key)).to_not be_nil
+        expect(cache.object_by_name(:function, fixture.functions[0].key)).to_not be_nil
+        expect(cache.object_by_name(:type, fixture.types[0].key)).to_not be_nil
+      end
+    end
+
     context 'default_classes action' do
       let(:action) { 'default_classes' }
 

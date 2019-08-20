@@ -385,6 +385,11 @@ module PuppetLanguageServer
           @aggregate[:types]
         end
 
+        def concat!(array)
+          return if array.nil? || array.empty?
+          array.each { |item| append!(item) }
+        end
+
         def append!(obj)
           list_for_object_class(obj.class) << obj
         end

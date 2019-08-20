@@ -48,10 +48,17 @@ describe 'PuppetLanguageServerSidecar' do
   describe 'when running default_aggregate action' do
     let (:cmd_options) { ['--action', 'default_aggregate'] }
 
-    it 'should return an empty hash' do
+    it 'should return a deserializable aggregate object with all default metadata' do
       result = run_sidecar(cmd_options)
+      deserial = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+      expect { deserial.from_json!(result) }.to_not raise_error
 
-      expect(result).to eq('{}')
+      # The contents of the result are tested later
+
+      # There should be at least one item per list in the aggregate
+      deserial.each_list do |_, v|
+        expect(v.count).to be > 0
+      end
     end
   end
 
@@ -139,10 +146,17 @@ describe 'PuppetLanguageServerSidecar' do
     describe 'when running workspace_aggregate action' do
       let (:cmd_options) { ['--action', 'workspace_aggregate', '--local-workspace', workspace] }
 
-      it 'should return an empty hash' do
+      it 'should return a deserializable aggregate object with all workspace metadata' do
         result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+        expect { deserial.from_json!(result) }.to_not raise_error
 
-        expect(result).to eq('{}')
+        # The contents of the result are tested later
+
+        # There should be at least one item per list in the aggregate
+        deserial.each_list do |_, v|
+          expect(v.count).to be > 0
+        end
       end
     end
 
@@ -235,10 +249,17 @@ describe 'PuppetLanguageServerSidecar' do
     describe 'when running workspace_aggregate action' do
       let (:cmd_options) { ['--action', 'workspace_aggregate', '--local-workspace', workspace] }
 
-      it 'should return an empty hash' do
+      it 'should return a deserializable aggregate object with all workspace metadata' do
         result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+        expect { deserial.from_json!(result) }.to_not raise_error
 
-        expect(result).to eq('{}')
+        # The contents of the result are tested later
+
+        # There should be at least one item per list in the aggregate
+        deserial.each_list do |_, v|
+          expect(v.count).to be > 0
+        end
       end
     end
 

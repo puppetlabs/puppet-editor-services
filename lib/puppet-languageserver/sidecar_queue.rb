@@ -63,6 +63,24 @@ module PuppetLanguageServer
       result = stdout.bytes.pack('U*')
 
       case action.downcase
+      when 'default_aggregate'
+        lists = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new.from_json!(result)
+        @cache.import_sidecar_list!(lists.classes,   :class, :default)
+        @cache.import_sidecar_list!(lists.functions, :function, :default)
+        @cache.import_sidecar_list!(lists.types,     :type, :default)
+
+        PuppetLanguageServer::PuppetHelper.assert_default_classes_loaded
+        PuppetLanguageServer::PuppetHelper.assert_default_functions_loaded
+        PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
+
+        lists.each_list do |k, v|
+          if v.nil?
+            PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_aggregate returned no #{k}")
+          else
+            PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_aggregate returned #{v.count} #{k}")
+          end
+        end
+
       when 'default_classes'
         list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new.from_json!(result)
         @cache.import_sidecar_list!(list, :class, :default)
@@ -89,6 +107,20 @@ module PuppetLanguageServer
 
       when 'resource_list'
         return PuppetLanguageServer::Sidecar::Protocol::ResourceList.new.from_json!(result)
+
+      when 'workspace_aggregate'
+        lists = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new.from_json!(result)
+        @cache.import_sidecar_list!(lists.classes,   :class, :workspace)
+        @cache.import_sidecar_list!(lists.functions, :function, :workspace)
+        @cache.import_sidecar_list!(lists.types,     :type, :workspace)
+
+        lists.each_list do |k, v|
+          if v.nil?
+            PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: workspace_aggregate returned no #{k}")
+          else
+            PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: workspace_aggregate returned #{v.count} #{k}")
+          end
+        end
 
       when 'workspace_classes'
         list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new.from_json!(result)

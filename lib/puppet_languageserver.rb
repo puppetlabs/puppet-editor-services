@@ -24,6 +24,15 @@ module PuppetLanguageServer
     @server_is_active
   end
 
+  def self.configure_featureflags(flags)
+    @flags = flags
+  end
+
+  def self.featureflag?(flagname)
+    return false if @flags.nil? || @flags.empty?
+    @flags.include?(flagname)
+  end
+
   def self.require_gems(options)
     original_verbose = $VERBOSE
     $VERBOSE = nil
@@ -83,6 +92,15 @@ module PuppetLanguageServer
         require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
       end
     end
+
+    # Validate the feature flags
+    unless options[:flags].nil? || options[:flags].empty?
+      flags = options[:flags]
+      log_message(:debug, "Detected feature flags [#{flags.join(', ')}]")
+
+      configure_featureflags(flags)
+    end
+
     @server_is_active = true
   ensure
     $VERBOSE = original_verbose
@@ -223,17 +241,25 @@ module PuppetLanguageServer
 
     log_message(:info, "Using Facter v#{Facter.version}")
     if options[:preload_puppet]
-      log_message(:info, 'Preloading Puppet Types (Async)...')
-      PuppetLanguageServer::PuppetHelper.load_default_types_async
+      if featureflag?('puppetstrings')
+        log_message(:info, 'Preloading Default metadata (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_aggregate_async
 
-      log_message(:info, 'Preloading Facter (Async)...')
-      PuppetLanguageServer::FacterHelper.load_facts_async
+        log_message(:info, 'Preloading Facter (Async)...')
+        PuppetLanguageServer::FacterHelper.load_facts_async
+      else
+        log_message(:info, 'Preloading Puppet Types (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_types_async
 
-      log_message(:info, 'Preloading Functions (Async)...')
-      PuppetLanguageServer::PuppetHelper.load_default_functions_async
+        log_message(:info, 'Preloading Facter (Async)...')
+        PuppetLanguageServer::FacterHelper.load_facts_async
 
-      log_message(:info, 'Preloading Classes (Async)...')
-      PuppetLanguageServer::PuppetHelper.load_default_classes_async
+        log_message(:info, 'Preloading Functions (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_functions_async
+
+        log_message(:info, 'Preloading Classes (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_classes_async
+      end
 
       if PuppetLanguageServer::DocumentStore.store_has_module_metadata? || PuppetLanguageServer::DocumentStore.store_has_environmentconf?
         log_message(:info, 'Preloading Workspace (Async)...')
