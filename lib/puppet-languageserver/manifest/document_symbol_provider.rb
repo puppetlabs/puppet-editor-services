@@ -3,14 +3,14 @@
 module PuppetLanguageServer
   module Manifest
     module DocumentSymbolProvider
-      def self.workspace_symbols(query)
+      def self.workspace_symbols(query, object_cache)
         query = '' if query.nil?
         result = []
-        PuppetLanguageServer::PuppetHelper.all_objects do |key, item|
+        object_cache.all_objects do |key, item|
           key_string = key.to_s
-          next unless key_string.include?(query)
+          next unless query.empty? || key_string.include?(query)
           case item
-          when PuppetLanguageServer::PuppetHelper::PuppetType
+          when PuppetLanguageServer::Sidecar::Protocol::PuppetType
             result << LSP::SymbolInformation.new(
               'name'     => key_string,
               'kind'     => LSP::SymbolKind::METHOD,
@@ -21,7 +21,7 @@ module PuppetLanguageServer
               }
             )
 
-          when PuppetLanguageServer::PuppetHelper::PuppetFunction
+          when PuppetLanguageServer::Sidecar::Protocol::PuppetFunction
             result << LSP::SymbolInformation.new(
               'name'     => key_string,
               'kind'     => LSP::SymbolKind::FUNCTION,
@@ -32,7 +32,7 @@ module PuppetLanguageServer
               }
             )
 
-          when PuppetLanguageServer::PuppetHelper::PuppetClass
+          when PuppetLanguageServer::Sidecar::Protocol::PuppetClass
             result << LSP::SymbolInformation.new(
               'name'     => key_string,
               'kind'     => LSP::SymbolKind::CLASS,
@@ -42,6 +42,9 @@ module PuppetLanguageServer
                 'range' => LSP.create_range(item.line, 0, item.line, 1024)
               }
             )
+
+          else
+            PuppetLanguageServer.log_message(:warn, "[Manifest::DocumentSymbolProvider] Unknown object type #{item.class}")
           end
         end
         result

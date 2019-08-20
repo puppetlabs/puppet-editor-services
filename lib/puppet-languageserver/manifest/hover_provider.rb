@@ -49,10 +49,10 @@ module PuppetLanguageServer
           resource_object = PuppetLanguageServer::PuppetHelper.get_type(resource_type_name)
           unless resource_object.nil?
             # Check if it's a property
-            attribute = resource_object.properties.key?(item.attribute_name.intern)
-            if attribute != false
+            attribute = resource_object.attributes[item.attribute_name.intern]
+            if attribute[:type] == :property
               content = get_attribute_type_property_content(resource_object, item.attribute_name.intern)
-            elsif resource_object.parameters.key?(item.attribute_name.intern)
+            elsif attribute[:type] == :param
               content = get_attribute_type_parameter_content(resource_object, item.attribute_name.intern)
             end
           end
@@ -114,14 +114,14 @@ module PuppetLanguageServer
       end
 
       def self.get_attribute_type_parameter_content(item_type, param)
-        param_type = item_type.parameters[param]
+        param_type = item_type.attributes[param]
         content = "**#{param}** Parameter"
         content += "\n\n#{param_type[:doc]}" unless param_type[:doc].nil?
         content
       end
 
       def self.get_attribute_type_property_content(item_type, property)
-        prop_type = item_type.properties[property]
+        prop_type = item_type.attributes[property]
         content = "**#{property}** Property"
         content += "\n\n(_required_)" if prop_type[:required?]
         content += "\n\n#{prop_type[:doc]}" unless prop_type[:doc].nil?
@@ -161,7 +161,7 @@ module PuppetLanguageServer
         content = "**#{item_type.key}** Resource\n\n"
         content += "\n\n#{item_type.doc}" unless item_type.doc.nil?
         content += "\n\n---\n"
-        item_type.allattrs.sort.each do |attr|
+        item_type.attributes.keys.sort.each do |attr|
           content += "* #{attr}\n"
         end
 

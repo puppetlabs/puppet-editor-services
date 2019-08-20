@@ -204,7 +204,7 @@ module PuppetLanguageServer
       when 'workspace/symbol'
         begin
           result = []
-          result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(request.params['query']))
+          result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(request.params['query'], PuppetLanguageServer::PuppetHelper.cache))
           request.reply_result(result)
         rescue StandardError => e
           PuppetLanguageServer.log_message(:error, "(workspace/symbol) #{e}")

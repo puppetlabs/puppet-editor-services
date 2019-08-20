@@ -35,7 +35,7 @@ RSpec::Matchers.define :be_json_like do |expected|
 end
 
 def create_mock_type(parameters = [], properties = [])
-  object = PuppetLanguageServer::PuppetHelper::PuppetType.new
+  object = PuppetLanguageServer::Sidecar::Protocol::PuppetType.new
   object.doc = 'mock documentation'
   object.attributes = {}
   parameters.each { |name| object.attributes[name] = {
