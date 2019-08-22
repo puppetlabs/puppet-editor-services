@@ -34,7 +34,7 @@ RSpec::Matchers.define :be_json_like do |expected|
   end
 end
 
-def create_mock_resource(parameters = [], properties = [])
+def create_mock_type(parameters = [], properties = [])
   object = PuppetLanguageServer::PuppetHelper::PuppetType.new
   object.doc = 'mock documentation'
   object.attributes = {}
@@ -474,7 +474,7 @@ EOT
       }
       let(:line_num) { 0 }
       let(:char_num) { 0 }
-      let(:mock_resource) { create_mock_resource([:param1, :param2], [:prop1, :prop2]) }
+      let(:mock_resource) { create_mock_type([:param1, :param2], [:prop1, :prop2]) }
 
       before(:each) do
         # Generate the resolution request based on a completion response
