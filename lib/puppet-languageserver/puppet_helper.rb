@@ -3,7 +3,7 @@
 require 'pathname'
 require 'tempfile'
 
-%w[puppet_helper/cache_objects puppet_helper/cache].each do |lib|
+%w[puppet_helper/cache].each do |lib|
   begin
     require "puppet-languageserver/#{lib}"
   rescue LoadError
@@ -26,14 +26,6 @@ module PuppetLanguageServer
       @helper_options = options
       @inmemory_cache = PuppetLanguageServer::PuppetHelper::Cache.new
       sidecar_queue.cache = @inmemory_cache
-    end
-
-    def self.all_objects(&_block)
-      return nil if @default_types_loaded == false
-      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
-      @inmemory_cache.all_objects do |key, item|
-        yield key, item
-      end
     end
 
     # Node Graph
@@ -174,8 +166,8 @@ module PuppetLanguageServer
       @inmemory_cache.object_names_by_section(:class).map(&:to_s)
     end
 
-    # The object cache.  Note this should only be used for testing
     def self.cache
+      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @inmemory_cache
     end
 

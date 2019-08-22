@@ -58,7 +58,7 @@ module PuppetLanguageServer
           item_object = PuppetLanguageServer::PuppetHelper.get_type(item.type_name.value)
           unless item_object.nil?
             # Add Parameters
-            item_object.parameters.each_key do |name|
+            item_object.attributes.select { |_name, data| data[:type] == :param }.each_key do |name|
               items << LSP::CompletionItem.new(
                 'label'  => name.to_s,
                 'kind'   => LSP::CompletionItemKind::PROPERTY,
@@ -71,7 +71,7 @@ module PuppetLanguageServer
               )
             end
             # Add Properties
-            item_object.properties.each_key do |name|
+            item_object.attributes.select { |_name, data| data[:type] == :property }.each_key do |name|
               items << LSP::CompletionItem.new(
                 'label'  => name.to_s,
                 'kind'   => LSP::CompletionItemKind::PROPERTY,
@@ -249,7 +249,7 @@ module PuppetLanguageServer
           # The param/property list should initially sorted alphabetically
           attr_names.sort!
           # Add the 'ensure' param/property at the top if the resource supports it
-          attr_names.insert(0, 'ensure') unless item_type.allattrs.find_index(:ensure).nil?
+          attr_names.insert(0, 'ensure') unless item_type.attributes.keys.find_index(:ensure).nil?
           # Get the longest string length for later hash-rocket padding
           max_length = -1
           attr_names.each { |name| max_length = name.length if name.length > max_length }
@@ -269,7 +269,7 @@ module PuppetLanguageServer
         when 'resource_parameter'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(data['resource_type'])
           return result if item_type.nil?
-          param_type = item_type.parameters[data['param'].intern]
+          param_type = item_type.attributes[data['param'].intern]
           unless param_type.nil?
             # TODO: More things?
             result.documentation = param_type[:doc] unless param_type[:doc].nil?
@@ -278,7 +278,7 @@ module PuppetLanguageServer
         when 'resource_property'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(data['resource_type'])
           return result if item_type.nil?
-          prop_type = item_type.properties[data['prop'].intern]
+          prop_type = item_type.attributes[data['prop'].intern]
           unless prop_type.nil?
             # TODO: More things?
             result.documentation = prop_type[:doc] unless prop_type[:doc].nil?

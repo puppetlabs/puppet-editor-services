@@ -3,36 +3,34 @@
 module PuppetLanguageServer
   module PuppetHelper
     class Cache
+      SECTIONS = %i[class type function].freeze
+      ORIGINS = %i[default workspace].freeze
+
       def initialize(_options = {})
         @cache_lock = Mutex.new
-        @inmemory_cache = []
-        # The cache consists of an array of module PuppetLanguageServer::PuppetHelper objects
+        @inmemory_cache = {}
+        # The cache consists of hash of hashes
+        # @inmemory_cache[<origin>][<section>] = [ Array of SidecarProtocol Objects ]
       end
 
-      def import_sidecar_list!(list, section, origin = nil)
-        section_object = section_to_object(section)
-        return if section_object.nil?
+      def import_sidecar_list!(list, section, origin)
+        return if origin.nil?
+        return if section.nil?
         list = [] if list.nil?
 
         @cache_lock.synchronize do
           # Remove the existing items
-          @inmemory_cache.reject! { |item| item.is_a?(section_object) && (origin.nil? || item.origin == origin) }
-          # Append the list
-          list.each do |item|
-            object = sidecar_protocol_to_cache_object(item)
-            object.origin = origin
-            @inmemory_cache << object
-          end
+          remove_section_impl(section, origin)
+          # Set the list
+          @inmemory_cache[origin] = {} if @inmemory_cache[origin].nil?
+          @inmemory_cache[origin][section] = list
         end
         nil
       end
 
       def remove_section!(section, origin = nil)
-        section_object = section_to_object(section)
-        return if section_object.nil?
-
         @cache_lock.synchronize do
-          @inmemory_cache.reject! { |item| item.is_a?(section_object) && (origin.nil? || item.origin == origin) }
+          remove_section_impl(section, origin)
         end
         nil
       end
@@ -40,12 +38,13 @@ module PuppetLanguageServer
       # section => <Type of object in the file :function, :type, :class>
       def object_by_name(section, name)
         name = name.intern if name.is_a?(String)
-        section_object = section_to_object(section)
-        return nil if section_object.nil?
+        return nil if section.nil?
         @cache_lock.synchronize do
-          @inmemory_cache.each do |item|
-            next unless item.is_a?(section_object) && item.key == name
-            return item
+          @inmemory_cache.each do |_, sections|
+            next if sections[section].nil? || sections[section].empty?
+            sections[section].each do |item|
+              return item if item.key == name
+            end
           end
         end
         nil
@@ -54,12 +53,11 @@ module PuppetLanguageServer
       # section => <Type of object in the file :function, :type, :class>
       def object_names_by_section(section)
         result = []
-        section_object = section_to_object(section)
-        return result if section_object.nil?
+        return result if section.nil?
         @cache_lock.synchronize do
-          @inmemory_cache.each do |item|
-            next unless item.is_a?(section_object)
-            result << item.key
+          @inmemory_cache.each do |_, sections|
+            next if sections[section].nil? || sections[section].empty?
+            result.concat(sections[section].map { |i| i.key })
           end
         end
         result.uniq!
@@ -68,43 +66,32 @@ module PuppetLanguageServer
 
       # section => <Type of object in the file :function, :type, :class>
       def objects_by_section(section, &_block)
-        section_object = section_to_object(section)
-        return if section_object.nil?
+        return if section.nil?
         @cache_lock.synchronize do
-          @inmemory_cache.each do |item|
-            next unless item.is_a?(section_object)
-            yield item.key, item
+          @inmemory_cache.each do |_, sections|
+            next if sections[section].nil? || sections[section].empty?
+            sections[section].each { |i| yield i.key, i }
           end
         end
       end
 
       def all_objects(&_block)
         @cache_lock.synchronize do
-          @inmemory_cache.each do |item|
-            yield item.key, item
+          @inmemory_cache.each do |_origin, sections|
+            sections.each do |_section_name, list|
+              list.each { |i| yield i.key, i }
+            end
           end
         end
       end
 
       private
 
-      # <Type of object in the file :function, :type, :class>
-      def section_to_object(section)
-        case section
-        when :class
-          PuppetLanguageServer::PuppetHelper::PuppetClass
-        when :function
-          PuppetLanguageServer::PuppetHelper::PuppetFunction
-        when :type
-          PuppetLanguageServer::PuppetHelper::PuppetType
+      def remove_section_impl(section, origin = nil)
+        @inmemory_cache.each do |list_origin, sections|
+          next unless origin.nil? || list_origin == origin
+          sections[section].clear unless sections[section].nil?
         end
-      end
-
-      def sidecar_protocol_to_cache_object(value)
-        return PuppetLanguageServer::PuppetHelper::PuppetClass.new.from_sidecar!(value) if value.is_a?(PuppetLanguageServer::Sidecar::Protocol::PuppetClass)
-        return PuppetLanguageServer::PuppetHelper::PuppetFunction.new.from_sidecar!(value) if value.is_a?(PuppetLanguageServer::Sidecar::Protocol::PuppetFunction)
-        return PuppetLanguageServer::PuppetHelper::PuppetType.new.from_sidecar!(value) if value.is_a?(PuppetLanguageServer::Sidecar::Protocol::PuppetType)
-        nil
       end
     end
   end

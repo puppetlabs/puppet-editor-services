@@ -187,7 +187,12 @@ module PuppetLanguageServer
         begin
           case documents.document_type(file_uri)
           when :manifest
-            request.reply_result(PuppetLanguageServer::Manifest::SignatureProvider.signature_help(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.module_plan_file?(file_uri)))
+            request.reply_result(PuppetLanguageServer::Manifest::SignatureProvider.signature_help(
+                                   content,
+                                   line_num,
+                                   char_num,
+                                   :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri)
+                                 ))
           else
             raise "Unable to provide signatures on #{file_uri}"
           end
@@ -199,7 +204,7 @@ module PuppetLanguageServer
       when 'workspace/symbol'
         begin
           result = []
-          result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(request.params['query']))
+          result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(request.params['query'], PuppetLanguageServer::PuppetHelper.cache))
           request.reply_result(result)
         rescue StandardError => e
           PuppetLanguageServer.log_message(:error, "(workspace/symbol) #{e}")
