@@ -22,8 +22,55 @@ RSpec::Matchers.define :be_document_symbol do |name, kind, start_line, start_cha
   end
 end
 
+RSpec::Matchers.define :be_symbol_information do |name, kind|
+  match do |actual|
+    actual.name == name &&
+    actual.kind == kind
+  end
+
+  failure_message do |actual|
+    "expected that symbol called '#{actual.name}' of type '#{actual.kind}' would be " +
+      "a symbol called '#{name}', of type '#{kind}'"
+  end
+
+  description do
+    "be a document symbol called '#{name}' of type #{kind} located at #{start_line}, #{start_char}, #{end_line}, #{end_char}"
+  end
+end
+
 describe 'PuppetLanguageServer::Manifest::DocumentSymbolProvider' do
   let(:subject) { PuppetLanguageServer::Manifest::DocumentSymbolProvider }
+
+  describe '#workspace_symbols' do
+    let(:cache) { PuppetLanguageServer::PuppetHelper::Cache.new }
+
+    before(:each) do
+      # Add test objects
+      origin = :default
+      cache.import_sidecar_list!([random_sidecar_puppet_class(:class1)], :class, origin)
+      cache.import_sidecar_list!([random_sidecar_puppet_function(:func1)], :function, origin)
+      cache.import_sidecar_list!([random_sidecar_puppet_type(:type1)], :type, origin)
+    end
+
+    it 'should emit all known objects for an empty query' do
+      result = subject.workspace_symbols(nil, cache)
+
+      expect(result[0]).to be_symbol_information('class1', LSP::SymbolKind::CLASS)
+      expect(result[1]).to be_symbol_information('func1', LSP::SymbolKind::FUNCTION)
+      expect(result[2]).to be_symbol_information('type1', LSP::SymbolKind::METHOD)
+
+      all_cache_names = []
+      cache.all_objects { |key, _| all_cache_names << key.to_s }
+      expect(result.count).to eq(all_cache_names.count)
+    end
+
+    it 'should only emit objects that match a simple text query' do
+      result = subject.workspace_symbols('func', cache)
+
+      expect(result.count).to eq(1)
+      expect(result[0]).to be_symbol_information('func1', LSP::SymbolKind::FUNCTION)
+    end
+  end
 
   context 'with Puppet 4.0 and below', :if => Gem::Version.new(Puppet.version) < Gem::Version.new('5.0.0') do
     describe '#extract_document_symbols' do

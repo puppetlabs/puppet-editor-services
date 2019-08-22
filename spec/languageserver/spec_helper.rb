@@ -55,8 +55,9 @@ def add_random_basepuppetobject_values!(value)
   value
 end
 
-def random_sidecar_puppet_class
+def random_sidecar_puppet_class(key = nil)
   result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new())
+  result.key = key unless key.nil?
   result.doc = 'doc' + rand(1000).to_s
   result.parameters = {
     "attr_name1" => { :type => "Optional[String]", :doc => 'attr_doc1' },
@@ -65,8 +66,9 @@ def random_sidecar_puppet_class
   result
 end
 
-def random_sidecar_puppet_function
+def random_sidecar_puppet_function(key = nil)
   result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetFunction.new())
+  result.key = key unless key.nil?
   result.doc = 'doc' + rand(1000).to_s
   result.function_version = rand(1) + 3
   result.signatures << random_sidecar_puppet_function_signature
@@ -96,8 +98,9 @@ def random_sidecar_puppet_function_signature_parameter
   result
 end
 
-def random_sidecar_puppet_type
+def random_sidecar_puppet_type(key = nil)
   result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetType.new())
+  result.key = key unless key.nil?
   result.doc = 'doc' + rand(1000).to_s
   result.attributes = {
     :attr_name1 => { :type => :attr_type, :doc => 'attr_doc1', :required? => false, :isnamevar? => true },
