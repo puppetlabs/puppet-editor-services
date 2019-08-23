@@ -6,6 +6,22 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.21.0 - 2019-08-26
+
+### Added
+
+- ([GH-144](https://github.com/lingua-pupuli/puppet-editor-services/issues/144)) Add a Signature Helper Provider
+- ([GH-163](https://github.com/lingua-pupuli/puppet-editor-services/issues/163)) Add aggregate sidecar tasks
+
+### Fixed
+
+- ([GH-55](https://github.com/lingua-pupuli/puppet-editor-services/issues/55)) Debug Server is now supported on Puppet 6
+
+### Changed
+
+- ([GH-106](https://github.com/lingua-pupuli/puppet-editor-services/issues/106)) Update puppet-lint to 2.3.6
+- ([GH-167](https://github.com/lingua-pupuli/puppet-editor-services/issues/167)) Refactor Language Server inmemory caching
+
 ## 0.20.0 - 2019-07-16
 
 ### Added

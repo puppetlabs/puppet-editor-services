@@ -1,4 +1,4 @@
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/arryulh580j47u26?svg=true)](https://ci.appveyor.com/project/lingua-pupuli/puppet-editor-services) [![Travis Build Status](https://travis-ci.com/lingua-pupuli/puppet-editor-services.svg?branch=master)](https://travis-ci.com/lingua-pupuli/puppet-editor-services.svg?branch=master)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/arryulh580j47u26?svg=true)](https://ci.appveyor.com/project/lingua-pupuli/puppet-editor-services) [![Travis Build Status](https://travis-ci.com/lingua-pupuli/puppet-editor-services.svg?branch=master)](https://travis-ci.com/lingua-pupuli/puppet-editor-services)
 
 # Puppet Editor Services
 
