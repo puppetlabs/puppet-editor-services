@@ -30,11 +30,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
       end
     end
 
-    it 'should roundtrip to_h to from_h!' do
-      subject_as_hash = subject.to_h
-      copy = subject_klass.new.from_h!(subject_as_hash)
-      expect(subject_as_hash).to eq(copy.to_h)
-    end
+    it_should_behave_like 'a round trip capable hash'
   end
 
   shared_examples_for 'a base Sidecar Protocol Puppet object list' do
@@ -53,6 +49,14 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
     end
   end
 
+  shared_examples_for 'a round trip capable hash' do
+    it 'should roundtrip to_h to from_h!' do
+      subject_as_hash = subject.to_h
+      copy = subject_klass.new.from_h!(subject_as_hash)
+      expect(subject_as_hash).to eq(copy.to_h)
+    end
+  end
+
   shared_examples_for 'a serializable object list' do
     it "should deserialize a serialized list" do
       serial = subject.to_json
@@ -68,6 +72,8 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
   basepuppetobject_properties = [:key, :calling_source, :source, :line, :char, :length]
   nodegraph_properties = [:dot_content, :error_content]
   puppetclass_properties = [:doc, :parameters]
+  puppetdatatype_properties = [:doc, :alias_of, :attributes, :is_type_alias]
+  puppetdatatypeattribute_properties = [:key, :doc, :default_value, :types]
   puppetfunction_properties = [:doc, :function_version, :signatures]
   puppetfunctionsignature_properties = [:key, :doc, :return_types, :parameters]
   puppetfunctionsignatureparameter_properties = [:name, :types, :doc, :signature_key_offset, :signature_key_length ]
@@ -197,6 +203,109 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
 
     it "instance should have a childtype of PuppetClass" do
       expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::PuppetClass)
+    end
+  end
+
+  describe 'PuppetDataType' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::PuppetDataType }
+    let(:subject) {
+      value = subject_klass.new
+      value.doc = 'doc'
+      value.alias_of = 'alias_of'
+      value.is_type_alias = true
+      value.attributes << random_sidecar_puppet_datatype_attribute
+      value.attributes << random_sidecar_puppet_datatype_attribute
+
+      add_default_basepuppetobject_values!(value)
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol Puppet object'
+
+    puppetdatatype_properties.each do |testcase|
+      it "instance should respond to #{testcase}" do
+        expect(subject).to respond_to(testcase)
+      end
+    end
+
+    describe '#from_json!' do
+      (basepuppetobject_properties + puppetdatatype_properties).each do |testcase|
+        it "should deserialize a serialized #{testcase} value" do
+          serial = subject.to_json
+          deserial = subject_klass.new.from_json!(serial)
+
+          expect(deserial.send(testcase)).to eq(subject.send(testcase))
+        end
+      end
+    end
+  end
+
+  describe 'PuppetDataTypeList' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList }
+    let(:subject) {
+      value = subject_klass.new
+      value << random_sidecar_puppet_datatype
+      value << random_sidecar_puppet_datatype
+      value << random_sidecar_puppet_datatype
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol Puppet object list'
+
+    it_should_behave_like 'a serializable object list'
+
+    it "instance should have a childtype of PuppetDataType" do
+      expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::PuppetDataType)
+    end
+  end
+
+  describe 'PuppetDataTypeAttribute' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeAttribute }
+    let(:subject) {
+      value = subject_klass.new
+      value.key = 'attr1'
+      value.doc = 'doc'
+      value.default_value = 'default+value'
+      value.types = 'String'
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol object'
+    it_should_behave_like 'a round trip capable hash'
+
+    puppetdatatypeattribute_properties.each do |testcase|
+      it "instance should respond to #{testcase}" do
+        expect(subject).to respond_to(testcase)
+      end
+    end
+
+    describe '#from_json!' do
+      puppetdatatypeattribute_properties.each do |testcase|
+        it "should deserialize a serialized #{testcase} value" do
+          serial = subject.to_json
+          deserial = subject_klass.new.from_json!(serial)
+
+          expect(deserial.send(testcase)).to eq(subject.send(testcase))
+        end
+      end
+    end
+  end
+
+  describe 'PuppetDataTypeAttributeList' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeAttributeList }
+    let(:subject) {
+      value = subject_klass.new
+      value << random_sidecar_puppet_datatype_attribute
+      value << random_sidecar_puppet_datatype_attribute
+      value << random_sidecar_puppet_datatype_attribute
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol Puppet object list'
+
+    it_should_behave_like 'a serializable object list'
+
+    it "instance should have a childtype of PuppetDataTypeAttribute" do
+      expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeAttribute)
     end
   end
 
@@ -450,6 +559,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
       value = subject_klass.new
       (1..3).each do |_|
         value.append!(random_sidecar_puppet_class)
+        value.append!(random_sidecar_puppet_datatype)
         value.append!(random_sidecar_puppet_function)
         value.append!(random_sidecar_puppet_type)
       end

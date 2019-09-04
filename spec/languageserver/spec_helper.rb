@@ -66,6 +66,25 @@ def random_sidecar_puppet_class(key = nil)
   result
 end
 
+def random_sidecar_puppet_datatype
+  result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new())
+  result.doc = 'doc' + rand(1000).to_s
+  result.alias_of = "String[1, #{rand(255)}]"
+  result.attributes << random_sidecar_puppet_datatype_attribute
+  result.attributes << random_sidecar_puppet_datatype_attribute
+  result.attributes << random_sidecar_puppet_datatype_attribute
+  result.is_type_alias = rand(255) < 128
+  result
+end
+
+def random_sidecar_puppet_datatype_attribute
+  result = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeAttribute.new
+  result.doc = 'doc' + rand(1000).to_s
+  result.default_value = 'default' + rand(1000).to_s
+  result.types = 'String'
+  result
+end
+
 def random_sidecar_puppet_function(key = nil)
   result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetFunction.new())
   result.key = key unless key.nil?

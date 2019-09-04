@@ -15,6 +15,69 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings' do
     let(:subject) { PuppetLanguageServerSidecar::PuppetStringsHelper::Helper.new }
     let(:cache) { nil }
 
+    # Data Types
+    context 'Given a Puppet Data Type' do
+      let(:fixture_filepath) { File.join($fixtures_dir, 'real_agent', 'cache', 'lib', 'puppet', 'datatypes', 'cachedatatype.rb') }
+
+      it 'should parse the file metadata correctly' do
+        result = subject.file_documentation(fixture_filepath, cache)
+        # There is only one datatype in the test fixture file
+        expect(result.datatypes.count).to eq(1)
+        item = result.datatypes[0]
+
+        # Check base methods
+        expect(item.key).to eq('RubyDataType')
+        expect(item.line).to eq(6)
+        expect(item.char).to be_nil
+        expect(item.length).to be_nil
+        expect(item.source).to eq(fixture_filepath)
+        # Check data type specific methods
+        expect(item.doc).to match(/An example Puppet Data Type in Ruby\./)
+        expect(item.is_type_alias).to eq(false)
+        expect(item.alias_of).to be_nil
+        expect(item.attributes.count).to eq(3)
+        attr = item.attributes[0]
+        expect(attr.key).to eq('arg1')
+        expect(attr.doc).to eq('A message parameter.')
+        expect(attr.default_value).to be_nil
+        expect(attr.types).to eq('Numeric')
+        attr = item.attributes[1]
+        expect(attr.key).to eq('arg2')
+        expect(attr.doc).to eq('Optional String parameter. Defaults to \'param\'.')
+        expect(attr.default_value).to eq('param')
+        expect(attr.types).to eq('Optional[String[1]]')
+        attr = item.attributes[2]
+        expect(attr.key).to eq('missingarg1')
+        expect(attr.doc).to eq('')
+        expect(attr.default_value).to eq('missing')
+        expect(attr.types).to eq('OString[1]')
+      end
+    end
+
+    context 'Given a Puppet Data Type Alias' do
+      let(:fixture_filepath) { File.join($fixtures_dir, 'real_agent', 'environments', 'testfixtures', 'modules', 'defaultmodule', 'types', 'moduletypealias.pp' ) }
+
+      it 'should parse the file metadata correctly' do
+        result = subject.file_documentation(fixture_filepath, cache)
+
+        # There is only one class in the test fixture file
+        expect(result.datatypes.count).to eq(1)
+        item = result.datatypes[0]
+
+        # Check base methods
+        expect(item.key).to eq('Defaultmodule::Modultetypealias')
+        expect(item.line).to eq(2)
+        expect(item.char).to be_nil
+        expect(item.length).to be_nil
+        expect(item.source).to eq(fixture_filepath)
+        # Check data type specific methods
+        expect(item.doc).to match(/Documentation for Defaultmodule Modultetypealias/)
+        expect(item.is_type_alias).to eq(true)
+        expect(item.alias_of).to eq('Pattern[/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/]')
+        expect(item.attributes).to eq([])
+      end
+    end
+
     # Classes
     context 'Given a Puppet Class' do
       let(:fixture_filepath) { File.join($fixtures_dir, 'real_agent', 'environments', 'testfixtures', 'modules', 'defaultmodule', 'manifests', 'init.pp' ) }
