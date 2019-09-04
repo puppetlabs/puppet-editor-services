@@ -42,6 +42,17 @@ EOT
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
       list << random_sidecar_puppet_type
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :type, :workspace)
+      # Datatypes
+      list = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
+      list << random_sidecar_puppet_datatype
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :datatype, :workspace)
+      # Currently the DataTypes are only loaded behind a feature flag. As we only test without
+      # the flag, simulate it the purposes of this test
+      list = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
+      # The String datatype
+      obj = PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new.from_h!({"key" => "String", "doc"=>"The String core data type", "attributes"=>[], "is_type_alias" => false })
+      list << obj
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :datatype, :default)
     end
 
     after(:each) do
@@ -49,6 +60,10 @@ EOT
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :type, :workspace)
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :workspace)
+      # Currently the DataTypes are only loaded behind a feature flag. As we only test without
+      # the flag, simulate it the purposes of this test
+      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :default)
     end
 
     describe "Given a manifest which has syntax errors" do
@@ -415,6 +430,40 @@ class firewall {
           expect(result.contents).to start_with("**service** Resource\n")
         end
       end
+    end
+
+    context "Given a class with data types" do
+      let(:content) { <<-EOF
+class module::foo (
+  String                      $load_balancer,
+  Variant[String[1], Boolean] $frontends = 'Hello',
+  Integer[1,10]               $blah,
+  Enum["running", "stopped"]  $enum,
+) {
+  Stdlib::Windowspath $test = false
+}
+    EOF
+      }
+
+      describe 'when cursor is on bare datatype name' do
+        let(:line_num) { 1 }
+        let(:char_num) { 6 }
+        it 'should complete an inbuilt Puppet type' do
+          result = subject.resolve(content, line_num, char_num)
+
+          expect(result.contents).to start_with("**String** Data Type\n")
+        end
+      end
+
+      # describe 'when cursor is hovering on service resource' do
+      #   let(:line_num) { 3 }
+      #   let(:char_num) { 6 }
+      #   it 'should complete to service resource documentation' do
+      #     result = subject.resolve(content, line_num, char_num)
+
+      #     expect(result.contents).to start_with("**service** Resource\n")
+      #   end
+      # end
     end
   end
 end
