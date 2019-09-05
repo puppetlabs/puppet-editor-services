@@ -227,7 +227,7 @@ function GenerateRubyEnums(enumList) {
       var rubyValue = enumType[enumItemName];
       switch (rubyValue.constructor.name) {
         case 'String':
-          rubyValue = "'" + rubyValue + "'.freeze"
+          rubyValue = "'" + rubyValue + "'"
           break;
         case 'Function':
           // Ignore function constants.
@@ -246,7 +246,8 @@ function GenerateRubyEnums(enumList) {
 }
 
 function GenerateRubyFileHeader(description) {
-  return "# DO NOT MODIFY. This file is built automatically\n# " + description + "\n\n" +
+  return "# frozen_string_literal: true\n\n" +
+         "# DO NOT MODIFY. This file is built automatically\n# " + description + "\n\n" +
          "# rubocop:disable Layout/EmptyLinesAroundClassBody\n" +
          "# rubocop:disable Lint/UselessAssignment\n" +
          "# rubocop:disable Style/AsciiComments\n" +
