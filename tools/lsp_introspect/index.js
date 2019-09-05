@@ -31,6 +31,9 @@ const enumList = {
   'CompletionTriggerKind': lspproto.CompletionTriggerKind
 }
 
+// Some property names are reserved names in ruby, so mutate them
+const propertyNameMunging = ['method'];
+
 function GenerateRubyFromInterfaceProperties(iface) {
   var rubyText = '';
 
@@ -57,7 +60,11 @@ function GenerateRubyFromInterfaceProperties(iface) {
         }
 
         property.name = item.name;
-        property.rubyname = ":" + item.name;
+        property.rubyname = property.name;
+
+        if (propertyNameMunging.includes(item.name)) {
+          property.rubyname = property.rubyname + "__lsp";
+        }
         property.typetext = itemTypeText;
         property.type = itemType;
         property.optional = item.isOptional;
@@ -73,7 +80,7 @@ function GenerateRubyFromInterfaceProperties(iface) {
 }
 
 function GenerateRubyFromProperty(prop, allTypes) {
-  const prefix = "      self." + prop.name + " = "
+  const prefix = "      self." + prop.rubyname + " = "
   const defaultText      = prefix + "value['" + prop.name + "']\n"
   const defaultArrayText = prefix + "value['" + prop.name + "'].map { |val| val } unless value['" + prop.name + "'].nil?" + "\n"
 
@@ -188,13 +195,13 @@ function GenerateRubyFile(parsed, fileContent, ignoreInterfaces = []) {
 
     // Spit out the property declarations.
     iface.properties.forEach( (item) => {
-      rubyContent += "    attr_accessor :" + item.name + " # type: " + item.typetext + "\n";
+      rubyContent += "    attr_accessor :" + item.rubyname + " # type: " + item.typetext + "\n";
     })
 
     // Create the class initializer
     var rubyInitialize = '';
     const optionalProperties = iface.properties.filter( (item) => { return item.optional; })
-                                               .map( (item) => { return item.name; });
+                                               .map( (item) => { return item.rubyname; });
     if (optionalProperties.length > 0) {
       rubyInitialize = "      @optional_method_names = %i[" + optionalProperties.join(" ") + "]\n";
     }

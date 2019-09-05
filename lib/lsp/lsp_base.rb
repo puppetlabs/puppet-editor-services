@@ -20,7 +20,8 @@ module LSP
         elsif !item_value.nil? && item_value.respond_to?(:to_h)
           item_value = item_value.to_h
         end
-        value[name.to_s] = item_value unless optional_names.include?(name) && item_value.nil?
+        valuename = name.to_s.end_with?('__lsp') ? name.to_s[0...-5] : name.to_s
+        value[valuename] = item_value unless optional_names.include?(name) && item_value.nil?
       end
 
       value
