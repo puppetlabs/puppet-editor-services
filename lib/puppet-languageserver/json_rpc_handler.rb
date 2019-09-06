@@ -44,10 +44,6 @@ module PuppetLanguageServer
 
     def initialize(options = {})
       options = {} if options.nil?
-      @key_jsonrpc = KEY_JSONRPC
-      @key_id = KEY_ID
-      @key_method = KEY_METHOD
-      @key_params = KEY_PARAMS
 
       @state = :data
       @buffer = []
@@ -59,6 +55,10 @@ module PuppetLanguageServer
         @message_router = options[:message_router]
       end
       @message_router.json_rpc_handler = self
+
+      @request_sequence_id = 0
+      @requests = {}
+      @request_mutex = Mutex.new
     end
 
     # From PuppetEditorServices::SimpleServerConnectionHandler
@@ -156,29 +156,20 @@ module PuppetLanguageServer
     end
 
     def process(obj)
-      is_request = obj.key?(@key_id)
-      id = obj[@key_id]
-      if is_request
-        unless id.is_a?(String) || id.is_a?(Integer) || id.is_a?(NilClass)
-          invalid_request obj, CODE_INVALID_REQUEST, MSG_INVALID_REQ_ID
-          reply_error nil, CODE_INVALID_REQUEST, MSG_INVALID_REQ_ID
-          return false
-        end
-      end
-
-      unless obj[@key_jsonrpc] == '2.0'
+      unless obj[KEY_JSONRPC] == '2.0'
         invalid_request obj, CODE_INVALID_REQUEST, MSG_INVALID_REQ_JSONRPC
         reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_JSONRPC
         return false
       end
 
-      unless (method = obj[@key_method]).is_a? String
-        invalid_request obj, CODE_INVALID_REQUEST, MSG_INVALID_REQ_METHOD
-        reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_METHOD
-        return false
-      end
+      # Requests must have an ID and Method
+      is_request = obj.key?(KEY_ID) && obj.key?(KEY_METHOD)
+      # Notifications must have a Method but no ID
+      is_notification = obj.key?(KEY_METHOD) && !obj.key?(KEY_ID)
+      # Responses must have an ID, no Method but one of Result or Error
+      is_response = obj.key?(KEY_ID) && !obj.key?(KEY_METHOD) && (obj.key?(KEY_RESULT) || obj.key?(KEY_ERROR))
 
-      if (params = obj[@key_params])
+      if (params = obj[KEY_PARAMS])
         unless params.is_a?(Array) || params.is_a?(Hash)
           invalid_request obj, CODE_INVALID_REQUEST, MSG_INVALID_REQ_PARAMS
           reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_PARAMS
@@ -186,11 +177,43 @@ module PuppetLanguageServer
         end
       end
 
-      if is_request
-        @message_router.receive_request Request.new(self, id, method, params)
-      else
-        @message_router.receive_notification method, params
+      id = obj[KEY_ID]
+      # Requests and Responses must have an ID that is either a string or integer
+      if is_request || is_response
+        unless id.is_a?(String) || id.is_a?(Integer)
+          invalid_request obj, CODE_INVALID_REQUEST, MSG_INVALID_REQ_ID
+          reply_error nil, CODE_INVALID_REQUEST, MSG_INVALID_REQ_ID
+          return false
+        end
       end
+
+      # Requests and Notifications must have a method
+      if is_request || is_notification
+        unless (obj[KEY_METHOD]).is_a? String
+          invalid_request obj, CODE_INVALID_REQUEST, MSG_INVALID_REQ_METHOD
+          reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_METHOD
+          return false
+        end
+      end
+
+      # Responses must have a matching request originating from this JSON Handler
+      # Otherwise ignore it
+      if is_response
+        original_request = client_request!(obj[KEY_ID])
+        return false if original_request.nil?
+      end
+
+      if is_request
+        @message_router.receive_request Request.new(self, obj[KEY_ID], obj[KEY_METHOD], obj[KEY_PARAMS])
+        return true
+      elsif is_notification
+        @message_router.receive_notification obj[KEY_METHOD], obj[KEY_PARAMS]
+        return true
+      elsif is_response
+        @message_router.receive_response(obj, original_request)
+        return true
+      end
+      false
     end
 
     def close_connection
@@ -239,6 +262,19 @@ module PuppetLanguageServer
       true
     end
 
+    def send_client_request(rpc_method, params)
+      req_id = client_request_id!
+      request = {
+        KEY_JSONRPC => VALUE_VERSION,
+        KEY_ID      => req_id,
+        KEY_METHOD  => rpc_method,
+        KEY_PARAMS  => params
+      }
+      send_response(encode_json(request))
+      add_client_request(req_id, request)
+      req_id
+    end
+
     # This method could be overriden in the user's inherited class.
     def parsing_error(_data, exception)
       PuppetEditorServices.log_message(:error, "parsing error:\n#{exception.message}")
@@ -252,6 +288,37 @@ module PuppetLanguageServer
     # This method could be overriden in the user's inherited class.
     def invalid_request(_obj, code, message = nil)
       PuppetEditorServices.log_message(:error, "error #{code}: #{message}")
+    end
+
+    # Thread-safe way to get a new request id
+    def client_request_id!
+      value = nil
+      @request_mutex.synchronize do
+        value = @request_sequence_id
+        @request_sequence_id += 1
+      end
+      value
+    end
+
+    # Stores the request so it can later be correlated with an
+    # incoming repsonse
+    def add_client_request(id, request)
+      @request_mutex.synchronize do
+        @requests[id] = request
+      end
+    end
+
+    # Retrieve the request to a client. Note that this removes it
+    # from the requests queue.
+    def client_request!(id)
+      value = nil
+      @request_mutex.synchronize do
+        unless @requests[id].nil?
+          value = @requests[id]
+          @requests.delete(id)
+        end
+      end
+      value
     end
 
     class Request

@@ -140,3 +140,15 @@ class MockRelationshipGraph
   def initialize()
   end
 end
+
+class MockMessageRouter
+  attr_accessor :json_rpc_handler
+
+  def initialize(_ = {}); end
+
+  def receive_request(_); end
+
+  def receive_notification(_, _); end
+
+  def receive_response(_, _); end
+end

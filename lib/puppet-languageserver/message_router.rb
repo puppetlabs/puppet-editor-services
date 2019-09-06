@@ -1,11 +1,35 @@
 # frozen_string_literal: true
 
 module PuppetLanguageServer
-  class MessageRouter
-    attr_reader :server_options
+  class BaseMessageRouter
     attr_accessor :json_rpc_handler
 
+    def initialize(*_); end
+
+    def receive_request(request)
+      if request.rpc_method.start_with?('$/')
+        json_rpc_handler.reply_error nil, PuppetLanguageServer::CODE_METHOD_NOT_FOUND, PuppetLanguageServer::MSG_METHOD_NOT_FOUND
+      else
+        PuppetLanguageServer.log_message(:error, "Unknown RPC method #{request.rpc_method}")
+      end
+    end
+
+    def receive_notification(method, _params)
+      if method.start_with?('$/')
+        PuppetLanguageServer.log_message(:debug, "Ignoring RPC notification #{method}")
+      else
+        PuppetLanguageServer.log_message(:error, "Unknown RPC notification #{method}")
+      end
+    end
+
+    def receive_response(_response, _original_request); end
+  end
+
+  class MessageRouter < BaseMessageRouter
+    attr_reader :server_options
+
     def initialize(options = {})
+      super
       @server_options = options.nil? ? {} : options
     end
 
@@ -21,7 +45,7 @@ module PuppetLanguageServer
         unless server_options[:puppet_version].nil? || server_options[:puppet_version] == Puppet.version
           # Add a minor delay before sending the notification to give the client some processing time
           sleep(0.5)
-          @json_rpc_handler.send_show_message_notification(
+          json_rpc_handler.send_show_message_notification(
             LSP::MessageType::WARNING,
             "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
           )
@@ -212,7 +236,7 @@ module PuppetLanguageServer
         end
 
       else
-        PuppetLanguageServer.log_message(:error, "Unknown RPC method #{request.rpc_method}")
+        super
       end
     rescue StandardError => e
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'request' => request.rpc_method, 'params' => request.params)
@@ -226,7 +250,7 @@ module PuppetLanguageServer
 
       when 'exit'
         PuppetLanguageServer.log_message(:info, 'Received exit notification.  Closing connection to client...')
-        @json_rpc_handler.close_connection
+        json_rpc_handler.close_connection
 
       when 'textDocument/didOpen'
         PuppetLanguageServer.log_message(:info, 'Received textDocument/didOpen notification.')
@@ -234,7 +258,7 @@ module PuppetLanguageServer
         content = params['textDocument']['text']
         doc_version = params['textDocument']['version']
         documents.set_document(file_uri, content, doc_version)
-        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @json_rpc_handler)
+        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, json_rpc_handler)
 
       when 'textDocument/didClose'
         PuppetLanguageServer.log_message(:info, 'Received textDocument/didClose notification.')
@@ -247,7 +271,7 @@ module PuppetLanguageServer
         content = params['contentChanges'][0]['text'] # TODO: Bad hardcoding zero
         doc_version = params['textDocument']['version']
         documents.set_document(file_uri, content, doc_version)
-        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, @json_rpc_handler)
+        PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, json_rpc_handler)
 
       when 'textDocument/didSave'
         PuppetLanguageServer.log_message(:info, 'Received textDocument/didSave notification.')
@@ -262,20 +286,22 @@ module PuppetLanguageServer
         end
 
       else
-        PuppetLanguageServer.log_message(:error, "Unknown RPC notification #{method}")
+        super
       end
     rescue StandardError => e
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'notification' => method, 'params' => params)
       raise
     end
+
+    def receive_response(response, original_request)
+      super
+    rescue StandardError => e
+      PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'response' => response, 'original_request' => original_request)
+      raise
+    end
   end
 
-  class DisabledMessageRouter
-    attr_accessor :json_rpc_handler
-
-    def initialize(_options)
-    end
-
+  class DisabledMessageRouter < BaseMessageRouter
     def receive_request(request)
       case request.rpc_method
       when 'initialize'
@@ -285,7 +311,7 @@ module PuppetLanguageServer
         request.reply_result('capabilities' => PuppetLanguageServer::ServerCapabilites.no_capabilities)
         # Add a minor delay before sending the notification to give the client some processing time
         sleep(0.5)
-        @json_rpc_handler.send_show_message_notification(
+        json_rpc_handler.send_show_message_notification(
           LSP::MessageType::WARNING,
           'An error occured while the Language Server was starting. The server has been disabled.'
         )
@@ -323,10 +349,10 @@ module PuppetLanguageServer
 
       when 'exit'
         PuppetLanguageServer.log_message(:info, 'Received exit notification.  Closing connection to client...')
-        @json_rpc_handler.close_connection
+        json_rpc_handler.close_connection
 
       else
-        PuppetLanguageServer.log_message(:error, "Unknown RPC notification #{method}")
+        super
       end
     rescue StandardError => e
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'notification' => method, 'params' => params)

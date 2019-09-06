@@ -25,7 +25,7 @@ module LSP
   # }
   class Registration < LSPBase
     attr_accessor :id # type: string
-    attr_accessor :method # type: string
+    attr_accessor :method__lsp # type: string
     attr_accessor :registerOptions # type: any
 
     def initialize(initial_hash = nil)
@@ -36,7 +36,7 @@ module LSP
     def from_h!(value)
       value = {} if value.nil?
       self.id = value['id']
-      self.method = value['method']
+      self.method__lsp = value['method']
       self.registerOptions = value['registerOptions']
       self
     end
@@ -68,12 +68,12 @@ module LSP
   # }
   class Unregistration < LSPBase
     attr_accessor :id # type: string
-    attr_accessor :method # type: string
+    attr_accessor :method__lsp # type: string
 
     def from_h!(value)
       value = {} if value.nil?
       self.id = value['id']
-      self.method = value['method']
+      self.method__lsp = value['method']
       self
     end
   end

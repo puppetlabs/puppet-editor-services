@@ -51,6 +51,15 @@ describe 'message_router' do
       end
     end
 
+    context 'given a request that is protocol implementation dependant' do
+      let(:request_rpc_method) { '$/MockRequest' }
+
+      it 'should reply with an error' do
+        expect(subject.json_rpc_handler).to receive(:reply_error).with(Object, PuppetLanguageServer::CODE_METHOD_NOT_FOUND, Object)
+        subject.receive_request(request)
+      end
+    end
+
     # initialize - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize
     context 'given an initialize request' do
       let(:request_rpc_method) { 'initialize' }
@@ -809,6 +818,15 @@ describe 'message_router' do
       it 'should call PuppetLanguageServer::CrashDump.write_crash_file' do
         expect(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
         expect{ subject.receive_notification(notification_method, notification_params) }.to raise_error(/MockError/)
+      end
+    end
+
+    context 'given a notification that is protocol implementation dependant' do
+      let(:notification_method) { '$/MockNotification' }
+
+      it 'should log a debug message' do
+        expect(PuppetLanguageServer).to receive(:log_message).with(:debug, /Ignoring .+ #{Regexp.escape(notification_method)}/)
+        subject.receive_notification(notification_method, notification_params)
       end
     end
 
