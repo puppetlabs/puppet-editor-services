@@ -212,7 +212,11 @@ module PuppetLanguageServer
         end
 
       else
-        PuppetLanguageServer.log_message(:error, "Unknown RPC method #{request.rpc_method}")
+        if request.rpc_method.start_with?('$/')
+          json_rpc_handler.reply_error nil, PuppetLanguageServer::CODE_METHOD_NOT_FOUND, PuppetLanguageServer::MSG_METHOD_NOT_FOUND
+        else
+          PuppetLanguageServer.log_message(:error, "Unknown RPC method #{request.rpc_method}")
+        end
       end
     rescue StandardError => e
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'request' => request.rpc_method, 'params' => request.params)
@@ -262,7 +266,11 @@ module PuppetLanguageServer
         end
 
       else
-        PuppetLanguageServer.log_message(:error, "Unknown RPC notification #{method}")
+        if method.start_with?('$/')
+          PuppetLanguageServer.log_message(:debug, "Ignoring RPC notification #{method}")
+        else
+          PuppetLanguageServer.log_message(:error, "Unknown RPC notification #{method}")
+        end
       end
     rescue StandardError => e
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'notification' => method, 'params' => params)
