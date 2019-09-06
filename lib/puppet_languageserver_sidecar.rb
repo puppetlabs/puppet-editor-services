@@ -107,12 +107,14 @@ module PuppetLanguageServerSidecar
     noop
     default_aggregate
     default_classes
+    default_datatypes
     default_functions
     default_types
     node_graph
     resource_list
     workspace_aggregate
     workspace_classes
+    workspace_datatypes
     workspace_functions
     workspace_types
   ].freeze
@@ -277,6 +279,14 @@ module PuppetLanguageServerSidecar
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(cache)
       end
 
+    when 'default_datatypes'
+      cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+      if use_puppet_strings
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:datatype]).datatypes
+      else
+        PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
+      end
+
     when 'default_functions'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       if use_puppet_strings
@@ -340,6 +350,17 @@ module PuppetLanguageServerSidecar
       else
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(null_cache,
                                                                    :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+      end
+
+    when 'workspace_datatypes'
+      return nil unless inject_workspace_as_module || inject_workspace_as_environment
+      if use_puppet_strings
+        cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                              :object_types => [:datatype],
+                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).datatypes
+      else
+        PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
       end
 
     when 'workspace_functions'

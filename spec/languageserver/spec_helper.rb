@@ -21,7 +21,8 @@ def wait_for_puppet_loading
   loop do
     break if PuppetLanguageServer::PuppetHelper.default_functions_loaded? &&
              PuppetLanguageServer::PuppetHelper.default_types_loaded? &&
-             PuppetLanguageServer::PuppetHelper.default_classes_loaded?
+             PuppetLanguageServer::PuppetHelper.default_classes_loaded? &&
+             PuppetLanguageServer::PuppetHelper.default_datatypes_loaded?
     sleep(1)
     interation += 1
     next if interation < 90
@@ -30,6 +31,7 @@ def wait_for_puppet_loading
             functions_loaded? = #{PuppetLanguageServer::PuppetHelper.default_functions_loaded?}
             types_loaded? = #{PuppetLanguageServer::PuppetHelper.default_types_loaded?}
             classes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_classes_loaded?}
+            datatypes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_datatypes_loaded?}
           ERRORMSG
   end
 end
@@ -63,6 +65,25 @@ def random_sidecar_puppet_class(key = nil)
     "attr_name1" => { :type => "Optional[String]", :doc => 'attr_doc1' },
     "attr_name2" => { :type => "String", :doc => 'attr_doc2' }
   }
+  result
+end
+
+def random_sidecar_puppet_datatype
+  result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new())
+  result.doc = 'doc' + rand(1000).to_s
+  result.alias_of = "String[1, #{rand(255)}]"
+  result.attributes << random_sidecar_puppet_datatype_attribute
+  result.attributes << random_sidecar_puppet_datatype_attribute
+  result.attributes << random_sidecar_puppet_datatype_attribute
+  result.is_type_alias = rand(255) < 128
+  result
+end
+
+def random_sidecar_puppet_datatype_attribute
+  result = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeAttribute.new
+  result.doc = 'doc' + rand(1000).to_s
+  result.default_value = 'default' + rand(1000).to_s
+  result.types = 'String'
   result
 end
 

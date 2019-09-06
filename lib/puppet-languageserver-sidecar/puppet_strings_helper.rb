@@ -100,6 +100,7 @@ module PuppetLanguageServerSidecar
       # Extract all of the information
       # Ref - https://github.com/puppetlabs/puppet-strings/blob/87a8e10f45bfeb7b6b8e766324bfb126de59f791/lib/puppet-strings/json.rb#L10-L16
       populate_classes_from_yard_registry!
+      populate_data_types_from_yard_registry!
       populate_functions_from_yard_registry!
       populate_types_from_yard_registry!
     end
@@ -148,6 +149,51 @@ module PuppetLanguageServerSidecar
 
           @cache[source_path].classes << obj
         end
+      end
+    end
+
+    def populate_data_types_from_yard_registry!
+      ::YARD::Registry.all(:puppet_data_type).map(&:to_hash).each do |item|
+        source_path = item[:file]
+        type_name = item[:name].to_s
+        @cache[source_path] = FileDocumentation.new(source_path) if @cache[source_path].nil?
+
+        obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new
+        obj.key            = type_name
+        obj.source         = item[:file]
+        obj.calling_source = obj.source
+        obj.line           = item[:line]
+        obj.doc            = item[:docstring][:text]
+        obj.is_type_alias  = false
+        obj.alias_of       = nil
+
+        defaults = item[:defaults] || {}
+        item[:docstring][:tags]&.select { |tag| tag[:tag_name] == 'param' }&.each do |tag|
+          obj.attributes << PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeAttribute.new.from_h!(
+            'key'           => tag[:name],
+            'default_value' => defaults[tag[:name]],
+            'doc'           => tag[:text],
+            'types'         => tag[:types].nil? ? nil : tag[:types].join(', ')
+          )
+        end
+
+        @cache[source_path].datatypes << obj
+      end
+      ::YARD::Registry.all(:puppet_data_type_alias).map(&:to_hash).each do |item|
+        source_path = item[:file]
+        type_name = item[:name].to_s
+        @cache[source_path] = FileDocumentation.new(source_path) if @cache[source_path].nil?
+
+        obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new
+        obj.key            = type_name
+        obj.source         = item[:file]
+        obj.calling_source = obj.source
+        obj.line           = item[:line]
+        obj.doc            = item[:docstring][:text]
+        obj.is_type_alias  = true
+        obj.alias_of       = item[:alias_of]
+
+        @cache[source_path].datatypes << obj
       end
     end
 
@@ -275,6 +321,9 @@ module PuppetLanguageServerSidecar
     # PuppetLanguageServer::Sidecar::Protocol::PuppetClassList object holding all classes
     attr_accessor :classes
 
+    # PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList object holding all types
+    attr_accessor :datatypes
+
     # PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList object holding all functions
     attr_accessor :functions
 
@@ -284,6 +333,7 @@ module PuppetLanguageServerSidecar
     def initialize(path = nil)
       @path      = path
       @classes   = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
+      @datatypes = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
       @functions = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
       @types     = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
     end
@@ -293,6 +343,7 @@ module PuppetLanguageServerSidecar
       {
         'path'      => path,
         'classes'   => classes,
+        'datatypes' => datatypes,
         'functions' => functions,
         'types'     => types
       }

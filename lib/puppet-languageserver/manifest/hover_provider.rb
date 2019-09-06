@@ -62,7 +62,14 @@ module PuppetLanguageServer
             content = get_attribute_class_parameter_content(resource_object, item.attribute_name) unless resource_object.nil?
           end
           raise "#{resource_type_name} is not a valid puppet type, class or defined type" if resource_object.nil?
-
+        when 'Puppet::Pops::Model::QualifiedReference'
+          # https://github.com/puppetlabs/puppet-specifications/blob/master/language/names.md#names
+          # Datatypes have to start with uppercase and can be fully qualified
+          if item.cased_value =~ /^[A-Z][a-zA-Z:0-9]*$/ # rubocop:disable Style/GuardClause
+            content = get_puppet_datatype_content(item)
+          else
+            raise "#{item.cased_value} is an unknown QualifiedReference"
+          end
         else
           raise "Unable to generate Hover information for object of type #{item.class}"
         end
@@ -181,6 +188,19 @@ module PuppetLanguageServer
         content.strip
       end
       private_class_method :get_puppet_class_content
+
+      def self.get_puppet_datatype_content(item)
+        dt_info = PuppetLanguageServer::PuppetHelper.datatype(item.cased_value)
+        raise "DataType #{item.cased_value} does not exist" if dt_info.nil?
+
+        content = "**#{item.cased_value}** Data Type"
+        content += ' Alias' if dt_info.is_type_alias
+        content += "\n\n" + dt_info.doc unless dt_info.doc.nil?
+
+        content += "\n\nAlias of `#{dt_info.alias_of}`" if dt_info.is_type_alias
+        content
+      end
+      private_class_method :get_puppet_datatype_content
     end
   end
 end

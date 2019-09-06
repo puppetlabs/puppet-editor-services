@@ -167,6 +167,39 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
     end
   end
 
+  describe 'when running default_datatypes action' do
+    let (:cmd_options) { ['--action', 'default_datatypes'] }
+
+    it 'should return a cachable deserializable datatype list with default datatypes' do
+      expect_empty_cache
+
+      result = run_sidecar(cmd_options)
+      deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new()
+      expect { deserial.from_json!(result) }.to_not raise_error
+
+      expect(deserial.count).to be > 0
+
+      # These datatypes always exist
+      expect(deserial).to contain_child_with_key(:String)
+      expect(deserial).to contain_child_with_key(:Numeric)
+
+      # This is defined in the fixtures/real_agent/cache/lib/puppet/datatypes
+      expect(deserial).to contain_child_with_key(:RubyDataType)
+      # This is defined in the fixtures/real_agent/environments/testfixtures/modules/defaultmodule/types
+      expect(deserial).to contain_child_with_key(:'Defaultmodule::Modultetypealias')
+
+      # Now run using cached information
+      expect_populated_cache
+
+      result2 = run_sidecar(cmd_options)
+      deserial2 = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new()
+      expect { deserial2.from_json!(result2) }.to_not raise_error
+
+      # The second result should be the same as the first
+      expect_same_array_content(deserial, deserial2)
+    end
+  end
+
   describe 'when running default_functions action' do
     let (:cmd_options) { ['--action', 'default_functions'] }
 
@@ -303,6 +336,51 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
         expect(deserial).to contain_child_with_key(:"valid::nested::anotherclass")
         # Defined Types
         expect(deserial).to contain_child_with_key(:deftypeone)
+      end
+    end
+
+    describe 'when running workspace_datatypes action' do
+      let (:cmd_options) { ['--action', 'workspace_datatypes', '--local-workspace', workspace] }
+
+      it 'should return a deserializable datatype list with the named fixtures' do
+        expect_empty_cache
+
+        result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        # These default datatypes should not exist
+        expect(deserial).to_not contain_child_with_key(:String)
+        expect(deserial).to_not contain_child_with_key(:Numeric)
+
+        # Ruby datatype
+        expect(deserial).to contain_child_with_key(:ValidModuleDataType)
+
+        # Puppet data typealias
+        expect(deserial).to contain_child_with_key(:'Valid::TestType')
+
+        # Make sure the datatype has the right properties
+        obj = child_with_key(deserial, :ValidModuleDataType)
+        expect(obj.doc).to match(/A Puppet Data Type in Ruby\./)
+        expect(obj.source).to match(/valid_module_workspace/)
+        expect(obj.is_type_alias).to be false
+        expect(obj.alias_of).to be_nil
+        expect(obj.attributes[0].key).to eq('arg1')
+        expect(obj.attributes[0].doc).to eq('A message parameter.')
+        expect(obj.attributes[0].default_value).to eq('defaultvalue')
+        expect(obj.attributes[0].types).to eq('String')
+        expect(obj.attributes[1].key).to eq('arg2')
+        expect(obj.attributes[1].doc).to eq('An Optional Numeric parameter.')
+        expect(obj.attributes[1].default_value).to eq(12)
+        expect(obj.attributes[1].types).to eq('Optional[Numeric]')
+
+        # Make sure the datatype alias has the right properties
+        obj = child_with_key(deserial, :'Valid::TestType')
+        expect(obj.doc).to eq('Documentation for Valid::TestType')
+        expect(obj.source).to match(/valid_module_workspace/)
+        expect(obj.is_type_alias).to be true
+        expect(obj.alias_of).to eq('String[2, 20]')
+        expect(obj.attributes).to eq([])
       end
     end
 
@@ -449,6 +527,51 @@ describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => G
         expect(obj.parameters['ensure']).to_not be_nil
         expect(obj.parameters['ensure'][:type]).to eq('String')
         expect(obj.source).to match(/valid_environment_workspace/)
+      end
+    end
+
+    describe 'when running workspace_datatypes action' do
+      let (:cmd_options) { ['--action', 'workspace_datatypes', '--local-workspace', workspace] }
+
+      it 'should return a deserializable datatype list with the named fixtures' do
+        expect_empty_cache
+
+        result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        # These default datatypes should not exist
+        expect(deserial).to_not contain_child_with_key(:String)
+        expect(deserial).to_not contain_child_with_key(:Numeric)
+
+        # Ruby datatype
+        expect(deserial).to contain_child_with_key(:ProfileDataType)
+
+        # Puppet data typealias
+        expect(deserial).to contain_child_with_key(:'Role::TestType')
+
+        # Make sure the datatype has the right properties
+        obj = child_with_key(deserial, :ProfileDataType)
+        expect(obj.doc).to match(/A Puppet Data Type in Ruby\./)
+        expect(obj.source).to match(/valid_environment_workspace/)
+        expect(obj.is_type_alias).to be false
+        expect(obj.alias_of).to be_nil
+        expect(obj.attributes[0].key).to eq('arg1')
+        expect(obj.attributes[0].doc).to eq('A message parameter.')
+        expect(obj.attributes[0].default_value).to eq('defaultvalue')
+        expect(obj.attributes[0].types).to eq('String')
+        expect(obj.attributes[1].key).to eq('arg2')
+        expect(obj.attributes[1].doc).to eq('An Optional Numeric parameter.')
+        expect(obj.attributes[1].default_value).to eq(12)
+        expect(obj.attributes[1].types).to eq('Optional[Numeric]')
+
+        # Make sure the datatype alias has the right properties
+        obj = child_with_key(deserial, :'Role::TestType')
+        expect(obj.doc).to eq('Documentation for Role::TestType')
+        expect(obj.source).to match(/valid_environment_workspace/)
+        expect(obj.is_type_alias).to be true
+        expect(obj.alias_of).to eq('Numeric')
+        expect(obj.attributes).to eq([])
       end
     end
 
