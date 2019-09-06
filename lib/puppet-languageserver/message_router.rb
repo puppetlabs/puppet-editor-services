@@ -268,6 +268,13 @@ module PuppetLanguageServer
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'notification' => method, 'params' => params)
       raise
     end
+
+    def receive_response(response, original_request)
+      # Do nothing
+    rescue StandardError => e
+      PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'response' => response, 'original_request' => original_request)
+      raise
+    end
   end
 
   class DisabledMessageRouter
@@ -331,6 +338,10 @@ module PuppetLanguageServer
     rescue StandardError => e
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'notification' => method, 'params' => params)
       raise
+    end
+
+    def receive_response(_, _)
+      # Do nothing
     end
   end
 end
