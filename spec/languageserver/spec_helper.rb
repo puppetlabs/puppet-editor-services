@@ -119,7 +119,11 @@ end
 
 # Mock ojects
 class MockConnection < PuppetEditorServices::SimpleServerConnectionBase
+  attr_accessor :buffer
+
   def send_data(data)
+    @buffer = '' if @buffer.nil?
+    @buffer += data
     true
   end
 end
@@ -131,7 +135,10 @@ class MockJSONRPCHandler < PuppetLanguageServer::JSONRPCHandler
     @client_connection = MockConnection.new
   end
 
-  def receive_data(data)
+  def receive_data(_); end
+
+  def connection
+    @client_connection
   end
 end
 

@@ -56,6 +56,7 @@ module PuppetLanguageServer
       json_rpc_handler
       document_store
       crash_dump
+      language_client
       message_router
       server_capabilities
     ].each do |lib|
