@@ -22,7 +22,9 @@ module PuppetLanguageServer
       end
     end
 
-    def receive_response(_response, _original_request); end
+    def receive_response(_response, original_request)
+      PuppetLanguageServer.log_message(:error, "Unknown RPC response for method #{original_request['method']}")
+    end
   end
 
   class MessageRouter < BaseMessageRouter
