@@ -314,15 +314,15 @@ module PuppetLanguageServer
     end
 
     def receive_response(response, original_request)
-      unless response.key?('result')
+      unless receive_response_succesful?(response) # rubocop:disable Style/IfUnlessModifier Too long
         PuppetLanguageServer.log_message(:error, "Response for method '#{original_request['method']}' with id '#{original_request['id']}' failed with #{response['error']}")
-        return
       end
-
+      # Error responses still need to be processed so process messages even if it failed
       case original_request['method']
       when 'client/registerCapability'
         client.parse_register_capability_response!(self, response, original_request)
       when 'workspace/configuration'
+        return unless receive_response_succesful?(response)
         client.parse_lsp_configuration_settings!(response['result'])
       else
         super
@@ -330,6 +330,12 @@ module PuppetLanguageServer
     rescue StandardError => e
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'response' => response, 'original_request' => original_request)
       raise
+    end
+
+    private
+
+    def receive_response_succesful?(response)
+      response.key?('result')
     end
   end
 
