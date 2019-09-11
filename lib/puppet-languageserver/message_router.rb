@@ -209,33 +209,6 @@ module PuppetLanguageServer
           request.reply_result(nil)
         end
 
-      when 'textDocument/onTypeFormatting'
-        unless PuppetLanguageServer.featureflag?('hashrocket')
-          request.reply_result(nil)
-          return
-        end
-        file_uri = request.params['textDocument']['uri']
-        line_num = request.params['position']['line']
-        char_num = request.params['position']['character']
-        content  = documents.document(file_uri)
-        begin
-          case documents.document_type(file_uri)
-          when :manifest
-            request.reply_result(PuppetLanguageServer::Manifest::FormatOnTypeProvider.instance.format(
-                                   content,
-                                   line_num,
-                                   char_num,
-                                   request.params['ch'],
-                                   request.params['options']
-                                 ))
-          else
-            raise "Unable to format on type on #{file_uri}"
-          end
-        rescue StandardError => e
-          PuppetLanguageServer.log_message(:error, "(textDocument/onTypeFormatting) #{e}")
-          request.reply_result(nil)
-        end
-
       when 'textDocument/signatureHelp'
         file_uri = request.params['textDocument']['uri']
         line_num = request.params['position']['line']

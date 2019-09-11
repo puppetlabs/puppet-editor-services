@@ -5,7 +5,7 @@ module PuppetLanguageServer
     def self.capabilities
       # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize-request
 
-      result = {
+      {
         'textDocumentSync'        => LSP::TextDocumentSyncKind::FULL,
         'hoverProvider'           => true,
         'completionProvider'      => {
@@ -19,9 +19,6 @@ module PuppetLanguageServer
           'triggerCharacters' => ['(', ',']
         }
       }
-      result[:documentOnTypeFormattingProvider] = { 'firstTriggerCharacter' => '>' } if PuppetLanguageServer.featureflag?('hashrocket')
-
-      result
     end
 
     def self.no_capabilities
