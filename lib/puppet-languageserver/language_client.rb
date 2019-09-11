@@ -44,7 +44,7 @@ module PuppetLanguageServer
     end
 
     def capability_registrations(method)
-      return [{ :registered => false, :state => :complete }] if @registrations[method].nil?
+      return [{ :registered => false, :state => :complete }] if @registrations[method].nil? || @registrations[method].empty?
       @registrations[method].dup
     end
 
@@ -56,7 +56,7 @@ module PuppetLanguageServer
       if @registrations[method] && @registrations[method].select { |i| i[:state] == :pending }.count > 0
         # The protocol doesn't specify whether this is allowed and is probably per client specific. For the moment we will allow
         # the registration to be sent but log a message that something may be wrong.
-        PuppetLanguageServer.log_message(:warn, "A dynamic registration for the #{method} method is already in progress")
+        PuppetLanguageServer.log_message(:warn, "A dynamic registration/deregistration for the #{method} method is already in progress")
       end
 
       params = LSP::RegistrationParams.new.from_h!('registrations' => [])
@@ -67,6 +67,31 @@ module PuppetLanguageServer
       @registrations[method] << { :registered => false, :state => :pending, :id => id }
 
       message_router.json_rpc_handler.send_client_request('client/registerCapability', params)
+      true
+    end
+
+    def unregister_capability(method)
+      if @registrations[method].nil?
+        PuppetLanguageServer.log_message(:debug, "No registrations to deregister for the #{method}")
+        return true
+      end
+
+      params = LSP::UnregistrationParams.new.from_h!('unregisterations' => [])
+      @registrations[method].each do |reg|
+        next if reg[:id].nil?
+        PuppetLanguageServer.log_message(:warn, "A dynamic registration/deregistration for the #{method} method, with id #{reg[:id]} is already in progress") if reg[:state] == :pending
+        # Ignore registrations that don't need to be unregistered
+        next if reg[:state] == :complete && !reg[:registered]
+        params.unregisterations << LSP::Unregistration.new.from_h!('id' => reg[:id], 'method' => method)
+        reg[:state] = :pending
+      end
+
+      if params.unregisterations.count.zero?
+        PuppetLanguageServer.log_message(:debug, "Nothing to deregister for the #{method} method")
+        return true
+      end
+
+      message_router.json_rpc_handler.send_client_request('client/unregisterCapability', params)
       true
     end
 
@@ -92,6 +117,30 @@ module PuppetLanguageServer
         # If we just registered the workspace/didChangeConfiguration method then
         # also trigger a configuration request to get the initial state
         send_configuration_request if reg.method__lsp == 'workspace/didChangeConfiguration'
+      end
+
+      true
+    end
+
+    def parse_unregister_capability_response!(response, original_request)
+      raise 'Response is not from client/unregisterCapability request' unless original_request['method'] == 'client/unregisterCapability'
+
+      unless response.key?('result')
+        original_request['params'].unregisterations.each do |reg|
+          # Mark the registration as completed and failed
+          @registrations[reg.method__lsp] = [] if @registrations[reg.method__lsp].nil?
+          @registrations[reg.method__lsp].select { |i| i[:id] == reg.id && i[:registered] }.each { |i| i[:state] = :complete }
+          @registrations[reg.method__lsp].delete_if { |i| i[:id] == reg.id && !i[:registered] }
+        end
+        return true
+      end
+
+      original_request['params'].unregisterations.each do |reg|
+        PuppetLanguageServer.log_message(:info, "Succesfully dynamically unregistered the #{reg.method__lsp} method")
+
+        # Remove registrations
+        @registrations[reg.method__lsp] = [] if @registrations[reg.method__lsp].nil?
+        @registrations[reg.method__lsp].delete_if { |i| i[:id] == reg.id }
       end
 
       true

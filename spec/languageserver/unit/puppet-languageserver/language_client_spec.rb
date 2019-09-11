@@ -331,6 +331,72 @@ describe 'PuppetLanguageServer::LanguageClient' do
     end
   end
 
+  describe '#unregister_capability' do
+    let(:method_name) { 'mockMethod' }
+
+    before(:each) do
+      # Mock an already succesful registration
+      subject.instance_variable_set(:@registrations, {
+        method_name => [{ :id => 'id001', :state => :complete, :registered => true }]
+      })
+    end
+
+    it 'should send a client request and return true' do
+      expect(json_rpc_handler).to receive(:send_client_request).with('client/unregisterCapability', Object)
+      expect(subject.unregister_capability(method_name)).to eq(true)
+    end
+
+    it 'should include the method to register' do
+      subject.unregister_capability(method_name)
+      expect(json_rpc_handler.connection.buffer).to include("\"method\":\"#{method_name}\"")
+    end
+
+    it 'should log a message if a registration is already in progress' do
+      allow(json_rpc_handler).to receive(:send_client_request)
+      expect(PuppetLanguageServer).to receive(:log_message).with(:warn, /#{method_name}/)
+
+      subject.unregister_capability(method_name)
+      subject.unregister_capability(method_name)
+    end
+
+    it 'should not log a message if a previous registration completed' do
+      req_method_name = nil
+      req_method_params = nil
+      # Remember the registration so we can fake a response later
+      allow(json_rpc_handler).to receive(:send_client_request) do |n, p|
+        req_method_name = n
+        req_method_params = p
+      end
+
+      expect(PuppetLanguageServer).to_not receive(:log_message).with(:warn, /#{method_name}/)
+      # Send as registration request
+      subject.unregister_capability(method_name)
+      # Mock a valid response
+      response = { 'jsonrpc'=>'2.0', 'id'=> 0, 'result' => nil }
+      original_request = { 'jsonrpc'=>'2.0', 'id' => 0, 'method' => req_method_name, 'params' => req_method_params }
+
+      subject.parse_unregister_capability_response!(response, original_request)
+
+      subject.unregister_capability(method_name)
+    end
+
+    it 'should not deregister methods that have not been registerd' do
+      expect(json_rpc_handler).to_not receive(:send_client_request)
+
+      subject.unregister_capability('unknown')
+    end
+
+    it 'should not deregister methods that are no longer registerd' do
+      expect(json_rpc_handler).to_not receive(:send_client_request)
+
+      subject.instance_variable_set(:@registrations, {
+        method_name => [{ :id => 'id001', :state => :complete, :registered => false }]
+      })
+
+      subject.unregister_capability(method_name)
+    end
+  end
+
   describe '#parse_register_capability_response!' do
     let(:request_id) { 0 }
     let(:response_result) { nil }
@@ -386,6 +452,86 @@ describe 'PuppetLanguageServer::LanguageClient' do
           expect(PuppetLanguageServer).to receive(:log_message).with(:info, /validMethod/)
 
           subject.parse_register_capability_response!(response, original_request)
+        end
+      end
+    end
+  end
+
+  describe '#parse_unregister_capability_response!' do
+    let(:request_id) { 0 }
+    let(:response_result) { nil }
+    let(:response) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'result' => response_result } }
+    let(:original_request) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'method' => request_method, 'params' => request_params} }
+    let(:method_name) { 'validMethod' }
+    let(:initial_registration) { true }
+
+    before(:each) do
+      # Mock an already succesful registration
+      subject.instance_variable_set(:@registrations, {
+        method_name => [{ :id => 'id001', :state => :complete, :registered => initial_registration }]
+      })
+    end
+
+    context 'Given an original request that is not an unregistration' do
+      let(:request_method) { 'mockMethod' }
+      let(:request_params) { {} }
+
+      it 'should raise an error if the original request was not a registration' do
+        expect{ subject.parse_unregister_capability_response!(response, original_request) }.to raise_error(/client\/unregisterCapability/)
+      end
+    end
+
+    context 'Given a valid original request' do
+      let(:request_method) { 'client/unregisterCapability' }
+      let(:request_params) do
+        params = LSP::UnregistrationParams.new.from_h!('unregisterations' => [])
+        params.unregisterations << LSP::Unregistration.new.from_h!('id' => 'id001', 'method' => method_name)
+        params
+      end
+
+      before(:each) do
+        # Mimic an unregistration that is in progress
+        subject.instance_variable_set(:@registrations, {
+          method_name => [{ :id => 'id001', :state => :pending, :registered => initial_registration }]
+        })
+      end
+
+      context 'that failed' do
+        before(:each) do
+          response.delete('result') if response.key?('result')
+          response['error'] = { 'code' => -1, 'message' => 'mock message' }
+        end
+
+        context 'and was previously registered' do
+          it 'should retain that it is registered' do
+            subject.parse_unregister_capability_response!(response, original_request)
+
+            expect(subject.capability_registrations(method_name)).to eq([{:id=>"id001", :registered=>true, :state=>:complete}])
+          end
+        end
+
+        context 'and was not previously registered' do
+          let(:initial_registration) { false }
+
+          it 'should no longer be in the registration list' do
+            subject.parse_unregister_capability_response!(response, original_request)
+
+            expect(subject.capability_registrations(method_name)).to eq([{ :registered => false, :state => :complete }])
+          end
+        end
+      end
+
+      context 'that succeeded' do
+        it 'should log the registration' do
+          expect(PuppetLanguageServer).to receive(:log_message).with(:info, /validMethod/)
+
+          subject.parse_unregister_capability_response!(response, original_request)
+        end
+
+        it 'should no longer be in the registration list' do
+          subject.parse_unregister_capability_response!(response, original_request)
+
+          expect(subject.capability_registrations(method_name)).to eq([{ :registered => false, :state => :complete }])
         end
       end
     end

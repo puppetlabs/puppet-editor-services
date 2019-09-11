@@ -321,6 +321,8 @@ module PuppetLanguageServer
       case original_request['method']
       when 'client/registerCapability'
         client.parse_register_capability_response!(response, original_request)
+      when 'client/unregisterCapability'
+        client.parse_unregister_capability_response!(response, original_request)
       when 'workspace/configuration'
         return unless receive_response_succesful?(response)
         client.parse_lsp_configuration_settings!(response['result'])
