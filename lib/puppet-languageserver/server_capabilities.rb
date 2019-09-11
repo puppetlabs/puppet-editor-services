@@ -21,6 +21,12 @@ module PuppetLanguageServer
       }
     end
 
+    def self.document_on_type_formatting_options
+      {
+        'firstTriggerCharacter': '>'
+      }
+    end
+
     def self.no_capabilities
       # Any empty hash denotes no capabilities at all
       {

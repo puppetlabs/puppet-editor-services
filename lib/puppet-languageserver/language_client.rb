@@ -4,6 +4,9 @@ module PuppetLanguageServer
   class LanguageClient
     attr_reader :message_router
 
+    # Client settings
+    attr_reader :format_on_type
+
     def initialize(message_router)
       @message_router = message_router
       @client_capabilites = {}
@@ -17,6 +20,9 @@ module PuppetLanguageServer
       #   }
       # ]
       @registrations = {}
+
+      # Default settings
+      @format_on_type = false
     end
 
     def client_capability(*names)
@@ -35,15 +41,27 @@ module PuppetLanguageServer
       @client_capabilites = initialize_params['capabilities']
     end
 
-    # Settings could be a hash or an array of hash
-    def parse_lsp_configuration_settings!(settings = [{}])
-      # TODO: Future use. Actually do something with the settings
-      # settings = [settings] unless settings.is_a?(Hash)
-      # settings.each do |hash|
-      # end
+    def parse_lsp_configuration_settings!(settings = {})
+      # format on type
+      value = safe_hash_traverse(settings, 'puppet', 'editorService', 'formatOnType', 'enable')
+      if !value.nil? && value != @format_on_type
+        # Is dynamic registration available?
+        if client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration') == true
+          value ?
+            register_capability(message_router, 'textDocument/onTypeFormatting', PuppetLanguageServer::ServerCapabilites.document_on_type_formatting_options) :
+            unregister_capability()
+        end
+        @format_on_type = value
+      end
+
+
+      puts "@@@@@@@@@ #{value}"
     end
 
-    def capability_registrations(method)
+    #D, [2019-09-11T15:33:36.482937 #20404] DEBUG -- : --- INBOUND
+#    {"jsonrpc":"2.0","id":1,"result":[{"editorService":{"enable":true,"debugFilePath":"C:\\Source\\puppet-vscode\\tmp\\debug.log","docker":{"imageName":"linguapupuli/puppet-language-server:latest"},"featureFlags":[],"hover":{"showMetadataInfo":true},"loglevel":"debug","protocol":"tcp","puppet":{"confdir":"","environment":"","modulePath":"","vardir":"","version":""},"tcp":{"address":"GLENNS","port":9000},"timeout":10,"modulePath":null},"format":{"enable":true},"installDirectory":null,"installType":"auto","notification":{"nodeGraph":"messagebox","puppetResource":"messagebox"},"pdk":{"checkVersion":true},"titleBar":{"pdkNewModule":{"enable":false}},"languageclient":{"protocol":null,"minimumUserLogLevel":null},"languageserver":{"address":null,"port":null,"timeout":null,"filecache":{"enable":null},"debugFilePath":null},"puppetAgentDir":null}]}
+
+def capability_registrations(method)
       return [{ :registered => false, :state => :complete }] if @registrations[method].nil? || @registrations[method].empty?
       @registrations[method].dup
     end
