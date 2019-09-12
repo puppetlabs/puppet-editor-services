@@ -14,6 +14,10 @@ describe 'message_router' do
     result
   end
 
+  RSpec::Matchers.define :method_not_nil do |method_name|
+    match { |actual| !actual.send(method_name).nil? }
+  end
+
   describe '#documents' do
     it 'should respond to documents method' do
       expect(subject).to respond_to(:documents)
@@ -83,32 +87,32 @@ describe 'message_router' do
     context 'given a puppet/getVersion request' do
       let(:request_rpc_method) { 'puppet/getVersion' }
       it 'should reply with the Puppet Version' do
-        expect(request).to receive(:reply_result).with(duck_type(:puppetVersion))
+        expect(request).to receive(:reply_result).with(method_not_nil(:puppetVersion))
 
         subject.receive_request(request)
       end
       it 'should reply with the Facter Version' do
-        expect(request).to receive(:reply_result).with(duck_type(:facterVersion))
+        expect(request).to receive(:reply_result).with(method_not_nil(:facterVersion))
 
         subject.receive_request(request)
       end
       it 'should reply with the Language Server version' do
-        expect(request).to receive(:reply_result).with(duck_type(:languageServerVersion))
+        expect(request).to receive(:reply_result).with(method_not_nil(:languageServerVersion))
 
         subject.receive_request(request)
       end
       it 'should reply with whether the facts are loaded' do
-        expect(request).to receive(:reply_result).with(duck_type(:factsLoaded))
+        expect(request).to receive(:reply_result).with(method_not_nil(:factsLoaded))
 
         subject.receive_request(request)
       end
       it 'should reply with whether the functions are loaded' do
-        expect(request).to receive(:reply_result).with(duck_type(:functionsLoaded))
+        expect(request).to receive(:reply_result).with(method_not_nil(:functionsLoaded))
 
         subject.receive_request(request)
       end
       it 'should reply with whether the types are loaded' do
-        expect(request).to receive(:reply_result).with(duck_type(:typesLoaded))
+        expect(request).to receive(:reply_result).with(method_not_nil(:typesLoaded))
 
         subject.receive_request(request)
       end

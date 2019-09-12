@@ -57,12 +57,13 @@ module PuppetLanguageServer
 
       when 'puppet/getVersion'
         request.reply_result(LSP::PuppetVersion.new(
-                               'puppetVersion'   => Puppet.version,
-                               'facterVersion'   => Facter.version,
-                               'factsLoaded'     => PuppetLanguageServer::FacterHelper.facts_loaded?,
-                               'functionsLoaded' => PuppetLanguageServer::PuppetHelper.default_functions_loaded?,
-                               'typesLoaded'     => PuppetLanguageServer::PuppetHelper.default_types_loaded?,
-                               'classesLoaded'   => PuppetLanguageServer::PuppetHelper.default_classes_loaded?
+                               'languageServerVersion' => PuppetEditorServices.version,
+                               'puppetVersion'         => Puppet.version,
+                               'facterVersion'         => Facter.version,
+                               'factsLoaded'           => PuppetLanguageServer::FacterHelper.facts_loaded?,
+                               'functionsLoaded'       => PuppetLanguageServer::PuppetHelper.default_functions_loaded?,
+                               'typesLoaded'           => PuppetLanguageServer::PuppetHelper.default_types_loaded?,
+                               'classesLoaded'         => PuppetLanguageServer::PuppetHelper.default_classes_loaded?
                              ))
 
       when 'puppet/getResource'
