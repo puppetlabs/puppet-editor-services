@@ -67,8 +67,15 @@ describe 'message_router' do
     # initialize - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize
     context 'given an initialize request' do
       let(:request_rpc_method) { 'initialize' }
+      let(:request_params) { { 'cap1' => 'value1' } }
       it 'should reply with capabilites' do
         expect(request).to receive(:reply_result).with(hash_including('capabilities'))
+
+        subject.receive_request(request)
+      end
+
+      it 'should save the client capabilities' do
+        expect(subject.client).to receive(:parse_lsp_initialize!).with(request_params)
 
         subject.receive_request(request)
       end
@@ -839,9 +846,35 @@ describe 'message_router' do
       let(:notification_method) { 'initialized' }
 
       it 'should log a message' do
-        expect(PuppetLanguageServer).to receive(:log_message).with(:info,String)
+        expect(PuppetLanguageServer).to receive(:log_message).with(:info, /initialization/)
+        allow(PuppetLanguageServer).to receive(:log_message).with(:debug, String)
 
         subject.receive_notification(notification_method, notification_params)
+      end
+
+      context 'when the client supports dynamic registration of workspace/didChangeConfiguration' do
+        before(:each) do
+          allow(subject.client).to receive(:client_capability).with('workspace', 'didChangeConfiguration', 'dynamicRegistration').and_return(true)
+        end
+
+        it 'should attempt to register workspace/didChangeConfiguration' do
+          expect(subject.client).to receive(:register_capability).with(Object, 'workspace/didChangeConfiguration')
+
+          subject.receive_notification(notification_method, notification_params)
+        end
+      end
+
+      context 'when the client does not support dynamic registration of workspace/didChangeConfiguration' do
+        before(:each) do
+          allow(subject.client).to receive(:client_capability).with('workspace', 'didChangeConfiguration', 'dynamicRegistration').and_return(nil)
+        end
+
+        it 'should log a debug message' do
+          expect(PuppetLanguageServer).to receive(:log_message).with(:debug, /Client does not support didChangeConfiguration/)
+          expect(PuppetLanguageServer).to receive(:log_message).with(Symbol, String)
+
+          subject.receive_notification(notification_method, notification_params)
+        end
       end
     end
 
@@ -992,6 +1025,36 @@ describe 'message_router' do
       end
     end
 
+    # workspace/didChangeConfiguration - https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration
+    context 'given a workspace/didChangeConfiguration notification' do
+      let(:notification_method) { 'workspace/didChangeConfiguration' }
+      let(:notification_params) { {
+        'settings' => config_settings
+      }}
+
+      # Server Pull method for settings
+      context 'given a settings with value of nil' do
+        let(:config_settings) { nil }
+
+        it 'should send a configuration request' do
+          expect(subject.client).to receive(:send_configuration_request).with(Object)
+
+          subject.receive_notification(notification_method, notification_params)
+        end
+      end
+
+      # Legacy Client Push method for settings
+      context 'given a settings with value of non-empty Hash' do
+        let(:config_settings) { { 'setting1' => 'value1' } }
+
+        it 'should parse the settings' do
+          expect(subject.client).to receive(:parse_lsp_configuration_settings!).with(config_settings)
+
+          subject.receive_notification(notification_method, notification_params)
+        end
+      end
+    end
+
     context 'given an unknown notification' do
       let(:notification_method) { 'unknown_notification_method' }
 
@@ -999,6 +1062,75 @@ describe 'message_router' do
         expect(PuppetLanguageServer).to receive(:log_message).with(:error,"Unknown RPC notification #{notification_method}")
 
         subject.receive_notification(notification_method, notification_params)
+      end
+    end
+  end
+
+  describe '#receive_response' do
+    let(:request_id) { 0 }
+    let(:response_result) { nil }
+    let(:response) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'result' => response_result } }
+    let(:original_request) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'method' => request_method, 'params' => request_params} }
+
+    before(:each) do
+      allow(PuppetLanguageServer).to receive(:log_message)
+    end
+
+    context 'given a response that errored' do
+      let(:request_method) { 'mockMethod'}
+      let(:request_params) { {} }
+
+      before(:each) do
+        response.delete('result') if response.key?('result')
+        response['error'] = { 'code' => -1, 'message' => 'mock message' }
+      end
+
+      it 'should log the error' do
+        expect(PuppetLanguageServer).to receive(:log_message).with(:error, /.+#{request_method}.+#{request_id}.+mock message.+/)
+
+        subject.receive_response(response, original_request)
+      end
+    end
+
+    context 'given an error during processing' do
+      let(:request_method) { 'client/registerCapability'}
+      let(:request_params) { {} }
+
+      before(:each) do
+        expect(subject.client).to receive(:parse_register_capability_response!).and_raise('MockError')
+        allow(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
+      end
+
+      it 'should raise an error' do
+        expect{ subject.receive_response(response, original_request) }.to raise_error(/MockError/)
+      end
+
+      it 'should call PuppetLanguageServer::CrashDump.write_crash_file' do
+        expect(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
+        expect{ subject.receive_response(response, original_request) }.to raise_error(/MockError/)
+      end
+    end
+
+    context 'given an original client/registerCapability request' do
+      let(:request_method) { 'client/registerCapability'}
+      let(:request_params) { {} }
+
+      it 'should call client.parse_register_capability_response!' do
+        expect(subject.client).to receive(:parse_register_capability_response!).with(Object, response, original_request)
+
+        subject.receive_response(response, original_request)
+      end
+    end
+
+    context 'given an original workspace/configuration request' do
+      let(:response_result) { { 'setting1' => 'value1' } }
+      let(:request_method) { 'workspace/configuration'}
+      let(:request_params) { {} }
+
+      it 'should call client.parse_lsp_configuration_settings!' do
+        expect(subject.client).to receive(:parse_lsp_configuration_settings!).with(response_result)
+
+        subject.receive_response(response, original_request)
       end
     end
   end

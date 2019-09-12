@@ -1,7 +1,7 @@
 ## Node LSP introspector
 
 Downloads the associated LSP node modules and generates the Ruby
-LSP types and enumerations for the Puppet Language Server
+LSP types and enumerations for the Puppet Language, and Debug, Server
 
 
 ### Prerequisites
@@ -15,7 +15,7 @@ LSP types and enumerations for the Puppet Language Server
 
 2. Run `npm install` to download the required node modules
 
-3. Run `node index.js` to generate the Language Server ruby types
+3. Run `node languageprotocol.js` to generate the Language Server ruby types
 
 4. Run `node debugprotocol.js` to generate the Debug Server ruby types
 

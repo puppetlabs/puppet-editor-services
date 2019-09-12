@@ -270,6 +270,9 @@ function GenerateRubyFileFooter() {
 
 // ----------------------------
 
+var rubyFileList = ['lsp_base', 'lsp_custom'];
+
+rubyFileList.push('lsp_types');
 parser.parseFile('./node_modules/vscode-languageserver-types/lib/esm/main.d.ts', 'workspace root').then(
   (value) => {
     const fileContent = fs.readFileSync(value.filePath, { encoding: 'UTF8'});
@@ -282,26 +285,56 @@ parser.parseFile('./node_modules/vscode-languageserver-types/lib/esm/main.d.ts',
   }
 );
 
-parser.parseFile('./node_modules/vscode-languageserver-protocol/lib/protocol.d.ts', 'workspace root').then(
-  (value) => {
-    const fileContent = fs.readFileSync(value.filePath, { encoding: 'UTF8'});
-    fs.writeFileSync(path.join(lspOutputPath, 'lsp_protocol.rb'),
-      GenerateRubyFileHeader('LSP Protocol: vscode-languageserver-protocol/lib/protocol.d.ts') +
-      // Unfortunately the protocol here splits out the client and server capabilities into separate objects
-      // In this case we'll ignore them for automagic generation and manually create the ruby classes
-      GenerateRubyFile(value, fileContent, [
-        '_ClientCapabilities',
-        'TextDocumentClientCapabilities',
-        'WorkspaceClientCapabilities',
-        '_InitializeParams',
-        '_ServerCapabilities'
-      ]) +
-      GenerateRubyFileFooter(), { encoding: 'UTF8'});
-  }
-);
-
+rubyFileList.push('lsp_enums');
 // Export Enums
 fs.writeFileSync(path.join(lspOutputPath, 'lsp_enums.rb'),
   GenerateRubyFileHeader('LSP Enumerations') +
   GenerateRubyEnums(enumList) +
   GenerateRubyFileFooter(), { encoding: 'UTF8'});
+
+// TODO: This is far from perfect due to type imports e.g. `TextDocumentIdentifier` appears as "Unknown Type"
+// because it's defined in a different file.  Ideally we should be following the imports (value.import) and keeping a global
+// cache of all the parsed types. But it will do for now at least.
+const protocolDir = './node_modules/vscode-languageserver-protocol/lib'
+fs.readdirSync(protocolDir).forEach((item) => {
+  if (item.startsWith('protocol.') && item.endsWith('.d.ts')) {
+    var rubyFilename = "lsp_" + item.slice(0, -5).replace(".", "_").toLowerCase();
+    rubyFileList.push(rubyFilename);
+    rubyFilename += ".rb";
+
+    parser.parseFile(protocolDir + '/' + item, 'workspace root').then(
+      (value) => {
+        const fileContent = fs.readFileSync(value.filePath, { encoding: 'UTF8'});
+        fs.writeFileSync(path.join(lspOutputPath, rubyFilename),
+          GenerateRubyFileHeader('LSP Protocol: vscode-languageserver-protocol/lib/' + item) +
+          // Unfortunately the protocol here splits out the client and server capabilities into separate objects
+          // In this case we'll ignore them for automagic generation and manually create the ruby classes
+          GenerateRubyFile(value, fileContent, [
+            '_ClientCapabilities',
+            'TextDocumentClientCapabilities',
+            'WorkspaceClientCapabilities',
+            '_InitializeParams',
+            '_ServerCapabilities'
+          ]) +
+          GenerateRubyFileFooter(), { encoding: 'UTF8'});
+      }
+    );
+  }
+});
+
+// Write out lsp.rb which loads in all of the other files
+var content =
+`# frozen_string_literal: true
+
+# DO NOT MODIFY. This file is built automatically
+# See tools/lsp_introspect/index.js
+
+%w[${rubyFileList.join(' ')}].each do |lib|
+  begin
+    require "lsp/#{lib}"
+  rescue LoadError
+    require File.expand_path(File.join(File.dirname(__FILE__), lib))
+  end
+end
+`
+fs.writeFileSync(path.join(lspOutputPath, 'lsp.rb'), content, { encoding: 'UTF8'});

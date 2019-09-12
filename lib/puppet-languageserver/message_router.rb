@@ -22,15 +22,19 @@ module PuppetLanguageServer
       end
     end
 
-    def receive_response(_response, _original_request); end
+    def receive_response(_response, original_request)
+      PuppetLanguageServer.log_message(:error, "Unknown RPC response for method #{original_request['method']}")
+    end
   end
 
   class MessageRouter < BaseMessageRouter
     attr_reader :server_options
+    attr_reader :client
 
     def initialize(options = {})
       super
       @server_options = options.nil? ? {} : options
+      @client = LanguageClient.new
     end
 
     def documents
@@ -41,6 +45,7 @@ module PuppetLanguageServer
       case request.rpc_method
       when 'initialize'
         PuppetLanguageServer.log_message(:debug, 'Received initialize method')
+        client.parse_lsp_initialize!(request.params)
         request.reply_result('capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities)
         unless server_options[:puppet_version].nil? || server_options[:puppet_version] == Puppet.version
           # Add a minor delay before sending the notification to give the client some processing time
@@ -248,6 +253,11 @@ module PuppetLanguageServer
       case method
       when 'initialized'
         PuppetLanguageServer.log_message(:info, 'Client has received initialization')
+        if client.client_capability('workspace', 'didChangeConfiguration', 'dynamicRegistration') == true
+          client.register_capability(self, 'workspace/didChangeConfiguration')
+        else
+          PuppetLanguageServer.log_message(:debug, 'Client does not support didChangeConfiguration dynamic registration. Using push method for configuration change detection.')
+        end
 
       when 'exit'
         PuppetLanguageServer.log_message(:info, 'Received exit notification.  Closing connection to client...')
@@ -286,6 +296,15 @@ module PuppetLanguageServer
           PuppetLanguageServer::PuppetHelper.purge_workspace
         end
 
+      when 'workspace/didChangeConfiguration'
+        if params.key?('settings') && params['settings'].nil?
+          # This is a notification from a dynamic registration.  Need to send a workspace/configuration
+          # request to get the actual configuration
+          client.send_configuration_request(self)
+        else
+          client.parse_lsp_configuration_settings!(params['settings'])
+        end
+
       else
         super
       end
@@ -295,7 +314,19 @@ module PuppetLanguageServer
     end
 
     def receive_response(response, original_request)
-      super
+      unless response.key?('result')
+        PuppetLanguageServer.log_message(:error, "Response for method '#{original_request['method']}' with id '#{original_request['id']}' failed with #{response['error']}")
+        return
+      end
+
+      case original_request['method']
+      when 'client/registerCapability'
+        client.parse_register_capability_response!(self, response, original_request)
+      when 'workspace/configuration'
+        client.parse_lsp_configuration_settings!(response['result'])
+      else
+        super
+      end
     rescue StandardError => e
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'response' => response, 'original_request' => original_request)
       raise
