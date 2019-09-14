@@ -86,6 +86,7 @@ module PuppetLanguageServer
       uri_helper
       puppet_monkey_patches
       providers
+      handlers
     ].each do |lib|
       begin
         require "puppet-languageserver/#{lib}"

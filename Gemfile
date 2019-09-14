@@ -28,6 +28,8 @@ group :development do
   # Gemfile here for testing and development.
   gem "puppet-strings", "~> 2.0", :require => false
 
+  gem "pdk"
+
   case RUBY_PLATFORM
   when /darwin/
     gem 'CFPropertyList'

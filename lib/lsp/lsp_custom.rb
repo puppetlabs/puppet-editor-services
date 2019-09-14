@@ -34,6 +34,30 @@ module LSP
     end
   end
 
+  # export interface GetPdkResponse {
+  #   files: string[];
+  #   data: string;
+  #   error: string;
+  # }
+  class PdkResponse < LSPBase
+    attr_accessor :files # type: string[]
+    attr_accessor :data # type: string
+    attr_accessor :error # type: string
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[error]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.files = value['files']
+      self.data = value['data']
+      self.error = value['error']
+      self
+    end
+  end
+
   # export interface GetPuppetResourceResponse {
   #   data: string;
   #   error: string;

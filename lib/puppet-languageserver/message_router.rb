@@ -56,6 +56,45 @@ module PuppetLanguageServer
         PuppetLanguageServer.log_message(:debug, 'Received shutdown method')
         request.reply_result(nil)
 
+      when 'pdk/newClass'
+        begin
+          files = PuppetLanguageServer::Handlers::PdkHandler.new_class(
+            request.params['name'],
+            request.params['targetdir']
+          )
+          request.reply_result(LSP::PdkResponse.new('files' => files))
+        rescue StandardError => e
+          request.reply_result(
+            LSP::PdkResponse.new('error' => e.to_s)
+          )
+        end
+
+      when 'pdk/newDefinedType'
+        begin
+          files = PuppetLanguageServer::Handlers::PdkHandler.new_defined_type(
+            request.params['name'],
+            request.params['targetdir']
+          )
+          request.reply_result(LSP::PdkResponse.new('files' => files))
+        rescue StandardError => e
+          request.reply_result(
+            LSP::PdkResponse.new('error' => e.to_s)
+          )
+        end
+
+      when 'pdk/newTask'
+        begin
+          files = PuppetLanguageServer::Handlers::PdkHandler.new_task(
+            request.params['name'],
+            request.params['targetdir']
+          )
+          request.reply_result(LSP::PdkResponse.new('files' => files))
+        rescue StandardError => e
+          request.reply_result(
+            LSP::PdkResponse.new('error' => e.to_s)
+          )
+        end
+
       when 'puppet/getVersion'
         request.reply_result(LSP::PuppetVersion.new(
                                'languageServerVersion' => PuppetEditorServices.version,
