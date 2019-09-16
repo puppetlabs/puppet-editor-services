@@ -2,7 +2,10 @@
 
 module PuppetLanguageServer
   class LanguageClient
-    def initialize
+    attr_reader :message_router
+
+    def initialize(message_router)
+      @message_router = message_router
       @client_capabilites = {}
 
       # Internal registry of dynamic registrations and their current state
@@ -20,7 +23,7 @@ module PuppetLanguageServer
       safe_hash_traverse(@client_capabilites, *names)
     end
 
-    def send_configuration_request(message_router)
+    def send_configuration_request
       params = LSP::ConfigurationParams.new.from_h!('items' => [])
       params.items << LSP::ConfigurationItem.new.from_h!('section' => 'puppet')
 
@@ -45,7 +48,7 @@ module PuppetLanguageServer
       @registrations[method].dup
     end
 
-    def register_capability(message_router, method, options = {})
+    def register_capability(method, options = {})
       id = new_request_id
 
       PuppetLanguageServer.log_message(:info, "Attempting to dynamically register the #{method} method with id #{id}")
@@ -67,7 +70,7 @@ module PuppetLanguageServer
       true
     end
 
-    def parse_register_capability_response!(message_router, response, original_request)
+    def parse_register_capability_response!(response, original_request)
       raise 'Response is not from client/registerCapability request' unless original_request['method'] == 'client/registerCapability'
 
       unless response.key?('result')
@@ -88,7 +91,7 @@ module PuppetLanguageServer
 
         # If we just registered the workspace/didChangeConfiguration method then
         # also trigger a configuration request to get the initial state
-        send_configuration_request(message_router) if reg.method__lsp == 'workspace/didChangeConfiguration'
+        send_configuration_request if reg.method__lsp == 'workspace/didChangeConfiguration'
       end
 
       true
