@@ -55,14 +55,11 @@ module PuppetLanguageServer
           # properities and parameters.
 
           # Try Types first
-          if item.type_name.value == 'class'
-            item_object = PuppetLanguageServer::PuppetHelper.get_type(item.bodies[0].title.value)
-            item_value = item.bodies[0].title.value
-          else
-            item_object = PuppetLanguageServer::PuppetHelper.get_type(item.type_name.value)
-            item_value = item.type_name.value
-          end
-
+          # The `class` pseudo resource type is actually used to set properties/params for the puppet type
+          # specified in the resource title.
+          # Ref: https://puppet.com/docs/puppet/5.3/lang_classes.html#using-resource-like-declarations
+          item_value = item.type_name.value == 'class' && item.bodies.length == 1 ? item.bodies[0].title.value : item.type_name.value
+          item_object = PuppetLanguageServer::PuppetHelper.get_type(item_value)
           unless item_object.nil?
             # Add Parameters
             item_object.attributes.select { |_name, data| data[:type] == :param }.each_key do |name|
