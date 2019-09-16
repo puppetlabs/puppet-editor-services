@@ -55,7 +55,11 @@ module PuppetLanguageServer
           # properities and parameters.
 
           # Try Types first
-          item_object = PuppetLanguageServer::PuppetHelper.get_type(item.type_name.value)
+          # The `class` pseudo resource type is actually used to set properties/params for the puppet type
+          # specified in the resource title.
+          # Ref: https://puppet.com/docs/puppet/5.3/lang_classes.html#using-resource-like-declarations
+          item_value = item.type_name.value == 'class' && item.bodies.length == 1 ? item.bodies[0].title.value : item.type_name.value
+          item_object = PuppetLanguageServer::PuppetHelper.get_type(item_value)
           unless item_object.nil?
             # Add Parameters
             item_object.attributes.select { |_name, data| data[:type] == :param }.each_key do |name|
@@ -66,7 +70,7 @@ module PuppetLanguageServer
                 'data'   => {
                   'type'          => 'resource_parameter',
                   'param'         => name.to_s,
-                  'resource_type' => item.type_name.value
+                  'resource_type' => item_value
                 }
               )
             end
@@ -79,7 +83,7 @@ module PuppetLanguageServer
                 'data'   => {
                   'type'          => 'resource_property',
                   'prop'          => name.to_s,
-                  'resource_type' => item.type_name.value
+                  'resource_type' => item_value
                 }
               )
             end
@@ -87,7 +91,7 @@ module PuppetLanguageServer
           end
           if item_object.nil?
             # Try Classes/Defined Types
-            item_object = PuppetLanguageServer::PuppetHelper.get_class(item.type_name.value)
+            item_object = PuppetLanguageServer::PuppetHelper.get_class(item_value)
             unless item_object.nil?
               # Add Parameters
               item_object.parameters.each_key do |name|
@@ -98,7 +102,7 @@ module PuppetLanguageServer
                   'data'   => {
                     'type'          => 'resource_class_parameter',
                     'param'         => name.to_s,
-                    'resource_type' => item.type_name.value
+                    'resource_type' => item_value
                   }
                 )
               end
