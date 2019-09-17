@@ -47,14 +47,6 @@ module PuppetLanguageServer
         PuppetLanguageServer.log_message(:debug, 'Received initialize method')
         client.parse_lsp_initialize!(request.params)
         request.reply_result('capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities)
-        unless server_options[:puppet_version].nil? || server_options[:puppet_version] == Puppet.version
-          # Add a minor delay before sending the notification to give the client some processing time
-          sleep(0.5)
-          json_rpc_handler.send_show_message_notification(
-            LSP::MessageType::WARNING,
-            "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
-          )
-        end
 
       when 'shutdown'
         PuppetLanguageServer.log_message(:debug, 'Received shutdown method')
@@ -253,6 +245,14 @@ module PuppetLanguageServer
       case method
       when 'initialized'
         PuppetLanguageServer.log_message(:info, 'Client has received initialization')
+        # Raise a warning if the Puppet version is mismatched
+        unless server_options[:puppet_version].nil? || server_options[:puppet_version] == Puppet.version
+          json_rpc_handler.send_show_message_notification(
+            LSP::MessageType::WARNING,
+            "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
+          )
+        end
+        # Register for workspace setting changes if it's supported
         if client.client_capability('workspace', 'didChangeConfiguration', 'dynamicRegistration') == true
           client.register_capability('workspace/didChangeConfiguration')
         else
