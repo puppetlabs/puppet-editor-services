@@ -2,10 +2,10 @@
 
 module PuppetLanguageServer
   module ServerCapabilites
-    def self.capabilities
+    def self.capabilities(options = {})
       # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize-request
 
-      {
+      value = {
         'textDocumentSync'        => LSP::TextDocumentSyncKind::FULL,
         'hoverProvider'           => true,
         'completionProvider'      => {
@@ -18,6 +18,14 @@ module PuppetLanguageServer
         'signatureHelpProvider'   => {
           'triggerCharacters' => ['(', ',']
         }
+      }
+      value['documentOnTypeFormattingProvider'] = document_on_type_formatting_options if options[:documentOnTypeFormattingProvider]
+      value
+    end
+
+    def self.document_on_type_formatting_options
+      {
+        'firstTriggerCharacter' => '>'
       }
     end
 

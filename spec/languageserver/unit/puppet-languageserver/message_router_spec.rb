@@ -18,6 +18,12 @@ describe 'message_router' do
     match { |actual| !actual.send(method_name).nil? }
   end
 
+  RSpec::Matchers.define :server_capability do |name|
+    match do |actual|
+      actual['capabilities'] && actual['capabilities'][name]
+    end
+  end
+
   describe '#documents' do
     it 'should respond to documents method' do
       expect(subject).to respond_to(:documents)
@@ -67,7 +73,7 @@ describe 'message_router' do
     # initialize - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize
     context 'given an initialize request' do
       let(:request_rpc_method) { 'initialize' }
-      let(:request_params) { { 'cap1' => 'value1' } }
+      let(:request_params) { { 'capabilities' => { 'cap1' => 'value1' } } }
       it 'should reply with capabilites' do
         expect(request).to receive(:reply_result).with(hash_including('capabilities'))
 
@@ -78,6 +84,55 @@ describe 'message_router' do
         expect(subject.client).to receive(:parse_lsp_initialize!).with(request_params)
 
         subject.receive_request(request)
+      end
+
+      context 'when onTypeFormatting does support dynamic registration' do
+        let(:request_params) do
+          { 'capabilities' => {
+              'textDocument' => {
+                'onTypeFormatting' => {
+                  'dynamicRegistration' => true
+                }
+              }
+            }
+          }
+        end
+
+        it 'should statically register a documentOnTypeFormattingProvider' do
+          expect(request).to_not receive(:reply_result).with(server_capability('documentOnTypeFormattingProvider'))
+          allow(request).to receive(:reply_result)
+
+          subject.receive_request(request)
+        end
+      end
+
+      context 'when onTypeFormatting does not support dynamic registration' do
+        let(:request_params) do
+          { 'capabilities' => {
+              'textDocument' => {
+                'onTypeFormatting' => {
+                  'dynamicRegistration' => false
+                }
+              }
+            }
+          }
+        end
+
+        it 'should statically register a documentOnTypeFormattingProvider' do
+          expect(request).to receive(:reply_result).with(server_capability('documentOnTypeFormattingProvider'))
+
+          subject.receive_request(request)
+        end
+      end
+
+      context 'when onTypeFormatting does not specify dynamic registration' do
+        let(:request_params) { {} }
+
+        it 'should statically register a documentOnTypeFormattingProvider' do
+          expect(request).to receive(:reply_result).with(server_capability('documentOnTypeFormattingProvider'))
+
+          subject.receive_request(request)
+        end
       end
     end
 
@@ -797,6 +852,33 @@ describe 'message_router' do
             subject.receive_request(request)
           end
         end
+      end
+    end
+
+    # textDocument/onTypeFormatting - https://microsoft.github.io/language-server-protocol/specification#textDocument_onTypeFormatting
+    context 'given a textDocument/onTypeFormatting request' do
+      let(:request_rpc_method) { 'textDocument/onTypeFormatting' }
+      let(:file_uri) { MANIFEST_FILENAME }
+      let(:line_num) { 1 }
+      let(:char_num) { 6 }
+      let(:trigger_char) { '>' }
+      let(:formatting_options) { { 'tabSize' => 2, 'insertSpaces' => true} }
+      let(:request_params) { {
+        'textDocument' => {
+          'uri' => file_uri
+        },
+        'position' => {
+          'line' => line_num,
+          'character' => char_num,
+        },
+        'ch' => trigger_char,
+        'options' => formatting_options
+      } }
+
+      it 'should not log an error message' do
+        expect(PuppetLanguageServer).to_not receive(:log_message).with(:error,"Unknown RPC method #{request_rpc_method}")
+
+        subject.receive_request(request)
       end
     end
 

@@ -4,6 +4,9 @@ module PuppetLanguageServer
   class LanguageClient
     attr_reader :message_router
 
+    # Client settings
+    attr_reader :format_on_type
+
     def initialize(message_router)
       @message_router = message_router
       @client_capabilites = {}
@@ -17,6 +20,9 @@ module PuppetLanguageServer
       #   }
       # ]
       @registrations = {}
+
+      # Default settings
+      @format_on_type = false
     end
 
     def client_capability(*names)
@@ -35,12 +41,20 @@ module PuppetLanguageServer
       @client_capabilites = initialize_params['capabilities']
     end
 
-    # Settings could be a hash or an array of hash
-    def parse_lsp_configuration_settings!(settings = [{}])
-      # TODO: Future use. Actually do something with the settings
-      # settings = [settings] unless settings.is_a?(Hash)
-      # settings.each do |hash|
-      # end
+    def parse_lsp_configuration_settings!(settings = {})
+      # format on type
+      value = safe_hash_traverse(settings, 'puppet', 'editorService', 'formatOnType', 'enable')
+      unless value.nil? || to_boolean(value) == @format_on_type # rubocop:disable Style/GuardClause  Ummm no.
+        # Is dynamic registration available?
+        if client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration') == true
+          if value
+            register_capability('textDocument/onTypeFormatting', PuppetLanguageServer::ServerCapabilites.document_on_type_formatting_options)
+          else
+            unregister_capability('textDocument/onTypeFormatting')
+          end
+        end
+        @format_on_type = value
+      end
     end
 
     def capability_registrations(method)
@@ -148,12 +162,18 @@ module PuppetLanguageServer
 
     private
 
+    def to_boolean(value)
+      return false if value.nil? || value == false
+      return true if value == true
+      value.to_s =~ %r{^(true|t|yes|y|1)$/i}
+    end
+
     def new_request_id
       SecureRandom.uuid
     end
 
     def safe_hash_traverse(hash, *names)
-      return nil if names.empty?
+      return nil if names.empty? || hash.nil? || hash.empty?
       item = nil
       loop do
         name = names.shift

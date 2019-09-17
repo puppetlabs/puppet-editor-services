@@ -46,7 +46,11 @@ module PuppetLanguageServer
       when 'initialize'
         PuppetLanguageServer.log_message(:debug, 'Received initialize method')
         client.parse_lsp_initialize!(request.params)
-        request.reply_result('capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities)
+        # Setup static registrations if dynamic registration is not available
+        info = {
+          :documentOnTypeFormattingProvider => !client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration')
+        }
+        request.reply_result('capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities(info))
 
       when 'shutdown'
         PuppetLanguageServer.log_message(:debug, 'Received shutdown method')
@@ -200,6 +204,9 @@ module PuppetLanguageServer
           PuppetLanguageServer.log_message(:error, "(textDocument/documentSymbol) #{e}")
           request.reply_result(nil)
         end
+
+      when 'textDocument/onTypeFormatting'
+        request.reply_result(nil)
 
       when 'textDocument/signatureHelp'
         file_uri = request.params['textDocument']['uri']
