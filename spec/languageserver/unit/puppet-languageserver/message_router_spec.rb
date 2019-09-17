@@ -1123,12 +1123,16 @@ describe 'message_router' do
     end
 
     context 'given an original workspace/configuration request' do
-      let(:response_result) { { 'setting1' => 'value1' } }
+      let(:response_result) { [{ 'setting1' => 'value1' }] }
       let(:request_method) { 'workspace/configuration'}
-      let(:request_params) { {} }
+      let(:request_params) do
+        params = LSP::ConfigurationParams.new.from_h!('items' => [])
+        params.items << LSP::ConfigurationItem.new.from_h!('section' => 'mock')
+        params
+      end
 
       it 'should call client.parse_lsp_configuration_settings!' do
-        expect(subject.client).to receive(:parse_lsp_configuration_settings!).with(response_result)
+        expect(subject.client).to receive(:parse_lsp_configuration_settings!).with({ 'mock' => response_result[0] })
 
         subject.receive_response(response, original_request)
       end

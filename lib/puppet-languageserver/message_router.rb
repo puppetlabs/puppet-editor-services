@@ -325,7 +325,10 @@ module PuppetLanguageServer
         client.parse_unregister_capability_response!(response, original_request)
       when 'workspace/configuration'
         return unless receive_response_succesful?(response)
-        client.parse_lsp_configuration_settings!(response['result'])
+        original_request['params'].items.each_with_index do |item, index|
+          # The response from the client strips the section name so we need to re-add it
+          client.parse_lsp_configuration_settings!(item.section => response['result'][index])
+        end
       else
         super
       end
