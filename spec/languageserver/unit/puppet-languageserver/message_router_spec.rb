@@ -859,6 +859,7 @@ describe 'message_router' do
     context 'given a textDocument/onTypeFormatting request' do
       let(:request_rpc_method) { 'textDocument/onTypeFormatting' }
       let(:file_uri) { MANIFEST_FILENAME }
+      let(:file_content) { "{\n  a =>\n  name => 'value'\n}\n" }
       let(:line_num) { 1 }
       let(:char_num) { 6 }
       let(:trigger_char) { '>' }
@@ -874,11 +875,77 @@ describe 'message_router' do
         'ch' => trigger_char,
         'options' => formatting_options
       } }
+      let(:provider) { PuppetLanguageServer::Manifest::FormatOnTypeProvider.new }
 
-      it 'should not log an error message' do
-        expect(PuppetLanguageServer).to_not receive(:log_message).with(:error,"Unknown RPC method #{request_rpc_method}")
+      before(:each) do
+        subject.documents.clear
+        subject.documents.set_document(file_uri,file_content, 0)
+      end
 
-        subject.receive_request(request)
+      context 'with client.format_on_type set to false' do
+        before(:each) do
+          allow(subject.client).to receive(:format_on_type).and_return(false)
+        end
+
+        it 'should reply with nil' do
+          expect(request).to receive(:reply_result).with(nil)
+          subject.receive_request(request)
+        end
+      end
+
+      context 'with client.format_on_type set to true' do
+        before(:each) do
+          allow(subject.client).to receive(:format_on_type).and_return(true)
+        end
+
+        context 'for a file the server does not understand' do
+          let(:file_uri) { UNKNOWN_FILENAME }
+
+          it 'should log an error message' do
+            expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to format on type on/)
+
+            subject.receive_request(request)
+          end
+
+          it 'should reply with nil' do
+            expect(request).to receive(:reply_result).with(nil)
+
+            subject.receive_request(request)
+          end
+        end
+
+        context 'for a puppet manifest file' do
+          let(:file_uri) { MANIFEST_FILENAME }
+
+          before(:each) do
+            allow(PuppetLanguageServer::Manifest::FormatOnTypeProvider).to receive(:instance).and_return(provider)
+          end
+
+          it 'should call format method on the Format On Type provider' do
+            expect(provider).to receive(:format)
+              .with(file_content, line_num, char_num, trigger_char, formatting_options).and_return('something')
+
+            result = subject.receive_request(request)
+          end
+
+          context 'and an error occurs during formatting' do
+            before(:each) do
+              expect(provider).to receive(:format).and_raise('MockError')
+            end
+
+            it 'should log an error message' do
+              expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
+
+              subject.receive_request(request)
+            end
+
+            it 'should reply with nil' do
+              expect(request).to receive(:reply_result).with(nil)
+
+              subject.receive_request(request)
+            end
+          end
+        end
       end
     end
 
