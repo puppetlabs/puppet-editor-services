@@ -1,5 +1,101 @@
 require 'spec_helper'
 
+def pretty_value(value)
+  value.nil? ? 'nil' : value.to_s
+end
+
+# Requires
+#   :settings      : A hashtable of the inbound settings
+#   :setting_value : The value that will be set to
+RSpec.shared_examples "a client setting" do |method_name|
+  [
+    { :from => false, :setting => nil,   :expected_setting => false },
+    { :from => false, :setting => false, :expected_setting => false },
+    { :from => false, :setting => true,  :expected_setting => true },
+    { :from => true,  :setting => nil,   :expected_setting => true },
+    { :from => true,  :setting => false, :expected_setting => false },
+    { :from => true,  :setting => true,  :expected_setting => true },
+  ].each do |testcase|
+    context "When it transitions from #{pretty_value(testcase[:from])} with a setting value of #{pretty_value(testcase[:setting])}" do
+      let(:setting_value) { testcase[:setting] }
+
+      before(:each) do
+        subject.instance_variable_set("@#{method_name}".intern, testcase[:from])
+      end
+
+      it "should have a cached value to #{testcase[:expected_setting]}" do
+        expect(subject.send(method_name)).to eq(testcase[:from])
+
+        subject.parse_lsp_configuration_settings!(settings)
+        expect(subject.send(method_name)).to eq(testcase[:expected_setting])
+      end
+    end
+  end
+end
+
+# Requires
+#   :settings      : A hashtable of the inbound settings
+#   :setting_value : The value that will be set to
+RSpec.shared_examples "a setting with dynamic registrations" do |method_name, dynamic_reg, registration_method|
+  [
+    { :from => false, :setting => nil,   :noop       => true },
+    { :from => false, :setting => false, :noop       => true },
+    { :from => false, :setting => true,  :register   => true },
+    { :from => true,  :setting => nil,   :noop       => true },
+    { :from => true,  :setting => false, :unregister => true },
+    { :from => true,  :setting => true,  :noop       => true },
+  ].each do |testcase|
+    context "When it transitions from #{pretty_value(testcase[:from])} with a setting value of #{pretty_value(testcase[:setting])}" do
+      let(:setting_value) { testcase[:setting] }
+
+      before(:each) do
+        subject.instance_variable_set("@#{method_name}".intern, testcase[:from])
+      end
+
+      it 'should not call any capabilities', :if => testcase[:noop] do
+        expect(subject).to receive(:client_capability).exactly(0).times
+        expect(subject).to receive(:register_capability).exactly(0).times
+        expect(subject).to receive(:unregister_capability).exactly(0).times
+
+        subject.parse_lsp_configuration_settings!(settings)
+      end
+
+      context "when dynamic registration is not supported", :unless => testcase[:noop] do
+        before(:each) do
+          expect(subject).to receive(:client_capability).with(*dynamic_reg).and_return(false)
+        end
+
+        it 'should not call any registration or unregistrations' do
+          expect(subject).to receive(:register_capability).exactly(0).times
+          expect(subject).to receive(:unregister_capability).exactly(0).times
+
+          subject.parse_lsp_configuration_settings!(settings)
+        end
+      end
+
+      context "when dynamic registration is supported", :unless => testcase[:noop] do
+        before(:each) do
+          expect(subject).to receive(:client_capability).with(*dynamic_reg).and_return(true)
+        end
+
+        it "should register #{registration_method}", :if => testcase[:register] do
+          expect(subject).to receive(:register_capability).with(registration_method, Object)
+          expect(subject).to receive(:unregister_capability).exactly(0).times
+
+          subject.parse_lsp_configuration_settings!(settings)
+        end
+
+        it "should unregister #{registration_method}", :if => testcase[:unregister] do
+          expect(subject).to receive(:unregister_capability).with(registration_method)
+          expect(subject).to receive(:register_capability).exactly(0).times
+
+          subject.parse_lsp_configuration_settings!(settings)
+        end
+      end
+    end
+  end
+end
+
 describe 'PuppetLanguageServer::LanguageClient' do
   let(:json_rpc_handler) { MockJSONRPCHandler.new }
   let(:message_router) { MockMessageRouter.new.tap { |i| i.json_rpc_handler = json_rpc_handler } }
@@ -146,6 +242,12 @@ describe 'PuppetLanguageServer::LanguageClient' do
     allow(PuppetLanguageServer).to receive(:log_message)
   end
 
+  describe '#format_on_type' do
+    it 'should be false by default' do
+      expect(subject.format_on_type).to eq(false)
+    end
+  end
+
   describe '#client_capability' do
     before(:each) do
       subject.parse_lsp_initialize!(initialize_params)
@@ -181,7 +283,25 @@ describe 'PuppetLanguageServer::LanguageClient' do
   # end
 
   describe '#parse_lsp_configuration_settings!' do
-    # TODO: Future use.
+    describe 'puppet.editorService.formatOnType.enable' do
+      let(:settings) do
+        { 'puppet' => {
+            'editorService' => {
+              'formatOnType' => {
+                'enable' => setting_value
+              }
+            }
+          }
+        }
+      end
+
+      it_behaves_like 'a client setting', :format_on_type
+
+      it_behaves_like 'a setting with dynamic registrations',
+        :format_on_type,
+        ['textDocument', 'onTypeFormatting', 'dynamicRegistration'],
+        'textDocument/onTypeFormatting'
+    end
   end
 
   describe '#capability_registrations' do

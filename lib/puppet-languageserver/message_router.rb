@@ -46,15 +46,11 @@ module PuppetLanguageServer
       when 'initialize'
         PuppetLanguageServer.log_message(:debug, 'Received initialize method')
         client.parse_lsp_initialize!(request.params)
-        request.reply_result('capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities)
-        unless server_options[:puppet_version].nil? || server_options[:puppet_version] == Puppet.version
-          # Add a minor delay before sending the notification to give the client some processing time
-          sleep(0.5)
-          json_rpc_handler.send_show_message_notification(
-            LSP::MessageType::WARNING,
-            "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
-          )
-        end
+        # Setup static registrations if dynamic registration is not available
+        info = {
+          :documentOnTypeFormattingProvider => !client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration')
+        }
+        request.reply_result('capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities(info))
 
       when 'shutdown'
         PuppetLanguageServer.log_message(:debug, 'Received shutdown method')
@@ -209,6 +205,9 @@ module PuppetLanguageServer
           request.reply_result(nil)
         end
 
+      when 'textDocument/onTypeFormatting'
+        request.reply_result(nil)
+
       when 'textDocument/signatureHelp'
         file_uri = request.params['textDocument']['uri']
         line_num = request.params['position']['line']
@@ -253,6 +252,14 @@ module PuppetLanguageServer
       case method
       when 'initialized'
         PuppetLanguageServer.log_message(:info, 'Client has received initialization')
+        # Raise a warning if the Puppet version is mismatched
+        unless server_options[:puppet_version].nil? || server_options[:puppet_version] == Puppet.version
+          json_rpc_handler.send_show_message_notification(
+            LSP::MessageType::WARNING,
+            "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
+          )
+        end
+        # Register for workspace setting changes if it's supported
         if client.client_capability('workspace', 'didChangeConfiguration', 'dynamicRegistration') == true
           client.register_capability('workspace/didChangeConfiguration')
         else
@@ -325,7 +332,10 @@ module PuppetLanguageServer
         client.parse_unregister_capability_response!(response, original_request)
       when 'workspace/configuration'
         return unless receive_response_succesful?(response)
-        client.parse_lsp_configuration_settings!(response['result'])
+        original_request['params'].items.each_with_index do |item, index|
+          # The response from the client strips the section name so we need to re-add it
+          client.parse_lsp_configuration_settings!(item.section => response['result'][index])
+        end
       else
         super
       end
