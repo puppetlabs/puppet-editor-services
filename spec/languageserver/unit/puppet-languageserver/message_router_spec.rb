@@ -858,7 +858,7 @@ describe 'message_router' do
         end
 
         it 'should attempt to register workspace/didChangeConfiguration' do
-          expect(subject.client).to receive(:register_capability).with(Object, 'workspace/didChangeConfiguration')
+          expect(subject.client).to receive(:register_capability).with('workspace/didChangeConfiguration')
 
           subject.receive_notification(notification_method, notification_params)
         end
@@ -1037,7 +1037,7 @@ describe 'message_router' do
         let(:config_settings) { nil }
 
         it 'should send a configuration request' do
-          expect(subject.client).to receive(:send_configuration_request).with(Object)
+          expect(subject.client).to receive(:send_configuration_request).with(no_args)
 
           subject.receive_notification(notification_method, notification_params)
         end
@@ -1116,7 +1116,7 @@ describe 'message_router' do
       let(:request_params) { {} }
 
       it 'should call client.parse_register_capability_response!' do
-        expect(subject.client).to receive(:parse_register_capability_response!).with(Object, response, original_request)
+        expect(subject.client).to receive(:parse_register_capability_response!).with(response, original_request)
 
         subject.receive_response(response, original_request)
       end

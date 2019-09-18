@@ -34,7 +34,7 @@ module PuppetLanguageServer
     def initialize(options = {})
       super
       @server_options = options.nil? ? {} : options
-      @client = LanguageClient.new
+      @client = LanguageClient.new(self)
     end
 
     def documents
@@ -254,7 +254,7 @@ module PuppetLanguageServer
       when 'initialized'
         PuppetLanguageServer.log_message(:info, 'Client has received initialization')
         if client.client_capability('workspace', 'didChangeConfiguration', 'dynamicRegistration') == true
-          client.register_capability(self, 'workspace/didChangeConfiguration')
+          client.register_capability('workspace/didChangeConfiguration')
         else
           PuppetLanguageServer.log_message(:debug, 'Client does not support didChangeConfiguration dynamic registration. Using push method for configuration change detection.')
         end
@@ -300,7 +300,7 @@ module PuppetLanguageServer
         if params.key?('settings') && params['settings'].nil?
           # This is a notification from a dynamic registration.  Need to send a workspace/configuration
           # request to get the actual configuration
-          client.send_configuration_request(self)
+          client.send_configuration_request
         else
           client.parse_lsp_configuration_settings!(params['settings'])
         end
@@ -314,15 +314,17 @@ module PuppetLanguageServer
     end
 
     def receive_response(response, original_request)
-      unless response.key?('result')
+      unless receive_response_succesful?(response) # rubocop:disable Style/IfUnlessModifier Line is too long otherwise
         PuppetLanguageServer.log_message(:error, "Response for method '#{original_request['method']}' with id '#{original_request['id']}' failed with #{response['error']}")
-        return
       end
-
+      # Error responses still need to be processed so process messages even if it failed
       case original_request['method']
       when 'client/registerCapability'
-        client.parse_register_capability_response!(self, response, original_request)
+        client.parse_register_capability_response!(response, original_request)
+      when 'client/unregisterCapability'
+        client.parse_unregister_capability_response!(response, original_request)
       when 'workspace/configuration'
+        return unless receive_response_succesful?(response)
         client.parse_lsp_configuration_settings!(response['result'])
       else
         super
@@ -330,6 +332,12 @@ module PuppetLanguageServer
     rescue StandardError => e
       PuppetLanguageServer::CrashDump.write_crash_file(e, nil, 'response' => response, 'original_request' => original_request)
       raise
+    end
+
+    private
+
+    def receive_response_succesful?(response)
+      response.key?('result')
     end
   end
 
