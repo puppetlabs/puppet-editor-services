@@ -5,6 +5,7 @@
   manifest/completion_provider
   manifest/definition_provider
   manifest/document_symbol_provider
+  manifest/format_on_type_provider
   manifest/signature_provider
   manifest/validation_provider
   manifest/hover_provider
