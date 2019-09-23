@@ -6,6 +6,18 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.22.0 - 2019-09-20
+
+### Added
+
+- ([GH-181](https://github.com/lingua-pupuli/puppet-editor-services/issues/181)) Added completion for resource-like class ([Julio Sueiras](https://github.com/juliosueiras))
+- ([GH-177](https://github.com/lingua-pupuli/puppet-editor-services/issues/177)) Add auto-align hash rocket formatter
+- ([GH-174](https://github.com/lingua-pupuli/puppet-editor-services/issues/174)) Understand Puppet Data Types and hover provider support
+
+### Fixed
+
+- ([GH-169](https://github.com/lingua-pupuli/puppet-editor-services/issues/169)) Respond to protocol dependant messages correctly
+
 ## 0.21.0 - 2019-08-26
 
 ### Added
