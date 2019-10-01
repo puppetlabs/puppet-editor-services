@@ -17,11 +17,11 @@ module PuppetLanguageServer
         include Base
 
         def to_json(*options)
-          JSON.generate(to_h, options)
+          ::JSON.generate(to_h, options)
         end
 
         def from_json!(json_string)
-          obj = JSON.parse(json_string)
+          obj = ::JSON.parse(json_string)
           obj.each do |key, value|
             self[key] = value
           end
@@ -37,7 +37,7 @@ module PuppetLanguageServer
         end
 
         def from_json!(json_string)
-          from_h!(JSON.parse(json_string))
+          from_h!(::JSON.parse(json_string))
         end
 
         def ==(other)
@@ -128,7 +128,7 @@ module PuppetLanguageServer
         end
 
         def from_json!(json_string)
-          obj = JSON.parse(json_string)
+          obj = ::JSON.parse(json_string)
           obj.each do |child_hash|
             child = child_type.new
             self << child.from_h!(child_hash)
@@ -153,7 +153,7 @@ module PuppetLanguageServer
         end
 
         def from_json!(json_string)
-          obj = JSON.parse(json_string)
+          obj = ::JSON.parse(json_string)
           self.dot_content = obj['dot_content']
           self.error_content = obj['error_content']
           self
@@ -421,7 +421,7 @@ module PuppetLanguageServer
         end
 
         def from_json!(json_string)
-          from_h!(JSON.parse(json_string))
+          from_h!(::JSON.parse(json_string))
         end
       end
 
@@ -470,7 +470,7 @@ module PuppetLanguageServer
         end
 
         def from_json!(json_string)
-          obj = JSON.parse(json_string)
+          obj = ::JSON.parse(json_string)
           obj.each do |key, value|
             info = METADATA_LIST[key.intern]
             next if info.nil?
