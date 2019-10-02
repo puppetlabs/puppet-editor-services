@@ -1,4 +1,6 @@
 require 'spec_helper'
+require 'puppet_editor_services/protocol/json_rpc'
+require 'puppet_editor_services/protocol/json_rpc_messages'
 
 def pretty_value(value)
   value.nil? ? 'nil' : value.to_s
@@ -97,10 +99,13 @@ RSpec.shared_examples "a setting with dynamic registrations" do |method_name, dy
 end
 
 describe 'PuppetLanguageServer::LanguageClient' do
-  let(:json_rpc_handler) { MockJSONRPCHandler.new }
-  let(:message_router) { MockMessageRouter.new.tap { |i| i.json_rpc_handler = json_rpc_handler } }
-  let(:subject_options) {}
-  let(:subject) { PuppetLanguageServer::LanguageClient.new(message_router) }
+  let(:server) do
+    MockServer.new({}, {}, { :class => PuppetEditorServices::Protocol::JsonRPC }, {})
+  end
+  let(:subject) { PuppetLanguageServer::LanguageClient.new(server.handler_object) }
+  let(:protocol) { server.protocol_object }
+  let(:mock_connection) { server.connection_object }
+
   let(:initialize_params) do
     # Example capabilities from VS Code
     {
@@ -268,13 +273,13 @@ describe 'PuppetLanguageServer::LanguageClient' do
 
   describe '#send_configuration_request' do
     it 'should send a client request and return true' do
-      expect(json_rpc_handler).to receive(:send_client_request).with('workspace/configuration', Object)
+      expect(protocol).to receive(:send_client_request).with('workspace/configuration', Object)
       expect(subject.send_configuration_request).to eq(true)
     end
 
     it 'should include the puppet settings' do
       subject.send_configuration_request
-      expect(json_rpc_handler.connection.buffer).to include('{"section":"puppet"}')
+      expect(mock_connection.buffer).to include('{"section":"puppet"}')
     end
   end
 
@@ -317,7 +322,7 @@ describe 'PuppetLanguageServer::LanguageClient' do
       req_method_name = nil
       req_method_params = nil
       # Remember the registration so we can fake a response later
-      allow(json_rpc_handler).to receive(:send_client_request) do |n, p|
+      allow(protocol).to receive(:send_client_request) do |n, p|
         req_method_name = n
         req_method_params = p
       end
@@ -331,8 +336,8 @@ describe 'PuppetLanguageServer::LanguageClient' do
       # Should show as in progress
       expect(subject.capability_registrations(method_name)).to eq([{:registered => false, :state => :pending, :id => request_id}])
       # Mock a valid response
-      response = { 'jsonrpc'=>'2.0', 'id'=> 0, 'result' => nil }
-      original_request = { 'jsonrpc'=>'2.0', 'id' => 0, 'method' => req_method_name, 'params' => req_method_params }
+      response = ::PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new.from_h!('id' => 0, 'result' => nil)
+      original_request = ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!('id' => 0, 'method' => req_method_name, 'params' => req_method_params)
       subject.parse_register_capability_response!(response, original_request)
       # Should show registered
       expect(subject.capability_registrations(method_name)).to eq([{:registered => true, :state => :complete, :id => request_id}])
@@ -342,7 +347,7 @@ describe 'PuppetLanguageServer::LanguageClient' do
       req_method_name = nil
       req_method_params = nil
       # Remember the registration so we can fake a response later
-      allow(json_rpc_handler).to receive(:send_client_request) do |n, p|
+      allow(protocol).to receive(:send_client_request) do |n, p|
         req_method_name = n
         req_method_params = p
       end
@@ -356,8 +361,8 @@ describe 'PuppetLanguageServer::LanguageClient' do
       # Should show as in progress
       expect(subject.capability_registrations(method_name)).to eq([{:registered => false, :state => :pending, :id => request_id}])
       # Mock an error response
-      response = { 'jsonrpc'=>'2.0', 'id'=> 0, 'error' => { 'code' => -1, 'message' => 'mock message' } }
-      original_request = { 'jsonrpc'=>'2.0', 'id' => 0, 'method' => req_method_name, 'params' => req_method_params }
+      response = ::PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new.from_h!('id' => 0, 'error' => { 'code' => -1, 'message' => 'mock message' })
+      original_request = ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!('id' => 0, 'method' => req_method_name, 'params' => req_method_params)
       subject.parse_register_capability_response!(response, original_request)
       # Should show registered
       expect(subject.capability_registrations(method_name)).to eq([{:registered => false, :state => :complete, :id => request_id}])
@@ -367,7 +372,7 @@ describe 'PuppetLanguageServer::LanguageClient' do
       req_method_name = nil
       req_method_params = nil
       # Remember the registration so we can fake a response later
-      allow(json_rpc_handler).to receive(:send_client_request) do |n, p|
+      allow(protocol).to receive(:send_client_request) do |n, p|
         req_method_name = n
         req_method_params = p
       end
@@ -380,8 +385,8 @@ describe 'PuppetLanguageServer::LanguageClient' do
       # Send as registration request
       subject.register_capability(method_name, method_options)
       # Mock a valid response
-      response = { 'jsonrpc'=>'2.0', 'id'=> 0, 'result' => nil }
-      original_request = { 'jsonrpc'=>'2.0', 'id' => 0, 'method' => req_method_name, 'params' => req_method_params }
+      response = ::PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new.from_h!('id' => 0, 'result' => nil)
+      original_request = ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!('id' => 0, 'method' => req_method_name, 'params' => req_method_params)
       subject.parse_register_capability_response!(response, original_request)
       # Should show registered
       expect(subject.capability_registrations(method_name)).to eq([{:registered => true, :state => :complete, :id => request_id}])
@@ -393,8 +398,8 @@ describe 'PuppetLanguageServer::LanguageClient' do
         {:registered => false, :state => :pending,  :id => request_id2}
       ])
       # Mock an error response
-      response = { 'jsonrpc'=>'2.0', 'id'=> 0, 'error' => { 'code' => -1, 'message' => 'mock message' } }
-      original_request = { 'jsonrpc'=>'2.0', 'id' => 0, 'method' => req_method_name, 'params' => req_method_params }
+      response = ::PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new.from_h!('id' => 0, 'error' => { 'code' => -1, 'message' => 'mock message' })
+      original_request = ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!('id' => 0, 'method' => req_method_name, 'params' => req_method_params)
       subject.parse_register_capability_response!(response, original_request)
       # Should still show registered
       expect(subject.capability_registrations(method_name)).to eq([
@@ -409,22 +414,22 @@ describe 'PuppetLanguageServer::LanguageClient' do
     let(:method_options) { {} }
 
     it 'should send a client request and return true' do
-      expect(json_rpc_handler).to receive(:send_client_request).with('client/registerCapability', Object)
+      expect(protocol).to receive(:send_client_request).with('client/registerCapability', Object)
       expect(subject.register_capability(method_name, method_options)).to eq(true)
     end
 
     it 'should include the method to register' do
       subject.register_capability(method_name, method_options)
-      expect(json_rpc_handler.connection.buffer).to include("\"method\":\"#{method_name}\"")
+      expect(mock_connection.buffer).to include("\"method\":\"#{method_name}\"")
     end
 
     it 'should include the parameters to register' do
       subject.register_capability(method_name, method_options)
-      expect(json_rpc_handler.connection.buffer).to include('"registerOptions":{}')
+      expect(mock_connection.buffer).to include('"registerOptions":{}')
     end
 
     it 'should log a message if a registration is already in progress' do
-      allow(json_rpc_handler).to receive(:send_client_request)
+      allow(protocol).to receive(:send_client_request)
       expect(PuppetLanguageServer).to receive(:log_message).with(:warn, /#{method_name}/)
 
       subject.register_capability(method_name, method_options)
@@ -435,7 +440,7 @@ describe 'PuppetLanguageServer::LanguageClient' do
       method_name = nil
       method_params = nil
       # Remember the registration so we can fake a response later
-      allow(json_rpc_handler).to receive(:send_client_request) do |n, p|
+      allow(protocol).to receive(:send_client_request) do |n, p|
         method_name = n
         method_params = p
       end
@@ -443,8 +448,8 @@ describe 'PuppetLanguageServer::LanguageClient' do
       # Send as registration request
       subject.register_capability(method_name, method_options)
       # Mock a valid response
-      response = { 'jsonrpc'=>'2.0', 'id'=> 0, 'result' => nil }
-      original_request = { 'jsonrpc'=>'2.0', 'id' => 0, 'method' => method_name, 'params' => method_params }
+      response = ::PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new.from_h!('id' => 0, 'result' => nil)
+      original_request = ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!('id' => 0, 'method' => method_name, 'params' => method_params)
       subject.parse_register_capability_response!(response, original_request)
 
       subject.register_capability(method_name, method_options)
@@ -462,17 +467,17 @@ describe 'PuppetLanguageServer::LanguageClient' do
     end
 
     it 'should send a client request and return true' do
-      expect(json_rpc_handler).to receive(:send_client_request).with('client/unregisterCapability', Object)
+      expect(protocol).to receive(:send_client_request).with('client/unregisterCapability', Object)
       expect(subject.unregister_capability(method_name)).to eq(true)
     end
 
     it 'should include the method to register' do
       subject.unregister_capability(method_name)
-      expect(json_rpc_handler.connection.buffer).to include("\"method\":\"#{method_name}\"")
+      expect(mock_connection.buffer).to include("\"method\":\"#{method_name}\"")
     end
 
     it 'should log a message if a registration is already in progress' do
-      allow(json_rpc_handler).to receive(:send_client_request)
+      allow(protocol).to receive(:send_client_request)
       expect(PuppetLanguageServer).to receive(:log_message).with(:warn, /#{method_name}/)
 
       subject.unregister_capability(method_name)
@@ -483,7 +488,7 @@ describe 'PuppetLanguageServer::LanguageClient' do
       req_method_name = nil
       req_method_params = nil
       # Remember the registration so we can fake a response later
-      allow(json_rpc_handler).to receive(:send_client_request) do |n, p|
+      allow(protocol).to receive(:send_client_request) do |n, p|
         req_method_name = n
         req_method_params = p
       end
@@ -492,22 +497,21 @@ describe 'PuppetLanguageServer::LanguageClient' do
       # Send as registration request
       subject.unregister_capability(method_name)
       # Mock a valid response
-      response = { 'jsonrpc'=>'2.0', 'id'=> 0, 'result' => nil }
-      original_request = { 'jsonrpc'=>'2.0', 'id' => 0, 'method' => req_method_name, 'params' => req_method_params }
-
+      response = ::PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new.from_h!('id' => 0, 'result' => nil)
+      original_request = ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!('id' => 0, 'method' => req_method_name, 'params' => req_method_params)
       subject.parse_unregister_capability_response!(response, original_request)
 
       subject.unregister_capability(method_name)
     end
 
     it 'should not deregister methods that have not been registerd' do
-      expect(json_rpc_handler).to_not receive(:send_client_request)
+      expect(protocol).to_not receive(:send_client_request)
 
       subject.unregister_capability('unknown')
     end
 
     it 'should not deregister methods that are no longer registerd' do
-      expect(json_rpc_handler).to_not receive(:send_client_request)
+      expect(protocol).to_not receive(:send_client_request)
 
       subject.instance_variable_set(:@registrations, {
         method_name => [{ :id => 'id001', :state => :complete, :registered => false }]
@@ -520,8 +524,8 @@ describe 'PuppetLanguageServer::LanguageClient' do
   describe '#parse_register_capability_response!' do
     let(:request_id) { 0 }
     let(:response_result) { nil }
-    let(:response) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'result' => response_result } }
-    let(:original_request) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'method' => request_method, 'params' => request_params} }
+    let(:response) { ::PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new.from_h!('id' => request_id, 'result' => response_result) }
+    let(:original_request) { ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!('id' => request_id, 'method' => request_method, 'params' => request_params) }
 
     context 'Given an original request that is not a registration' do
       let(:request_method) { 'mockMethod' }
@@ -556,8 +560,8 @@ describe 'PuppetLanguageServer::LanguageClient' do
 
       context 'that failed' do
         before(:each) do
-          response.delete('result') if response.key?('result')
-          response['error'] = { 'code' => -1, 'message' => 'mock message' }
+          response.error = { 'code' => -1, 'message' => 'mock message' }
+          response.is_successful = false
         end
 
         it 'should not log the registration' do
@@ -580,8 +584,8 @@ describe 'PuppetLanguageServer::LanguageClient' do
   describe '#parse_unregister_capability_response!' do
     let(:request_id) { 0 }
     let(:response_result) { nil }
-    let(:response) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'result' => response_result } }
-    let(:original_request) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'method' => request_method, 'params' => request_params} }
+    let(:response) { ::PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new.from_h!('id' => request_id, 'result' => response_result) }
+    let(:original_request) { ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!('id' => request_id, 'method' => request_method, 'params' => request_params) }
     let(:method_name) { 'validMethod' }
     let(:initial_registration) { true }
 
@@ -618,8 +622,8 @@ describe 'PuppetLanguageServer::LanguageClient' do
 
       context 'that failed' do
         before(:each) do
-          response.delete('result') if response.key?('result')
-          response['error'] = { 'code' => -1, 'message' => 'mock message' }
+          response.error = { 'code' => -1, 'message' => 'mock message' }
+          response.is_successful = false
         end
 
         context 'and was previously registered' do

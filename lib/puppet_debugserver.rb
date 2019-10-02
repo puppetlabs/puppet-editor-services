@@ -30,8 +30,7 @@ module PuppetDebugServer
     end
 
     %w[
-      json_handler
-      message_router
+      message_handler
       hooks
       puppet_debug_session
       debug_session/break_points
@@ -122,19 +121,25 @@ module PuppetDebugServer
 
     Thread.new do
       Thread.current.abort_on_exception = true
-      server = PuppetEditorServices::SimpleTCPServer.new
 
-      options[:servicename] = 'DEBUG SERVER'
+      require 'puppet_editor_services/protocol/debug_adapter'
+      require 'puppet_editor_services/server/tcp'
 
-      server.add_service(options[:ipaddress], options[:port])
+      server_options = options.dup
+      protocol_options = { :class => PuppetEditorServices::Protocol::DebugAdapter }.merge(options)
+      handler_options = { :class => PuppetDebugServer::MessageHandler }.merge(options)
+      # TODO: Add max threads?
+      server_options[:servicename] = 'DEBUG SERVER'
+
+      log_message(:debug, 'Using TCP Server')
+      server = ::PuppetEditorServices::Server::Tcp.new(server_options, protocol_options, handler_options)
       trap('INT') do
         server.stop_services(true)
         PuppetDebugServer::PuppetDebugSession.instance.flow_control.assert_flag(:terminate)
       end
-      server.start(PuppetDebugServer::JSONHandler, options, 2)
+      server.start
 
       log_message(:info, 'Debug Server exited.')
-
       # Forcibly kill the Debug Session
       log_message(:info, 'Signalling Debug Session to terminate with extreme prejudice')
       PuppetDebugServer::PuppetDebugSession.instance.force_terminate

@@ -42,3 +42,47 @@ RSpec::Matchers.define :receive_event_within_timeout do |event_name, timeout = 5
     message
   end
 end
+
+# Mock ojects
+require 'puppet_editor_services/server/base'
+class MockServer < PuppetEditorServices::Server::Base
+  attr_reader :connection_object
+  attr_reader :protocol_object
+  attr_reader :handler_object
+
+  def initialize(server_options, connection_options, protocol_options, handler_options)
+    connection_options = {} if connection_options.nil?
+    connection_options[:class] = MockConnection if connection_options[:class].nil?
+
+    super(server_options, connection_options, protocol_options, handler_options)
+    # Build up the object chain
+    @connection_object = connection_options[:class].new(self)
+    @protocol_object = @connection_object.protocol
+    @handler_object = @protocol_object.handler
+
+    # Baic validation that the test fixtures are sane
+    raise "Invalid Connection object class" unless @connection_object.is_a?(::PuppetEditorServices::Connection::Base)
+    raise "Invalid Protocol object class" unless @protocol_object.is_a?(::PuppetEditorServices::Protocol::Base)
+    raise "Invalid Handler object class" unless @handler_object.is_a?(::PuppetEditorServices::Handler::Base)
+  end
+end
+
+require 'puppet_editor_services/server/base'
+class MockConnection < PuppetEditorServices::Connection::Base
+  attr_accessor :sent_objects
+
+  def send_data(data)
+    @sent_objects = [] if @sent_objects.nil?
+    # Strip the Content Header
+    stripped_data = data.slice(data.index("\r\n\r\n") + 4 ..-1)
+    @sent_objects << JSON.parse(stripped_data)
+    true
+  end
+end
+
+require 'puppet_editor_services/protocol/debug_adapter'
+class MockProtocol < PuppetEditorServices::Protocol::DebugAdapter
+  def receive_mock_string(content)
+    receive_json_message_as_string(content)
+  end
+end

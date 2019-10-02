@@ -139,7 +139,31 @@ def random_sidecar_resource(typename = nil, title = nil)
 end
 
 # Mock ojects
-class MockConnection < PuppetEditorServices::SimpleServerConnectionBase
+require 'puppet_editor_services/server/base'
+class MockServer < PuppetEditorServices::Server::Base
+  attr_reader :connection_object
+  attr_reader :protocol_object
+  attr_reader :handler_object
+
+  def initialize(server_options, connection_options, protocol_options, handler_options)
+    connection_options = {} if connection_options.nil?
+    connection_options[:class] = MockConnection if connection_options[:class].nil?
+
+    super(server_options, connection_options, protocol_options, handler_options)
+    # Build up the object chain
+    @connection_object = connection_options[:class].new(self)
+    @protocol_object = @connection_object.protocol
+    @handler_object = @protocol_object.handler
+
+    # Baic validation that the test fixtures are sane
+    raise "Invalid Connection object class" unless @connection_object.is_a?(::PuppetEditorServices::Connection::Base)
+    raise "Invalid Protocol object class" unless @protocol_object.is_a?(::PuppetEditorServices::Protocol::Base)
+    raise "Invalid Handler object class" unless @handler_object.is_a?(::PuppetEditorServices::Handler::Base)
+  end
+end
+
+require 'puppet_editor_services/server/base'
+class MockConnection < PuppetEditorServices::Connection::Base
   attr_accessor :buffer
 
   def send_data(data)
@@ -149,34 +173,10 @@ class MockConnection < PuppetEditorServices::SimpleServerConnectionBase
   end
 end
 
-class MockJSONRPCHandler < PuppetLanguageServer::JSONRPCHandler
-  def initialize(options = {})
-    super(options)
+class MockMessageHandler < PuppetEditorServices::Handler::Base
+  def request_initialize(*_); end
 
-    @client_connection = MockConnection.new
-  end
+  def notification_initialized(*_); end
 
-  def receive_data(_); end
-
-  def connection
-    @client_connection
-  end
-end
-
-class MockRelationshipGraph
-  attr_accessor :vertices
-  def initialize()
-  end
-end
-
-class MockMessageRouter
-  attr_accessor :json_rpc_handler
-
-  def initialize(_ = {}); end
-
-  def receive_request(_); end
-
-  def receive_notification(_, _); end
-
-  def receive_response(_, _); end
+  def response_mock(*_); end
 end

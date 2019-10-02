@@ -16,7 +16,7 @@ describe 'End to End Testing' do
                                                                         "--ip=#{@debug_host}")
     @debug_pid = wait_thr.pid
     # Wait for something to be output from the Debug Server.  This indicates it's alive and ready for a connection
-    result = IO.select([@debug_stdout], [], [], 5)
+    result = IO.select([@debug_stdout], [], [], 10)
     raise('Debug Server did not start up in the required timespan') unless result
 
     # Now connect to the Debug Server
@@ -25,7 +25,7 @@ describe 'End to End Testing' do
   }
 
   after(:each) {
-    @client.close unless @client.closed?
+    @client.close unless @client.nil? || @client.closed?
     Process.kill("KILL", @debug_pid) rescue true
     @debug_stdin.close
     @debug_stdout.close

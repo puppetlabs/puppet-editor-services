@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'lsp/lsp'
+
 module PuppetLanguageServer
   module ServerCapabilites
     def self.capabilities(options = {})

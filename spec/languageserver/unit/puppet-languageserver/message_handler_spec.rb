@@ -1,18 +1,18 @@
 require 'spec_helper'
+require 'puppet_editor_services/protocol/json_rpc_messages'
 
-describe 'message_router' do
+describe 'PuppetLanguageServer::MessageHandler' do
   MANIFEST_FILENAME = 'file:///something.pp'
   PUPPETFILE_FILENAME = 'file:///Puppetfile'
   EPP_FILENAME = 'file:///something.epp'
   UNKNOWN_FILENAME = 'file:///I_do_not_work.exe'
   ERROR_CAUSING_FILE_CONTENT = "file_content which causes errros\n <%- Wee!\n class 'foo' {'"
 
-  let(:subject_options) {}
-  let(:subject) do
-    result = PuppetLanguageServer::MessageRouter.new(subject_options)
-    result.json_rpc_handler = MockJSONRPCHandler.new
-    result
+  let(:server) do
+    MockServer.new({}, {}, {}, { :class => PuppetLanguageServer::MessageHandler })
   end
+  let(:connection_id) { server.connection_object.id }
+  let(:subject) { server.handler_object }
 
   RSpec::Matchers.define :method_not_nil do |method_name|
     match { |actual| !actual.send(method_name).nil? }
@@ -30,60 +30,41 @@ describe 'message_router' do
     end
   end
 
-  describe '#receive_request' do
-    let(:request_connection) { MockJSONRPCHandler.new() }
+  context 'When receiving a request' do
     let(:request_rpc_method) { nil }
     let(:request_params) { {} }
-    let(:request_id) { 0 }
-    let(:request) do
-      PuppetLanguageServer::JSONRPCHandler::Request.new(
-        request_connection, request_id, request_rpc_method, request_params)
+    let(:request_message) do
+      ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!(
+        'id'      => 1,
+        'method'  => request_rpc_method,
+        'params'  => request_params
+      )
     end
 
     before(:each) do
       allow(PuppetLanguageServer).to receive(:log_message)
     end
 
-    context 'given a request that raises an error' do
-      let(:request_rpc_method) { 'puppet/getVersion' }
-      before(:each) do
-        expect(Puppet).to receive(:version).and_raise('MockError')
-        allow(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
-      end
-
-      it 'should raise an error' do
-        expect{ subject.receive_request(request) }.to raise_error(/MockError/)
-      end
-
+    describe '.unhandled_exception' do
       it 'should call PuppetLanguageServer::CrashDump.write_crash_file' do
         expect(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
-        expect{ subject.receive_request(request) }.to raise_error(/MockError/)
-      end
-    end
-
-    context 'given a request that is protocol implementation dependant' do
-      let(:request_rpc_method) { '$/MockRequest' }
-
-      it 'should reply with an error' do
-        expect(subject.json_rpc_handler).to receive(:reply_error).with(Object, PuppetLanguageServer::CODE_METHOD_NOT_FOUND, Object)
-        subject.receive_request(request)
+        subject.unhandled_exception(RuntimeError.new('mock'), {})
       end
     end
 
     # initialize - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize
-    context 'given an initialize request' do
+    describe '.request_initialize' do
+      #context 'given an initialize request' do
       let(:request_rpc_method) { 'initialize' }
       let(:request_params) { { 'capabilities' => { 'cap1' => 'value1' } } }
-      it 'should reply with capabilites' do
-        expect(request).to receive(:reply_result).with(hash_including('capabilities'))
 
-        subject.receive_request(request)
+      it 'should reply with capabilites' do
+        expect(subject.request_initialize(connection_id, request_message)['capabilities']).to_not be_nil
       end
 
       it 'should save the client capabilities' do
-        expect(subject.client).to receive(:parse_lsp_initialize!).with(request_params)
-
-        subject.receive_request(request)
+        expect(subject.language_client).to receive(:parse_lsp_initialize!).with(request_params)
+        subject.request_initialize(connection_id, request_message)
       end
 
       context 'when onTypeFormatting does support dynamic registration' do
@@ -98,11 +79,8 @@ describe 'message_router' do
           }
         end
 
-        it 'should statically register a documentOnTypeFormattingProvider' do
-          expect(request).to_not receive(:reply_result).with(server_capability('documentOnTypeFormattingProvider'))
-          allow(request).to receive(:reply_result)
-
-          subject.receive_request(request)
+        it 'should not statically register a documentOnTypeFormattingProvider' do
+          expect(subject.request_initialize(connection_id, request_message)).to_not server_capability('documentOnTypeFormattingProvider')
         end
       end
 
@@ -119,9 +97,7 @@ describe 'message_router' do
         end
 
         it 'should statically register a documentOnTypeFormattingProvider' do
-          expect(request).to receive(:reply_result).with(server_capability('documentOnTypeFormattingProvider'))
-
-          subject.receive_request(request)
+          expect(subject.request_initialize(connection_id, request_message)).to server_capability('documentOnTypeFormattingProvider')
         end
       end
 
@@ -129,58 +105,42 @@ describe 'message_router' do
         let(:request_params) { {} }
 
         it 'should statically register a documentOnTypeFormattingProvider' do
-          expect(request).to receive(:reply_result).with(server_capability('documentOnTypeFormattingProvider'))
-
-          subject.receive_request(request)
+          expect(subject.request_initialize(connection_id, request_message)).to server_capability('documentOnTypeFormattingProvider')
         end
       end
     end
 
     # shutdown - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#shutdown
-    context 'given a shutdown request' do
+    describe '.request_shutdown' do
       let(:request_rpc_method) { 'shutdown' }
       it 'should reply with nil' do
-        expect(request).to receive(:reply_result).with(nil)
-
-        subject.receive_request(request)
+        expect(subject.request_shutdown(connection_id, request_message)).to be_nil
       end
     end
 
-    context 'given a puppet/getVersion request' do
+    describe '.request_puppet_getversion' do
       let(:request_rpc_method) { 'puppet/getVersion' }
       it 'should reply with the Puppet Version' do
-        expect(request).to receive(:reply_result).with(method_not_nil(:puppetVersion))
-
-        subject.receive_request(request)
+        expect(subject.request_puppet_getversion(connection_id, request_message)).to method_not_nil(:puppetVersion)
       end
       it 'should reply with the Facter Version' do
-        expect(request).to receive(:reply_result).with(method_not_nil(:facterVersion))
-
-        subject.receive_request(request)
+        expect(subject.request_puppet_getversion(connection_id, request_message)).to method_not_nil(:facterVersion)
       end
       it 'should reply with the Language Server version' do
-        expect(request).to receive(:reply_result).with(method_not_nil(:languageServerVersion))
-
-        subject.receive_request(request)
+        expect(subject.request_puppet_getversion(connection_id, request_message)).to method_not_nil(:languageServerVersion)
       end
       it 'should reply with whether the facts are loaded' do
-        expect(request).to receive(:reply_result).with(method_not_nil(:factsLoaded))
-
-        subject.receive_request(request)
+        expect(subject.request_puppet_getversion(connection_id, request_message)).to method_not_nil(:factsLoaded)
       end
       it 'should reply with whether the functions are loaded' do
-        expect(request).to receive(:reply_result).with(method_not_nil(:functionsLoaded))
-
-        subject.receive_request(request)
+        expect(subject.request_puppet_getversion(connection_id, request_message)).to method_not_nil(:functionsLoaded)
       end
       it 'should reply with whether the types are loaded' do
-        expect(request).to receive(:reply_result).with(method_not_nil(:typesLoaded))
-
-        subject.receive_request(request)
+        expect(subject.request_puppet_getversion(connection_id, request_message)).to method_not_nil(:typesLoaded)
       end
     end
 
-    context 'given a puppet/getResource request' do
+    describe '.request_puppet_getresource' do
       let(:request_rpc_method) { 'puppet/getResource' }
       let(:type_name) { 'user' }
       let(:title) { 'alice' }
@@ -188,9 +148,7 @@ describe 'message_router' do
       context 'and missing the typename' do
         let(:request_params) { {} }
         it 'should return an error string' do
-          expect(request).to receive(:reply_result).with(duck_type(:error))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_getresource(connection_id, request_message)).to method_not_nil(:error)
         end
       end
 
@@ -201,9 +159,7 @@ describe 'message_router' do
 
         it 'should return data with an empty string' do
           expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).and_return(nil)
-          expect(request).to receive(:reply_result).with(having_attributes(:data => ''))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_getresource(connection_id, request_message)).to have_attributes(:data => '')
         end
       end
 
@@ -220,9 +176,7 @@ describe 'message_router' do
         context 'and resource face returns empty array' do
           it 'should return data with an empty string' do
             expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).and_return([])
-            expect(request).to receive(:reply_result).with(having_attributes(:data => ''))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_getresource(connection_id, request_message)).to have_attributes(:data => '')
           end
         end
 
@@ -232,13 +186,11 @@ describe 'message_router' do
           end
 
           it 'should call get_puppet_resource' do
-            subject.receive_request(request)
+            subject.request_puppet_getresource(connection_id, request_message)
           end
 
           it 'should return data containing the type name' do
-            expect(request).to receive(:reply_result).with(having_attributes(:data => /#{type_name}/))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_getresource(connection_id, request_message)).to have_attributes(:data => /#{type_name}/)
           end
         end
       end
@@ -256,9 +208,7 @@ describe 'message_router' do
         context 'and resource face returns nil' do
           it 'should return data with an empty string' do
             expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).and_return(nil)
-            expect(request).to receive(:reply_result).with(having_attributes(:data => ''))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_getresource(connection_id, request_message)).to have_attributes(:data => '')
           end
         end
 
@@ -268,25 +218,21 @@ describe 'message_router' do
           end
 
           it 'should call resource_face_get_by_typename' do
-            subject.receive_request(request)
+            subject.request_puppet_getresource(connection_id, request_message)
           end
 
           it 'should return data containing the type name' do
-            expect(request).to receive(:reply_result).with(having_attributes(:data => /#{type_name}/))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_getresource(connection_id, request_message)).to have_attributes(:data => /#{type_name}/)
           end
 
           it 'should return data containing the title' do
-            expect(request).to receive(:reply_result).with(having_attributes(:data => /#{title}/))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_getresource(connection_id, request_message)).to have_attributes(:data => /#{title}/)
           end
         end
       end
     end
 
-    context 'given a puppet/compileNodeGraph request' do
+    describe '.request_puppet_compilenodegraph' do
       let(:request_rpc_method) { 'puppet/compileNodeGraph' }
       let(:file_uri) { MANIFEST_FILENAME }
       let(:file_content) { 'some file content' }
@@ -305,15 +251,11 @@ describe 'message_router' do
         let(:file_uri) { UNKNOWN_FILENAME }
 
         it 'should reply with the error text' do
-          expect(request).to receive(:reply_result).with(having_attributes(:error => /Files of this type/))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:error => /Files of this type/)
         end
 
         it 'should not reply with dotContent' do
-          expect(request).to_not receive(:reply_result).with(having_attributes(:dotContent => /.+/))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to_not have_attributes(:dotContent => /.+/)
         end
       end
 
@@ -330,15 +272,11 @@ describe 'message_router' do
         end
 
         it 'should reply with the error text' do
-          expect(request).to receive(:reply_result).with(having_attributes(:error => /MockError/))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:error => /MockError/)
         end
 
         it 'should not reply with dotContent' do
-          expect(request).to receive(:reply_result).with(having_attributes(:dotContent => ''))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:dotContent => '')
         end
       end
 
@@ -355,20 +293,16 @@ describe 'message_router' do
         end
 
         it 'should reply with dotContent' do
-          expect(request).to receive(:reply_result).with(having_attributes(:dotContent => /success/))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:dotContent => /success/)
         end
 
         it 'should not reply with error' do
-          expect(request).to receive(:reply_result).with(having_attributes(:error => ''))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:error => '')
         end
       end
     end
 
-    context 'given a puppet/fixDiagnosticErrors request' do
+    describe '.request_puppet_fixdiagnosticerrors' do
       let(:request_rpc_method) { 'puppet/fixDiagnosticErrors' }
       let(:file_uri) { MANIFEST_FILENAME }
       let(:return_content) { true }
@@ -390,29 +324,22 @@ describe 'message_router' do
 
         it 'should log an error message' do
           expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to fixDiagnosticErrors/)
-
-          subject.receive_request(request)
+          subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)
         end
 
         it 'should reply with the document uri' do
-          expect(request).to receive(:reply_result).with(having_attributes(:documentUri => file_uri))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:documentUri => file_uri)
         end
 
         it 'should reply with no fixes applied' do
-          expect(request).to receive(:reply_result).with(having_attributes(:fixesApplied => 0))
-
-          subject.receive_request(request)
+          expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:fixesApplied => 0)
         end
 
         context 'and return_content set to true' do
           let(:return_content) { true }
 
           it 'should reply with document content' do
-            expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_content))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:newContent => file_content)
           end
         end
 
@@ -420,9 +347,7 @@ describe 'message_router' do
           let(:return_content) { false }
 
           it 'should reply with no document content' do
-            expect(request).to receive(:reply_result).with(having_attributes(:newContent => nil))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:newContent => nil)
           end
         end
       end
@@ -437,29 +362,22 @@ describe 'message_router' do
 
           it 'should log an error message' do
             expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
-
-            subject.receive_request(request)
+            subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)
           end
 
           it 'should reply with the document uri' do
-            expect(request).to receive(:reply_result).with(having_attributes(:documentUri => file_uri))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:documentUri => file_uri)
           end
 
           it 'should reply with no fixes applied' do
-            expect(request).to receive(:reply_result).with(having_attributes(:fixesApplied => 0))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:fixesApplied => 0)
           end
 
           context 'and return_content set to true' do
             let(:return_content) { true }
 
             it 'should reply with document content' do
-              expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_content))
-
-              subject.receive_request(request)
+              expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:newContent => file_content)
             end
           end
 
@@ -467,9 +385,7 @@ describe 'message_router' do
             let(:return_content) { false }
 
             it 'should reply with no document content' do
-              expect(request).to receive(:reply_result).with(having_attributes(:newContent => nil))
-
-              subject.receive_request(request)
+              expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:newContent => nil)
             end
           end
         end
@@ -482,24 +398,18 @@ describe 'message_router' do
           end
 
           it 'should reply with the document uri' do
-            expect(request).to receive(:reply_result).with(having_attributes(:documentUri => file_uri))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:documentUri => file_uri)
           end
 
           it 'should reply with the number of fixes applied' do
-            expect(request).to receive(:reply_result).with(having_attributes(:fixesApplied => applied_fixes))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:fixesApplied => applied_fixes)
           end
 
           context 'and return_content set to true' do
             let(:return_content) { true }
 
             it 'should reply with document content' do
-              expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_new_content))
-
-              subject.receive_request(request)
+              expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:newContent => file_new_content)
             end
           end
 
@@ -507,9 +417,7 @@ describe 'message_router' do
             let(:return_content) { false }
 
             it 'should reply with document content' do
-              expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_new_content))
-
-              subject.receive_request(request)
+              expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:newContent => file_new_content)
             end
           end
         end
@@ -522,24 +430,18 @@ describe 'message_router' do
           end
 
           it 'should reply with the document uri' do
-            expect(request).to receive(:reply_result).with(having_attributes(:documentUri => file_uri))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:documentUri => file_uri)
           end
 
           it 'should reply with the number of fixes applied' do
-            expect(request).to receive(:reply_result).with(having_attributes(:fixesApplied => applied_fixes))
-
-            subject.receive_request(request)
+            expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:fixesApplied => applied_fixes)
           end
 
           context 'and return_content set to true' do
             let(:return_content) { true }
 
             it 'should reply with document content' do
-              expect(request).to receive(:reply_result).with(having_attributes(:newContent => file_content))
-
-              subject.receive_request(request)
+              expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:newContent => file_content)
             end
           end
 
@@ -547,9 +449,7 @@ describe 'message_router' do
             let(:return_content) { false }
 
             it 'should reply with no document content' do
-              expect(request).to receive(:reply_result).with(having_attributes(:newContent => nil))
-
-              subject.receive_request(request)
+              expect(subject.request_puppet_fixdiagnosticerrors(connection_id, request_message)).to have_attributes(:newContent => nil)
             end
           end
         end
@@ -557,7 +457,7 @@ describe 'message_router' do
     end
 
     # textDocument/completion - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#completion-request
-    context 'given a textDocument/completion request' do
+    describe '.request_textdocument_completion' do
       let(:request_rpc_method) { 'textDocument/completion' }
       let(:line_num) { 1 }
       let(:char_num) { 2 }
@@ -576,30 +476,26 @@ describe 'message_router' do
 
         it 'should log an error message' do
           expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to provide completion/)
-
-          subject.receive_request(request)
+          subject.request_textdocument_completion(connection_id, request_message)
         end
 
         it 'should reply with a complete, empty response' do
-          expect(request).to receive(:reply_result).with(having_attributes(:isIncomplete => false, :items => []))
-
-          subject.receive_request(request)
+          expect(subject.request_textdocument_completion(connection_id, request_message)).to have_attributes(:isIncomplete => false, :items => [])
         end
       end
 
       context 'for a puppet manifest file' do
         let(:file_uri) { MANIFEST_FILENAME }
+
         it 'should call complete method on the Completion Provider' do
           expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
-
-          subject.receive_request(request)
+          subject.request_textdocument_completion(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
           allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
-
-          subject.receive_request(request)
+          subject.request_textdocument_completion(connection_id, request_message)
         end
 
         context 'and an error occurs during completion' do
@@ -609,21 +505,18 @@ describe 'message_router' do
 
           it 'should log an error message' do
             expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
-
-            subject.receive_request(request)
+            subject.request_textdocument_completion(connection_id, request_message)
           end
 
           it 'should reply with a complete, empty response' do
-            expect(request).to receive(:reply_result).with(having_attributes(:isIncomplete => false, :items => []))
-
-            subject.receive_request(request)
+            expect(subject.request_textdocument_completion(connection_id, request_message)).to have_attributes(:isIncomplete => false, :items => [])
           end
         end
       end
     end
 
     # completionItem/resolve - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#completion-item-resolve-request-leftwards_arrow_with_hook
-    context 'given a completionItem/resolve request' do
+    describe '.request_completionitem_resolve' do
       let(:request_rpc_method) { 'completionItem/resolve' }
       let(:request_params) {{
         'type' => 'keyword',
@@ -633,8 +526,7 @@ describe 'message_router' do
 
       it 'should call resolve method on the Completion Provider' do
         expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:resolve).and_return('something')
-
-        subject.receive_request(request)
+        subject.request_completionitem_resolve(connection_id, request_message)
       end
 
       context 'and an error occurs during resolution' do
@@ -644,20 +536,17 @@ describe 'message_router' do
 
         it 'should log an error message' do
           expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
-
-          subject.receive_request(request)
+          subject.request_completionitem_resolve(connection_id, request_message)
         end
 
         it 'should reply with the same input params' do
-          expect(request).to receive(:reply_result).with(request_params)
-
-          subject.receive_request(request)
+          expect(subject.request_completionitem_resolve(connection_id, request_message)).to eq(request_params)
         end
       end
     end
 
     # textDocument/hover - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#hover-request-leftwards_arrow_with_hook
-    context 'given a textDocument/hover request' do
+    describe '.request_textdocument_hover' do
       let(:request_rpc_method) { 'textDocument/hover' }
       let(:line_num) { 1 }
       let(:char_num) { 2 }
@@ -676,14 +565,11 @@ describe 'message_router' do
 
         it 'should log an error message' do
           expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to provide hover/)
-
-          subject.receive_request(request)
+          subject.request_textdocument_hover(connection_id, request_message)
         end
 
         it 'should reply with nil for the contents' do
-          expect(request).to receive(:reply_result).with(having_attributes(:contents => nil))
-
-          subject.receive_request(request)
+          expect(subject.request_textdocument_hover(connection_id, request_message)).to have_attributes(:contents => nil)
         end
       end
 
@@ -692,15 +578,13 @@ describe 'message_router' do
 
         it 'should call resolve method on the Hover Provider' do
           expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
-
-          subject.receive_request(request)
+          subject.request_textdocument_hover(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
           allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
-
-          subject.receive_request(request)
+          subject.request_textdocument_hover(connection_id, request_message)
         end
 
         context 'and an error occurs during resolution' do
@@ -710,21 +594,18 @@ describe 'message_router' do
 
           it 'should log an error message' do
             expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
-
-            subject.receive_request(request)
+            subject.request_textdocument_hover(connection_id, request_message)
           end
 
           it 'should reply with nil for the contents' do
-            expect(request).to receive(:reply_result).with(having_attributes(:contents => nil))
-
-            subject.receive_request(request)
+            expect(subject.request_textdocument_hover(connection_id, request_message)).to have_attributes(:contents => nil)
           end
         end
       end
     end
 
     # textDocument/definition - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#goto-definition-request-leftwards_arrow_with_hook
-    context 'given a textDocument/definition request' do
+    describe '.request_textdocument_definition' do
       let(:request_rpc_method) { 'textDocument/definition' }
       let(:line_num) { 1 }
       let(:char_num) { 2 }
@@ -743,14 +624,11 @@ describe 'message_router' do
 
         it 'should log an error message' do
           expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to provide definition/)
-
-          subject.receive_request(request)
+          subject.request_textdocument_definition(connection_id, request_message)
         end
 
         it 'should reply with nil' do
-          expect(request).to receive(:reply_result).with(nil)
-
-          subject.receive_request(request)
+          expect(subject.request_textdocument_definition(connection_id, request_message)).to be_nil
         end
       end
 
@@ -760,16 +638,14 @@ describe 'message_router' do
         it 'should call find_definition method on the Definition Provider' do
           expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition)
             .with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
-
-          subject.receive_request(request)
+          subject.request_textdocument_definition(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition)
             .with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
           allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
-
-          subject.receive_request(request)
+          subject.request_textdocument_definition(connection_id, request_message)
         end
 
         context 'and an error occurs during definition' do
@@ -779,21 +655,18 @@ describe 'message_router' do
 
           it 'should log an error message' do
             expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
-
-            subject.receive_request(request)
+            subject.request_textdocument_definition(connection_id, request_message)
           end
 
           it 'should reply with nil' do
-            expect(request).to receive(:reply_result).with(nil)
-
-            subject.receive_request(request)
+            expect(subject.request_textdocument_definition(connection_id, request_message)).to be_nil
           end
         end
       end
     end
 
     # textDocument/documentSymbol - https://github.com/Microsoft/language-server-protocol/blob/gh-pages/specification.md#document-symbols-request-leftwards_arrow_with_hook
-    context 'given a textDocument/documentSymbol request' do
+    describe '.request_textdocument_documentsymbol' do
       let(:request_rpc_method) { 'textDocument/documentSymbol' }
       let(:request_params) {{
         'textDocument' => {
@@ -806,14 +679,11 @@ describe 'message_router' do
 
         it 'should log an error message' do
           expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to provide definition/)
-
-          subject.receive_request(request)
+          subject.request_textdocument_documentsymbol(connection_id, request_message)
         end
 
         it 'should reply with nil' do
-          expect(request).to receive(:reply_result).with(nil)
-
-          subject.receive_request(request)
+          expect(subject.request_textdocument_documentsymbol(connection_id, request_message)).to be_nil
         end
       end
 
@@ -823,16 +693,14 @@ describe 'message_router' do
         it 'should call extract_document_symbols method on the Document Symbol Provider' do
           expect(PuppetLanguageServer::Manifest::DocumentSymbolProvider).to receive(:extract_document_symbols)
             .with(Object,{:tasks_mode=>false}).and_return('something')
-
-          subject.receive_request(request)
+          subject.request_textdocument_documentsymbol(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::DocumentSymbolProvider).to receive(:extract_document_symbols)
             .with(Object,{:tasks_mode=>true}).and_return('something')
           allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
-
-          subject.receive_request(request)
+          subject.request_textdocument_documentsymbol(connection_id, request_message)
         end
 
         context 'and an error occurs during extraction' do
@@ -842,21 +710,18 @@ describe 'message_router' do
 
           it 'should log an error message' do
             expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
-
-            subject.receive_request(request)
+            subject.request_textdocument_documentsymbol(connection_id, request_message)
           end
 
           it 'should reply with nil' do
-            expect(request).to receive(:reply_result).with(nil)
-
-            subject.receive_request(request)
+            expect(subject.request_textdocument_documentsymbol(connection_id, request_message)).to be_nil
           end
         end
       end
     end
 
     # textDocument/onTypeFormatting - https://microsoft.github.io/language-server-protocol/specification#textDocument_onTypeFormatting
-    context 'given a textDocument/onTypeFormatting request' do
+    describe '.request_textdocument_ontypeformatting' do
       let(:request_rpc_method) { 'textDocument/onTypeFormatting' }
       let(:file_uri) { MANIFEST_FILENAME }
       let(:file_content) { "{\n  a =>\n  name => 'value'\n}\n" }
@@ -884,18 +749,17 @@ describe 'message_router' do
 
       context 'with client.format_on_type set to false' do
         before(:each) do
-          allow(subject.client).to receive(:format_on_type).and_return(false)
+          allow(subject.language_client).to receive(:format_on_type).and_return(false)
         end
 
         it 'should reply with nil' do
-          expect(request).to receive(:reply_result).with(nil)
-          subject.receive_request(request)
+          expect(subject.request_textdocument_ontypeformatting(connection_id, request_message)).to be_nil
         end
       end
 
       context 'with client.format_on_type set to true' do
         before(:each) do
-          allow(subject.client).to receive(:format_on_type).and_return(true)
+          allow(subject.language_client).to receive(:format_on_type).and_return(true)
         end
 
         context 'for a file the server does not understand' do
@@ -903,14 +767,11 @@ describe 'message_router' do
 
           it 'should log an error message' do
             expect(PuppetLanguageServer).to receive(:log_message).with(:error,/Unable to format on type on/)
-
-            subject.receive_request(request)
+            subject.request_textdocument_ontypeformatting(connection_id, request_message)
           end
 
           it 'should reply with nil' do
-            expect(request).to receive(:reply_result).with(nil)
-
-            subject.receive_request(request)
+            expect(subject.request_textdocument_ontypeformatting(connection_id, request_message)).to be_nil
           end
         end
 
@@ -924,8 +785,7 @@ describe 'message_router' do
           it 'should call format method on the Format On Type provider' do
             expect(provider).to receive(:format)
               .with(file_content, line_num, char_num, trigger_char, formatting_options).and_return('something')
-
-            result = subject.receive_request(request)
+            subject.request_textdocument_ontypeformatting(connection_id, request_message)
           end
 
           context 'and an error occurs during formatting' do
@@ -935,100 +795,65 @@ describe 'message_router' do
 
             it 'should log an error message' do
               expect(PuppetLanguageServer).to receive(:log_message).with(:error,/MockError/)
-
-              subject.receive_request(request)
+              subject.request_textdocument_ontypeformatting(connection_id, request_message)
             end
 
             it 'should reply with nil' do
-              expect(request).to receive(:reply_result).with(nil)
-
-              subject.receive_request(request)
+              expect(subject.request_textdocument_ontypeformatting(connection_id, request_message)).to be_nil
             end
           end
         end
       end
     end
-
-    context 'given an unknown request' do
-      let(:request_rpc_method) { 'unknown_request_method' }
-
-      it 'should log an error message' do
-        expect(PuppetLanguageServer).to receive(:log_message).with(:error,"Unknown RPC method #{request_rpc_method}")
-
-        subject.receive_request(request)
-      end
-    end
   end
 
-  describe '#receive_notification' do
+  context 'When receiving a notification' do
     let(:notification_method) { nil }
     let(:notification_params) { {} }
-
-    context 'given a notification that raises an error' do
-      let(:notification_method) { 'exit' }
-      before(:each) do
-        expect(subject.json_rpc_handler).to receive(:close_connection).and_raise('MockError')
-        allow(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
-      end
-
-      it 'should raise an error' do
-        expect{ subject.receive_notification(notification_method, notification_params) }.to raise_error(/MockError/)
-      end
-
-      it 'should call PuppetLanguageServer::CrashDump.write_crash_file' do
-        expect(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
-        expect{ subject.receive_notification(notification_method, notification_params) }.to raise_error(/MockError/)
-      end
-    end
-
-    context 'given a notification that is protocol implementation dependant' do
-      let(:notification_method) { '$/MockNotification' }
-
-      it 'should log a debug message' do
-        expect(PuppetLanguageServer).to receive(:log_message).with(:debug, /Ignoring .+ #{Regexp.escape(notification_method)}/)
-        subject.receive_notification(notification_method, notification_params)
-      end
+    let(:notification_message) do
+      ::PuppetEditorServices::Protocol::JsonRPCMessages::NotificationMessage.new.from_h!(
+        'method'  => notification_method,
+        'params'  => notification_params
+      )
     end
 
     # initialized - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialized
-    context 'given an initialized notification' do
+    describe '.notification_initialized' do
       let(:notification_method) { 'initialized' }
 
       it 'should log a message' do
         expect(PuppetLanguageServer).to receive(:log_message).with(:info, /initialization/)
         allow(PuppetLanguageServer).to receive(:log_message).with(:debug, String)
 
-        subject.receive_notification(notification_method, notification_params)
+        subject.notification_initialized(connection_id, notification_message)
       end
 
       context 'when the client supports dynamic registration of workspace/didChangeConfiguration' do
         before(:each) do
-          allow(subject.client).to receive(:client_capability).with('workspace', 'didChangeConfiguration', 'dynamicRegistration').and_return(true)
+          allow(subject.language_client).to receive(:client_capability).with('workspace', 'didChangeConfiguration', 'dynamicRegistration').and_return(true)
         end
 
         it 'should attempt to register workspace/didChangeConfiguration' do
-          expect(subject.client).to receive(:register_capability).with('workspace/didChangeConfiguration')
-
-          subject.receive_notification(notification_method, notification_params)
+          expect(subject.language_client).to receive(:register_capability).with('workspace/didChangeConfiguration')
+          subject.notification_initialized(connection_id, notification_message)
         end
       end
 
       context 'when the client does not support dynamic registration of workspace/didChangeConfiguration' do
         before(:each) do
-          allow(subject.client).to receive(:client_capability).with('workspace', 'didChangeConfiguration', 'dynamicRegistration').and_return(nil)
+          allow(subject.language_client).to receive(:client_capability).with('workspace', 'didChangeConfiguration', 'dynamicRegistration').and_return(nil)
         end
 
         it 'should log a debug message' do
           expect(PuppetLanguageServer).to receive(:log_message).with(:debug, /Client does not support didChangeConfiguration/)
           expect(PuppetLanguageServer).to receive(:log_message).with(Symbol, String)
-
-          subject.receive_notification(notification_method, notification_params)
+          subject.notification_initialized(connection_id, notification_message)
         end
       end
     end
 
     # exit - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#exit-notification
-    context 'given an exit notification' do
+    describe '.notification_exit' do
       let(:notification_method) { 'exit' }
 
       before(:each) do
@@ -1037,19 +862,17 @@ describe 'message_router' do
 
       it 'should log a message' do
         expect(PuppetLanguageServer).to receive(:log_message).with(:info,String)
-
-        subject.receive_notification(notification_method, notification_params)
+        subject.notification_exit(connection_id, notification_message)
       end
 
       it 'should close the connection' do
-        expect(subject.json_rpc_handler).to receive(:close_connection)
-
-        subject.receive_notification(notification_method, notification_params)
+        expect(server.connection_object).to receive(:close)
+        subject.notification_exit(connection_id, notification_message)
       end
     end
 
     # textDocument/didOpen - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#textDocument_didOpen
-    context 'given a textDocument/didOpen notification' do
+    describe '.notification_textdocument_didopen' do
       shared_examples_for "an opened document with enqueued validation" do |file_uri, file_content|
         let(:notification_method) { 'textDocument/didOpen' }
         let(:notification_params) { {
@@ -1062,13 +885,13 @@ describe 'message_router' do
         }}
 
         it 'should add the document to the document store' do
-          subject.receive_notification(notification_method, notification_params)
+          subject.notification_textdocument_didopen(connection_id, notification_message)
           expect(subject.documents.document(file_uri)).to eq(file_content)
         end
 
         it 'should enqueue the file for validation' do
           expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 1, Object)
-          subject.receive_notification(notification_method, notification_params)
+          subject.notification_textdocument_didopen(connection_id, notification_message)
         end
       end
 
@@ -1076,6 +899,7 @@ describe 'message_router' do
         subject.documents.clear
       end
 
+      # TODO: Can probably DRY this up.
       context 'for a puppet manifest file' do
         it_should_behave_like "an opened document with enqueued validation", MANIFEST_FILENAME, ERROR_CAUSING_FILE_CONTENT
       end
@@ -1094,7 +918,7 @@ describe 'message_router' do
     end
 
     # textDocument/didClose - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#didclosetextdocument-notification
-    context 'given a textDocument/didClose notification' do
+    describe '.notification_textdocument_didclose' do
       let(:notification_method) { 'textDocument/didClose' }
       let(:notification_params) { {
         'textDocument' => { 'uri' => file_uri}
@@ -1108,13 +932,13 @@ describe 'message_router' do
       end
 
       it 'should remove the document from the document store' do
-        subject.receive_notification(notification_method, notification_params)
+        subject.notification_textdocument_didclose(connection_id, notification_message)
         expect(subject.documents.document(file_uri)).to be_nil
       end
     end
 
     # textDocument/didChange - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#didchangetextdocument-notification
-    context 'given a textDocument/didChange notification and a TextDocumentSyncKind of Full' do
+    describe '.notification_textdocument_didchange' do
       shared_examples_for "a changed document with enqueued validation" do |file_uri, new_file_content|
         let(:notification_params) { {
           'textDocument' => {
@@ -1133,13 +957,13 @@ describe 'message_router' do
         let(:new_file_content ) { 'new_file_content' }
 
         it 'should update the document in the document store' do
-          subject.receive_notification(notification_method, notification_params)
+          subject.notification_textdocument_didchange(connection_id, notification_message)
           expect(subject.documents.document(file_uri)).to eq(new_file_content)
         end
 
         it 'should enqueue the file for validation' do
           expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 2, Object)
-          subject.receive_notification(notification_method, notification_params)
+          subject.notification_textdocument_didchange(connection_id, notification_message)
         end
       end
 
@@ -1147,6 +971,7 @@ describe 'message_router' do
         subject.documents.clear
       end
 
+      # TODO: Can probably DRY this up.
       context 'for a puppet manifest file' do
         it_should_behave_like "a changed document with enqueued validation", MANIFEST_FILENAME, ERROR_CAUSING_FILE_CONTENT
       end
@@ -1165,17 +990,18 @@ describe 'message_router' do
     end
 
     # textDocument/didSave - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#didsavetextdocument-notification
-    context 'given a textDocument/didSave notification' do
+    describe '.notification_textdocument_didsave' do
       let(:notification_method) { 'textDocument/didSave' }
       it 'should log a message' do
         expect(PuppetLanguageServer).to receive(:log_message).with(:info,String)
-
-        subject.receive_notification(notification_method, notification_params)
+        subject.notification_textdocument_didsave(connection_id, notification_message)
       end
+
+      # TODO: Needs more tests for the document store
     end
 
     # workspace/didChangeConfiguration - https://microsoft.github.io/language-server-protocol/specification#workspace_didChangeConfiguration
-    context 'given a workspace/didChangeConfiguration notification' do
+    describe '.notification_workspace_didchangeconfiguration' do
       let(:notification_method) { 'workspace/didChangeConfiguration' }
       let(:notification_params) { {
         'settings' => config_settings
@@ -1186,9 +1012,8 @@ describe 'message_router' do
         let(:config_settings) { nil }
 
         it 'should send a configuration request' do
-          expect(subject.client).to receive(:send_configuration_request).with(no_args)
-
-          subject.receive_notification(notification_method, notification_params)
+          expect(subject.language_client).to receive(:send_configuration_request).with(no_args)
+          subject.notification_workspace_didchangeconfiguration(connection_id, notification_message)
         end
       end
 
@@ -1197,81 +1022,63 @@ describe 'message_router' do
         let(:config_settings) { { 'setting1' => 'value1' } }
 
         it 'should parse the settings' do
-          expect(subject.client).to receive(:parse_lsp_configuration_settings!).with(config_settings)
-
-          subject.receive_notification(notification_method, notification_params)
+          expect(subject.language_client).to receive(:parse_lsp_configuration_settings!).with(config_settings)
+          subject.notification_workspace_didchangeconfiguration(connection_id, notification_message)
         end
-      end
-    end
-
-    context 'given an unknown notification' do
-      let(:notification_method) { 'unknown_notification_method' }
-
-      it 'should log an error message' do
-        expect(PuppetLanguageServer).to receive(:log_message).with(:error,"Unknown RPC notification #{notification_method}")
-
-        subject.receive_notification(notification_method, notification_params)
       end
     end
   end
 
-  describe '#receive_response' do
-    let(:request_id) { 0 }
+  context 'When receiving a response' do
+    let(:request_id) { 1 }
+
+    let(:request_method) { nil }
+    let(:request_params) { {} }
+    let(:request_message) do
+      ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!(
+        'id'      => request_id,
+        'method'  => request_method,
+        'params'  => request_params
+      )
+    end
+
     let(:response_result) { nil }
-    let(:response) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'result' => response_result } }
-    let(:original_request) { {'jsonrpc'=>'2.0', 'id'=> request_id, 'method' => request_method, 'params' => request_params} }
-
-    before(:each) do
-      allow(PuppetLanguageServer).to receive(:log_message)
-    end
-
-    context 'given a response that errored' do
-      let(:request_method) { 'mockMethod'}
-      let(:request_params) { {} }
-
-      before(:each) do
-        response.delete('result') if response.key?('result')
-        response['error'] = { 'code' => -1, 'message' => 'mock message' }
-      end
-
-      it 'should log the error' do
-        expect(PuppetLanguageServer).to receive(:log_message).with(:error, /.+#{request_method}.+#{request_id}.+mock message.+/)
-
-        subject.receive_response(response, original_request)
+    let(:response_error) { nil }
+    let(:response_success) { true }
+    let(:response_message) do
+      ::PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new.from_h!(
+        'id' => request_id
+      ).tap do |obj|
+        obj.is_successful = response_success
+        if response_success
+          obj.result = response_result
+        else
+          obj.error = response_error
+        end
       end
     end
 
-    context 'given an error during processing' do
+    describe '.response_client_registercapability' do
       let(:request_method) { 'client/registerCapability'}
-      let(:request_params) { {} }
-
-      before(:each) do
-        expect(subject.client).to receive(:parse_register_capability_response!).and_raise('MockError')
-        allow(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
-      end
-
-      it 'should raise an error' do
-        expect{ subject.receive_response(response, original_request) }.to raise_error(/MockError/)
-      end
-
-      it 'should call PuppetLanguageServer::CrashDump.write_crash_file' do
-        expect(PuppetLanguageServer::CrashDump).to receive(:write_crash_file)
-        expect{ subject.receive_response(response, original_request) }.to raise_error(/MockError/)
-      end
-    end
-
-    context 'given an original client/registerCapability request' do
-      let(:request_method) { 'client/registerCapability'}
-      let(:request_params) { {} }
 
       it 'should call client.parse_register_capability_response!' do
-        expect(subject.client).to receive(:parse_register_capability_response!).with(response, original_request)
+        expect(subject.language_client).to receive(:parse_register_capability_response!).with(response_message, request_message)
 
-        subject.receive_response(response, original_request)
+        subject.response_client_registercapability(connection_id, response_message, request_message)
       end
     end
 
-    context 'given an original workspace/configuration request' do
+    describe '.response_client_unregistercapability' do
+      let(:request_method) { 'client/unregisterCapability'}
+
+      it 'should call client.parse_register_capability_response!' do
+        expect(subject.language_client).to receive(:parse_unregister_capability_response!).with(response_message, request_message)
+
+        subject.response_client_unregistercapability(connection_id, response_message, request_message)
+      end
+    end
+
+    describe '.response_workspace_configuration' do
       let(:response_result) { [{ 'setting1' => 'value1' }] }
       let(:request_method) { 'workspace/configuration'}
       let(:request_params) do
@@ -1280,10 +1087,20 @@ describe 'message_router' do
         params
       end
 
-      it 'should call client.parse_lsp_configuration_settings!' do
-        expect(subject.client).to receive(:parse_lsp_configuration_settings!).with({ 'mock' => response_result[0] })
+      context 'With a successful response' do
+        let(:response_success) { true }
+        it 'should call client.parse_lsp_configuration_settings!' do
+          expect(subject.language_client).to receive(:parse_lsp_configuration_settings!).with({ 'mock' => response_result[0] })
+          subject.response_workspace_configuration(connection_id, response_message, request_message)
+        end
+      end
 
-        subject.receive_response(response, original_request)
+      context 'With an unsuccessful response' do
+        let(:response_success) { false }
+        it 'should not call client.parse_lsp_configuration_settings!' do
+          expect(subject.language_client).to_not receive(:parse_lsp_configuration_settings!)
+          subject.response_workspace_configuration(connection_id, response_message, request_message)
+        end
       end
     end
   end
