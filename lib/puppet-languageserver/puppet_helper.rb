@@ -160,18 +160,25 @@ module PuppetLanguageServer
       result
     end
 
-    def self.function(name)
+    def self.function(name, tasks_mode = false)
       return nil if @default_functions_loaded == false
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       load_default_functions unless @default_functions_loaded
-      @inmemory_cache.object_by_name(:function, name)
+      exclude_origins = tasks_mode ? [] : [:bolt]
+      @inmemory_cache.object_by_name(
+        :function,
+        name,
+        :fuzzy_match     => true,
+        :exclude_origins => exclude_origins
+      )
     end
 
-    def self.function_names
+    def self.function_names(tasks_mode = false)
       return [] if @default_functions_loaded == false
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       load_default_functions if @default_functions_loaded.nil?
-      @inmemory_cache.object_names_by_section(:function).map(&:to_s)
+      exclude_origins = tasks_mode ? [] : [:bolt]
+      @inmemory_cache.object_names_by_section(:function, :exclude_origins => exclude_origins).map(&:to_s)
     end
 
     # Classes and Defined Types
@@ -229,11 +236,18 @@ module PuppetLanguageServer
       sidecar_queue.enqueue('default_datatypes', [])
     end
 
-    def self.datatype(name)
+    def self.datatype(name, tasks_mode = false)
       return nil if @default_datatypes_loaded == false
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       load_default_datatypes unless @default_datatypes_loaded
-      @inmemory_cache.object_by_name(:datatype, name)
+      load_static_data if tasks_mode && !static_data_loaded?
+      exclude_origins = tasks_mode ? [] : [:bolt]
+      @inmemory_cache.object_by_name(
+        :datatype,
+        name,
+        :fuzzy_match     => true,
+        :exclude_origins => exclude_origins
+      )
     end
 
     def self.cache

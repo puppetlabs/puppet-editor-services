@@ -4,6 +4,10 @@ def number_of_completion_item_with_type(completion_list, typename)
   (completion_list.items.select { |item| item.data['type'] == typename}).length
 end
 
+def completion_item_with_type_and_name(completion_list, typename, name)
+  completion_list.items.find { |item| item.data['type'] == typename && item.data['name'] == name }
+end
+
 def retrieve_completion_response(label, kind)
   value = @completion_response.items.find do |item|
     item.label == label && item.kind == kind
@@ -106,11 +110,19 @@ describe 'completion_provider' do
       let(:content) { <<-EOT
         plan mymodule::my_plan(
         ) {
+          # Needed
         }
         EOT
       }
+
       it "should not raise an error" do
         result = subject.complete(content, 0, 1, { :tasks_mode => true})
+      end
+
+      it 'should suggest Bolt functions' do
+        result = subject.complete(content, 2, 1, { :tasks_mode => true})
+
+        expect(completion_item_with_type_and_name(result, 'function', 'run_task')).to_not be_nil
       end
     end
 
@@ -147,7 +159,7 @@ EOT
             end
 
             expected_types.each do |typename|
-              expect(number_of_completion_item_with_type(result,typename)).to be > 0
+              expect(number_of_completion_item_with_type(result, typename)).to be > 0
             end
           end
         end
@@ -459,6 +471,21 @@ EOT
         end
 
         it 'should return plain text' do
+          result = subject.resolve(@resolve_request)
+          expect(result.insertText).to match(/.+/)
+          expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::PLAINTEXT)
+        end
+      end
+
+      context 'for a Bolt function (run_task)' do
+        it 'should return the documentation' do
+          @resolve_request.data['name'] = 'run_task'
+          result = subject.resolve(@resolve_request)
+          expect(result.documentation).to match(/.+/)
+        end
+
+        it 'should return plain text' do
+          @resolve_request.data['name'] = 'run_task'
           result = subject.resolve(@resolve_request)
           expect(result.insertText).to match(/.+/)
           expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::PLAINTEXT)
