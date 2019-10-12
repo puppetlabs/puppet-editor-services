@@ -52,6 +52,48 @@ module PuppetLanguageServer
       sidecar_queue.execute_sync('resource_list', args)
     end
 
+    # Static data
+    def self.static_data_loaded?
+      @static_data_loaded.nil? ? false : @static_data_loaded
+    end
+
+    def self.load_static_data
+      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
+      @static_data_loaded = false
+
+      bolt_static_data = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+      Dir.glob(File.join(PuppetLanguageServer.static_data_dir, 'bolt-*.json')) do |path|
+        PuppetLanguageServer.log_message(:debug, "Importing static data file #{path}...")
+        # No need to catch errors here. As this is static data and is tested in rspec
+        # Sure, we could have corrupt/missing files on disk, but then we have bigger issues
+        data = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new.from_json!(File.open(path, 'rb:UTF-8') { |f| f.read })
+        data.each_list { |_, list| bolt_static_data.concat!(list) }
+      end
+
+      @inmemory_cache.import_sidecar_list!(bolt_static_data.classes,   :class,    :bolt)
+      @inmemory_cache.import_sidecar_list!(bolt_static_data.datatypes, :datatype, :bolt)
+      @inmemory_cache.import_sidecar_list!(bolt_static_data.functions, :function, :bolt)
+      @inmemory_cache.import_sidecar_list!(bolt_static_data.types,     :type,     :bolt)
+
+      bolt_static_data.each_list do |k, v|
+        if v.nil?
+          PuppetLanguageServer.log_message(:debug, "Static bolt data returned no #{k}")
+        else
+          PuppetLanguageServer.log_message(:debug, "Static bolt data returned #{v.count} #{k}")
+        end
+      end
+
+      @static_data_loaded = true
+    end
+
+    def self.load_static_data_async
+      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
+      @static_data_loaded = false
+      Thread.new do
+        load_static_data
+      end
+    end
+
     # Types
     def self.default_types_loaded?
       @default_types_loaded.nil? ? false : @default_types_loaded

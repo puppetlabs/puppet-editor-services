@@ -4,7 +4,7 @@ module PuppetLanguageServer
   module PuppetHelper
     class Cache
       SECTIONS = %i[class type function datatype].freeze
-      ORIGINS = %i[default workspace].freeze
+      ORIGINS = %i[default workspace bolt].freeze
 
       def initialize(_options = {})
         @cache_lock = Mutex.new
