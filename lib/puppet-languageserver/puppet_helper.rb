@@ -188,9 +188,9 @@ module PuppetLanguageServer
     end
 
     def self.datatype(name)
-      return nil if @default_functions_loaded == false
+      return nil if @default_datatypes_loaded == false
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
-      load_default_datatypes unless @default_functions_loaded
+      load_default_datatypes unless @default_datatypes_loaded
       @inmemory_cache.object_by_name(:datatype, name)
     end
 
