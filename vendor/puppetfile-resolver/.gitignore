@@ -1,0 +1,14 @@
+.git/
+.*.sw[op]
+.metadata
+.yardoc
+.yardwarns
+*.iml
+.bundle/
+.idea/
+bin/
+Gemfile.local
+Gemfile.lock
+tmp/
+vendor/
+.DS_Store

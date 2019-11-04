@@ -1,0 +1,46 @@
+inherit_from:
+- .rubocop_cocoapods.yml
+- .rubocop_todo.yml
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*_spec.rb'
+
+Metrics/LineLength:
+  Max: 120
+
+Metrics/MethodLength:
+  Max: 15
+
+AllCops:
+  Exclude:
+    - 'vendor/**/*'
+    - 'spec/resolver_integration_specs/**/*'
+    - 'bin/*'
+
+Style/TrailingCommaInArguments:
+  Enabled: false
+
+Style/TrailingCommaInLiteral:
+  Enabled: false
+
+Style/EmptyElse:
+  EnforcedStyle: empty
+
+RaiseArgs:
+  Enabled: false
+
+Lint/UnusedMethodArgument:
+  Exclude:
+    - 'lib/molinillo/modules/**/*'
+
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: always
+
+Layout/IndentHeredoc:
+  Enabled: false
+
+# CocoaPods default overrides
+
+Metrics/CyclomaticComplexity:
+  Enabled: true
