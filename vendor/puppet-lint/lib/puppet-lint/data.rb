@@ -171,21 +171,21 @@ class PuppetLint::Data
         tokens.select { |t| t.type == :COLON }.each do |colon_token|
           next unless colon_token.next_code_token && colon_token.next_code_token.type != :LBRACE
 
-          start_idx = tokens.index(colon_token)
-          next if start_idx < marker
+          rel_start_idx = tokens[marker..-1].index(colon_token)
+          break if rel_start_idx.nil?
+          start_idx = rel_start_idx + marker
           end_token = colon_token.next_token_of([:SEMIC, :RBRACE])
-          end_idx = tokens.index(end_token)
-
-          raise PuppetLint::SyntaxError, colon_token if end_idx.nil?
+          rel_end_idx = tokens[start_idx..-1].index(end_token)
+          raise PuppetLint::SyntaxError, colon_token if rel_end_idx.nil?
+          marker = rel_end_idx + start_idx
 
           result << {
             :start        => start_idx + 1,
-            :end          => end_idx,
-            :tokens       => tokens[start_idx..end_idx],
+            :end          => marker,
+            :tokens       => tokens[start_idx..marker],
             :type         => find_resource_type_token(start_idx),
-            :param_tokens => find_resource_param_tokens(tokens[start_idx..end_idx]),
+            :param_tokens => find_resource_param_tokens(tokens[start_idx..marker]),
           }
-          marker = end_idx
         end
         result
       end
@@ -201,6 +201,9 @@ class PuppetLint::Data
       lbrace_idx = tokens[0..index].rindex do |token|
         token.type == :LBRACE && token.prev_code_token.type != :QMARK
       end
+
+      raise PuppetLint::SyntaxError, tokens[index] if lbrace_idx.nil?
+
       tokens[lbrace_idx].prev_code_token
     end
 
@@ -212,9 +215,21 @@ class PuppetLint::Data
     #
     # Returns an Array of Token objects.
     def find_resource_param_tokens(resource_tokens)
-      resource_tokens.select do |token|
-        token.type == :NAME && token.next_code_token.type == :FARROW
+      param_tokens = []
+
+      iter_token = resource_tokens.first.prev_token
+
+      until iter_token.nil?
+        iter_token = iter_token.next_token_of(:NAME)
+
+        break unless resource_tokens.include?(iter_token)
+
+        if iter_token && iter_token.next_code_token.type == :FARROW
+          param_tokens << iter_token
+        end
       end
+
+      param_tokens
     end
 
     # Internal: Calculate the positions of all class definitions within the
