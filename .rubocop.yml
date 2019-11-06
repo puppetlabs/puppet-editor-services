@@ -47,7 +47,7 @@ Style/DateTime:
   Enabled: false
 
 # Please don't fail at failing.
-Lint/UnneededCopDisableDirective:
+Lint/RedundantCopDisableDirective:
   Enabled: false
 
 # Don't care
@@ -61,7 +61,7 @@ Metrics/ParameterLists:
 # In some cases readability is better without these cops enabled
 Style/ConditionalAssignment:
   Enabled: false
-Next:
+Style/Next:
   Enabled: false
 
 # Enforce LF line endings, even when on Windows
