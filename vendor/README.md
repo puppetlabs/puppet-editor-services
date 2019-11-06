@@ -11,6 +11,6 @@ Note - To improve the packaging size, test files etc. were stripped from the Gem
 Gem List
 --------
 
-* puppet-lint (https://github.com/rodjek/puppet-lint.git ref 2.3.6)
+* puppet-lint (https://github.com/rodjek/puppet-lint.git ref 2.4.2)
 * hiera-eyaml (https://github.com/voxpupuli/hiera-eyaml ref v2.1.0)
 
