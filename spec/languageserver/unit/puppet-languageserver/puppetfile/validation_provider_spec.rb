@@ -1,13 +1,31 @@
 require 'spec_helper'
+require 'puppetfile-resolver/cache/base'
+
+# Puppetfile Resolver cache which always says that results are cached
+# in order to stop the resolver using Spec Searchers.
+class MockCache < PuppetfileResolver::Cache::Base
+  def initialize(_initial_cache)
+    super(nil)
+  end
+
+  def exist?(name)
+    true
+  end
+
+  def load(name)
+    []
+  end
+end
 
 describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
+  let(:validation_options) { {:resolve_puppetfile => false} }
   let(:subject) { PuppetLanguageServer::Puppetfile::ValidationProvider }
 
   describe "#validate" do
     context 'with an empty Puppetfile' do
       let(:content) { '' }
       it 'should return no validation errors' do
-        result = subject.validate(content, nil)
+        result = subject.validate(content, validation_options)
 
         expect(result).to eq([])
       end
@@ -40,7 +58,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       end
 
       it 'should return no validation errors' do
-        result = subject.validate(content, nil)
+        result = subject.validate(content, validation_options)
 
         expect(result).to eq([])
       end
@@ -65,7 +83,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       end
 
       it 'should return a validation error' do
-        lint_error = subject.validate(content, nil)[0]
+        lint_error = subject.validate(content, validation_options)[0]
 
         expect(lint_error.source).to eq('Puppet')
         expect(lint_error.message).to match('syntax error')
@@ -94,7 +112,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       end
 
       it 'should return a validation error' do
-        lint_error = subject.validate(content, nil)[0]
+        lint_error = subject.validate(content, validation_options)[0]
 
         expect(lint_error.source).to eq('Puppet')
         expect(lint_error.message).to match('not_loadable')
@@ -125,7 +143,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       end
 
       it 'should return a validation error' do
-        lint_error = subject.validate(content, nil)
+        lint_error = subject.validate(content, validation_options)
         expect(lint_error.count).to eq(1)
         lint_error = lint_error[0]
 
@@ -155,7 +173,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       end
 
       it 'should return a validation error on the specified line' do
-        lint_error = subject.validate(content, nil)[0]
+        lint_error = subject.validate(content, validation_options)[0]
 
         expect(lint_error.source).to eq('Puppet')
         expect(lint_error.message).to match('mod_BROKEN')
@@ -175,7 +193,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       end
 
       it 'should return a validation error' do
-        lint_error = subject.validate(content, nil)[0]
+        lint_error = subject.validate(content, validation_options)[0]
 
         expect(lint_error.source).to eq('Puppet')
         expect(lint_error.message).to match('doesn\'t have an implementation')
@@ -200,8 +218,8 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       end
 
       it 'should return all validation error' do
-        lint_errors = subject.validate(content, nil)
-        expect(lint_errors.count).to eq(3)
+        lint_errors = subject.validate(content, validation_options)
+        expect(lint_errors.count).to eq(2)
 
         lint_error = lint_errors[0]
         expect(lint_error.source).to eq('Puppet')
@@ -216,13 +234,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
         expect(lint_error.range.start.line).to eq(4)
         expect(lint_error.range.end.line).to eq(4)
         expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
-
-        lint_error = lint_errors[2]
-        expect(lint_error.source).to eq('Puppet')
-        expect(lint_error.message).to match(/Duplicate.+duplicatemodule/)
-        expect(lint_error.range.start.line).to eq(7)
-        expect(lint_error.range.end.line).to eq(7)
-        expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
+        expect(lint_error.relatedInformation).to_not be_empty
       end
     end
 
@@ -235,7 +247,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
               :git => 'https://github.com/username/repo'
             EOT
 
-          result = subject.validate(content, nil)
+          result = subject.validate(content, validation_options)
 
           expect(result).to eq([])
         end
@@ -251,7 +263,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
               :svn => 'svn://host/repo'
             EOT
 
-          result = subject.validate(content, nil)
+          result = subject.validate(content, validation_options)
 
           expect(result).to eq([])
         end
@@ -267,7 +279,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
               :local => true
             EOT
 
-          result = subject.validate(content, nil)
+          result = subject.validate(content, validation_options)
 
           expect(result).to eq([])
         end
@@ -295,7 +307,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
               mod '#{good_module_name}', '#{testcase}'
               EOT
 
-            result = subject.validate(content, nil)
+            result = subject.validate(content, validation_options)
 
             expect(result).to eq([])
           end
@@ -312,7 +324,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
               mod '#{good_module_name}', '#{testcase}'
               EOT
 
-            lint_error = subject.validate(content, nil)
+            lint_error = subject.validate(content, validation_options)
             expect(lint_error.count).to eq(1)
             lint_error = lint_error[0]
 
@@ -337,7 +349,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
               mod '#{testcase}', '#{good_module_version}'
               EOT
 
-            result = subject.validate(content, nil)
+            result = subject.validate(content, validation_options)
 
             expect(result).to eq([])
           end
@@ -354,7 +366,7 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
               mod '#{testcase}', '#{good_module_version}'
               EOT
 
-            lint_error = subject.validate(content, nil)
+            lint_error = subject.validate(content, validation_options)
             expect(lint_error.count).to eq(1)
             lint_error = lint_error[0]
 
@@ -366,6 +378,54 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
             expect(lint_error.range).to_not be_nil
             expect(lint_error.severity).to eq(LSP::DiagnosticSeverity::ERROR)
           end
+        end
+      end
+    end
+
+    context 'and puppetfile resolution enabled' do
+      let(:module_path) { ['/some/path'] }
+      let(:puppet_version) { '6.0.0' }
+      let(:document_uri) { 'file:///Puppetfile' }
+      let(:validation_options) do
+        {
+          :resolve_puppetfile => true,
+          :module_path        => module_path,
+          :document_uri       => document_uri,
+          :puppet_version     => puppet_version
+        }
+      end
+      let(:mock_cache) do
+        MockCache.new(nil)
+      end
+
+      let(:content) { '' }
+
+      before(:each) do
+        allow(subject).to receive(:resolver_cache).and_return(mock_cache)
+      end
+
+      it 'should call validate_resolution' do
+        expect(subject).to receive(:validate_resolution).with(
+          Object,
+          document_uri,
+          mock_cache,
+          module_path,
+          puppet_version
+        ).and_return([])
+
+        subject.validate(content, validation_options)
+      end
+
+      context 'with a missing module' do
+        let(:content) { 'mod "module1", :local => true' }
+
+        it 'should return a missing module diagnostic' do
+          result = subject.validate(content, validation_options)
+          expect(result.count).to eq(1)
+          expect(result[0]).to have_attributes(
+            :severity => LSP::DiagnosticSeverity::HINT,
+            :message  => /module1/
+          )
         end
       end
     end

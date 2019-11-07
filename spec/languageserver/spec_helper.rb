@@ -5,6 +5,8 @@ root = File.join(File.dirname(__FILE__),'..','..')
 $LOAD_PATH.unshift(File.join(root,'lib'))
 # Add the vendored gems into the load path
 $LOAD_PATH.unshift(File.join(root,'vendor','puppet-lint','lib'))
+$LOAD_PATH.unshift(File.join(root,'vendor','molinillo','lib'))
+$LOAD_PATH.unshift(File.join(root,'vendor','puppetfile-resolver','lib'))
 
 require 'puppet_languageserver'
 $fixtures_dir = File.join(File.dirname(__FILE__),'fixtures')

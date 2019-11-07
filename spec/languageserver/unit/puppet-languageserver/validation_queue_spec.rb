@@ -50,6 +50,7 @@ describe 'validation_queue' do
       let(:file_content2) { FILE_CONTENT + "_2" }
       let(:file_content3) { FILE_CONTENT + "_3" }
       let(:validation_result) { [{ 'result' => 'MockResult' }] }
+      let(:validation_options) { { :resolve_puppetfile => false } }
 
       before(:each) do
       end
@@ -74,7 +75,7 @@ describe 'validation_queue' do
         # We only expect the following results to be returned
         expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(file_content2, Hash).and_return(validation_result)
         expect(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).with(file_content1).and_return(validation_result)
-        expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(file_content1).and_return(validation_result)
+        expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(file_content1, Hash).and_return(validation_result)
         expect(PuppetLanguageServer::ValidationQueue).to receive(:send_diagnostics).with(connection_id, MANIFEST_FILENAME, validation_result)
         expect(PuppetLanguageServer::ValidationQueue).to receive(:send_diagnostics).with(connection_id, EPP_FILENAME, validation_result)
         expect(PuppetLanguageServer::ValidationQueue).to receive(:send_diagnostics).with(connection_id, PUPPETFILE_FILENAME, validation_result)
@@ -103,7 +104,7 @@ describe 'validation_queue' do
         validation_result = [{ 'result' => 'MockResult' }]
 
         before(:each) do
-          expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(FILE_CONTENT).and_return(validation_result)
+          expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(FILE_CONTENT, Hash).and_return(validation_result)
         end
 
         it_should_behave_like "single document which sends validation results", PUPPETFILE_FILENAME, FILE_CONTENT, validation_result
@@ -133,7 +134,7 @@ describe 'validation_queue' do
         subject.documents.set_document(file_uri, file_content, document_version)
         expect(PuppetLanguageServer::ValidationQueue).to receive(:send_diagnostics).with(connection_id, file_uri, validation_result)
 
-        subject.validate_sync(file_uri, document_version, connection_id, )
+        subject.validate_sync(file_uri, document_version, connection_id)
       end
     end
 
@@ -165,7 +166,7 @@ describe 'validation_queue' do
       validation_result = [{ 'result' => 'MockResult' }]
 
       before(:each) do
-        expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(FILE_CONTENT).and_return(validation_result)
+        expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(FILE_CONTENT, Hash).and_return(validation_result)
       end
 
       it_should_behave_like "document which sends validation results", PUPPETFILE_FILENAME, FILE_CONTENT, validation_result

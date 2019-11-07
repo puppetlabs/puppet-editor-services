@@ -28,6 +28,19 @@ module PuppetLanguageServer
       sidecar_queue.cache = @inmemory_cache
     end
 
+    def self.module_path
+      return @module_path unless @module_path.nil?
+      # TODO: It would be nice if this wasn't using the whole puppet environment to calculate the modulepath directoties
+      # In the meantime memoize it. Currently you can't change the modulepath mid-process.
+      begin
+        env = Puppet.lookup(:environments).get!(Puppet.settings[:environment])
+      rescue Puppet::Environments::EnvironmentNotFound, StandardError
+        env = Puppet.lookup(:current_environment)
+      end
+      return [] if env.nil?
+      @module_path = env.modulepath
+    end
+
     # Node Graph
     def self.get_node_graph(content, local_workspace)
       with_temporary_file(content) do |filepath|
