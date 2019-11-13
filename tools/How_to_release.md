@@ -4,7 +4,7 @@
 
     * Move the Unreleased parts of the changelog to the released section
 
-    * Modify `lib/puppet-editor-services/version.rb` with the new version number
+    * Modify `lib/puppet_editor_services/version.rb` with the new version number
 
 2. Once merged get the commit id of the preparation
 

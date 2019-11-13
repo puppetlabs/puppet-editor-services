@@ -47,7 +47,7 @@ module PuppetDebugServer
     end
 
     def initialize
-      @message_router = nil
+      @message_handler = nil
       @flow_control = PuppetDebugServer::DebugSession::FlowControl.new(self)
       @hook_manager = PuppetDebugServer::Hooks.new
       @hook_handlers = PuppetDebugServer::DebugSession::HookHandlers.new(self)
@@ -75,7 +75,7 @@ module PuppetDebugServer
     # @see DSP::OutputEvent
     # @param options [Hash] Options for the output
     def send_output_event(options)
-      @message_router.send_output_event(options) unless @message_router.nil?
+      @message_handler.send_output_event(options) unless @message_handler.nil?
     end
 
     # Sends a StoppedEvent to the Debug Client
@@ -83,7 +83,7 @@ module PuppetDebugServer
     # @param reason [String] Why the session has stopped
     # @param options [Hash] Options for the output
     def send_stopped_event(reason, options = {})
-      @message_router.send_stopped_event(reason, options) unless @message_router.nil?
+      @message_handler.send_stopped_event(reason, options) unless @message_handler.nil?
     end
 
     # Sends a ThreadEvent to the Debug Client
@@ -91,28 +91,28 @@ module PuppetDebugServer
     # @param reason [String] Why the the thread status has changed
     # @param thread_id [Integer] The ID of the thread
     def send_thread_event(reason, thread_id)
-      @message_router.send_thread_event(reason, thread_id) unless @message_router.nil?
+      @message_handler.send_thread_event(reason, thread_id) unless @message_handler.nil?
     end
 
     # Sends an TerminatedEvent to the Debug Client to indicated the Debug Server is terminating
     # @see DSP::TerminatedEvent
     def send_termination_event
-      @message_router.send_termination_event unless @message_router.nil?
+      @message_handler.send_termination_event unless @message_handler.nil?
     end
 
     # Sends an ExitedEvent to the Debug Client
     # @see DSP::ExitedEvent
     # @param exitcode [Integer] The exit code from the process. This is the puppet detailed exit code
     def send_exited_event(exitcode)
-      @message_router.send_exited_event(exitcode) unless @message_router.nil?
+      @message_handler.send_exited_event(exitcode) unless @message_handler.nil?
     end
 
     # Sets up the debug session ready for actual use. This is different from initialize_session in that
     # it requires a running RPC server
-    # @param message_router [PuppetDebugServer::MessageRouter] The message router used to communicate with the Debug Client.
+    # @param message_handler [PuppetDebugServer::MessageRouter] The message router used to communicate with the Debug Client.
     # @param options [Hash<String, String>] Hash of launch arguments from the DSP launch request
-    def setup(message_router, options = {})
-      @message_router = message_router
+    def setup(message_handler, options = {})
+      @message_handler = message_handler
       @session_options = options
       flow_control.assert_flag(:session_setup)
     end

@@ -9,16 +9,16 @@ describe 'validation_queue' do
   FILE_CONTENT = "file_content which causes errros\n <%- Wee!\n class 'foo' {'"
 
   let(:subject) { PuppetLanguageServer::ValidationQueue }
-  let(:connection) { PuppetLanguageServer::MessageRouter.new }
+  let(:connection_id) { 'abc123' }
   let(:document_version) { 10 }
 
   describe '#enqueue' do
     shared_examples_for "single document which sends validation results" do |file_uri, file_content, validation_result|
       it 'should send validation results' do
         subject.documents.set_document(file_uri, file_content, document_version)
-        expect(connection).to receive(:reply_diagnostics).with(file_uri, validation_result)
+        expect(PuppetLanguageServer::ValidationQueue).to receive(:send_diagnostics).with(connection_id, file_uri, validation_result)
 
-        subject.enqueue(file_uri, document_version, connection)
+        subject.enqueue(file_uri, document_version, connection_id)
         # Wait for the thread to complete
         subject.drain_queue
       end
@@ -36,9 +36,9 @@ describe 'validation_queue' do
       it 'should not return validation results' do
         subject.documents.set_document(MANIFEST_FILENAME, FILE_CONTENT, document_version)
 
-        expect(connection).to_not receive(:reply_diagnostics)
+        expect(PuppetLanguageServer::ValidationQueue).to_not receive(:send_diagnostics)
 
-        subject.enqueue(MANIFEST_FILENAME, document_version + 1, connection)
+        subject.enqueue(MANIFEST_FILENAME, document_version + 1, connection_id)
         # Wait for the thread to complete
         subject.drain_queue
       end
@@ -64,25 +64,25 @@ describe 'validation_queue' do
 
         # Preconfigure the validation queue
         subject.reset_queue([
-          { 'file_uri' => MANIFEST_FILENAME,   'doc_version' => document_version + 0, 'document_type' => :manifest,   'connection_object' => connection },
-          { 'file_uri' => MANIFEST_FILENAME,   'doc_version' => document_version + 1, 'document_type' => :manifest,   'connection_object' => connection },
-          { 'file_uri' => MANIFEST_FILENAME,   'doc_version' => document_version + 3, 'document_type' => :manifest,   'connection_object' => connection },
-          { 'file_uri' => EPP_FILENAME,        'doc_version' => document_version + 1, 'document_type' => :epp,        'connection_object' => connection },
-          { 'file_uri' => PUPPETFILE_FILENAME, 'doc_version' => document_version + 1, 'document_type' => :puppetfile, 'connection_object' => connection },
+          { 'file_uri' => MANIFEST_FILENAME,   'doc_version' => document_version + 0, 'document_type' => :manifest,   'connection_id' => connection_id },
+          { 'file_uri' => MANIFEST_FILENAME,   'doc_version' => document_version + 1, 'document_type' => :manifest,   'connection_id' => connection_id },
+          { 'file_uri' => MANIFEST_FILENAME,   'doc_version' => document_version + 3, 'document_type' => :manifest,   'connection_id' => connection_id },
+          { 'file_uri' => EPP_FILENAME,        'doc_version' => document_version + 1, 'document_type' => :epp,        'connection_id' => connection_id },
+          { 'file_uri' => PUPPETFILE_FILENAME, 'doc_version' => document_version + 1, 'document_type' => :puppetfile, 'connection_id' => connection_id },
         ])
 
         # We only expect the following results to be returned
         expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(file_content2, Hash).and_return(validation_result)
         expect(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).with(file_content1).and_return(validation_result)
         expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(file_content1).and_return(validation_result)
-        expect(connection).to receive(:reply_diagnostics).with(MANIFEST_FILENAME, validation_result)
-        expect(connection).to receive(:reply_diagnostics).with(EPP_FILENAME, validation_result)
-        expect(connection).to receive(:reply_diagnostics).with(PUPPETFILE_FILENAME, validation_result)
+        expect(PuppetLanguageServer::ValidationQueue).to receive(:send_diagnostics).with(connection_id, MANIFEST_FILENAME, validation_result)
+        expect(PuppetLanguageServer::ValidationQueue).to receive(:send_diagnostics).with(connection_id, EPP_FILENAME, validation_result)
+        expect(PuppetLanguageServer::ValidationQueue).to receive(:send_diagnostics).with(connection_id, PUPPETFILE_FILENAME, validation_result)
 
         # Simulate a new document begin added by adding it to the document store and
         # enqueue validation for a version that it's in the middle of the versions in the queue
         subject.documents.set_document(MANIFEST_FILENAME, file_content2, document_version + 2)
-        subject.enqueue(MANIFEST_FILENAME, document_version + 2, connection)
+        subject.enqueue(MANIFEST_FILENAME, document_version + 2, connection_id)
         # Wait for the thread to complete
         subject.drain_queue
       end
@@ -131,9 +131,9 @@ describe 'validation_queue' do
     shared_examples_for "document which sends validation results" do |file_uri, file_content, validation_result|
       it 'should send validation results' do
         subject.documents.set_document(file_uri, file_content, document_version)
-        expect(connection).to receive(:reply_diagnostics).with(file_uri, validation_result)
+        expect(PuppetLanguageServer::ValidationQueue).to receive(:send_diagnostics).with(connection_id, file_uri, validation_result)
 
-        subject.validate_sync(file_uri, document_version, connection)
+        subject.validate_sync(file_uri, document_version, connection_id, )
       end
     end
 
@@ -146,9 +146,9 @@ describe 'validation_queue' do
     end
 
     it 'should not send validation results for documents that do not exist' do
-      expect(connection).to_not receive(:reply_diagnostics)
+      expect(PuppetLanguageServer::ValidationQueue).to_not receive(:send_diagnostics)
 
-      subject.validate_sync(MISSING_FILENAME, 1, connection)
+      subject.validate_sync(MISSING_FILENAME, 1, connection_id)
     end
 
     context 'for a puppet manifest file' do

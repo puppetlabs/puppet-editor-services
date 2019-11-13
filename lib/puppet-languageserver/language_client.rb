@@ -2,13 +2,13 @@
 
 module PuppetLanguageServer
   class LanguageClient
-    attr_reader :message_router
+    attr_reader :message_handler
 
     # Client settings
     attr_reader :format_on_type
 
-    def initialize(message_router)
-      @message_router = message_router
+    def initialize(message_handler)
+      @message_handler = message_handler
       @client_capabilites = {}
 
       # Internal registry of dynamic registrations and their current state
@@ -33,7 +33,7 @@ module PuppetLanguageServer
       params = LSP::ConfigurationParams.new.from_h!('items' => [])
       params.items << LSP::ConfigurationItem.new.from_h!('section' => 'puppet')
 
-      message_router.json_rpc_handler.send_client_request('workspace/configuration', params)
+      message_handler.protocol.send_client_request('workspace/configuration', params)
       true
     end
 
@@ -80,7 +80,7 @@ module PuppetLanguageServer
       @registrations[method] = [] if @registrations[method].nil?
       @registrations[method] << { :registered => false, :state => :pending, :id => id }
 
-      message_router.json_rpc_handler.send_client_request('client/registerCapability', params)
+      message_handler.protocol.send_client_request('client/registerCapability', params)
       true
     end
 
@@ -105,15 +105,15 @@ module PuppetLanguageServer
         return true
       end
 
-      message_router.json_rpc_handler.send_client_request('client/unregisterCapability', params)
+      message_handler.protocol.send_client_request('client/unregisterCapability', params)
       true
     end
 
     def parse_register_capability_response!(response, original_request)
-      raise 'Response is not from client/registerCapability request' unless original_request['method'] == 'client/registerCapability'
+      raise 'Response is not from client/registerCapability request' unless original_request.rpc_method == 'client/registerCapability'
 
-      unless response.key?('result')
-        original_request['params'].registrations.each do |reg|
+      unless response.is_successful
+        original_request.params.registrations.each do |reg|
           # Mark the registration as completed and failed
           @registrations[reg.method__lsp] = [] if @registrations[reg.method__lsp].nil?
           @registrations[reg.method__lsp].select { |i| i[:id] == reg.id }.each { |i| i[:registered] = false; i[:state] = :complete } # rubocop:disable Style/Semicolon This is fine
@@ -121,7 +121,7 @@ module PuppetLanguageServer
         return true
       end
 
-      original_request['params'].registrations.each do |reg|
+      original_request.params.registrations.each do |reg|
         PuppetLanguageServer.log_message(:info, "Succesfully dynamically registered the #{reg.method__lsp} method")
 
         # Mark the registration as completed and succesful
@@ -137,10 +137,10 @@ module PuppetLanguageServer
     end
 
     def parse_unregister_capability_response!(response, original_request)
-      raise 'Response is not from client/unregisterCapability request' unless original_request['method'] == 'client/unregisterCapability'
+      raise 'Response is not from client/unregisterCapability request' unless original_request.rpc_method == 'client/unregisterCapability'
 
-      unless response.key?('result')
-        original_request['params'].unregisterations.each do |reg|
+      unless response.is_successful
+        original_request.params.unregisterations.each do |reg|
           # Mark the registration as completed and failed
           @registrations[reg.method__lsp] = [] if @registrations[reg.method__lsp].nil?
           @registrations[reg.method__lsp].select { |i| i[:id] == reg.id && i[:registered] }.each { |i| i[:state] = :complete }
@@ -149,7 +149,7 @@ module PuppetLanguageServer
         return true
       end
 
-      original_request['params'].unregisterations.each do |reg|
+      original_request.params.unregisterations.each do |reg|
         PuppetLanguageServer.log_message(:info, "Succesfully dynamically unregistered the #{reg.method__lsp} method")
 
         # Remove registrations

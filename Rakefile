@@ -123,7 +123,7 @@ task :build do
   Dir.mkdir(output_dir) unless Dir.exists?(output_dir)
 
   puts "Fetch editor services version..."
-  require_relative 'lib/puppet-editor-services/version'
+  require_relative 'lib/puppet_editor_services/version'
   version = PuppetEditorServices.version
   puts "Editor services is v#{version}"
 

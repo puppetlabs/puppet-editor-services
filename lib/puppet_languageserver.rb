@@ -53,11 +53,10 @@ module PuppetLanguageServer
     # These libraries do not require the puppet gem and required for the
     # server to respond to clients.
     %w[
-      json_rpc_handler
       document_store
       crash_dump
       language_client
-      message_router
+      message_handler
       server_capabilities
     ].each do |lib|
       begin
@@ -212,6 +211,7 @@ module PuppetLanguageServer
     log_message(:debug, 'Loading gems...')
     require_gems(options)
     return unless active?
+
     log_message(:info, "Using Puppet v#{Puppet.version}")
 
     log_message(:debug, "Detected additional puppet settings #{options[:puppet_settings]}")
@@ -278,25 +278,30 @@ module PuppetLanguageServer
     log_message(:info, 'Starting RPC Server...')
     options[:servicename] = 'LANGUAGE SERVER'
 
+    require 'puppet_editor_services/protocol/json_rpc'
+
+    server_options = options
+    protocol_options = { :class => PuppetEditorServices::Protocol::JsonRPC }.merge(options)
+    handler_options = { :class => PuppetLanguageServer::MessageHandler }.merge(options)
+
     unless active?
-      options[:message_router] = @message_router = PuppetLanguageServer::DisabledMessageRouter.new(options)
+      handler_options[:class] = PuppetLanguageServer::DisabledMessageHandler
       log_message(:info, 'Configured the Language Server to use the Disabled Message Router')
     end
 
     if options[:stdio]
-      log_message(:debug, 'Using STDIO')
-      server = PuppetEditorServices::SimpleSTDIOServer.new
-
+      log_message(:debug, 'Using STDIO Server')
+      require 'puppet_editor_services/server/stdio'
+      server = ::PuppetEditorServices::Server::Stdio.new(server_options, protocol_options, handler_options)
       trap('INT') { server.stop }
-      server.start(PuppetLanguageServer::JSONRPCHandler, options)
     else
-      log_message(:debug, 'Using Simple TCP')
-      server = PuppetEditorServices::SimpleTCPServer.new
-
-      server.add_service(options[:ipaddress], options[:port])
+      log_message(:debug, 'Using TCP Server')
+      require 'puppet_editor_services/server/tcp'
+      # TODO: Add max threads?
+      server = ::PuppetEditorServices::Server::Tcp.new(server_options, protocol_options, handler_options)
       trap('INT') { server.stop_services(true) }
-      server.start(PuppetLanguageServer::JSONRPCHandler, options, 2)
     end
+    server.start
 
     log_message(:info, 'Language Server exited.')
   end
