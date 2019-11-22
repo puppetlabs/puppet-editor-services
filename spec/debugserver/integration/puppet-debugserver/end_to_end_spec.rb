@@ -32,6 +32,12 @@ describe 'End to End Testing' do
     @debug_stderr.close
   }
 
+  def modified_puppet_stack_trace
+    # Due to a modification to the way stack traces are treated in Puppet 6.11.0, the stack size is different
+    # See https://tickets.puppetlabs.com/browse/PUP-10150 for more infomation
+    @modified_puppet_stack_trace ||= Gem::Version.create(Puppet.version) >= Gem::Version.create('6.11.0')
+  end
+
   context 'Processing an empty manifest with no breakpoints' do
     let(:manifest_file) { File.join($fixtures_dir, 'environments', 'testfixtures', 'manifests', 'empty.pp') }
     let(:noop) { true }
@@ -92,10 +98,14 @@ describe 'End to End Testing' do
       result = @client.data_from_request_seq_id(@client.current_seq_id)
       # As we're only in the root, only two frames should be available.  The error and where it was called from
       expect(result['success']).to be true
-      expect(result['body']['stackFrames'].count).to eq(2)
-      expect(result['body']['stackFrames'][0]).to include('line' => 3)
-      expect(result['body']['stackFrames'][1]).to include('line' => 3)
-
+      if modified_puppet_stack_trace
+        expect(result['body']['stackFrames'].count).to eq(1)
+        expect(result['body']['stackFrames'][0]).to include('line' => 3)
+      else
+        expect(result['body']['stackFrames'].count).to eq(2)
+        expect(result['body']['stackFrames'][0]).to include('line' => 3)
+        expect(result['body']['stackFrames'][1]).to include('line' => 3)
+      end
       # continue_request
       @client.send_data(@client.continue_request(@client.next_seq_id, thread_id))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
