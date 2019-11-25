@@ -256,7 +256,11 @@ module PuppetDebugServer
         end
 
         break_description = break_display_text if break_description.empty?
-        stack_trace = Puppet::Pops::PuppetStack.stacktrace
+        # Due to a modification to the way stack traces are treated in Puppet 6.11.0, the stack
+        # now includes entries for files in Line 0, which doesn't exist. These indicate that a file
+        # has started to be processed/parsed/compiled. So we just ignore them
+        # See https://tickets.puppetlabs.com/browse/PUP-10150 for more infomation
+        stack_trace = Puppet::Pops::PuppetStack.stacktrace.reject { |item| item[1].zero? }
         # Due to https://github.com/puppetlabs/puppet/commit/0f96dd918b6184261bc2219e5e68e246ffbeac10
         # Prior to Puppet 4.8.0, stacktrace is in reverse order
         stack_trace.reverse! if Gem::Version.new(Puppet.version) < Gem::Version.new('4.8.0')

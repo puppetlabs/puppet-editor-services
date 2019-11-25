@@ -69,6 +69,84 @@ module Puppet
   end
 end
 
+# The Null Loader was removed in Puppet 6.11.0+ (and friends) so monkey patch it back in!
+# Last known source is at - https://github.com/puppetlabs/puppet/blob/6.10.1/lib/puppet/pops/loader/null_loader.rb
+if defined?(::Puppet::Pops::Loader::NullLoader).nil?
+  # This came direct from Puppet so ignore Rubocop
+  # rubocop:disable Lint/UnusedMethodArgument
+  # rubocop:disable Style/ClassAndModuleChildren
+  # rubocop:disable Layout/SpaceAroundEqualsInParameterDefault
+  # rubocop:disable Style/StringLiterals
+  # rubocop:disable Style/TrivialAccessors
+  # rubocop:disable Style/DefWithParentheses
+  # The null loader is empty and delegates everything to its parent if it has one.
+  #
+  class ::Puppet::Pops::Loader::NullLoader < ::Puppet::Pops::Loader::Loader
+    attr_reader :loader_name
+
+    # Construct a NullLoader, optionally with a parent loader
+    #
+    def initialize(parent_loader=nil, loader_name = "null-loader")
+      super(loader_name)
+      @parent = parent_loader
+    end
+
+    # Has parent if one was set when constructed
+    def parent
+      @parent
+    end
+
+    def find(typed_name)
+      if @parent.nil?
+        nil
+      else
+        @parent.find(typed_name)
+      end
+    end
+
+    def load_typed(typed_name)
+      if @parent.nil?
+        nil
+      else
+        @parent.load_typed(typed_name)
+      end
+    end
+
+    def loaded_entry(typed_name, check_dependencies = false)
+      if @parent.nil?
+        nil
+      else
+        @parent.loaded_entry(typed_name, check_dependencies)
+      end
+    end
+
+    # Has no entries on its own - always nil
+    def get_entry(typed_name)
+      nil
+    end
+
+    # Finds nothing, there are no entries
+    def find(name)
+      nil
+    end
+
+    # Cannot store anything
+    def set_entry(typed_name, value, origin = nil)
+      nil
+    end
+
+    def to_s()
+      "(NullLoader '#{loader_name}')"
+    end
+  end
+  # rubocop:enable Lint/UnusedMethodArgument
+  # rubocop:enable Style/ClassAndModuleChildren
+  # rubocop:enable Layout/SpaceAroundEqualsInParameterDefault
+  # rubocop:enable Style/StringLiterals
+  # rubocop:enable Style/TrivialAccessors
+  # rubocop:enable Style/DefWithParentheses
+end
+
 # While this is not a monkey patch, but a new class, this class is used purely to
 # enumerate the paths of puppet "things" that aren't already covered as part of the
 # usual loaders. It is implemented as a null loader as it can't actually _load_
