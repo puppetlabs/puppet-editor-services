@@ -29,10 +29,10 @@ module PuppetLanguageServer
         # The cursor should be at the end of a hashrocket, otherwise exit
         return result unless cursor_token.type == :FARROW
 
-        # Find the start of the hash with respect to the cursor
-        start_brace = cursor_token.prev_token_of(:LBRACE, skip_blocks: true)
-        # Find the end  of the hash with respect to the cursor
-        end_brace = cursor_token.next_token_of(:RBRACE, skip_blocks: true)
+        # Find the start of the hash (or semicolon for multi-resource definitions) with respect to the cursor
+        start_brace = cursor_token.prev_token_of(%i[LBRACE SEMIC], skip_blocks: true)
+        # Find the end of the hash (or semicolon for multi-resource definitions) with respect to the cursor
+        end_brace = cursor_token.next_token_of(%i[RBRACE SEMIC], skip_blocks: true)
 
         # The line count between the start and end brace needs to be at least 2 lines. Otherwise there's nothing to align to
         return result if end_brace.nil? || start_brace.nil? || end_brace.line - start_brace.line <= 2

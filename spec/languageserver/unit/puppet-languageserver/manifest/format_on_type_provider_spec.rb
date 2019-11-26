@@ -102,6 +102,35 @@ MANIFEST
         expect(result[0].to_h).to eq({"range"=>{"start"=>{"character"=>9, "line"=>5}, "end"=>{"character"=>13, "line"=>5}}, "newText"=>" "})
       end
 
+      context "when declaring multiple resources in the title" do
+        let(:content) do <<-MANIFEST
+file {
+  default:
+    a => 'value',
+    b   => 'value2',
+  ;
+  'title1':
+    a  => 'value1',
+    bcd => 'value2',
+    e    => 'value3',
+  ;
+  'title2':
+    a => directory,
+    b  => '0770',
+  ;
+}
+MANIFEST
+        end
+
+        it 'should return text edits only for the inner resource' do
+          result = subject.format(content, 6, 9, trigger_character, formatting_options)
+          # The expected TextEdits should edit the `a  =>` and `e    =>` in the middle resource only
+          expect(result.count).to eq(2)
+          expect(result[0].to_h).to eq({"range"=>{"start"=>{"character"=>5, "line"=>6}, "end"=>{"character"=>7, "line"=>6}}, "newText"=>"   "})
+          expect(result[1].to_h).to eq({"range"=>{"start"=>{"character"=>5, "line"=>8}, "end"=>{"character"=>9, "line"=>8}}, "newText"=>"   "})
+        end
+      end
+
       # Invalid scenarios
       [
         { name: 'only one line',                      content: "{\n  oneline    =>\n}\n" },
