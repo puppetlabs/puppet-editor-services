@@ -116,6 +116,7 @@ describe 'completion_provider' do
 
     context "Given a simple valid manifest" do
       let(:content) { <<-EOT
+
 class Alice {
 
   user { 'Bob':
@@ -143,7 +144,7 @@ EOT
         let(:char_num) { 0 }
         let(:expected_types) { ['keyword','resource_type','function','resource_class'] }
 
-        [0, 8].each do |line_num|
+        [0, 9].each do |line_num|
           it "should return a list of keyword, resource_type, function, resource_class regardless of cursor location (Testing line #{line_num})" do
             result = subject.complete(content, line_num, char_num)
 
@@ -160,7 +161,7 @@ EOT
 
       [
         { :name => 'class', :line_num => 1 },
-        { :name => 'defined type', :line_num => 18 },
+        { :name => 'defined type', :line_num => 19 },
       ].each do |testcase|
         describe "When inside the root of a #{testcase[:name]}" do
           let(:char_num) { 0 }
@@ -181,7 +182,7 @@ EOT
       end
 
       describe "When inside the root of a resource" do
-        let(:line_num) { 11 }
+        let(:line_num) { 12 }
         let(:char_num) { 0 }
         let(:expected_types) { ['resource_parameter','resource_property'] }
 
