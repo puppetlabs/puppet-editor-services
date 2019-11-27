@@ -5,6 +5,8 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'lib'))
 # Add the vendored gems into the load path
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'vendor', 'puppet-lint', 'lib'))
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'vendor', 'molinillo', 'lib'))
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), 'vendor', 'puppetfile-resolver', 'lib'))
 
 require 'puppet_languageserver'
 

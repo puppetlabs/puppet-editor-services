@@ -55,7 +55,17 @@ task :gem_revendor do
       :directory => 'hiera-eyaml',
       :github_repo => 'https://github.com/voxpupuli/hiera-eyaml',
       :github_ref => 'v2.1.0',
-    }
+    },
+    {
+      :directory => 'puppetfile-resolver',
+      :github_repo => 'https://github.com/lingua-pupuli/puppetfile-resolver.git',
+      :github_ref => '0.0.3',
+    },
+    {
+      :directory => 'molinillo',
+      :github_repo => 'https://github.com/CocoaPods/Molinillo.git',
+      :github_ref => '0.6.6',
+    },
   ]
 
   # Clean out the vendor directory first

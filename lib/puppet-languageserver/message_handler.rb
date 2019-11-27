@@ -257,7 +257,7 @@ module PuppetLanguageServer
       content = json_rpc_message.params['textDocument']['text']
       doc_version = json_rpc_message.params['textDocument']['version']
       documents.set_document(file_uri, content, doc_version)
-      PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, client_handler_id)
+      enqueue_validation(file_uri, doc_version, client_handler_id)
     end
 
     def notification_textdocument_didclose(_, json_rpc_message)
@@ -272,7 +272,7 @@ module PuppetLanguageServer
       content = json_rpc_message.params['contentChanges'][0]['text'] # TODO: Bad hardcoding zero
       doc_version = json_rpc_message.params['textDocument']['version']
       documents.set_document(file_uri, content, doc_version)
-      PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, client_handler_id)
+      enqueue_validation(file_uri, doc_version, client_handler_id)
     end
 
     def notification_textdocument_didsave(_, _json_rpc_message)
@@ -317,6 +317,18 @@ module PuppetLanguageServer
     def unhandled_exception(error, options)
       super(error, options)
       PuppetLanguageServer::CrashDump.write_crash_file(error, nil, options)
+    end
+
+    private
+
+    def enqueue_validation(file_uri, doc_version, client_handler_id)
+      options = {}
+      if documents.document_type(file_uri) == :puppetfile
+        options[:resolve_puppetfile] = language_client.use_puppetfile_resolver
+        options[:puppet_version]     = Puppet.version
+        options[:module_path]        = PuppetLanguageServer::PuppetHelper.module_path
+      end
+      PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, client_handler_id, options)
     end
   end
 

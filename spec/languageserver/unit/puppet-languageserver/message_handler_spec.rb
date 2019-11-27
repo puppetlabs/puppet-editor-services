@@ -890,7 +890,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
         end
 
         it 'should enqueue the file for validation' do
-          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 1, Object)
+          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 1, Object, Hash)
           subject.notification_textdocument_didopen(connection_id, notification_message)
         end
       end
@@ -962,7 +962,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
         end
 
         it 'should enqueue the file for validation' do
-          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 2, Object)
+          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 2, Object, Hash)
           subject.notification_textdocument_didchange(connection_id, notification_message)
         end
       end

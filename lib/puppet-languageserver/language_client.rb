@@ -6,6 +6,7 @@ module PuppetLanguageServer
 
     # Client settings
     attr_reader :format_on_type
+    attr_reader :use_puppetfile_resolver
 
     def initialize(message_handler)
       @message_handler = message_handler
@@ -23,6 +24,7 @@ module PuppetLanguageServer
 
       # Default settings
       @format_on_type = false
+      @use_puppetfile_resolver = true
     end
 
     def client_capability(*names)
@@ -55,6 +57,9 @@ module PuppetLanguageServer
         end
         @format_on_type = value
       end
+      # use puppetfile resolver
+      value = safe_hash_traverse(settings, 'puppet', 'validate', 'resolvePuppetfiles')
+      @use_puppetfile_resolver = to_boolean(value)
     end
 
     def capability_registrations(method)
