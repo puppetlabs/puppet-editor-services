@@ -4,7 +4,7 @@ module PuppetLanguageServer
   module PuppetHelper
     class Cache
       SECTIONS = %i[class type function datatype].freeze
-      ORIGINS = %i[default workspace].freeze
+      ORIGINS = %i[default workspace bolt].freeze
 
       def initialize(_options = {})
         @cache_lock = Mutex.new
@@ -36,27 +36,60 @@ module PuppetLanguageServer
       end
 
       # section => <Type of object in the file :function, :type, :class, :datatype>
-      def object_by_name(section, name)
+      def object_by_name(section, name, options = {})
+        # options[:exclude_origins]
+        # options[:fuzzy_match]
+        options = {
+          :exclude_origins => [],
+          :fuzzy_match     => false
+        }.merge(options)
+
         name = name.intern if name.is_a?(String)
         return nil if section.nil?
         @cache_lock.synchronize do
-          @inmemory_cache.each do |_, sections|
+          @inmemory_cache.each do |origin, sections|
             next if sections[section].nil? || sections[section].empty?
+            next if options[:exclude_origins].include?(origin)
             sections[section].each do |item|
-              return item if item.key == name
+              match = options[:fuzzy_match] ? fuzzy_match?(item.key, name) : item.key == name
+              return item if match
             end
           end
         end
         nil
       end
 
+      # Performs fuzzy text matching of Puppet Language Type names
+      #  e.g 'TargetSpec' in 'Boltlib::TargetSpec'
+      # @api private
+      def fuzzy_match?(obj, test_obj)
+        value = obj.is_a?(String) ? obj.dup : obj.to_s
+        test_string = test_obj.is_a?(String) ? test_obj.dup : test_obj.to_s
+
+        # Test for equality
+        return true if value == test_string
+
+        # Test for a shortname
+        unless test_string.start_with?('::')
+          # e.g 'TargetSpec' in 'Boltlib::TargetSpec'
+          return true if value.end_with?('::' + test_string)
+        end
+
+        false
+      end
+
       # section => <Type of object in the file :function, :type, :class, :datatype>
-      def object_names_by_section(section)
+      # options[:exclude_origins]
+      def object_names_by_section(section, options = {})
+        options = {
+          :exclude_origins => []
+        }.merge(options)
         result = []
         return result if section.nil?
         @cache_lock.synchronize do
-          @inmemory_cache.each do |_, sections|
+          @inmemory_cache.each do |origin, sections|
             next if sections[section].nil? || sections[section].empty?
+            next if options[:exclude_origins].include?(origin)
             result.concat(sections[section].map { |i| i.key })
           end
         end

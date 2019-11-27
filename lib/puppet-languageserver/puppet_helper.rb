@@ -65,6 +65,48 @@ module PuppetLanguageServer
       sidecar_queue.execute_sync('resource_list', args)
     end
 
+    # Static data
+    def self.static_data_loaded?
+      @static_data_loaded.nil? ? false : @static_data_loaded
+    end
+
+    def self.load_static_data
+      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
+      @static_data_loaded = false
+
+      bolt_static_data = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+      Dir.glob(File.join(PuppetLanguageServer.static_data_dir, 'bolt-*.json')) do |path|
+        PuppetLanguageServer.log_message(:debug, "Importing static data file #{path}...")
+        # No need to catch errors here. As this is static data and is tested in rspec
+        # Sure, we could have corrupt/missing files on disk, but then we have bigger issues
+        data = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new.from_json!(File.open(path, 'rb:UTF-8') { |f| f.read })
+        data.each_list { |_, list| bolt_static_data.concat!(list) }
+      end
+
+      @inmemory_cache.import_sidecar_list!(bolt_static_data.classes,   :class,    :bolt)
+      @inmemory_cache.import_sidecar_list!(bolt_static_data.datatypes, :datatype, :bolt)
+      @inmemory_cache.import_sidecar_list!(bolt_static_data.functions, :function, :bolt)
+      @inmemory_cache.import_sidecar_list!(bolt_static_data.types,     :type,     :bolt)
+
+      bolt_static_data.each_list do |k, v|
+        if v.nil?
+          PuppetLanguageServer.log_message(:debug, "Static bolt data returned no #{k}")
+        else
+          PuppetLanguageServer.log_message(:debug, "Static bolt data returned #{v.count} #{k}")
+        end
+      end
+
+      @static_data_loaded = true
+    end
+
+    def self.load_static_data_async
+      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
+      @static_data_loaded = false
+      Thread.new do
+        load_static_data
+      end
+    end
+
     # Types
     def self.default_types_loaded?
       @default_types_loaded.nil? ? false : @default_types_loaded
@@ -131,18 +173,25 @@ module PuppetLanguageServer
       result
     end
 
-    def self.function(name)
+    def self.function(name, tasks_mode = false)
       return nil if @default_functions_loaded == false
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       load_default_functions unless @default_functions_loaded
-      @inmemory_cache.object_by_name(:function, name)
+      exclude_origins = tasks_mode ? [] : [:bolt]
+      @inmemory_cache.object_by_name(
+        :function,
+        name,
+        :fuzzy_match     => true,
+        :exclude_origins => exclude_origins
+      )
     end
 
-    def self.function_names
+    def self.function_names(tasks_mode = false)
       return [] if @default_functions_loaded == false
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       load_default_functions if @default_functions_loaded.nil?
-      @inmemory_cache.object_names_by_section(:function).map(&:to_s)
+      exclude_origins = tasks_mode ? [] : [:bolt]
+      @inmemory_cache.object_names_by_section(:function, :exclude_origins => exclude_origins).map(&:to_s)
     end
 
     # Classes and Defined Types
@@ -200,11 +249,18 @@ module PuppetLanguageServer
       sidecar_queue.enqueue('default_datatypes', [])
     end
 
-    def self.datatype(name)
-      return nil if @default_functions_loaded == false
+    def self.datatype(name, tasks_mode = false)
+      return nil if @default_datatypes_loaded == false
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
-      load_default_datatypes unless @default_functions_loaded
-      @inmemory_cache.object_by_name(:datatype, name)
+      load_default_datatypes unless @default_datatypes_loaded
+      load_static_data if tasks_mode && !static_data_loaded?
+      exclude_origins = tasks_mode ? [] : [:bolt]
+      @inmemory_cache.object_by_name(
+        :datatype,
+        name,
+        :fuzzy_match     => true,
+        :exclude_origins => exclude_origins
+      )
     end
 
     def self.cache

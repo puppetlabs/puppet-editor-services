@@ -33,7 +33,7 @@ module PuppetLanguageServer
 
           content = get_hover_content_for_access_expression(path, expr)
         when 'Puppet::Pops::Model::CallNamedFunctionExpression'
-          content = get_call_named_function_expression_content(item)
+          content = get_call_named_function_expression_content(item, options[:tasks_mode])
         when 'Puppet::Pops::Model::AttributeOperation'
           # Get the parent resource class
           distance_up_ast = -1
@@ -66,7 +66,7 @@ module PuppetLanguageServer
           # https://github.com/puppetlabs/puppet-specifications/blob/master/language/names.md#names
           # Datatypes have to start with uppercase and can be fully qualified
           if item.cased_value =~ /^[A-Z][a-zA-Z:0-9]*$/ # rubocop:disable Style/GuardClause
-            content = get_puppet_datatype_content(item)
+            content = get_puppet_datatype_content(item, options[:tasks_mode])
           else
             raise "#{item.cased_value} is an unknown QualifiedReference"
           end
@@ -143,10 +143,10 @@ module PuppetLanguageServer
         content
       end
 
-      def self.get_call_named_function_expression_content(item)
+      def self.get_call_named_function_expression_content(item, tasks_mode)
         func_name = item.functor_expr.value
 
-        func_info = PuppetLanguageServer::PuppetHelper.function(func_name)
+        func_info = PuppetLanguageServer::PuppetHelper.function(func_name, tasks_mode)
         raise "Function #{func_name} does not exist" if func_info.nil?
 
         content = "**#{func_name}** Function"
@@ -189,8 +189,8 @@ module PuppetLanguageServer
       end
       private_class_method :get_puppet_class_content
 
-      def self.get_puppet_datatype_content(item)
-        dt_info = PuppetLanguageServer::PuppetHelper.datatype(item.cased_value)
+      def self.get_puppet_datatype_content(item, tasks_mode)
+        dt_info = PuppetLanguageServer::PuppetHelper.datatype(item.cased_value, tasks_mode)
         raise "DataType #{item.cased_value} does not exist" if dt_info.nil?
 
         content = "**#{item.cased_value}** Data Type"

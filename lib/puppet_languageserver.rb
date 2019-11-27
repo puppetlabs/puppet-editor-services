@@ -24,6 +24,10 @@ module PuppetLanguageServer
     @server_is_active
   end
 
+  def self.static_data_dir
+    @static_data_dir ||= File.expand_path(File.join(__dir__, 'puppet-languageserver', 'static_data'))
+  end
+
   def self.configure_featureflags(flags)
     @flags = flags
   end
@@ -269,6 +273,9 @@ module PuppetLanguageServer
         log_message(:info, 'Preloading Workspace (Async)...')
         PuppetLanguageServer::PuppetHelper.load_workspace_async
       end
+
+      log_message(:info, 'Preloading static data (Async)...')
+      PuppetLanguageServer::PuppetHelper.load_static_data_async
     else
       log_message(:info, 'Skipping preloading Puppet')
     end
