@@ -488,14 +488,34 @@ describe 'PuppetLanguageServer::MessageHandler' do
         let(:file_uri) { MANIFEST_FILENAME }
 
         it 'should call complete method on the Completion Provider' do
-          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object, line_num, char_num, { :tasks_mode => false, :context => nil }).and_return('something')
           subject.request_textdocument_completion(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
-          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object, line_num, char_num, { :tasks_mode => true, :context => nil }).and_return('something')
           allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
           subject.request_textdocument_completion(connection_id, request_message)
+        end
+
+        context 'with a completion context' do
+          let(:request_params) {{
+            'textDocument' => {
+              'uri' => file_uri
+            },
+            'position' => {
+              'line' => line_num,
+              'character' => char_num,
+            },
+            'context' => {
+              'triggerKind' => 1
+            }
+          }}
+
+          it 'should pass the context' do
+            expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object, line_num, char_num, { :tasks_mode => false, :context => LSP::CompletionContext}).and_return('something')
+            subject.request_textdocument_completion(connection_id, request_message)
+          end
         end
 
         context 'and an error occurs during completion' do

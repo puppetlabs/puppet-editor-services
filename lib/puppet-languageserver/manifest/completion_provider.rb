@@ -5,15 +5,18 @@ module PuppetLanguageServer
     module CompletionProvider
       def self.complete(content, line_num, char_num, options = {})
         options = {
-          :tasks_mode => false
+          :tasks_mode => false,
+          :context    => nil # LSP::CompletionContext object
         }.merge(options)
         items = []
         incomplete = false
+        is_trigger_char = !options[:context].nil? && options[:context].triggerKind == LSP::CompletionTriggerKind::TRIGGERCHARACTER
 
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
-                                                                              :multiple_attempts  => true,
-                                                                              :disallowed_classes => [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression],
-                                                                              :tasks_mode         => options[:tasks_mode])
+                                                                              :multiple_attempts   => true,
+                                                                              :disallowed_classes  => [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression],
+                                                                              :tasks_mode          => options[:tasks_mode],
+                                                                              :remove_trigger_char => is_trigger_char)
         if result.nil?
           # We are in the root of the document.
 
@@ -41,8 +44,8 @@ module PuppetLanguageServer
           # Complete for `$facts[...`
           all_facts { |x| items << x } if expr == 'facts'
 
-        when 'Puppet::Pops::Model::HostClassDefinition'
-          # We are in the root of a `class` statement
+        when 'Puppet::Pops::Model::HostClassDefinition', 'Puppet::Pops::Model::ResourceTypeDefinition'
+          # We are in the root of a `class` or `define` statement
 
           # Add keywords
           keywords(%w[require contain]) { |x| items << x }

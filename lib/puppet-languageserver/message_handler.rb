@@ -105,10 +105,11 @@ module PuppetLanguageServer
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
       content = documents.document(file_uri)
+      context = json_rpc_message.params['context'].nil? ? nil : LSP::CompletionContext.new(json_rpc_message.params['context'])
 
       case documents.document_type(file_uri)
       when :manifest
-        return PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        return PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :context => context, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
       else
         raise "Unable to provide completion on #{file_uri}"
       end
