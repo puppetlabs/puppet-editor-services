@@ -131,6 +131,11 @@ user { 'Charlie':
   ensure => 'present',
   name   => 'name',
 }
+
+define delta (
+) {
+
+}
 EOT
       }
 
@@ -153,20 +158,24 @@ EOT
         end
       end
 
-      describe "When inside the root of a class" do
-        let(:line_num) { 1 }
-        let(:char_num) { 0 }
-        let(:expected_types) { ['keyword','resource_type','resource_class'] }
+      [
+        { :name => 'class', :line_num => 1 },
+        { :name => 'defined type', :line_num => 18 },
+      ].each do |testcase|
+        describe "When inside the root of a #{testcase[:name]}" do
+          let(:char_num) { 0 }
+          let(:expected_types) { ['keyword','resource_type','resource_class'] }
 
-        it 'should return a list of keyword, resource_type, resource_class' do
-          result = subject.complete(content, line_num, char_num)
+          it 'should return a list of keyword, resource_type, resource_class' do
+            result = subject.complete(content, testcase[:line_num], char_num)
 
-          result.items.each do |item|
-            expect(item).to be_completion_item_with_type(expected_types)
-          end
+            result.items.each do |item|
+              expect(item).to be_completion_item_with_type(expected_types)
+            end
 
-          expected_types.each do |typename|
-            expect(number_of_completion_item_with_type(result,typename)).to be > 0
+            expected_types.each do |typename|
+              expect(number_of_completion_item_with_type(result,typename)).to be > 0
+            end
           end
         end
       end

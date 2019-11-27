@@ -41,8 +41,8 @@ module PuppetLanguageServer
           # Complete for `$facts[...`
           all_facts { |x| items << x } if expr == 'facts'
 
-        when 'Puppet::Pops::Model::HostClassDefinition'
-          # We are in the root of a `class` statement
+        when 'Puppet::Pops::Model::HostClassDefinition', 'Puppet::Pops::Model::ResourceTypeDefinition'
+          # We are in the root of a `class` or `define` statement
 
           # Add keywords
           keywords(%w[require contain]) { |x| items << x }
