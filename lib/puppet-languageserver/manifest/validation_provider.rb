@@ -80,11 +80,11 @@ module PuppetLanguageServer
                                             'message'  => problem[:message])
             end
           end
-        # rubocop:disable Lint/HandleExceptions
+        # rubocop:disable Lint/SuppressedException
         rescue StandardError
           # If anything catastrophic happens we resort to puppet parsing anyway
         end
-        # rubocop:enable Lint/HandleExceptions
+        # rubocop:enable Lint/SuppressedException
 
         # TODO: Should I wrap this thing in a big rescue block?
         Puppet[:code] = content

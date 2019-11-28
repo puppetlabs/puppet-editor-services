@@ -12,10 +12,8 @@ group :development do
   gem 'rake', '>= 10.4',            :require => false
   gem 'rspec', '>= 3.2',            :require => false
 
-  if RUBY_VERSION =~ /^2\.1\./
-    gem "rubocop", "<= 0.57.2", :require => false, :platforms => [:ruby, :x64_mingw]
-  else
-    gem "rubocop", ">= 0.60.0", :require => false, :platforms => [:ruby, :x64_mingw]
+  if Gem::Version.create(RUBY_VERSION) >= Gem::Version.create('2.3.0')
+    gem "rubocop", ">= 0.77.0", :require => false, :platforms => [:ruby, :x64_mingw]
   end
 
   if ENV['PUPPET_GEM_VERSION']

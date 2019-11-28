@@ -64,11 +64,11 @@ module PuppetLanguageServer
 
       begin
         node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(content, documents.store_root_path)
-        return LSP::CompileNodeGraphResponse.new('dotContent' => node_graph.dot_content,
-                                                 'error'      => node_graph.error_content)
+        LSP::CompileNodeGraphResponse.new('dotContent' => node_graph.dot_content,
+                                          'error'      => node_graph.error_content)
       rescue StandardError => e
         PuppetLanguageServer.log_message(:error, "(puppet/compileNodeGraph) Error generating node graph. #{e}")
-        return LSP::CompileNodeGraphResponse.new('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.')
+        LSP::CompileNodeGraphResponse.new('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.')
       end
     end
 
@@ -92,7 +92,7 @@ module PuppetLanguageServer
     rescue StandardError => e
       PuppetLanguageServer.log_message(:error, "(puppet/fixDiagnosticErrors) #{e}")
       unless formatted_request.nil?
-        return LSP::PuppetFixDiagnosticErrorsResponse.new(
+        LSP::PuppetFixDiagnosticErrorsResponse.new(
           'documentUri'  => formatted_request.documentUri,
           'fixesApplied' => 0,
           'newContent'   => formatted_request.alwaysReturnContent ? content : nil # rubocop:disable Metrics/BlockNesting
@@ -109,7 +109,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        return PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :context => context, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :context => context, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
       else
         raise "Unable to provide completion on #{file_uri}"
       end
@@ -133,7 +133,7 @@ module PuppetLanguageServer
       content = documents.document(file_uri)
       case documents.document_type(file_uri)
       when :manifest
-        return PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
       else
         raise "Unable to provide hover on #{file_uri}"
       end
@@ -150,7 +150,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        return PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -165,7 +165,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        return PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -183,7 +183,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        return PuppetLanguageServer::Manifest::FormatOnTypeProvider.instance.format(
+        PuppetLanguageServer::Manifest::FormatOnTypeProvider.instance.format(
           content,
           line_num,
           char_num,
@@ -206,7 +206,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        return PuppetLanguageServer::Manifest::SignatureProvider.signature_help(
+        PuppetLanguageServer::Manifest::SignatureProvider.signature_help(
           content,
           line_num,
           char_num,

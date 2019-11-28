@@ -43,7 +43,7 @@ TEXT
 
       crash_file = filename.nil? ? default_crash_file : filename
       File.open(crash_file, 'wb') { |file| file.write(crashtext) }
-    rescue # rubocop:disable Style/RescueStandardError, Lint/HandleExceptions
+    rescue # rubocop:disable Style/RescueStandardError, Lint/SuppressedException
       # Swallow all errors.  Errors in the error handler should not
       # terminate the application
     end

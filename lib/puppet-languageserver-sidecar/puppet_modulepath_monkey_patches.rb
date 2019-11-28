@@ -73,9 +73,9 @@ class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
       # https://github.com/puppetlabs/puppet/commit/935c0311dbaf1df03937822525c36b26de5390ef
       # We need to switch the creation based on whether the modules_strict_semver? method is available
       return Puppet::Module.new(module_name, path, self, modules_strict_semver?) if respond_to?('modules_strict_semver?')
-      return Puppet::Module.new(module_name, path, self)
+      Puppet::Module.new(module_name, path, self)
     rescue StandardError
-      return nil
+      nil
     end
   end
 

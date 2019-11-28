@@ -78,7 +78,7 @@ Style/SymbolProc:
 Style/HashSyntax:
   Enabled: false
 
-Layout/AlignHash:
+Layout/HashAlignment:
   EnforcedHashRocketStyle: table
 
 Naming/RescuedExceptionsVariableName:
@@ -90,4 +90,8 @@ Style/NumericPredicate:
 
 # This is not valid on Ruby 2.1
 Style/SafeNavigation:
+  Enabled: false
+
+# This is not valid on Ruby 2.1
+Layout/HeredocIndentation:
   Enabled: false
