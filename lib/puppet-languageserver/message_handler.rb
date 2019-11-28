@@ -3,18 +3,81 @@
 require 'puppet_editor_services/handler/json_rpc'
 require 'puppet_editor_services/protocol/json_rpc_messages'
 require 'puppet-languageserver/server_capabilities'
+require 'puppet-languageserver/client_session_state'
 
 module PuppetLanguageServer
-  class MessageHandler < PuppetEditorServices::Handler::JsonRPC
-    attr_reader :language_client
+  # This module is just duck-typing the old PuppetLanguageServer::DocumentStore Module.
+  # This will eventually be refactored out. But for now, this exists for backwards compatibility
+  module DocumentStore
+    def self.instance
+      @instance ||= PuppetLanguageServer::SessionState::DocumentStore.new
+    end
 
+    def self.set_document(uri, content, doc_version)
+      instance.set_document(uri, content, doc_version)
+    end
+
+    def self.remove_document(uri)
+      instance.remove_document(uri)
+    end
+
+    def self.clear
+      instance.clear
+    end
+
+    def self.document(uri, doc_version = nil)
+      instance.document(uri, doc_version)
+    end
+
+    def self.document_version(uri)
+      instance.document_version(uri)
+    end
+
+    def self.document_uris
+      instance.document_uris
+    end
+
+    def self.document_type(uri)
+      instance.document_type(uri)
+    end
+
+    def self.plan_file?(uri)
+      instance.plan_file?(uri)
+    end
+
+    def self.initialize_store(options = {})
+      instance.initialize_store(options)
+    end
+
+    def self.expire_store_information
+      instance.expire_store_information
+    end
+
+    def self.store_root_path
+      instance.store_root_path
+    end
+
+    def self.store_has_module_metadata?
+      instance.store_has_module_metadata?
+    end
+
+    def self.store_has_environmentconf?
+      instance.store_has_environmentconf?
+    end
+  end
+
+  class MessageHandler < PuppetEditorServices::Handler::JsonRPC
     def initialize(*_)
       super
-      @language_client = LanguageClient.new(self)
+      @session_state = ClientSessionState.new(self, :documents => DocumentStore.instance)
+    end
+
+    def language_client
+      @session_state.language_client
     end
 
     def documents
-      PuppetLanguageServer::DocumentStore
+      @session_state.documents
     end
 
     def request_initialize(_, json_rpc_message)
@@ -24,6 +87,17 @@ module PuppetLanguageServer
       info = {
         :documentOnTypeFormattingProvider => !language_client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration')
       }
+
+      # Configure the document store
+      documents.initialize_store(
+        :workspace => workspace_root_from_initialize_params(json_rpc_message.params)
+      )
+
+      # Initiate loading of the workspace if needed
+      if documents.store_has_module_metadata? || documents.store_has_environmentconf?
+        PuppetLanguageServer.log_message(:info, 'Loading Workspace (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_workspace_async
+      end
 
       { 'capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities(info) }
     end
@@ -110,7 +184,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :context => context, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :context => context, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide completion on #{file_uri}"
       end
@@ -134,7 +208,7 @@ module PuppetLanguageServer
       content = documents.document(file_uri)
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide hover on #{file_uri}"
       end
@@ -151,7 +225,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -166,7 +240,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -211,7 +285,7 @@ module PuppetLanguageServer
           content,
           line_num,
           char_num,
-          :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri)
+          :tasks_mode => documents.plan_file?(file_uri)
         )
       else
         raise "Unable to provide signatures on #{file_uri}"
@@ -280,8 +354,8 @@ module PuppetLanguageServer
     def notification_textdocument_didsave(_, _json_rpc_message)
       PuppetLanguageServer.log_message(:info, 'Received textDocument/didSave notification.')
       # Expire the store cache so that the store information can re-evaluated
-      PuppetLanguageServer::DocumentStore.expire_store_information
-      if PuppetLanguageServer::DocumentStore.store_has_module_metadata? || PuppetLanguageServer::DocumentStore.store_has_environmentconf?
+      documents.expire_store_information
+      if documents.store_has_module_metadata? || documents.store_has_environmentconf?
         # Load the workspace information
         PuppetLanguageServer::PuppetHelper.load_workspace_async
       else
@@ -331,6 +405,16 @@ module PuppetLanguageServer
         options[:module_path]        = PuppetLanguageServer::PuppetHelper.module_path
       end
       PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, client_handler_id, options)
+    end
+
+    def workspace_root_from_initialize_params(params)
+      if params.key?('workspaceFolders')
+        return nil if params['workspaceFolders'].nil? || params['workspaceFolders'].empty?
+        # We don't support multiple workspace folders yet, so just select the first one
+        return UriHelper.uri_path(params['workspaceFolders'][0]['uri'])
+      end
+      return UriHelper.uri_path(params['rootUri']) if params.key?('rootUri')
+      params['rootPath']
     end
   end
 

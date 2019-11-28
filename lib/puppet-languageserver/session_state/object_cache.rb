@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module PuppetLanguageServer
-  module PuppetHelper
-    class Cache
+  module SessionState
+    class ObjectCache
       SECTIONS = %i[class type function datatype fact].freeze
       ORIGINS = %i[default workspace bolt].freeze
 

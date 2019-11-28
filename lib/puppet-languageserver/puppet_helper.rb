@@ -2,14 +2,7 @@
 
 require 'pathname'
 require 'tempfile'
-
-%w[puppet_helper/cache].each do |lib|
-  begin
-    require "puppet-languageserver/#{lib}"
-  rescue LoadError
-    require File.expand_path(File.join(File.dirname(__FILE__), lib))
-  end
-end
+require 'puppet-languageserver/session_state/object_cache'
 
 module PuppetLanguageServer
   module PuppetHelper
@@ -24,7 +17,7 @@ module PuppetLanguageServer
 
     def self.initialize_helper(options = {})
       @helper_options = options
-      @inmemory_cache = PuppetLanguageServer::PuppetHelper::Cache.new
+      @inmemory_cache = PuppetLanguageServer::SessionState::ObjectCache.new
       sidecar_queue.cache = @inmemory_cache
     end
 

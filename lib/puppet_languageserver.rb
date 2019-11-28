@@ -57,9 +57,8 @@ module PuppetLanguageServer
     # These libraries do not require the puppet gem and required for the
     # server to respond to clients.
     %w[
-      document_store
+      client_session_state
       crash_dump
-      language_client
       message_handler
       server_capabilities
     ].each do |lib|
@@ -185,8 +184,7 @@ module PuppetLanguageServer
           args[:puppet_version] = text
         end
 
-        opts.on('--local-workspace=PATH', 'The workspace or file path that will be used to provide module-specific functionality. Default is no workspace path.') do |path|
-          args[:workspace] = path
+        opts.on('--local-workspace=PATH', '** DEPRECATED ** The workspace or file path that will be used to provide module-specific functionality. Default is no workspace path.') do |_path|
         end
 
         opts.on('-h', '--help', 'Prints this help') do
@@ -223,9 +221,6 @@ module PuppetLanguageServer
 
     log_message(:info, 'Initializing Puppet Helper...')
     PuppetLanguageServer::PuppetHelper.initialize_helper(options)
-
-    log_message(:debug, 'Initializing Document Store...')
-    PuppetLanguageServer::DocumentStore.initialize_store(options)
 
     log_message(:info, 'Initializing settings...')
     if options[:fast_start_langserver]
@@ -267,11 +262,6 @@ module PuppetLanguageServer
 
         log_message(:info, 'Preloading DataTypes (Async)...')
         PuppetLanguageServer::PuppetHelper.load_default_datatypes_async
-      end
-
-      if PuppetLanguageServer::DocumentStore.store_has_module_metadata? || PuppetLanguageServer::DocumentStore.store_has_environmentconf?
-        log_message(:info, 'Preloading Workspace (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_workspace_async
       end
 
       log_message(:info, 'Preloading static data (Async)...')

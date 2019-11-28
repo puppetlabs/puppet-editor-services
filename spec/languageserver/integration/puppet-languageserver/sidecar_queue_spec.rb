@@ -7,7 +7,7 @@ class SuccessStatus
 end
 
 describe 'sidecar_queue' do
-  let(:cache) { PuppetLanguageServer::PuppetHelper::Cache.new }
+  let(:cache) { PuppetLanguageServer::SessionState::ObjectCache.new }
   let(:subject) {
     subject = PuppetLanguageServer::SidecarQueue.new
     subject.cache = cache

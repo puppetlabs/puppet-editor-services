@@ -9,7 +9,7 @@ describe 'PuppetLanguageServer::PuppetHelper' do
 
     before(:each) do
       # Purge the static data
-      PuppetLanguageServer::PuppetHelper::Cache::SECTIONS.each do |section|
+      PuppetLanguageServer::SessionState::ObjectCache::SECTIONS.each do |section|
         PuppetLanguageServer::PuppetHelper.cache.remove_section!(section, :bolt)
       end
      expect(contains_bolt_objects?(PuppetLanguageServer::PuppetHelper.cache)).to be(false)

@@ -1,11 +1,11 @@
 require 'spec_helper'
 
-describe 'PuppetLanguageServer::PuppetHelper::Cache' do
+describe 'PuppetLanguageServer::SessionState::ObjectCache' do
   let(:section_function) { :function }
   let(:origin_default) { :default }
   let(:origin_workspace) { :workspace }
 
-  let(:subject) { PuppetLanguageServer::PuppetHelper::Cache.new() }
+  let(:subject) { PuppetLanguageServer::SessionState::ObjectCache.new() }
 
   describe "#import_sidecar_list!" do
     # Note that this method is used a lot in the test fixtures below so it

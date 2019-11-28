@@ -1,7 +1,7 @@
 require 'spec_helper'
 
-describe 'PuppetLanguageServer::DocumentStore' do
-  let(:subject) { PuppetLanguageServer::DocumentStore }
+describe 'PuppetLanguageServer::SessionState::DocumentStore' do
+  let(:subject) { PuppetLanguageServer::SessionState::DocumentStore.new }
 
   describe '#plan_file?' do
     before(:each) do
@@ -32,6 +32,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
         prefixes.each do |prefix|
           it "should detect '#{prefix}#{testcase}' as a plan file" do
             file_uri = PuppetLanguageServer::UriHelper.build_file_uri(prefix + testcase)
+
             expect(subject.plan_file?(file_uri)).to be(true)
           end
         end

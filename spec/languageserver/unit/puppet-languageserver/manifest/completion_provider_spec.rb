@@ -53,7 +53,7 @@ describe 'PuppetLanguageServer::Manifest::CompletionProvider' do
 
   after(:each) do
     # Clear out the Object Cache of workspace objects
-    PuppetLanguageServer::PuppetHelper::Cache::SECTIONS.each do |section|
+    PuppetLanguageServer::SessionState::ObjectCache::SECTIONS.each do |section|
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], section, :workspace)
     end
   end
