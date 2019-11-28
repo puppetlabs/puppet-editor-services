@@ -6,6 +6,23 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.23.0 - 2019-12-04
+
+### Added
+
+- ([GH-198](https://github.com/lingua-pupuli/puppet-editor-services/issues/198)) Added the Puppetfile Resolver for more in-depth Puppetfile validation
+- ([GH-94](https://github.com/lingua-pupuli/puppet-editor-services/issues/94)) Added better intellisense when inside Bolt plans
+
+### Fixed
+
+- ([GH-199](https://github.com/lingua-pupuli/puppet-editor-services/issues/199)) Fixes for Puppet 6.11.0
+- ([GH-139](https://github.com/lingua-pupuli/puppet-editor-services/issues/139)) Provide completions for defined types
+
+### Changed
+
+- ([GH-193](https://github.com/lingua-pupuli/puppet-editor-services/issues/193)) Refactor the TCP and STDIO servers, protocols and handlers
+- ([Commit](https://github.com/lingua-pupuli/puppet-editor-services/commit/c3bd86f5b9a237b92f4c0e2d6c2ddc7aa5b0d9e5)) Update puppet-lint to version 2.4.2
+
 ## 0.22.0 - 2019-09-20
 
 ### Added
