@@ -200,7 +200,7 @@ module PuppetEditorServices
               if self.class.services[io]
                 begin
                   callback(self, :add_connection, io.accept_nonblock, self.class.services[io])
-                rescue Errno::EWOULDBLOCK # rubocop:disable Lint/HandleExceptions
+                rescue Errno::EWOULDBLOCK # rubocop:disable Lint/SuppressedException
                   # There's nothing to handle. Swallow the error
                 rescue StandardError => e
                   log(e.message)

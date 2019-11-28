@@ -144,22 +144,20 @@ module PuppetDebugServer
           # Stepping-in is basically break on everything
           # Re-raise the hook as a step breakpoint
           @debug_session.execute_hook(:hook_step_breakpoint, [ast_classname, ''] + args)
-          return
         when :next
           # Next will break on anything at this Pop depth or shallower than this Pop depth. Re-raise the hook as a step breakpoint
           depth = @debug_session.flow_control.run_mode.options[:pops_depth_level] || -1
-          if @debug_session.puppet_session_state.actual.pops_depth_level <= depth
+          if @debug_session.puppet_session_state.actual.pops_depth_level <= depth # rubocop:disable Style/IfUnlessModifier
             @debug_session.execute_hook(:hook_step_breakpoint, [ast_classname, ''] + args)
-            return
           end
         when :stepout
           # Stepping-Out will break on anything shallower than this Pop depth. Re-raise the hook as a step breakpoint
           depth = @debug_session.flow_control.run_mode.options[:pops_depth_level] || -1
-          if @debug_session.puppet_session_state.actual.pops_depth_level < depth
+          if @debug_session.puppet_session_state.actual.pops_depth_level < depth # rubocop:disable Style/IfUnlessModifier
             @debug_session.execute_hook(:hook_step_breakpoint, [ast_classname, ''] + args)
-            return
           end
         end
+        nil
       end
 
       # Fires when a source/line breakpoint is hit
