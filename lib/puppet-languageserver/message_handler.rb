@@ -4,6 +4,7 @@ require 'puppet_editor_services/handler/json_rpc'
 require 'puppet_editor_services/protocol/json_rpc_messages'
 require 'puppet-languageserver/server_capabilities'
 require 'puppet-languageserver/client_session_state'
+require 'puppet-languageserver/global_queues'
 
 module PuppetLanguageServer
   # This module is just duck-typing the old PuppetLanguageServer::DocumentStore Module.
@@ -404,7 +405,7 @@ module PuppetLanguageServer
         options[:puppet_version]     = Puppet.version
         options[:module_path]        = PuppetLanguageServer::PuppetHelper.module_path
       end
-      PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, client_handler_id, options)
+      GlobalQueues.validate_queue.enqueue(file_uri, doc_version, client_handler_id, options)
     end
 
     def workspace_root_from_initialize_params(params)

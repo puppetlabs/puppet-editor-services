@@ -79,7 +79,7 @@ module PuppetLanguageServer
 
     # These libraries require the puppet and LSP gems.
     %w[
-      validation_queue
+      global_queues
       sidecar_protocol
       sidecar_queue
       puppet_parser_helper
