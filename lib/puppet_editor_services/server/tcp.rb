@@ -311,6 +311,7 @@ module PuppetEditorServices
             return v[:handler] unless v[:handler].nil? || v[:handler].id != connection_id
           end
         end
+        nil
       end
 
       # @api private
