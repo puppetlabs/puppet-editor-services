@@ -37,12 +37,6 @@ describe 'PuppetLanguageServer::Manifest::CompletionProvider' do
     object
   end
 
-  before(:all) do
-    # TODO: This shouldn't really be required, but the PuppetHelper seems to require the default types to be loaded
-    # in order to query the cache.  This is wrong.
-    wait_for_puppet_loading
-  end
-
   before(:each) do
     # Prepopulate the Object Cache with workspace objects
     # Types

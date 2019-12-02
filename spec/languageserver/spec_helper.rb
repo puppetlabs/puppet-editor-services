@@ -19,25 +19,39 @@ server_options[:puppet_settings] = ['--vardir',File.join($fixtures_dir,'cache'),
 PuppetLanguageServer::init_puppet(server_options)
 
 def wait_for_puppet_loading
-  interation = 0
-  loop do
-    break if PuppetLanguageServer::PuppetHelper.default_functions_loaded? &&
-             PuppetLanguageServer::PuppetHelper.default_types_loaded? &&
-             PuppetLanguageServer::PuppetHelper.default_classes_loaded? &&
-             PuppetLanguageServer::PuppetHelper.default_datatypes_loaded? &&
-             PuppetLanguageServer::FacterHelper.facts_loaded?
-    sleep(1)
-    interation += 1
-    next if interation < 90
-    raise <<-ERRORMSG
-            Puppet has not be initialised in time:
-            facts_loaded? = #{PuppetLanguageServer::FacterHelper.facts_loaded?}
-            functions_loaded? = #{PuppetLanguageServer::PuppetHelper.default_functions_loaded?}
-            types_loaded? = #{PuppetLanguageServer::PuppetHelper.default_types_loaded?}
-            classes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_classes_loaded?}
-            datatypes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_datatypes_loaded?}
-          ERRORMSG
-  end
+  PuppetLanguageServer::PuppetHelper.load_static_data unless PuppetLanguageServer::PuppetHelper.static_data_loaded?
+
+  return if PuppetLanguageServer::PuppetHelper.default_functions_loaded? &&
+           PuppetLanguageServer::PuppetHelper.default_types_loaded? &&
+           PuppetLanguageServer::PuppetHelper.default_classes_loaded? &&
+           PuppetLanguageServer::PuppetHelper.default_datatypes_loaded? &&
+           PuppetLanguageServer::FacterHelper.facts_loaded?
+
+  # Emulate the result of running a sidecar job to load all of puppet.
+  # This comes from a saved JSON fixtures file to speed up testing.
+  puppet_data = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+  path = File.join($fixtures_dir, 'puppet_object_cache.json')
+  data = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new.from_json!(File.open(path, 'rb:UTF-8') { |f| f.read })
+  data.each_list { |_, list| puppet_data.concat!(list) }
+
+  PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(puppet_data.classes,   :class,    :default)
+  PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(puppet_data.datatypes, :datatype, :default)
+  PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(puppet_data.functions, :function, :default)
+  PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(puppet_data.types,     :type,     :default)
+
+  PuppetLanguageServer::PuppetHelper.assert_default_classes_loaded
+  PuppetLanguageServer::PuppetHelper.assert_default_functions_loaded
+  PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
+  PuppetLanguageServer::PuppetHelper.assert_default_datatypes_loaded
+
+  # Emulate the result of running a sidecar job to load facter.
+  # This comes from a saved JSON fixtures file to speed up testing.
+  path = File.join($fixtures_dir, 'fact_object_cache.json')
+  data = PuppetLanguageServer::Sidecar::Protocol::FactList.new.from_json!(File.open(path, 'rb:UTF-8') { |f| f.read })
+  PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(data, :fact, :default)
+
+  PuppetLanguageServer::FacterHelper.assert_facts_loaded
+  return
 end
 
 # Sidecar Protocol Helpers

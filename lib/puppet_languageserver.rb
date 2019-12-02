@@ -79,9 +79,8 @@ module PuppetLanguageServer
 
     # These libraries require the puppet and LSP gems.
     %w[
-      global_queues
       sidecar_protocol
-      sidecar_queue
+      global_queues
       puppet_parser_helper
       puppet_helper
       facter_helper
@@ -156,7 +155,7 @@ module PuppetLanguageServer
           args[:debug] = debug
         end
 
-        opts.on('-s', '--slow-start', 'Delay starting the Language Server until Puppet initialisation has completed.  Default is to start fast') do |_misc|
+        opts.on('-s', '--slow-start', '** DEPRECATED ** Delay starting the Language Server until Puppet initialisation has completed.  Default is to start fast') do |_misc|
           args[:fast_start_langserver] = false
         end
 
@@ -215,6 +214,7 @@ module PuppetLanguageServer
     return unless active?
 
     log_message(:info, "Using Puppet v#{Puppet.version}")
+    log_message(:info, "Using Facter v#{Facter.version}")
 
     log_message(:debug, "Detected additional puppet settings #{options[:puppet_settings]}")
     options[:puppet_settings].nil? ? Puppet.initialize_settings : Puppet.initialize_settings(options[:puppet_settings])
@@ -223,52 +223,12 @@ module PuppetLanguageServer
     PuppetLanguageServer::PuppetHelper.initialize_helper(options)
 
     log_message(:info, 'Initializing settings...')
-    if options[:fast_start_langserver]
-      Thread.new do
-        init_puppet_worker(options)
-      end
-    else
-      init_puppet_worker(options)
-    end
 
-    true
-  end
-
-  def self.init_puppet_worker(options)
     # Remove all other logging destinations except for ours
     Puppet::Util::Log.destinations.clear
     Puppet::Util::Log.newdestination('null_logger')
 
-    log_message(:info, "Using Facter v#{Facter.version}")
-    if options[:preload_puppet]
-      if featureflag?('puppetstrings')
-        log_message(:info, 'Preloading Default metadata (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_aggregate_async
-
-        log_message(:info, 'Preloading Facter (Async)...')
-        PuppetLanguageServer::FacterHelper.load_facts_async
-      else
-        log_message(:info, 'Preloading Puppet Types (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_types_async
-
-        log_message(:info, 'Preloading Facter (Async)...')
-        PuppetLanguageServer::FacterHelper.load_facts_async
-
-        log_message(:info, 'Preloading Functions (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_functions_async
-
-        log_message(:info, 'Preloading Classes (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_classes_async
-
-        log_message(:info, 'Preloading DataTypes (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_datatypes_async
-      end
-
-      log_message(:info, 'Preloading static data (Async)...')
-      PuppetLanguageServer::PuppetHelper.load_static_data_async
-    else
-      log_message(:info, 'Skipping preloading Puppet')
-    end
+    true
   end
 
   def self.rpc_server(options)

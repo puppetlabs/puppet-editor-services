@@ -361,7 +361,7 @@ EOT
 
         it 'should return the fact value' do
           result = subject.resolve(@resolve_request)
-          expect(result.documentation).to eq(Facter.fact('operatingsystem').value)
+          expect(result.documentation).to eq('windows')
         end
       end
 

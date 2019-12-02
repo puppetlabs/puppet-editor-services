@@ -3,6 +3,7 @@
 require 'pathname'
 require 'tempfile'
 require 'puppet-languageserver/session_state/object_cache'
+require 'puppet-languageserver/global_queues'
 
 module PuppetLanguageServer
   module PuppetHelper
@@ -12,13 +13,9 @@ module PuppetLanguageServer
     @default_functions_loaded = nil
     @default_classes_loaded = nil
     @inmemory_cache = nil
-    @sidecar_queue_obj = nil
-    @helper_options = nil
 
-    def self.initialize_helper(options = {})
-      @helper_options = options
+    def self.initialize_helper(_options)
       @inmemory_cache = PuppetLanguageServer::SessionState::ObjectCache.new
-      sidecar_queue.cache = @inmemory_cache
     end
 
     def self.module_path
@@ -43,7 +40,7 @@ module PuppetLanguageServer
         args = ['--action-parameters=' + ap.to_json]
         args << "--local-workspace=#{local_workspace}" unless local_workspace.nil?
 
-        sidecar_queue.execute_sync('node_graph', args, false)
+        sidecar_queue.execute('node_graph', args, false, connection_id)
       end
     end
 
@@ -55,7 +52,7 @@ module PuppetLanguageServer
       args = ['--action-parameters=' + ap.to_json]
       args << "--local-workspace=#{local_workspace}" unless local_workspace.nil?
 
-      sidecar_queue.execute_sync('resource_list', args)
+      sidecar_queue.execute('resource_list', args, false, connection_id)
     end
 
     # Static data
@@ -112,13 +109,13 @@ module PuppetLanguageServer
     def self.load_default_types
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @default_types_loaded = false
-      sidecar_queue.execute_sync('default_types', [])
+      sidecar_queue.execute('default_types', [], false, connection_id)
     end
 
     def self.load_default_types_async
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @default_types_loaded = false
-      sidecar_queue.enqueue('default_types', [])
+      sidecar_queue.enqueue('default_types', [], false, connection_id)
     end
 
     def self.get_type(name)
@@ -145,13 +142,13 @@ module PuppetLanguageServer
     def self.load_default_functions
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @default_functions_loaded = false
-      sidecar_queue.execute_sync('default_functions', [])
+      sidecar_queue.execute('default_functions', [], false, connection_id)
     end
 
     def self.load_default_functions_async
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @default_functions_loaded = false
-      sidecar_queue.enqueue('default_functions', [])
+      sidecar_queue.enqueue('default_functions', [], false, connection_id)
     end
 
     def self.filtered_function_names(&block)
@@ -199,13 +196,13 @@ module PuppetLanguageServer
     def self.load_default_classes
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @default_classes_loaded = false
-      sidecar_queue.execute_sync('default_classes', [])
+      sidecar_queue.execute('default_classes', [], false, connection_id)
     end
 
     def self.load_default_classes_async
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @default_classes_loaded = false
-      sidecar_queue.enqueue('default_classes', [])
+      sidecar_queue.enqueue('default_classes', [], false, connection_id)
     end
 
     def self.get_class(name)
@@ -233,13 +230,13 @@ module PuppetLanguageServer
     def self.load_default_datatypes
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @default_datatypes_loaded = false
-      sidecar_queue.execute_sync('default_datatypes', [])
+      sidecar_queue.execute('default_datatypes', [], false, connection_id)
     end
 
     def self.load_default_datatypes_async
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @default_datatypes_loaded = false
-      sidecar_queue.enqueue('default_datatypes', [])
+      sidecar_queue.enqueue('default_datatypes', [], false, connection_id)
     end
 
     def self.datatype(name, tasks_mode = false)
@@ -261,11 +258,23 @@ module PuppetLanguageServer
       @inmemory_cache
     end
 
+    # This is a temporary module level variable.  It will be removed once PuppetHelper
+    # is refactored into a session_state style class
+    def self.connection_id
+      @connection_id
+    end
+
+    # This is a temporary module level variable.  It will be removed once PuppetHelper
+    # is refactored into a session_state style class
+    def self.connection_id=(value)
+      @connection_id = value
+    end
+
     # Workspace Loading
     def self.load_workspace_async
       if PuppetLanguageServer.featureflag?('puppetstrings')
         return true if PuppetLanguageServer::DocumentStore.store_root_path.nil?
-        sidecar_queue.enqueue('workspace_aggregate', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path])
+        sidecar_queue.enqueue('workspace_aggregate', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path], false, connection_id)
         return true
       end
       load_workspace_classes_async
@@ -276,17 +285,17 @@ module PuppetLanguageServer
 
     def self.load_workspace_classes_async
       return if PuppetLanguageServer::DocumentStore.store_root_path.nil?
-      sidecar_queue.enqueue('workspace_classes', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path])
+      sidecar_queue.enqueue('workspace_classes', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path], false, connection_id)
     end
 
     def self.load_workspace_functions_async
       return if PuppetLanguageServer::DocumentStore.store_root_path.nil?
-      sidecar_queue.enqueue('workspace_functions', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path])
+      sidecar_queue.enqueue('workspace_functions', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path], false, connection_id)
     end
 
     def self.load_workspace_types_async
       return if PuppetLanguageServer::DocumentStore.store_root_path.nil?
-      sidecar_queue.enqueue('workspace_types', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path])
+      sidecar_queue.enqueue('workspace_types', ['--local-workspace', PuppetLanguageServer::DocumentStore.store_root_path], false, connection_id)
     end
 
     def self.purge_workspace
@@ -296,7 +305,7 @@ module PuppetLanguageServer
     end
 
     def self.sidecar_queue
-      @sidecar_queue_obj ||= PuppetLanguageServer::SidecarQueue.new(@helper_options)
+      PuppetLanguageServer::GlobalQueues.sidecar_queue
     end
 
     def self.with_temporary_file(content)
@@ -317,7 +326,7 @@ module PuppetLanguageServer
       @default_classes_loaded   = false if @default_classes_loaded.nil?
       @default_functions_loaded = false if @default_functions_loaded.nil?
       @default_types_loaded     = false if @default_types_loaded.nil?
-      sidecar_queue.enqueue('default_aggregate', [])
+      sidecar_queue.enqueue('default_aggregate', [], false, connection_id)
     end
   end
 end

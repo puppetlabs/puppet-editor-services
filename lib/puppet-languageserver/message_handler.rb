@@ -70,7 +70,7 @@ module PuppetLanguageServer
   class MessageHandler < PuppetEditorServices::Handler::JsonRPC
     def initialize(*_)
       super
-      @session_state = ClientSessionState.new(self, :documents => DocumentStore.instance)
+      @session_state = ClientSessionState.new(self, :documents => DocumentStore.instance, :object_cache => PuppetLanguageServer::PuppetHelper.cache)
     end
 
     def session_state # rubocop:disable Style/TrivialAccessors During the refactor, this is fine.
@@ -85,8 +85,13 @@ module PuppetLanguageServer
       session_state.documents
     end
 
-    def request_initialize(_, json_rpc_message)
+    def request_initialize(connection_id, json_rpc_message)
       PuppetLanguageServer.log_message(:debug, 'Received initialize method')
+
+      # This is a temporary module level variable.  It will be removed once refactored into a session_state style class
+      PuppetLanguageServer::PuppetHelper.connection_id = connection_id
+      PuppetLanguageServer::FacterHelper.connection_id = connection_id
+
       language_client.parse_lsp_initialize!(json_rpc_message.params)
       # Setup static registrations if dynamic registration is not available
       info = {
@@ -97,6 +102,32 @@ module PuppetLanguageServer
       documents.initialize_store(
         :workspace => workspace_root_from_initialize_params(json_rpc_message.params)
       )
+
+      # Initiate loading the object_cache
+      if PuppetLanguageServer.featureflag?('puppetstrings')
+        PuppetLanguageServer.log_message(:info, 'Loading Default metadata (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_aggregate_async
+
+        PuppetLanguageServer.log_message(:info, 'Loading Facter (Async)...')
+        PuppetLanguageServer::FacterHelper.load_facts_async
+      else
+        PuppetLanguageServer.log_message(:info, 'Loading Puppet Types (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_types_async
+
+        PuppetLanguageServer.log_message(:info, 'Loading Facter (Async)...')
+        PuppetLanguageServer::FacterHelper.load_facts_async
+
+        PuppetLanguageServer.log_message(:info, 'Loading Functions (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_functions_async
+
+        PuppetLanguageServer.log_message(:info, 'Loading Classes (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_classes_async
+
+        PuppetLanguageServer.log_message(:info, 'Loading DataTypes (Async)...')
+        PuppetLanguageServer::PuppetHelper.load_default_datatypes_async
+      end
+      PuppetLanguageServer.log_message(:info, 'Loading static data (Async)...')
+      PuppetLanguageServer::PuppetHelper.load_static_data_async
 
       # Initiate loading of the workspace if needed
       if documents.store_has_module_metadata? || documents.store_has_environmentconf?

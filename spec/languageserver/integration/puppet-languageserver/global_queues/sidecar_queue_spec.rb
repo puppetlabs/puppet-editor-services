@@ -7,12 +7,25 @@ class SuccessStatus
 end
 
 describe 'sidecar_queue' do
+  let(:mock_connection) { Object.new }
+  let(:connection_id) { 'mock_conn_id' }
   let(:cache) { PuppetLanguageServer::SessionState::ObjectCache.new }
-  let(:subject) {
-    subject = PuppetLanguageServer::SidecarQueue.new
-    subject.cache = cache
-    subject
-  }
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :object_cache => cache) }
+  let(:subject) { PuppetLanguageServer::GlobalQueues::SidecarQueue.new }
+
+  before(:each) do
+    # Mock a connection and session state
+    allow(subject).to receive(:connection_from_connection_id).with(connection_id).and_return(mock_connection)
+    allow(subject).to receive(:sidecar_args_from_connection).with(mock_connection).and_return([])
+    allow(subject).to receive(:session_state_from_connection).with(mock_connection).and_return(session_state)
+  end
+
+  describe 'SidecarQueueJob' do
+    it 'should only contain the action name connection id in the key' do
+      job = PuppetLanguageServer::GlobalQueues::SidecarQueueJob.new('action', ['additional'], true, connection_id)
+      expect(job.key).to eq("action-#{connection_id}")
+    end
+  end
 
   describe '#enqueue' do
     let(:action1) { 'default_classes' }
@@ -21,47 +34,47 @@ describe 'sidecar_queue' do
     let(:additional_args2) { [] }
 
     before(:each) do
-      allow(subject).to receive(:execute_sync).and_raise("PuppetLanguageServer::SidecarQueue.execute_sync mock should not be called")
+      allow(subject).to receive(:execute_job).and_raise("#{self.class}.execute_job mock should not be called")
     end
 
     context 'for a single item in the queue' do
-      before(:each) do
-        expect(subject).to receive(:execute_sync).with(action1, additional_args1).and_return(true)
-      end
-
       it 'should call the synchronous method' do
-        subject.enqueue(action1, additional_args1)
+        expect(subject).to receive(:execute_job).with(having_attributes(
+          :action          => action1,
+          :additional_args => additional_args1,
+          :handle_errors   => false,
+          :connection_id   => connection_id
+        )).and_return(true)
+
+        subject.enqueue(action1, additional_args1, false, connection_id)
         subject.drain_queue
       end
     end
 
     context 'for multiple items in the queue' do
       it 'should process all unique actions' do
-        expect(subject).to receive(:execute_sync).with(action1, additional_args1).and_return(true)
-        expect(subject).to receive(:execute_sync).with(action2, additional_args2).and_return(true)
+        expect(subject).to receive(:execute_job).with(having_attributes(
+          :action          => action1,
+          :additional_args => additional_args1,
+          :handle_errors   => false,
+          :connection_id   => connection_id
+        )).and_return(true)
 
-        subject.enqueue(action1, additional_args1)
-        subject.enqueue(action2, additional_args2)
-        subject.drain_queue
-      end
+        expect(subject).to receive(:execute_job).with(having_attributes(
+          :action          => action2,
+          :additional_args => additional_args2,
+          :handle_errors   => false,
+          :connection_id   => connection_id
+        )).and_return(true)
 
-      it 'should ignore duplicate actions' do
-        expect(subject).to receive(:execute_sync).with(action1, additional_args1).and_return(true)
-        expect(subject).to receive(:execute_sync).with(action2, additional_args2).and_return(true)
-
-        # Populate the queue with one of each action
-        subject.reset_queue([
-          { action: action1, additional_args: additional_args1},
-          { action: action2, additional_args: additional_args2},
-        ])
-
-        subject.enqueue(action2, additional_args2)
+        subject.enqueue(action1, additional_args1, false, connection_id)
+        subject.enqueue(action2, additional_args2, false, connection_id)
         subject.drain_queue
       end
     end
   end
 
-  describe '#execute_sync' do
+  describe '#execute' do
     context 'default_aggregate action' do
       let(:action) { 'default_aggregate' }
 
@@ -77,7 +90,7 @@ describe 'sidecar_queue' do
         expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_functions_loaded)
         expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_types_loaded)
 
-        subject.execute_sync(action, [])
+        subject.execute(action, [], false, connection_id)
         expect(cache.object_by_name(:class, fixture.classes[0].key)).to_not be_nil
         expect(cache.object_by_name(:function, fixture.functions[0].key)).to_not be_nil
         expect(cache.object_by_name(:type, fixture.types[0].key)).to_not be_nil
@@ -95,7 +108,7 @@ describe 'sidecar_queue' do
         expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
         expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_classes_loaded)
 
-        subject.execute_sync(action, [])
+        subject.execute(action, [], false, connection_id)
         expect(cache.object_by_name(:class, fixture[0].key)).to_not be nil
       end
     end
@@ -111,7 +124,7 @@ describe 'sidecar_queue' do
         expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
         expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_functions_loaded)
 
-        subject.execute_sync(action, [])
+        subject.execute(action, [], false, connection_id)
         expect(cache.object_by_name(:function, fixture[0].key)).to_not be nil
       end
     end
@@ -127,7 +140,7 @@ describe 'sidecar_queue' do
         expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
         expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_types_loaded)
 
-        subject.execute_sync(action, [])
+        subject.execute(action, [], false, connection_id)
         expect(cache.object_by_name(:type, fixture[0].key)).to_not be nil
       end
     end

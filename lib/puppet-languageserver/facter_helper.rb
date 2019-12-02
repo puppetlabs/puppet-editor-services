@@ -23,12 +23,12 @@ module PuppetLanguageServer
 
     def self.load_facts
       @facts_loaded = false
-      sidecar_queue.execute_sync('facts', [])
+      sidecar_queue.execute('facts', [], false, connection_id)
     end
 
     def self.load_facts_async
       @facts_loaded = false
-      sidecar_queue.enqueue('facts', [])
+      sidecar_queue.enqueue('facts', [], false, connection_id)
     end
 
     def self.fact(name)
@@ -45,6 +45,18 @@ module PuppetLanguageServer
     def self.fact_names
       return [] if @facts_loaded == false
       cache.object_names_by_section(:fact).map(&:to_s)
+    end
+
+    # This is a temporary module level variable.  It will be removed once FacterHelper
+    # is refactored into a session_state style class
+    def self.connection_id
+      @connection_id
+    end
+
+    # This is a temporary module level variable.  It will be removed once FacterHelper
+    # is refactored into a session_state style class
+    def self.connection_id=(value)
+      @connection_id = value
     end
   end
 end
