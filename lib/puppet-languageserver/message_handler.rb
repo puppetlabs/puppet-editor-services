@@ -73,12 +73,16 @@ module PuppetLanguageServer
       @session_state = ClientSessionState.new(self, :documents => DocumentStore.instance)
     end
 
+    def session_state # rubocop:disable Style/TrivialAccessors During the refactor, this is fine.
+      @session_state
+    end
+
     def language_client
-      @session_state.language_client
+      session_state.language_client
     end
 
     def documents
-      @session_state.documents
+      session_state.documents
     end
 
     def request_initialize(_, json_rpc_message)
@@ -393,7 +397,7 @@ module PuppetLanguageServer
 
     def unhandled_exception(error, options)
       super(error, options)
-      PuppetLanguageServer::CrashDump.write_crash_file(error, nil, options)
+      PuppetLanguageServer::CrashDump.write_crash_file(error, session_state, nil, options)
     end
 
     private

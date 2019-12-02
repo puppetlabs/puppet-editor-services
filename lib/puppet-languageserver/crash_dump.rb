@@ -6,7 +6,7 @@ module PuppetLanguageServer
       File.join(Dir.tmpdir, 'puppet_language_server_crash.txt')
     end
 
-    def self.write_crash_file(err, filename = nil, additional = {})
+    def self.write_crash_file(err, session_state, filename = nil, additional = {})
       # Create the crash text
 
       puppet_version         = Puppet.version rescue 'Unknown' # rubocop:disable Lint/RescueWithoutErrorClass, Style/RescueModifier
@@ -33,8 +33,8 @@ TEXT
       # rubocop:enable Layout/IndentHeredoc, Layout/ClosingHeredocIndentation, Style/FormatStringToken
 
       # Append the documents in the cache
-      PuppetLanguageServer::DocumentStore.document_uris.each do |uri|
-        crashtext += "Document - #{uri}\n---\n#{PuppetLanguageServer::DocumentStore.document(uri)}\n\n"
+      session_state.documents.document_uris.each do |uri|
+        crashtext += "Document - #{uri}\n---\n#{session_state.documents.document(uri)}\n\n"
       end
       # Append additional objects from the crash
       additional.each do |k, v|
