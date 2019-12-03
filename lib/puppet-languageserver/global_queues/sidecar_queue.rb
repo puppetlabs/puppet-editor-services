@@ -66,11 +66,6 @@ module PuppetLanguageServer
           cache.import_sidecar_list!(lists.functions, :function, :default)
           cache.import_sidecar_list!(lists.types,     :type, :default)
 
-          PuppetLanguageServer::PuppetHelper.assert_default_classes_loaded
-          PuppetLanguageServer::PuppetHelper.assert_default_functions_loaded
-          PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
-          PuppetLanguageServer::PuppetHelper.assert_default_datatypes_loaded
-
           lists.each_list do |k, v|
             if v.nil?
               PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_aggregate returned no #{k}")
@@ -84,35 +79,25 @@ module PuppetLanguageServer
           cache.import_sidecar_list!(list, :class, :default)
           PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_classes returned #{list.count} items")
 
-          PuppetLanguageServer::PuppetHelper.assert_default_classes_loaded
-
         when 'default_datatypes'
           list = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new.from_json!(result)
           cache.import_sidecar_list!(list, :datatype, :default)
           PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_datatypes returned #{list.count} items")
-
-          PuppetLanguageServer::PuppetHelper.assert_default_datatypes_loaded
 
         when 'default_functions'
           list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new.from_json!(result)
           cache.import_sidecar_list!(list, :function, :default)
           PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_functions returned #{list.count} items")
 
-          PuppetLanguageServer::PuppetHelper.assert_default_functions_loaded
-
         when 'default_types'
           list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new.from_json!(result)
           cache.import_sidecar_list!(list, :type, :default)
           PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: default_types returned #{list.count} items")
 
-          PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
-
         when 'facts'
           list = PuppetLanguageServer::Sidecar::Protocol::FactList.new.from_json!(result)
           cache.import_sidecar_list!(list, :fact, :default)
           PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: facts returned #{list.count} items")
-
-          PuppetLanguageServer::FacterHelper.assert_facts_loaded
 
         when 'node_graph'
           return PuppetLanguageServer::Sidecar::Protocol::PuppetNodeGraph.new.from_json!(result)
@@ -162,7 +147,7 @@ module PuppetLanguageServer
         true
       rescue StandardError => e
         raise unless job_object.handle_errors
-        PuppetLanguageServer.log_message(:error, "SidecarQueue Thread: Error running action #{job_object.action}. #{e}")
+        PuppetLanguageServer.log_message(:error, "SidecarQueue Thread: Error running action #{job_object.action}. #{e}\n#{e.backtrace}")
         nil
       end
 

@@ -3,10 +3,6 @@ require 'spec_helper'
 describe 'hover_provider' do
   let(:subject) { PuppetLanguageServer::Manifest::HoverProvider }
 
-  before(:all) do
-    wait_for_puppet_loading
-  end
-
   describe '#resolve' do
     let(:content) { <<-EOT
 user { 'Bob':
@@ -27,6 +23,7 @@ EOT
     }
 
     before(:each) do
+      populate_cache(PuppetLanguageServer::PuppetHelper.cache)
       # Prepopulate the Object Cache with workspace objects
       # Classes / Defined Types
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
@@ -61,8 +58,6 @@ EOT
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :type, :workspace)
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :workspace)
-      # Currently the DataTypes are only loaded behind a feature flag. As we only test without
-      # the flag, simulate it the purposes of this test
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :default)
     end
 

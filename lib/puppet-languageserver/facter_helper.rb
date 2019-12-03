@@ -13,24 +13,6 @@ module PuppetLanguageServer
     end
 
     # Facts
-    def self.facts_loaded?
-      @facts_loaded.nil? ? false : @facts_loaded
-    end
-
-    def self.assert_facts_loaded
-      @facts_loaded = true
-    end
-
-    def self.load_facts
-      @facts_loaded = false
-      sidecar_queue.execute('facts', [], false, connection_id)
-    end
-
-    def self.load_facts_async
-      @facts_loaded = false
-      sidecar_queue.enqueue('facts', [], false, connection_id)
-    end
-
     def self.fact(name)
       return nil if @facts_loaded == false
       cache.object_by_name(:fact, name)

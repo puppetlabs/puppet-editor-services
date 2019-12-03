@@ -70,11 +70,8 @@ end
 describe 'completion_provider' do
   let(:subject) { PuppetLanguageServer::Manifest::CompletionProvider }
 
-  before(:all) do
-    wait_for_puppet_loading
-  end
-
   before(:each) do
+    populate_cache(PuppetLanguageServer::PuppetHelper.cache)
     # Prepopulate the Object Cache with workspace objects
     # Classes / Defined Types
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new

@@ -24,11 +24,9 @@ end
 describe 'definition_provider' do
   let(:subject) { PuppetLanguageServer::Manifest::DefinitionProvider }
 
-  before(:all) do
-    # This is a little brittle
-    cache = PuppetLanguageServer::PuppetHelper.instance_variable_get(:@inmemory_cache)
-
-    cache.import_sidecar_list!([
+  before(:each) do
+    populate_cache(PuppetLanguageServer::PuppetHelper.cache)
+    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([
       puppetclass_cache_object(:deftypeone, '/root/deftypeone.pp'),
       puppetclass_cache_object(:puppetclassone, '/root/puppetclassone.pp'),
       puppetclass_cache_object(:testclasses, '/root/init.pp'),
@@ -37,16 +35,10 @@ describe 'definition_provider' do
   end
 
   after(:all) do
-    # This is a little brittle
-    cache = PuppetLanguageServer::PuppetHelper.instance_variable_get(:@inmemory_cache)
-    cache.remove_section!(:class, :rspec)
+    PuppetLanguageServer::PuppetHelper.cache.remove_section!(:class, :rspec)
   end
 
   describe '#find_defintion' do
-    before(:all) do
-      wait_for_puppet_loading
-    end
-
     context 'Given a Puppet Plan', :if => Puppet.tasks_supported? do
       let(:content) { <<-EOT
         plan mymodule::my_plan(

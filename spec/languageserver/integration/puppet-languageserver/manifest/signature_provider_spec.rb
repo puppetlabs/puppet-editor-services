@@ -7,11 +7,8 @@ end
 describe 'signature_provider' do
   let(:subject) { PuppetLanguageServer::Manifest::SignatureProvider }
 
-  before(:all) do
-    wait_for_puppet_loading
-  end
-
   before(:each) do
+    populate_cache(PuppetLanguageServer::PuppetHelper.cache)
     # Prepopulate the Object Cache with workspace objects
     # Functions
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new

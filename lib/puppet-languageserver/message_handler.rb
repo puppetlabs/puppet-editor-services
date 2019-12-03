@@ -104,36 +104,11 @@ module PuppetLanguageServer
       )
 
       # Initiate loading the object_cache
-      if PuppetLanguageServer.featureflag?('puppetstrings')
-        PuppetLanguageServer.log_message(:info, 'Loading Default metadata (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_aggregate_async
-
-        PuppetLanguageServer.log_message(:info, 'Loading Facter (Async)...')
-        PuppetLanguageServer::FacterHelper.load_facts_async
-      else
-        PuppetLanguageServer.log_message(:info, 'Loading Puppet Types (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_types_async
-
-        PuppetLanguageServer.log_message(:info, 'Loading Facter (Async)...')
-        PuppetLanguageServer::FacterHelper.load_facts_async
-
-        PuppetLanguageServer.log_message(:info, 'Loading Functions (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_functions_async
-
-        PuppetLanguageServer.log_message(:info, 'Loading Classes (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_classes_async
-
-        PuppetLanguageServer.log_message(:info, 'Loading DataTypes (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_datatypes_async
-      end
-      PuppetLanguageServer.log_message(:info, 'Loading static data (Async)...')
-      PuppetLanguageServer::PuppetHelper.load_static_data_async
+      session_state.load_default_data!
+      session_state.load_static_data!
 
       # Initiate loading of the workspace if needed
-      if documents.store_has_module_metadata? || documents.store_has_environmentconf?
-        PuppetLanguageServer.log_message(:info, 'Loading Workspace (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_workspace_async
-      end
+      session_state.load_workspace_data! if documents.store_has_module_metadata? || documents.store_has_environmentconf?
 
       { 'capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities(info) }
     end
@@ -148,10 +123,10 @@ module PuppetLanguageServer
         'languageServerVersion' => PuppetEditorServices.version,
         'puppetVersion'         => Puppet.version,
         'facterVersion'         => Facter.version,
-        'factsLoaded'           => PuppetLanguageServer::FacterHelper.facts_loaded?,
-        'functionsLoaded'       => PuppetLanguageServer::PuppetHelper.default_functions_loaded?,
-        'typesLoaded'           => PuppetLanguageServer::PuppetHelper.default_types_loaded?,
-        'classesLoaded'         => PuppetLanguageServer::PuppetHelper.default_classes_loaded?
+        'factsLoaded'           => session_state.facts_loaded?,
+        'functionsLoaded'       => session_state.default_functions_loaded?,
+        'typesLoaded'           => session_state.default_types_loaded?,
+        'classesLoaded'         => session_state.default_classes_loaded?
       )
     end
 
@@ -393,10 +368,10 @@ module PuppetLanguageServer
       documents.expire_store_information
       if documents.store_has_module_metadata? || documents.store_has_environmentconf?
         # Load the workspace information
-        PuppetLanguageServer::PuppetHelper.load_workspace_async
+        session_state.load_workspace_data!
       else
         # Purge the workspace information
-        PuppetLanguageServer::PuppetHelper.purge_workspace
+        session_state.purge_workspace_data!
       end
     end
 

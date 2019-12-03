@@ -7,10 +7,13 @@ class SuccessStatus
 end
 
 describe 'sidecar_queue' do
-  let(:mock_connection) { Object.new }
+  let(:server) do
+    MockServer.new({}, {}, {}, { :class => PuppetLanguageServer::MessageHandler })
+  end
+  let(:mock_connection) { server.connection_object }
   let(:connection_id) { 'mock_conn_id' }
   let(:cache) { PuppetLanguageServer::SessionState::ObjectCache.new }
-  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :object_cache => cache) }
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(server.handler_object, :object_cache => cache) }
   let(:subject) { PuppetLanguageServer::GlobalQueues::SidecarQueue.new }
 
   before(:each) do
@@ -78,7 +81,7 @@ describe 'sidecar_queue' do
     context 'default_aggregate action' do
       let(:action) { 'default_aggregate' }
 
-      it 'should deserialize the json, import into the cache and assert default classes are loaded' do
+      it 'should deserialize the json, import into the cache' do
         fixture = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
         fixture.append!(random_sidecar_puppet_class)
         fixture.append!(random_sidecar_puppet_function)
@@ -86,9 +89,6 @@ describe 'sidecar_queue' do
         sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
 
         expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
-        expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_classes_loaded)
-        expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_functions_loaded)
-        expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_types_loaded)
 
         subject.execute(action, [], false, connection_id)
         expect(cache.object_by_name(:class, fixture.classes[0].key)).to_not be_nil
@@ -100,13 +100,12 @@ describe 'sidecar_queue' do
     context 'default_classes action' do
       let(:action) { 'default_classes' }
 
-      it 'should deserialize the json, import into the cache and assert default classes are loaded' do
+      it 'should deserialize the json, import into the cache' do
         fixture = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
         fixture << random_sidecar_puppet_class
         sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
 
         expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
-        expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_classes_loaded)
 
         subject.execute(action, [], false, connection_id)
         expect(cache.object_by_name(:class, fixture[0].key)).to_not be nil
@@ -116,13 +115,12 @@ describe 'sidecar_queue' do
     context 'default_functions action' do
       let(:action) { 'default_functions' }
 
-      it 'should deserialize the json, import into the cache and assert default functions are loaded' do
+      it 'should deserialize the json, import into the cache' do
         fixture = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
         fixture << random_sidecar_puppet_function
         sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
 
         expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
-        expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_functions_loaded)
 
         subject.execute(action, [], false, connection_id)
         expect(cache.object_by_name(:function, fixture[0].key)).to_not be nil
@@ -132,13 +130,12 @@ describe 'sidecar_queue' do
     context 'default_types action' do
       let(:action) { 'default_types' }
 
-      it 'should deserialize the json, import into the cache and assert default types are loaded' do
+      it 'should deserialize the json, import into the cache' do
         fixture = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
         fixture << random_sidecar_puppet_type
         sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
 
         expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
-        expect(PuppetLanguageServer::PuppetHelper).to receive(:assert_default_types_loaded)
 
         subject.execute(action, [], false, connection_id)
         expect(cache.object_by_name(:type, fixture[0].key)).to_not be nil
