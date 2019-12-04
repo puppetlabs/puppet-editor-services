@@ -3,7 +3,7 @@
 module PuppetLanguageServer
   module Manifest
     module CompletionProvider
-      def self.complete(content, line_num, char_num, options = {})
+      def self.complete(session_state, content, line_num, char_num, options = {})
         options = {
           :tasks_mode => false,
           :context    => nil # LSP::CompletionContext object
@@ -25,7 +25,7 @@ module PuppetLanguageServer
           keywords(%w[plan]) { |x| items << x } if options[:tasks_mode]
 
           # Add resources
-          all_resources { |x| items << x }
+          all_resources(session_state) { |x| items << x }
 
           all_functions(options[:tasks_mode]) { |x| items << x }
 
@@ -51,13 +51,13 @@ module PuppetLanguageServer
           keywords(%w[require contain]) { |x| items << x }
 
           # Add resources
-          all_resources { |x| items << x }
+          all_resources(session_state) { |x| items << x }
 
         when 'Puppet::Pops::Model::PlanDefinition'
           # We are in the root of a `plan` statement
 
           # Add resources
-          all_resources { |x| items << x }
+          all_resources(session_state) { |x| items << x }
 
           all_functions(options[:tasks_mode]) { |x| items << x }
 
@@ -70,7 +70,7 @@ module PuppetLanguageServer
           # specified in the resource title.
           # Ref: https://puppet.com/docs/puppet/5.3/lang_classes.html#using-resource-like-declarations
           item_value = item.type_name.value == 'class' && item.bodies.length == 1 ? item.bodies[0].title.value : item.type_name.value
-          item_object = PuppetLanguageServer::PuppetHelper.get_type(item_value)
+          item_object = PuppetLanguageServer::PuppetHelper.get_type(session_state, item_value)
           unless item_object.nil?
             # Add Parameters
             item_object.attributes.select { |_name, data| data[:type] == :param }.each_key do |name|
@@ -159,9 +159,9 @@ module PuppetLanguageServer
         end
       end
 
-      def self.all_resources(&block)
+      def self.all_resources(session_state, &block)
         # Find Puppet Types
-        PuppetLanguageServer::PuppetHelper.type_names.each do |pup_type|
+        PuppetLanguageServer::PuppetHelper.type_names(session_state).each do |pup_type|
           item = LSP::CompletionItem.new(
             'label'  => pup_type,
             'kind'   => LSP::CompletionItemKind::MODULE,
@@ -201,7 +201,7 @@ module PuppetLanguageServer
       # END Helpers
 
       # completion_item is an instance of LSP::CompletionItem
-      def self.resolve(completion_item)
+      def self.resolve(session_state, completion_item)
         result = completion_item.clone
         data = result.data
         case data['type']
@@ -254,7 +254,7 @@ module PuppetLanguageServer
           end
 
         when 'resource_type'
-          item_type = PuppetLanguageServer::PuppetHelper.get_type(data['name'])
+          item_type = PuppetLanguageServer::PuppetHelper.get_type(session_state, data['name'])
           return result if item_type.nil?
 
           attr_names = []
@@ -283,7 +283,7 @@ module PuppetLanguageServer
           result.insertText = snippet
           result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
         when 'resource_parameter'
-          item_type = PuppetLanguageServer::PuppetHelper.get_type(data['resource_type'])
+          item_type = PuppetLanguageServer::PuppetHelper.get_type(session_state, data['resource_type'])
           return result if item_type.nil?
           param_type = item_type.attributes[data['param'].intern]
           unless param_type.nil?
@@ -292,7 +292,7 @@ module PuppetLanguageServer
             result.insertText = "#{data['param']} => "
           end
         when 'resource_property'
-          item_type = PuppetLanguageServer::PuppetHelper.get_type(data['resource_type'])
+          item_type = PuppetLanguageServer::PuppetHelper.get_type(session_state, data['resource_type'])
           return result if item_type.nil?
           prop_type = item_type.attributes[data['prop'].intern]
           unless prop_type.nil?

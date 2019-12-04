@@ -50,12 +50,12 @@ module PuppetLanguageServer
       sidecar_queue.execute('resource_list', args, false, session_state.connection_id)
     end
 
-    def self.get_type(name)
-      @inmemory_cache.object_by_name(:type, name)
+    def self.get_type(session_state, name)
+      session_state.object_cache.object_by_name(:type, name)
     end
 
-    def self.type_names
-      @inmemory_cache.object_names_by_section(:type).map(&:to_s)
+    def self.type_names(session_state)
+      session_state.object_cache.object_names_by_section(:type).map(&:to_s)
     end
 
     def self.filtered_function_names(&block)

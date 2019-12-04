@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.shared_examples "a single definition result" do |filename_regex|
   it "should return a single definition result which matches #{filename_regex.to_s}" do
-    result = subject.find_definition(content, line_num, char_num)
+    result = subject.find_definition(session_state, content, line_num, char_num)
 
     expect(result).to be_a(Array)
     expect(result.count).to eq(1)
@@ -22,10 +22,14 @@ def puppetclass_cache_object(key, source)
 end
 
 describe 'definition_provider' do
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => 'mock') }
   let(:subject) { PuppetLanguageServer::Manifest::DefinitionProvider }
 
   before(:each) do
+    # Until the PuppetHelper has finished refactoring, we need to mock
+    # the items in both cache objects
     populate_cache(PuppetLanguageServer::PuppetHelper.cache)
+    populate_cache(session_state.object_cache)
     PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([
       puppetclass_cache_object(:deftypeone, '/root/deftypeone.pp'),
       puppetclass_cache_object(:puppetclassone, '/root/puppetclassone.pp'),
@@ -47,7 +51,7 @@ describe 'definition_provider' do
         EOT
       }
       it "should not raise an error" do
-        result = subject.find_definition(content, 0, 1, { :tasks_mode => true})
+        result = subject.find_definition(session_state, content, 0, 1, { :tasks_mode => true})
       end
     end
 

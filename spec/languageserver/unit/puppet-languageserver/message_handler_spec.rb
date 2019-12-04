@@ -489,12 +489,12 @@ describe 'PuppetLanguageServer::MessageHandler' do
         let(:file_uri) { MANIFEST_FILENAME }
 
         it 'should call complete method on the Completion Provider' do
-          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object, line_num, char_num, { :tasks_mode => false, :context => nil }).and_return('something')
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(subject.session_state, Object, line_num, char_num, { :tasks_mode => false, :context => nil }).and_return('something')
           subject.request_textdocument_completion(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
-          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object, line_num, char_num, { :tasks_mode => true, :context => nil }).and_return('something')
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(subject.session_state, Object, line_num, char_num, { :tasks_mode => true, :context => nil }).and_return('something')
           allow(subject.documents).to receive(:plan_file?).and_return true
           subject.request_textdocument_completion(connection_id, request_message)
         end
@@ -514,7 +514,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
           }}
 
           it 'should pass the context' do
-            expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object, line_num, char_num, { :tasks_mode => false, :context => LSP::CompletionContext}).and_return('something')
+            expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(subject.session_state, Object, line_num, char_num, { :tasks_mode => false, :context => LSP::CompletionContext}).and_return('something')
             subject.request_textdocument_completion(connection_id, request_message)
           end
         end
@@ -598,12 +598,12 @@ describe 'PuppetLanguageServer::MessageHandler' do
         let(:file_uri) { MANIFEST_FILENAME }
 
         it 'should call resolve method on the Hover Provider' do
-          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
+          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(subject.session_state, Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
           subject.request_textdocument_hover(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
-          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
+          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(subject.session_state, Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
           allow(subject.documents).to receive(:plan_file?).and_return true
           subject.request_textdocument_hover(connection_id, request_message)
         end
@@ -658,13 +658,13 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
         it 'should call find_definition method on the Definition Provider' do
           expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition)
-            .with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
+            .with(subject.session_state, Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
           subject.request_textdocument_definition(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition)
-            .with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
+            .with(subject.session_state, Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
           allow(subject.documents).to receive(:plan_file?).and_return true
           subject.request_textdocument_definition(connection_id, request_message)
         end

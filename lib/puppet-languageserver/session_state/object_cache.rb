@@ -23,7 +23,7 @@ module PuppetLanguageServer
           remove_section_impl(section, origin)
           # Set the list
           @inmemory_cache[origin] = {} if @inmemory_cache[origin].nil?
-          @inmemory_cache[origin][section] = list
+          @inmemory_cache[origin][section] = list.dup
         end
         nil
       end

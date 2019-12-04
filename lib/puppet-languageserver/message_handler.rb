@@ -194,7 +194,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :context => context, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::CompletionProvider.complete(session_state, content, line_num, char_num, :context => context, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide completion on #{file_uri}"
       end
@@ -204,7 +204,7 @@ module PuppetLanguageServer
     end
 
     def request_completionitem_resolve(_, json_rpc_message)
-      PuppetLanguageServer::Manifest::CompletionProvider.resolve(LSP::CompletionItem.new(json_rpc_message.params))
+      PuppetLanguageServer::Manifest::CompletionProvider.resolve(session_state, LSP::CompletionItem.new(json_rpc_message.params))
     rescue StandardError => e
       PuppetLanguageServer.log_message(:error, "(completionItem/resolve) #{e}")
       # Spit back the same params if an error happens
@@ -218,7 +218,7 @@ module PuppetLanguageServer
       content = documents.document(file_uri)
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::HoverProvider.resolve(session_state, content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide hover on #{file_uri}"
       end
@@ -235,7 +235,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(session_state, content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
