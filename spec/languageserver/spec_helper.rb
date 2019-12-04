@@ -20,8 +20,7 @@ PuppetLanguageServer::init_puppet(server_options)
 
 def populate_cache(cache)
   if $exemplar_cache.nil?
-    mock_server = MockServer.new({}, {}, {}, { :class => PuppetLanguageServer::MessageHandler })
-    session_state = PuppetLanguageServer::ClientSessionState.new(mock_server.handler_object)
+    session_state = PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => '123')
     session_state.load_static_data!(false)
     $exemplar_cache = session_state.object_cache
 

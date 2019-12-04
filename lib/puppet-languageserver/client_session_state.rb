@@ -18,7 +18,7 @@ module PuppetLanguageServer
       @documents       = options[:documents].nil? ? PuppetLanguageServer::SessionState::DocumentStore.new : options[:documents]
       @language_client = options[:language_client].nil? ? PuppetLanguageServer::SessionState::LanguageClient.new(message_handler) : options[:language_client]
       @object_cache    = options[:object_cache].nil? ? PuppetLanguageServer::SessionState::ObjectCache.new : options[:object_cache]
-      @connection_id   = message_handler.protocol.connection.id
+      @connection_id   = options[:connection_id].nil? ? message_handler.protocol.connection.id : options[:connection_id]
     end
 
     # Helper methods to know the state of the object cache

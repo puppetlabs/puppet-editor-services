@@ -1,11 +1,8 @@
 require 'spec_helper'
 
 describe 'PuppetLanguageServer::ClientSessionState' do
-  let(:server) do
-    MockServer.new({}, {}, {}, { :class => PuppetLanguageServer::MessageHandler })
-  end
   let(:async) { false } # Always load synchoronously for rspec testing
-  let(:subject) { PuppetLanguageServer::ClientSessionState.new(server.handler_object) }
+  let(:subject) { PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => '123') }
 
   describe '#load_static_data!' do
     def contains_bolt_objects?(cache)

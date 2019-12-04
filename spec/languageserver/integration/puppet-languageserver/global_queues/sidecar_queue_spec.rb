@@ -7,13 +7,10 @@ class SuccessStatus
 end
 
 describe 'sidecar_queue' do
-  let(:server) do
-    MockServer.new({}, {}, {}, { :class => PuppetLanguageServer::MessageHandler })
-  end
-  let(:mock_connection) { server.connection_object }
+  let(:mock_connection) { Object.new }
   let(:connection_id) { 'mock_conn_id' }
   let(:cache) { PuppetLanguageServer::SessionState::ObjectCache.new }
-  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(server.handler_object, :object_cache => cache) }
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :object_cache => cache, :connection_id => connection_id) }
   let(:subject) { PuppetLanguageServer::GlobalQueues::SidecarQueue.new }
 
   before(:each) do
