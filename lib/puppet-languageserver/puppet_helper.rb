@@ -27,7 +27,7 @@ module PuppetLanguageServer
     end
 
     # Node Graph
-    def self.get_node_graph(content, local_workspace)
+    def self.get_node_graph(session_state, content, local_workspace)
       with_temporary_file(content) do |filepath|
         ap = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new
         ap['source'] = filepath
@@ -35,11 +35,11 @@ module PuppetLanguageServer
         args = ['--action-parameters=' + ap.to_json]
         args << "--local-workspace=#{local_workspace}" unless local_workspace.nil?
 
-        sidecar_queue.execute('node_graph', args, false, connection_id)
+        sidecar_queue.execute('node_graph', args, false, session_state.connection_id)
       end
     end
 
-    def self.get_puppet_resource(typename, title, local_workspace)
+    def self.get_puppet_resource(session_state, typename, title, local_workspace)
       ap = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new
       ap['typename'] = typename
       ap['title'] = title unless title.nil?
@@ -47,7 +47,7 @@ module PuppetLanguageServer
       args = ['--action-parameters=' + ap.to_json]
       args << "--local-workspace=#{local_workspace}" unless local_workspace.nil?
 
-      sidecar_queue.execute('resource_list', args, false, connection_id)
+      sidecar_queue.execute('resource_list', args, false, session_state.connection_id)
     end
 
     def self.get_type(name)
@@ -105,18 +105,6 @@ module PuppetLanguageServer
     def self.cache
       raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
       @inmemory_cache
-    end
-
-    # This is a temporary module level variable.  It will be removed once PuppetHelper
-    # is refactored into a session_state style class
-    def self.connection_id
-      @connection_id
-    end
-
-    # This is a temporary module level variable.  It will be removed once PuppetHelper
-    # is refactored into a session_state style class
-    def self.connection_id=(value)
-      @connection_id = value
     end
 
     def self.sidecar_queue

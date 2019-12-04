@@ -89,7 +89,6 @@ module PuppetLanguageServer
       PuppetLanguageServer.log_message(:debug, 'Received initialize method')
 
       # This is a temporary module level variable.  It will be removed once refactored into a session_state style class
-      PuppetLanguageServer::PuppetHelper.connection_id = connection_id
       PuppetLanguageServer::FacterHelper.connection_id = connection_id
 
       language_client.parse_lsp_initialize!(json_rpc_message.params)
@@ -135,7 +134,7 @@ module PuppetLanguageServer
       title = json_rpc_message.params['title']
       return LSP::PuppetResourceResponse.new('error' => 'Missing Typename') if type_name.nil?
 
-      resource_list = PuppetLanguageServer::PuppetHelper.get_puppet_resource(type_name, title, documents.store_root_path)
+      resource_list = PuppetLanguageServer::PuppetHelper.get_puppet_resource(session_state, type_name, title, documents.store_root_path)
       return LSP::PuppetResourceResponse.new('data' => '') if resource_list.nil? || resource_list.length.zero?
 
       content = resource_list.map(&:manifest).join("\n\n") + "\n"
@@ -145,10 +144,10 @@ module PuppetLanguageServer
     def request_puppet_compilenodegraph(_, json_rpc_message)
       file_uri = json_rpc_message.params['external']
       return LSP::PuppetNodeGraphResponse.new('error' => 'Files of this type can not be used to create a node graph.') unless documents.document_type(file_uri) == :manifest
-      content = documents.document(file_uri)
+      document = documents.document(file_uri)
 
       begin
-        node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(content, documents.store_root_path)
+        node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(session_state, document.content, documents.store_root_path)
         LSP::PuppetNodeGraphResponse.new('vertices' => node_graph.vertices,
                                          'edges'    => node_graph.edges,
                                          'error'    => node_graph.error_content)
