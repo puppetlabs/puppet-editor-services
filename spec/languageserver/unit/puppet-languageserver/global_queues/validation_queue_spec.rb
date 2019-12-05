@@ -12,11 +12,12 @@ describe 'validation_queue' do
   let(:subject) { PuppetLanguageServer::GlobalQueues::ValidationQueue.new }
   let(:connection_id) { 'abc123' }
   let(:document_version) { 10 }
-  let(:document_store) { PuppetLanguageServer::SessionState::DocumentStore.new }
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => 'mock') }
+  let(:document_store) { session_state.documents }
 
   before(:each) do
     document_store.clear
-    allow(subject).to receive(:document_store_from_connection_id).with(connection_id).and_return(document_store)
+    allow(subject).to receive(:session_state_from_connection_id).with(connection_id).and_return(session_state)
   end
 
   def job(file_uri, document_version, connection_id, job_options = {})
@@ -79,7 +80,7 @@ describe 'validation_queue' do
         ])
 
         # We only expect the following results to be returned
-        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(file_content2, Hash).and_return(validation_result)
+        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(session_state, file_content2, Hash).and_return(validation_result)
         expect(PuppetLanguageServer::Epp::ValidationProvider).to receive(:validate).with(file_content1).and_return(validation_result)
         expect(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).with(file_content1, Hash).and_return(validation_result)
         expect(subject).to receive(:send_diagnostics).with(connection_id, VALIDATE_MANIFEST_FILENAME, validation_result)
@@ -100,7 +101,7 @@ describe 'validation_queue' do
         validation_result = [{ 'result' => 'MockResult' }]
 
         before(:each) do
-          expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(VALIDATE_FILE_CONTENT, Hash).and_return(validation_result)
+          expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(session_state, VALIDATE_FILE_CONTENT, Hash).and_return(validation_result)
         end
 
         it_should_behave_like "single document which sends validation results", VALIDATE_MANIFEST_FILENAME, VALIDATE_FILE_CONTENT, validation_result
@@ -160,7 +161,7 @@ describe 'validation_queue' do
       validation_result = [{ 'result' => 'MockResult' }]
 
       before(:each) do
-        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(VALIDATE_FILE_CONTENT, Hash).and_return(validation_result)
+        expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:validate).with(session_state, VALIDATE_FILE_CONTENT, Hash).and_return(validation_result)
       end
 
       it_should_behave_like "document which sends validation results", VALIDATE_MANIFEST_FILENAME, VALIDATE_FILE_CONTENT, validation_result

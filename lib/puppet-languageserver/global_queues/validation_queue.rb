@@ -39,7 +39,8 @@ module PuppetLanguageServer
 
       def execute_job(job_object)
         super(job_object)
-        document_store = document_store_from_connection_id(job_object.connection_id)
+        session_state = session_state_from_connection_id(job_object.connection_id)
+        document_store = session_state.nil? ? nil : session_state.documents
         raise "Document store is not available for connection id #{job_object.connection_id}" if document_store.nil?
 
         # Check if the document is the latest version
@@ -54,7 +55,7 @@ module PuppetLanguageServer
         results = case document_store.document_type(job_object.file_uri)
                   when :manifest
                     options[:tasks_mode] = document_store.plan_file?(job_object.file_uri)
-                    PuppetLanguageServer:: Manifest::ValidationProvider.validate(content, options)
+                    PuppetLanguageServer:: Manifest::ValidationProvider.validate(session_state, content, options)
                   when :epp
                     PuppetLanguageServer::Epp::ValidationProvider.validate(content)
                   when :puppetfile
@@ -78,11 +79,11 @@ module PuppetLanguageServer
 
       private
 
-      def document_store_from_connection_id(connection_id)
+      def session_state_from_connection_id(connection_id)
         connection = PuppetEditorServices::Server.current_server.connection(connection_id)
         return if connection.nil?
         handler = connection.protocol.handler
-        handler.respond_to?(:documents) ? handler.documents : nil
+        handler.respond_to?(:session_state) ? handler.session_state : nil
       end
 
       def send_diagnostics(connection_id, file_uri, diagnostics)

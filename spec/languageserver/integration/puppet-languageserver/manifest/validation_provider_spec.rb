@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => 'mock') }
   let(:subject) { PuppetLanguageServer::Manifest::ValidationProvider }
 
   describe '#fix_validate_errors' do
@@ -8,7 +9,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       let(:manifest) { 'user { \'Bob\'' }
 
       it "should return no changes" do
-        problems_fixed, new_content = subject.fix_validate_errors(manifest)
+        problems_fixed, new_content = subject.fix_validate_errors(session_state, manifest)
         expect(problems_fixed).to eq(0)
         expect(new_content).to eq(manifest)
       end
@@ -27,7 +28,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       }
 
       it "should return changes" do
-        problems_fixed, new_content = subject.fix_validate_errors(manifest)
+        problems_fixed, new_content = subject.fix_validate_errors(session_state, manifest)
         expect(problems_fixed).to eq(1)
         expect(new_content).to eq(new_manifest)
       end
@@ -50,7 +51,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       }
 
       it "should return changes" do
-        problems_fixed, new_content = subject.fix_validate_errors(manifest)
+        problems_fixed, new_content = subject.fix_validate_errors(session_state, manifest)
         expect(problems_fixed).to eq(3)
         expect(new_content).to eq(new_manifest)
       end
@@ -66,7 +67,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       }
 
       it "should return no changes" do
-        problems_fixed, new_content = subject.fix_validate_errors(manifest)
+        problems_fixed, new_content = subject.fix_validate_errors(session_state, manifest)
         expect(problems_fixed).to eq(0)
         expect(new_content).to eq(manifest)
       end
@@ -78,7 +79,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
 
       it "should preserve CRLF" do
         pending('Release of https://github.com/rodjek/puppet-lint/commit/2a850ab3fd3694a4dd0c4d2f22a1e60b9ca0a495')
-        problems_fixed, new_content = subject.fix_validate_errors(manifest)
+        problems_fixed, new_content = subject.fix_validate_errors(session_state, manifest)
         expect(problems_fixed).to eq(1)
         expect(new_content).to eq(new_manifest)
       end
@@ -92,7 +93,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       }
 
       it "should return no changes" do
-        problems_fixed, new_content = subject.fix_validate_errors(manifest)
+        problems_fixed, new_content = subject.fix_validate_errors(session_state, manifest)
         expect(problems_fixed).to eq(0)
         expect(new_content).to eq(manifest)
       end
@@ -104,7 +105,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       let(:manifest) { 'user { "Bob"' }
 
       it "should return at least one error" do
-        result = subject.validate(manifest)
+        result = subject.validate(session_state, manifest)
         expect(result.length).to be > 0
       end
     end
@@ -117,7 +118,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
         EOT
       }
       it "should not raise an error" do
-        result = subject.validate(manifest, { :tasks_mode => true})
+        result = subject.validate(session_state, manifest, { :tasks_mode => true})
       end
     end
 
@@ -125,7 +126,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       let(:manifest) { "user { 'Bob': ensure => 'present' }" }
 
       it "should return an empty array" do
-        expect(subject.validate(manifest)).to eq([])
+        expect(subject.validate(session_state, manifest)).to eq([])
       end
     end
 
@@ -135,8 +136,8 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       let(:manifest_crlf) { File.open(manifest_fixture, 'r') { |file| file.read }.gsub("\n","\r\n") }
 
       it "should return same errors for both LF and CRLF line endings" do
-        lint_error_lf = subject.validate(manifest_lf)
-        lint_error_crlf = subject.validate(manifest_crlf)
+        lint_error_lf = subject.validate(session_state, manifest_lf)
+        lint_error_crlf = subject.validate(session_state, manifest_crlf)
         expect(lint_error_crlf.to_json).to eq(lint_error_lf.to_json)
       end
    end
@@ -150,11 +151,11 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
       }
 
       it "should return an array with one entry" do
-        expect(subject.validate(manifest).count).to eq(1)
+        expect(subject.validate(session_state, manifest).count).to eq(1)
       end
 
       it "should return an entry with linting error information" do
-        lint_error = subject.validate(manifest)[0]
+        lint_error = subject.validate(session_state, manifest)[0]
 
         expect(lint_error.source).to eq('Puppet')
         expect(lint_error.message).to match('140')
@@ -173,7 +174,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
           }
 
           it "should return an empty array" do
-            expect(subject.validate(manifest)).to eq([])
+            expect(subject.validate(session_state, manifest)).to eq([])
           end
         end
 
@@ -188,7 +189,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
           }
 
           it "should return an empty array" do
-            expect(subject.validate(manifest)).to eq([])
+            expect(subject.validate(session_state, manifest)).to eq([])
           end
         end
       end

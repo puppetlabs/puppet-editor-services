@@ -7,70 +7,10 @@ require 'puppet-languageserver/client_session_state'
 require 'puppet-languageserver/global_queues'
 
 module PuppetLanguageServer
-  # This module is just duck-typing the old PuppetLanguageServer::DocumentStore Module.
-  # This will eventually be refactored out. But for now, this exists for backwards compatibility
-  module DocumentStore
-    def self.instance
-      @instance ||= PuppetLanguageServer::SessionState::DocumentStore.new
-    end
-
-    def self.set_document(uri, content, doc_version)
-      instance.set_document(uri, content, doc_version)
-    end
-
-    def self.remove_document(uri)
-      instance.remove_document(uri)
-    end
-
-    def self.clear
-      instance.clear
-    end
-
-    def self.document(uri, doc_version = nil)
-      instance.document(uri, doc_version)
-    end
-
-    def self.document_version(uri)
-      instance.document_version(uri)
-    end
-
-    def self.document_uris
-      instance.document_uris
-    end
-
-    def self.document_type(uri)
-      instance.document_type(uri)
-    end
-
-    def self.plan_file?(uri)
-      instance.plan_file?(uri)
-    end
-
-    def self.initialize_store(options = {})
-      instance.initialize_store(options)
-    end
-
-    def self.expire_store_information
-      instance.expire_store_information
-    end
-
-    def self.store_root_path
-      instance.store_root_path
-    end
-
-    def self.store_has_module_metadata?
-      instance.store_has_module_metadata?
-    end
-
-    def self.store_has_environmentconf?
-      instance.store_has_environmentconf?
-    end
-  end
-
   class MessageHandler < PuppetEditorServices::Handler::JsonRPC
     def initialize(*_)
       super
-      @session_state = ClientSessionState.new(self, :documents => DocumentStore.instance)
+      @session_state = ClientSessionState.new(self)
     end
 
     def session_state # rubocop:disable Style/TrivialAccessors During the refactor, this is fine.
@@ -161,7 +101,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        changes, new_content = PuppetLanguageServer::Manifest::ValidationProvider.fix_validate_errors(content)
+        changes, new_content = PuppetLanguageServer::Manifest::ValidationProvider.fix_validate_errors(session_state, content)
       else
         raise "Unable to fixDiagnosticErrors on #{file_uri}"
       end
