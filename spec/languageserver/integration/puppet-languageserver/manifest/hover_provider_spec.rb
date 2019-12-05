@@ -34,7 +34,6 @@ EOT
       obj = random_sidecar_puppet_class
       obj.key = :mock_workspace_class
       list << obj
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :class, :workspace)
       session_state.object_cache.import_sidecar_list!(list, :class, :workspace)
       # Functions
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
@@ -61,7 +60,6 @@ EOT
 
     after(:each) do
       # Clear out the Object Cache of workspace objects
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :workspace)
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :default)
     end

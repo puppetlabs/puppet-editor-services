@@ -26,20 +26,13 @@ describe 'definition_provider' do
   let(:subject) { PuppetLanguageServer::Manifest::DefinitionProvider }
 
   before(:each) do
-    # Until the PuppetHelper has finished refactoring, we need to mock
-    # the items in both cache objects
-    populate_cache(PuppetLanguageServer::PuppetHelper.cache)
     populate_cache(session_state.object_cache)
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([
+    session_state.object_cache.import_sidecar_list!([
       puppetclass_cache_object(:deftypeone, '/root/deftypeone.pp'),
       puppetclass_cache_object(:puppetclassone, '/root/puppetclassone.pp'),
       puppetclass_cache_object(:testclasses, '/root/init.pp'),
       puppetclass_cache_object(:"testclasses::nestedclass", '/root/nestedclass.pp')
     ], :class, :rspec)
-  end
-
-  after(:all) do
-    PuppetLanguageServer::PuppetHelper.cache.remove_section!(:class, :rspec)
   end
 
   describe '#find_defintion' do

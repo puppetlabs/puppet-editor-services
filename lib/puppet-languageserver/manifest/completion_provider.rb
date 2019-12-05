@@ -102,7 +102,7 @@ module PuppetLanguageServer
           end
           if item_object.nil?
             # Try Classes/Defined Types
-            item_object = PuppetLanguageServer::PuppetHelper.get_class(item_value)
+            item_object = PuppetLanguageServer::PuppetHelper.get_class(session_state, item_value)
             unless item_object.nil?
               # Add Parameters
               item_object.parameters.each_key do |name|
@@ -174,7 +174,7 @@ module PuppetLanguageServer
           block.call(item) if block
         end
         # Find Puppet Classes/Defined Types
-        PuppetLanguageServer::PuppetHelper.class_names.each do |pup_class|
+        PuppetLanguageServer::PuppetHelper.class_names(session_state).each do |pup_class|
           item = LSP::CompletionItem.new('label'  => pup_class,
                                          'kind'   => LSP::CompletionItemKind::MODULE,
                                          'detail' => 'Resource',
@@ -302,13 +302,13 @@ module PuppetLanguageServer
           end
 
         when 'resource_class'
-          item_class = PuppetLanguageServer::PuppetHelper.get_class(data['name'])
+          item_class = PuppetLanguageServer::PuppetHelper.get_class(session_state, data['name'])
           return result if item_class.nil?
 
           result.insertText = "#{data['name']} { '${1:title}':\n\t$0\n}"
           result.insertTextFormat = LSP::InsertTextFormat::SNIPPET
         when 'resource_class_parameter'
-          item_class = PuppetLanguageServer::PuppetHelper.get_class(data['resource_type'])
+          item_class = PuppetLanguageServer::PuppetHelper.get_class(session_state, data['resource_type'])
           return result if item_class.nil?
           param_type = item_class.parameters[data['param']]
           unless param_type.nil?

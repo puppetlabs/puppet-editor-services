@@ -72,9 +72,6 @@ describe 'completion_provider' do
   let(:subject) { PuppetLanguageServer::Manifest::CompletionProvider }
 
   before(:each) do
-    # Until the PuppetHelper has finished refactoring, we need to mock
-    # the items in both cache objects
-    populate_cache(PuppetLanguageServer::PuppetHelper.cache)
     populate_cache(session_state.object_cache)
     # Prepopulate the Object Cache with workspace objects
     # Classes / Defined Types
@@ -83,7 +80,6 @@ describe 'completion_provider' do
     obj.key = :mock_workspace_class
     list << obj
     session_state.object_cache.import_sidecar_list!(list, :class, :workspace)
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :class, :workspace)
     # Functions
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
     list << random_sidecar_puppet_function
@@ -92,13 +88,6 @@ describe 'completion_provider' do
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
     list << random_sidecar_puppet_type
     session_state.object_cache.import_sidecar_list!(list, :type, :workspace)
-  end
-
-
-  after(:each) do
-    # Until the PuppetHelper has finished refactoring, we need to
-    # clear out the Object Cache of workspace objects
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
   end
 
   describe '#complete' do

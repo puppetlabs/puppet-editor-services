@@ -73,7 +73,7 @@ module PuppetLanguageServer
         # Strip the leading double-colons for root resource names
         resource_name = resource_name.slice(2, resource_name.length - 2) if resource_name.start_with?('::')
         item = PuppetLanguageServer::PuppetHelper.get_type(session_state, resource_name)
-        item = PuppetLanguageServer::PuppetHelper.get_class(resource_name) if item.nil?
+        item = PuppetLanguageServer::PuppetHelper.get_class(session_state, resource_name) if item.nil?
         unless item.nil?
           return LSP::Location.new(
             'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),

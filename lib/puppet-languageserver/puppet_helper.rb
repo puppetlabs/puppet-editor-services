@@ -73,12 +73,12 @@ module PuppetLanguageServer
       session_state.object_cache.object_names_by_section(:function, :exclude_origins => exclude_origins).map(&:to_s)
     end
 
-    def self.get_class(name)
-      @inmemory_cache.object_by_name(:class, name)
+    def self.get_class(session_state, name)
+      session_state.object_cache.object_by_name(:class, name)
     end
 
-    def self.class_names
-      @inmemory_cache.object_names_by_section(:class).map(&:to_s)
+    def self.class_names(session_state)
+      session_state.object_cache.object_names_by_section(:class).map(&:to_s)
     end
 
     def self.datatype(name, tasks_mode = false)
