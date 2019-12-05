@@ -70,7 +70,7 @@ module PuppetLanguageServer
           # https://github.com/puppetlabs/puppet-specifications/blob/master/language/names.md#names
           # Datatypes have to start with uppercase and can be fully qualified
           if item.cased_value =~ /^[A-Z][a-zA-Z:0-9]*$/ # rubocop:disable Style/GuardClause
-            content = get_puppet_datatype_content(item, options[:tasks_mode])
+            content = get_puppet_datatype_content(session_state, item, options[:tasks_mode])
           else
             raise "#{item.cased_value} is an unknown QualifiedReference"
           end
@@ -197,8 +197,8 @@ module PuppetLanguageServer
       end
       private_class_method :get_puppet_class_content
 
-      def self.get_puppet_datatype_content(item, tasks_mode)
-        dt_info = PuppetLanguageServer::PuppetHelper.datatype(item.cased_value, tasks_mode)
+      def self.get_puppet_datatype_content(session_state, item, tasks_mode)
+        dt_info = PuppetLanguageServer::PuppetHelper.datatype(session_state, item.cased_value, tasks_mode)
         raise "DataType #{item.cased_value} does not exist" if dt_info.nil?
 
         content = "**#{item.cased_value}** Data Type"

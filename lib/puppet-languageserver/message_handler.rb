@@ -70,7 +70,7 @@ module PuppetLanguageServer
   class MessageHandler < PuppetEditorServices::Handler::JsonRPC
     def initialize(*_)
       super
-      @session_state = ClientSessionState.new(self, :documents => DocumentStore.instance, :object_cache => PuppetLanguageServer::PuppetHelper.cache)
+      @session_state = ClientSessionState.new(self, :documents => DocumentStore.instance)
     end
 
     def session_state # rubocop:disable Style/TrivialAccessors During the refactor, this is fine.
@@ -305,7 +305,7 @@ module PuppetLanguageServer
 
     def request_workspace_symbol(_, json_rpc_message)
       result = []
-      result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(json_rpc_message.params['query'], PuppetLanguageServer::PuppetHelper.cache))
+      result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(json_rpc_message.params['query'], session_state.object_cache))
       result
     rescue StandardError => e
       PuppetLanguageServer.log_message(:error, "(workspace/symbol) #{e}")

@@ -7,12 +7,6 @@ require 'puppet-languageserver/global_queues'
 
 module PuppetLanguageServer
   module PuppetHelper
-    @inmemory_cache = nil
-
-    def self.initialize_helper(_options)
-      @inmemory_cache = PuppetLanguageServer::SessionState::ObjectCache.new
-    end
-
     def self.module_path
       return @module_path unless @module_path.nil?
       # TODO: It would be nice if this wasn't using the whole puppet environment to calculate the modulepath directoties
@@ -81,21 +75,14 @@ module PuppetLanguageServer
       session_state.object_cache.object_names_by_section(:class).map(&:to_s)
     end
 
-    def self.datatype(name, tasks_mode = false)
+    def self.datatype(session_state, name, tasks_mode = false)
       exclude_origins = tasks_mode ? [] : [:bolt]
-      @inmemory_cache.object_by_name(
+      session_state.object_cache.object_by_name(
         :datatype,
         name,
         :fuzzy_match     => true,
         :exclude_origins => exclude_origins
       )
-    end
-
-    # Only required during refactoring of PuppetHelper to use the session state.
-    # Once the refactor is complete this method is no longer required.
-    def self.cache
-      raise('Puppet Helper Cache has not been configured') if @inmemory_cache.nil?
-      @inmemory_cache
     end
 
     def self.sidecar_queue

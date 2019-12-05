@@ -24,9 +24,6 @@ EOT
     }
 
     before(:each) do
-      # Until the PuppetHelper has finished refactoring, we need to mock
-      # the items in both cache objects
-      populate_cache(PuppetLanguageServer::PuppetHelper.cache)
       populate_cache(session_state.object_cache)
       # Prepopulate the Object Cache with workspace objects
       # Classes / Defined Types
@@ -46,7 +43,6 @@ EOT
       # Datatypes
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
       list << random_sidecar_puppet_datatype
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :datatype, :workspace)
       session_state.object_cache.import_sidecar_list!(list, :datatype, :workspace)
       # Currently the DataTypes are only loaded behind a feature flag. As we only test without
       # the flag, simulate it the purposes of this test
@@ -54,14 +50,7 @@ EOT
       # The String datatype
       obj = PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new.from_h!({"key" => "String", "doc"=>"The String core data type", "attributes"=>[], "is_type_alias" => false })
       list << obj
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :datatype, :default)
       session_state.object_cache.import_sidecar_list!(list, :datatype, :default)
-    end
-
-    after(:each) do
-      # Clear out the Object Cache of workspace objects
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :workspace)
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :default)
     end
 
     describe "Given a manifest which has syntax errors" do
