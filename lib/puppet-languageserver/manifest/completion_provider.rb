@@ -27,7 +27,7 @@ module PuppetLanguageServer
           # Add resources
           all_resources(session_state) { |x| items << x }
 
-          all_functions(options[:tasks_mode]) { |x| items << x }
+          all_functions(session_state, options[:tasks_mode]) { |x| items << x }
 
           response = LSP::CompletionList.new
           response.items = items
@@ -59,7 +59,7 @@ module PuppetLanguageServer
           # Add resources
           all_resources(session_state) { |x| items << x }
 
-          all_functions(options[:tasks_mode]) { |x| items << x }
+          all_functions(session_state, options[:tasks_mode]) { |x| items << x }
 
         when 'Puppet::Pops::Model::ResourceExpression'
           # We are inside a resource definition.  Should display all available
@@ -184,8 +184,8 @@ module PuppetLanguageServer
         end
       end
 
-      def self.all_functions(tasks_mode, &block)
-        PuppetLanguageServer::PuppetHelper.function_names(tasks_mode).each do |name|
+      def self.all_functions(session_state, tasks_mode, &block)
+        PuppetLanguageServer::PuppetHelper.function_names(session_state, tasks_mode).each do |name|
           item = LSP::CompletionItem.new(
             'label'  => name.to_s,
             'kind'   => LSP::CompletionItemKind::FUNCTION,
@@ -243,7 +243,7 @@ module PuppetLanguageServer
 
         when 'function'
           # We don't know if this resolution is coming from a plan or not, so just assume it is
-          item_type = PuppetLanguageServer::PuppetHelper.function(data['name'], true)
+          item_type = PuppetLanguageServer::PuppetHelper.function(session_state, data['name'], true)
           return result if item_type.nil?
           result.documentation = item_type.doc unless item_type.doc.nil?
           unless item_type.nil? || item_type.signatures.count.zero?

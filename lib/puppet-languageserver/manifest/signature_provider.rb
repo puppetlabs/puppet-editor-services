@@ -3,7 +3,7 @@
 module PuppetLanguageServer
   module Manifest
     module SignatureProvider
-      def self.signature_help(content, line_num, char_num, options = {})
+      def self.signature_help(session_state, content, line_num, char_num, options = {})
         options = {
           :tasks_mode => false
         }.merge(options)
@@ -53,7 +53,7 @@ module PuppetLanguageServer
         param_number = param_number_from_ast(abs_offset, function_ast_object, locator)
         raise 'Cursor is not within the function expression' if param_number.nil?
 
-        func_info = PuppetLanguageServer::PuppetHelper.function(function_name)
+        func_info = PuppetLanguageServer::PuppetHelper.function(session_state, function_name)
         raise "Function #{function_name} does not exist" if func_info.nil?
 
         func_info.signatures.each do |sig|

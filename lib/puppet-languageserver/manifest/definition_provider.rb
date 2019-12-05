@@ -19,7 +19,7 @@ module PuppetLanguageServer
         case item.class.to_s
         when 'Puppet::Pops::Model::CallNamedFunctionExpression'
           func_name = item.functor_expr.value
-          response << function_name(func_name)
+          response << function_name(session_state, func_name)
 
         when 'Puppet::Pops::Model::LiteralString'
           # LiteralString could be anything.  Context is the key here
@@ -45,7 +45,7 @@ module PuppetLanguageServer
              parent.class.to_s == 'Puppet::Pops::Model::CallNamedFunctionExpression' &&
              parent.functor_expr.value == item.value
             func_name = item.value
-            response << function_name(func_name)
+            response << function_name(session_state, func_name)
           end
           # What if it's an "include <class>" call
           if !parent.nil? && parent.class.to_s == 'Puppet::Pops::Model::CallNamedFunctionExpression' && parent.functor_expr.value == 'include'
@@ -84,8 +84,8 @@ module PuppetLanguageServer
       end
       private_class_method :type_or_class
 
-      def self.function_name(func_name)
-        item = PuppetLanguageServer::PuppetHelper.function(func_name)
+      def self.function_name(session_state, func_name)
+        item = PuppetLanguageServer::PuppetHelper.function(session_state, func_name)
         return nil if item.nil? || item.source.nil? || item.line.nil?
         LSP::Location.new(
           'uri'   => 'file:///' + item.source,

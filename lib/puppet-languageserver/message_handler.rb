@@ -292,6 +292,7 @@ module PuppetLanguageServer
       case documents.document_type(file_uri)
       when :manifest
         PuppetLanguageServer::Manifest::SignatureProvider.signature_help(
+          session_state,
           content,
           line_num,
           char_num,

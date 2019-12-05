@@ -88,7 +88,6 @@ describe 'completion_provider' do
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
     list << random_sidecar_puppet_function
     session_state.object_cache.import_sidecar_list!(list, :function, :workspace)
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :function, :workspace)
     # Types
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
     list << random_sidecar_puppet_type
@@ -100,7 +99,6 @@ describe 'completion_provider' do
     # Until the PuppetHelper has finished refactoring, we need to
     # clear out the Object Cache of workspace objects
     PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
   end
 
   describe '#complete' do

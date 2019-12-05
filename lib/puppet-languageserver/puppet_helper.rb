@@ -58,18 +58,9 @@ module PuppetLanguageServer
       session_state.object_cache.object_names_by_section(:type).map(&:to_s)
     end
 
-    def self.filtered_function_names(&block)
-      result = []
-      @inmemory_cache.objects_by_section(:function) do |name, data|
-        filter = block.call(name, data)
-        result << name if filter == true
-      end
-      result
-    end
-
-    def self.function(name, tasks_mode = false)
+    def self.function(session_state, name, tasks_mode = false)
       exclude_origins = tasks_mode ? [] : [:bolt]
-      @inmemory_cache.object_by_name(
+      session_state.object_cache.object_by_name(
         :function,
         name,
         :fuzzy_match     => true,
@@ -77,9 +68,9 @@ module PuppetLanguageServer
       )
     end
 
-    def self.function_names(tasks_mode = false)
+    def self.function_names(session_state, tasks_mode = false)
       exclude_origins = tasks_mode ? [] : [:bolt]
-      @inmemory_cache.object_names_by_section(:function, :exclude_origins => exclude_origins).map(&:to_s)
+      session_state.object_cache.object_names_by_section(:function, :exclude_origins => exclude_origins).map(&:to_s)
     end
 
     def self.get_class(name)

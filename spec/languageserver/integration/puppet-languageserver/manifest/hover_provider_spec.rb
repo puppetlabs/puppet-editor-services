@@ -39,7 +39,6 @@ EOT
       # Functions
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
       list << random_sidecar_puppet_function
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :function, :workspace)
       session_state.object_cache.import_sidecar_list!(list, :function, :workspace)
       # Types
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
@@ -63,7 +62,6 @@ EOT
     after(:each) do
       # Clear out the Object Cache of workspace objects
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :workspace)
       PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :default)
     end
