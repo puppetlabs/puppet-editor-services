@@ -12,15 +12,11 @@ module PuppetLanguageServer
       attr_accessor :options
 
       def initialize(file_uri, doc_version, connection_id, options = {})
-        super
+        super(file_uri)
         @file_uri = file_uri
         @doc_version = doc_version
         @connection_id = connection_id
         @options = options
-      end
-
-      def key
-        @file_uri
       end
     end
 

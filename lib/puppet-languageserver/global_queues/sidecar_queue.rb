@@ -13,14 +13,11 @@ module PuppetLanguageServer
       attr_accessor :connection_id
 
       def initialize(action, additional_args, handle_errors, connection_id)
+        super("#{action}-#{connection_id}")
         @action = action
         @additional_args = additional_args
         @handle_errors = handle_errors
         @connection_id = connection_id
-      end
-
-      def key
-        "#{action}-#{connection_id}"
       end
     end
 

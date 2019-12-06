@@ -1,7 +1,24 @@
 require 'spec_helper'
 require 'puppet-languageserver/session_state/document_store'
 
-describe 'validation_queue' do
+describe 'PuppetLanguageServer::GlobalQueues::ValidationQueueJob' do
+  let(:file_uri) { 'file_uri' }
+  let(:doc_version) { 1 }
+  let(:connection_id) { 'id1234' }
+  let(:options) { {} }
+
+  let(:subject) { PuppetLanguageServer::GlobalQueues::ValidationQueueJob.new(file_uri, doc_version, connection_id, options) }
+
+  it 'is a SingleInstanceQueueJob' do
+    expect(subject).is_a?(PuppetLanguageServer::GlobalQueues::SingleInstanceQueueJob)
+  end
+
+  it 'uses the file uri as the job key' do
+    expect(subject.key).to eq(file_uri)
+  end
+end
+
+describe 'PuppetLanguageServer::GlobalQueues::ValidationQueue' do
   VALIDATE_MANIFEST_FILENAME = 'file:///something.pp'
   VALIDATE_PUPPETFILE_FILENAME = 'file:///Puppetfile'
   VALIDATE_EPP_FILENAME = 'file:///something.epp'
@@ -22,6 +39,14 @@ describe 'validation_queue' do
 
   def job(file_uri, document_version, connection_id, job_options = {})
     PuppetLanguageServer::GlobalQueues::ValidationQueueJob.new(file_uri, document_version, connection_id, job_options)
+  end
+
+  it 'is a SingleInstanceQueue' do
+    expect(subject).is_a?(PuppetLanguageServer::GlobalQueues::SingleInstanceQueue)
+  end
+
+  it 'has a job_class of ValidationQueueJob' do
+    expect(subject.job_class).is_a?(PuppetLanguageServer::GlobalQueues::ValidationQueueJob)
   end
 
   describe '#enqueue' do

@@ -3,13 +3,12 @@
 module PuppetLanguageServer
   module GlobalQueues
     class SingleInstanceQueueJob
-      def initialize(*_); end
-
       # Unique key for the job. The SingleInstanceQueue uses the key
       # to ensure that only a single instance is in the queue
-      # @api asbtract
-      def key
-        raise ArgumentError, "key should be implenmented for #{self.class}"
+      attr_reader :key
+
+      def initialize(key)
+        @key = key
       end
     end
 
@@ -30,9 +29,10 @@ module PuppetLanguageServer
       end
 
       # The ruby Job class that this queue operates on
+      # Should be inherited from SingleInstanceQueueJob
       # @api asbtract
       def job_class
-        raise ArgumentError, "job_class should be implemented for #{self.class}"
+        SingleInstanceQueueJob
       end
 
       def new_job(*args)
