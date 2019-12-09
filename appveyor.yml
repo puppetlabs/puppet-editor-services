@@ -25,6 +25,11 @@ environment:
     RUBY_VER: 24-x64
     RAKE_TASK: test_languageserver
 
+    # Acceptance tests.
+  - PUPPET_GEM_VERSION: "~> 6.0"
+    RUBY_VER: 25-x64
+    RAKE_TASK: acceptance_languageserver
+
     # Ruby tasks (style, build release archives)
   - PUPPET_GEM_VERSION: "> 0.0" # Version is irrelevant
     RUBY_VER: 25-x64

@@ -6,10 +6,16 @@ require 'rubocop/rake_task' if rubocop_available
 desc 'Run rspec tests for the Language Server with coloring.'
 RSpec::Core::RakeTask.new(:test_languageserver) do |t|
   t.rspec_opts = %w[--color --format documentation --default-path spec/languageserver]
-  t.pattern    = 'spec/languageserver'
+  t.pattern    = ['spec/languageserver/unit/**/*_spec.rb', 'spec/languageserver/integration/**/*_spec.rb']
 end
 
-desc 'Run rspec tests for the Language Server with coloring.'
+desc 'Run acceptance tests for the Language Server with coloring.'
+RSpec::Core::RakeTask.new(:acceptance_languageserver) do |t|
+  t.rspec_opts = %w[--color --format documentation --default-path spec/languageserver]
+  t.pattern    = ['spec/languageserver/acceptance/**/*_spec.rb']
+end
+
+desc 'Run rspec tests for the Language Server Sidecar with coloring.'
 RSpec::Core::RakeTask.new(:test_languageserver_sidecar) do |t|
   t.rspec_opts = %w[--color --format documentation --default-path spec/languageserver-sidecar]
   t.pattern    = 'spec/languageserver-sidecar'
