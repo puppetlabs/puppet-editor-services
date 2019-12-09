@@ -907,7 +907,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
         it 'should add the document to the document store' do
           subject.notification_textdocument_didopen(connection_id, notification_message)
-          expect(subject.documents.document(file_uri)).to eq(file_content)
+          expect(subject.documents.document_content(file_uri)).to eq(file_content)
         end
 
         it 'should enqueue the file for validation' do
@@ -954,7 +954,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
       it 'should remove the document from the document store' do
         subject.notification_textdocument_didclose(connection_id, notification_message)
-        expect(subject.documents.document(file_uri)).to be_nil
+        expect(subject.documents.document_content(file_uri)).to be_nil
       end
     end
 
@@ -979,7 +979,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
         it 'should update the document in the document store' do
           subject.notification_textdocument_didchange(connection_id, notification_message)
-          expect(subject.documents.document(file_uri)).to eq(new_file_content)
+          expect(subject.documents.document_content(file_uri)).to eq(new_file_content)
         end
 
         it 'should enqueue the file for validation' do

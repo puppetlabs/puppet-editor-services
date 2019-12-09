@@ -2,6 +2,37 @@
 
 module PuppetLanguageServer
   module SessionState
+    # Represents a Document in the Document Store.
+    # Can be subclassed to add additional methods and helpers
+    class Document
+      attr_reader :uri
+      attr_reader :content
+      attr_reader :version
+
+      # @param uri String The content of the document
+      # @param content String The content of the document
+      # @param version Integer The version the document
+      def initialize(uri, content, version)
+        @uri = uri
+        @content = content
+        @version = version
+      end
+
+      # Update a document with new content and version
+      # @param content String The new content for the document
+      # @param version Integer The version of the new document
+      def update(content, version)
+        @content = content
+        @version = version
+      end
+    end
+
+    class EppDocument < Document; end
+
+    class ManifestDocument < Document; end
+
+    class PuppetfileDocument < Document; end
+
     class DocumentStore
       # @param options :workspace Path to the workspace
       def initialize(_options = {})
@@ -13,15 +44,17 @@ module PuppetLanguageServer
 
       def set_document(uri, content, doc_version)
         @doc_mutex.synchronize do
-          @documents[uri] = {
-            :content => content,
-            :version => doc_version
-          }
+          if @documents[uri].nil?
+            @documents[uri] = create_document(uri, content, doc_version)
+          else
+            @documents[uri].update(content, doc_version)
+          end
         end
       end
 
       def remove_document(uri)
-        @doc_mutex.synchronize { @documents[uri] = nil }
+        @doc_mutex.synchronize { @documents.delete(uri) }
+        nil
       end
 
       def clear
@@ -31,16 +64,19 @@ module PuppetLanguageServer
       def document(uri, doc_version = nil)
         @doc_mutex.synchronize do
           return nil if @documents[uri].nil?
-          return nil unless doc_version.nil? || @documents[uri][:version] == doc_version
-          @documents[uri][:content].clone
+          return nil unless doc_version.nil? || @documents[uri].version == doc_version
+          @documents[uri]
         end
       end
 
+      def document_content(uri, doc_version = nil)
+        doc = document(uri, doc_version)
+        doc.nil? ? nil : doc.content.clone
+      end
+
       def document_version(uri)
-        @doc_mutex.synchronize do
-          return nil if @documents[uri].nil?
-          @documents[uri][:version]
-        end
+        doc = document(uri)
+        doc.nil? ? nil : doc.version
       end
 
       def document_uris
@@ -185,6 +221,20 @@ module PuppetLanguageServer
         # Ruby only sets File::ALT_SEPARATOR on Windows and the Ruby standard
         # library uses that to test what platform it's on.
         !!File::ALT_SEPARATOR # rubocop:disable Style/DoubleNegation
+      end
+
+      # Creates a document object based on the Uri
+      def create_document(uri, content, doc_version)
+        case document_type(uri)
+        when :puppetfile
+          PuppetfileDocument.new(uri, content, doc_version)
+        when :manifest
+          ManifestDocument.new(uri, content, doc_version)
+        when :epp
+          EppDocument.new(uri, content, doc_version)
+        else
+          Document.new(uri, content, doc_version)
+        end
       end
     end
   end

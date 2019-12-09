@@ -97,7 +97,7 @@ module PuppetLanguageServer
     def request_puppet_fixdiagnosticerrors(_, json_rpc_message)
       formatted_request = LSP::PuppetFixDiagnosticErrorsRequest.new(json_rpc_message.params)
       file_uri = formatted_request.documentUri
-      content = documents.document(file_uri)
+      content = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest
@@ -126,7 +126,7 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content = documents.document(file_uri)
+      content = documents.document_content(file_uri)
       context = json_rpc_message.params['context'].nil? ? nil : LSP::CompletionContext.new(json_rpc_message.params['context'])
 
       case documents.document_type(file_uri)
@@ -152,7 +152,7 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content = documents.document(file_uri)
+      content = documents.document_content(file_uri)
       case documents.document_type(file_uri)
       when :manifest
         PuppetLanguageServer::Manifest::HoverProvider.resolve(session_state, content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
@@ -168,7 +168,7 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content = documents.document(file_uri)
+      content = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest
@@ -183,7 +183,7 @@ module PuppetLanguageServer
 
     def request_textdocument_documentsymbol(_, json_rpc_message)
       file_uri = json_rpc_message.params['textDocument']['uri']
-      content  = documents.document(file_uri)
+      content  = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest
@@ -201,7 +201,7 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content  = documents.document(file_uri)
+      content  = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest
@@ -224,7 +224,7 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content  = documents.document(file_uri)
+      content  = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest

@@ -34,7 +34,7 @@ TEXT
 
       # Append the documents in the cache
       session_state.documents.document_uris.each do |uri|
-        crashtext += "Document - #{uri}\n---\n#{session_state.documents.document(uri)}\n\n"
+        crashtext += "Document - #{uri}\n---\n#{session_state.documents.document_content(uri)}\n\n"
       end
       # Append additional objects from the crash
       additional.each do |k, v|

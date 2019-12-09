@@ -3,6 +3,22 @@ require 'spec_helper'
 describe 'PuppetLanguageServer::SessionState::DocumentStore' do
   let(:subject) { PuppetLanguageServer::SessionState::DocumentStore.new }
 
+  describe '#set_document' do
+    let(:content) { 'content' }
+    let(:version) { 1 }
+    [
+      { :name => 'n EPP document', :uri => '/template.epp', :klass => PuppetLanguageServer::SessionState::EppDocument },
+      { :name => ' Puppet Manifest', :uri => '/manifest.pp', :klass => PuppetLanguageServer::SessionState::ManifestDocument },
+      { :name => ' Puppetfile', :uri => '/Puppetfile', :klass => PuppetLanguageServer::SessionState::PuppetfileDocument },
+      { :name => 'n unknown document', :uri => '/unknown.txt', :klass => PuppetLanguageServer::SessionState::Document },
+    ].each do |testcase|
+      it "creates a #{testcase[:klass]} object for a#{testcase[:name]}" do
+        subject.set_document(testcase[:uri], content, version)
+        expect(subject.document(testcase[:uri], version)).to be_a(testcase[:klass])
+      end
+    end
+  end
+
   describe '#plan_file?' do
     before(:each) do
       # Assume we are not in any module or control repo. Just a bare file

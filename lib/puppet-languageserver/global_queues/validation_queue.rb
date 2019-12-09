@@ -40,7 +40,7 @@ module PuppetLanguageServer
         raise "Document store is not available for connection id #{job_object.connection_id}" if document_store.nil?
 
         # Check if the document is the latest version
-        content = document_store.document(job_object.file_uri, job_object.doc_version)
+        content = document_store.document_content(job_object.file_uri, job_object.doc_version)
         if content.nil?
           PuppetLanguageServer.log_message(:debug, "#{self.class.name}: Ignoring #{job_object.file_uri} as it is not the latest version or has been removed")
           return
