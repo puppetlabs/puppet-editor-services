@@ -98,7 +98,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
         deserial = subject_klass.new.from_json!(serial)
 
         subject.keys.each do |key|
-          expect(deserial[key]).to eq(deserial[key])
+          expect(deserial[key]).to eq(subject[key])
         end
       end
     end
@@ -126,6 +126,30 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
           deserial = subject_klass.new.from_json!(serial)
 
           expect(deserial.send(testcase)).to eq(subject.send(testcase))
+        end
+      end
+    end
+  end
+
+  describe 'Facts' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::Facts }
+    let(:subject) {
+      value = subject_klass.new
+      value['val1_' + rand(1000).to_s] = rand(1000).to_s
+      value['val2_' + rand(1000).to_s] = rand(1000).to_s
+      value['val3_' + rand(1000).to_s] = rand(1000).to_s
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol object'
+
+    describe '#from_json!' do
+      it "should deserialize a serialized value" do
+        serial = subject.to_json
+        deserial = subject_klass.new.from_json!(serial)
+
+        subject.keys.each do |key|
+          expect(deserial[key]).to eq(subject[key])
         end
       end
     end
