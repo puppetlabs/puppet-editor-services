@@ -520,6 +520,27 @@ module PuppetLanguageServer
           raise "Unknown object class #{klass.name}"
         end
       end
+
+      class Facts < Hash
+        include Base
+
+        def from_h!(value)
+          value.keys.each { |key| self[key] = value[key] }
+          self
+        end
+
+        def to_json(*options)
+          ::JSON.generate(to_h, options)
+        end
+
+        def from_json!(json_string)
+          obj = ::JSON.parse(json_string)
+          obj.each do |key, value|
+            self[key] = value
+          end
+          self
+        end
+      end
     end
   end
 end
