@@ -59,6 +59,13 @@ def add_random_basepuppetobject_values!(value)
   value
 end
 
+def random_sidecar_fact(key = nil)
+  result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::Fact.new())
+  result.key = key unless key.nil?
+  result.value = 'value' + rand(1000).to_s
+  result
+end
+
 def random_sidecar_puppet_class(key = nil)
   result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new())
   result.key = key unless key.nil?
