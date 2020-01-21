@@ -33,9 +33,12 @@ describe 'End to End Testing' do
   }
 
   def modified_puppet_stack_trace
-    # Due to a modification to the way stack traces are treated in Puppet 6.11.0, the stack size is different
+    # Due to a modification to the way stack traces are treated in Puppet 6.11.0 and 5.5.18, the stack size is different
     # See https://tickets.puppetlabs.com/browse/PUP-10150 for more infomation
-    @modified_puppet_stack_trace ||= Gem::Version.create(Puppet.version) >= Gem::Version.create('6.11.0')
+    pup_ver = Gem::Version.create(Puppet.version)
+    return true if pup_ver >= Gem::Version.create('6.11.0')
+    return true if pup_ver.canonical_segments.first == 5 && pup_ver >= Gem::Version.create('5.5.18')
+    false
   end
 
   context 'Processing an empty manifest with no breakpoints' do
