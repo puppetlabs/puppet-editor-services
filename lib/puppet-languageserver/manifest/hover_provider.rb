@@ -107,8 +107,9 @@ module PuppetLanguageServer
 
       # Content generation functions
       def self.get_fact_content(factname)
-        return nil unless PuppetLanguageServer::FacterHelper.facts.key?(factname)
-        value = PuppetLanguageServer::FacterHelper.facts[factname]
+        fact = PuppetLanguageServer::FacterHelper.fact(factname)
+        return nil if fact.nil?
+        value = fact.value
         content = "**#{factname}** Fact\n\n"
 
         if value.is_a?(Hash)
