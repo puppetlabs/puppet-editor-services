@@ -111,6 +111,13 @@ module PuppetLanguageServer
 
         PuppetLanguageServer::PuppetHelper.assert_default_types_loaded
 
+      when 'facts'
+        list = PuppetLanguageServer::Sidecar::Protocol::FactList.new.from_json!(result)
+        @cache.import_sidecar_list!(list, :fact, :default)
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: facts returned #{list.count} items")
+
+        PuppetLanguageServer::FacterHelper.assert_facts_loaded
+
       when 'node_graph'
         return PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new.from_json!(result)
 

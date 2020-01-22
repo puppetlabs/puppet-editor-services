@@ -521,24 +521,26 @@ module PuppetLanguageServer
         end
       end
 
-      class Facts < Hash
-        include Base
+      class Fact < BasePuppetObject
+        attr_accessor :value
+
+        def to_h
+          super.to_h.merge(
+            'value' => value
+          )
+        end
 
         def from_h!(value)
-          value.keys.each { |key| self[key] = value[key] }
+          super
+
+          self.value = value['value']
           self
         end
+      end
 
-        def to_json(*options)
-          ::JSON.generate(to_h, options)
-        end
-
-        def from_json!(json_string)
-          obj = ::JSON.parse(json_string)
-          obj.each do |key, value|
-            self[key] = value
-          end
-          self
+      class FactList < BasePuppetObjectList
+        def child_type
+          Fact
         end
       end
     end

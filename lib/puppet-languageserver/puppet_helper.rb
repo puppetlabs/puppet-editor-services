@@ -305,7 +305,6 @@ module PuppetLanguageServer
     def self.sidecar_queue
       @sidecar_queue_obj ||= PuppetLanguageServer::SidecarQueue.new(@helper_options)
     end
-    private_class_method :sidecar_queue
 
     def self.with_temporary_file(content)
       tempfile = Tempfile.new('langserver-sidecar')

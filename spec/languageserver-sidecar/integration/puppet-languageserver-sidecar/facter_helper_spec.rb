@@ -20,24 +20,33 @@ describe 'PuppetLanguageServerSidecar::FacterHelper' do
     return stdout.bytes.pack('U*')
   end
 
-  let(:default_fact_names) { ['hostname', 'fixture_agent_custom_fact'] }
-  let(:module_fact_names) { ['fixture_module_custom_fact', 'fixture_module_external_fact'] }
-  let(:environment_fact_names) { ['fixture_environment_custom_fact', 'fixture_environment_external_fact'] }
+  RSpec::Matchers.define :contain_child_with_key do |key|
+    match do |actual|
+      !(actual.index { |item| item.key == key }).nil?
+    end
+
+    failure_message do |actual|
+      "expected that #{actual.class.to_s} would contain a child with key #{key}"
+    end
+  end
+
+  let(:default_fact_names) { %i[hostname fixture_agent_custom_fact] }
+  let(:module_fact_names) { %i[fixture_module_custom_fact fixture_module_external_fact] }
+  let(:environment_fact_names) { %i[fixture_environment_custom_fact fixture_environment_external_fact] }
 
   describe 'when running facts action' do
     let (:cmd_options) { ['--action', 'facts'] }
 
     it 'should return a deserializable facts object with all default facts' do
       result = run_sidecar(cmd_options)
-      deserial = PuppetLanguageServer::Sidecar::Protocol::Facts.new
+      deserial = PuppetLanguageServer::Sidecar::Protocol::FactList.new
       expect { deserial.from_json!(result) }.to_not raise_error
-
       default_fact_names.each do |name|
-        expect(deserial).to include(name)
+        expect(deserial).to contain_child_with_key(name)
       end
 
       module_fact_names.each do |name|
-        expect(deserial).not_to include(name)
+        expect(deserial).to_not contain_child_with_key(name)
       end
     end
   end
@@ -51,15 +60,15 @@ describe 'PuppetLanguageServerSidecar::FacterHelper' do
 
       it 'should return a deserializable facts object with default facts and workspace facts' do
         result = run_sidecar(cmd_options)
-        deserial = PuppetLanguageServer::Sidecar::Protocol::Facts.new
+        deserial = PuppetLanguageServer::Sidecar::Protocol::FactList.new
         expect { deserial.from_json!(result) }.to_not raise_error
 
         default_fact_names.each do |name|
-          expect(deserial).to include(name)
+          expect(deserial).to contain_child_with_key(name)
         end
 
         module_fact_names.each do |name|
-          expect(deserial).to include(name)
+          expect(deserial).to contain_child_with_key(name)
         end
       end
     end
@@ -74,15 +83,15 @@ describe 'PuppetLanguageServerSidecar::FacterHelper' do
 
       it 'should return a deserializable facts object with default facts and workspace facts' do
         result = run_sidecar(cmd_options)
-        deserial = PuppetLanguageServer::Sidecar::Protocol::Facts.new
+        deserial = PuppetLanguageServer::Sidecar::Protocol::FactList.new
         expect { deserial.from_json!(result) }.to_not raise_error
 
         default_fact_names.each do |name|
-          expect(deserial).to include(name)
+          expect(deserial).to contain_child_with_key(name)
         end
 
         environment_fact_names.each do |name|
-          expect(deserial).to include(name)
+          expect(deserial).to contain_child_with_key(name)
         end
       end
     end

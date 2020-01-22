@@ -18,18 +18,23 @@ module PuppetLanguageServerSidecar
       require 'puppet/indirector/facts/facter'
 
       PuppetLanguageServerSidecar.log_message(:debug, '[FacterHelper::retrieve_facts] Starting')
-      facts = PuppetLanguageServer::Sidecar::Protocol::Facts.new
+      facts = PuppetLanguageServer::Sidecar::Protocol::FactList.new
       begin
         req = Puppet::Indirector::Request.new(:facts, :find, 'language_server', nil, environment: current_environment)
         result = Puppet::Node::Facts::Facter.new.find(req)
-        facts.from_h!(result.values)
+        result.values.each do |key, value|
+          # TODO: This isn't strictly correct e.g. fully qualified facts will look a bit odd.
+          # Consider a fact called foo.bar.baz = 'Hello'.  Even though the fact name is `foo.bar.baz`
+          # it will appear in the facts object as `facts['foo'] = { 'bar' => { 'baz' => 'Hello' }}`
+          facts << PuppetLanguageServer::Sidecar::Protocol::Fact.new.from_h!('key' => key, 'value' => value)
+        end
       rescue StandardError => e
         PuppetLanguageServerSidecar.log_message(:error, "[FacterHelper::_load_facts] Error loading facts #{e.message} #{e.backtrace}")
       rescue LoadError => e
         PuppetLanguageServerSidecar.log_message(:error, "[FacterHelper::_load_facts] Error loading facts (LoadError) #{e.message} #{e.backtrace}")
       end
 
-      PuppetLanguageServerSidecar.log_message(:debug, "[FacterHelper::retrieve_facts] Finished loading #{facts.keys.count} facts")
+      PuppetLanguageServerSidecar.log_message(:debug, "[FacterHelper::retrieve_facts] Finished loading #{facts.count} facts")
       facts
     end
   end

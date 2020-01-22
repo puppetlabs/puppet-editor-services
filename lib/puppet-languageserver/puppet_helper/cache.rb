@@ -3,7 +3,7 @@
 module PuppetLanguageServer
   module PuppetHelper
     class Cache
-      SECTIONS = %i[class type function datatype].freeze
+      SECTIONS = %i[class type function datatype fact].freeze
       ORIGINS = %i[default workspace bolt].freeze
 
       def initialize(_options = {})

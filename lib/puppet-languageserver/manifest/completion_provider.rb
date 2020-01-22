@@ -144,7 +144,7 @@ module PuppetLanguageServer
       end
 
       def self.all_facts(&block)
-        PuppetLanguageServer::FacterHelper.facts.each_key do |name|
+        PuppetLanguageServer::FacterHelper.fact_names.each do |name|
           item = LSP::CompletionItem.new(
             'label'      => name.to_s,
             'insertText' => "'#{name}'",
@@ -206,7 +206,7 @@ module PuppetLanguageServer
         data = result.data
         case data['type']
         when 'variable_expr_fact'
-          value = PuppetLanguageServer::FacterHelper.facts[data['expr']]
+          value = PuppetLanguageServer::FacterHelper.fact_value(data['expr'])
           # TODO: More things?
           result.documentation = value.to_s
 
