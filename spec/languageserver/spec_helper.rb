@@ -24,12 +24,14 @@ def wait_for_puppet_loading
     break if PuppetLanguageServer::PuppetHelper.default_functions_loaded? &&
              PuppetLanguageServer::PuppetHelper.default_types_loaded? &&
              PuppetLanguageServer::PuppetHelper.default_classes_loaded? &&
-             PuppetLanguageServer::PuppetHelper.default_datatypes_loaded?
+             PuppetLanguageServer::PuppetHelper.default_datatypes_loaded? &&
+             PuppetLanguageServer::FacterHelper.facts_loaded?
     sleep(1)
     interation += 1
     next if interation < 90
     raise <<-ERRORMSG
             Puppet has not be initialised in time:
+            facts_loaded? = #{PuppetLanguageServer::FacterHelper.facts_loaded?}
             functions_loaded? = #{PuppetLanguageServer::PuppetHelper.default_functions_loaded?}
             types_loaded? = #{PuppetLanguageServer::PuppetHelper.default_types_loaded?}
             classes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_classes_loaded?}
@@ -57,6 +59,13 @@ def add_random_basepuppetobject_values!(value)
   value.char = rand(1000)
   value.length = rand(1000)
   value
+end
+
+def random_sidecar_fact(key = nil)
+  result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::Fact.new())
+  result.key = key unless key.nil?
+  result.value = 'value' + rand(1000).to_s
+  result
 end
 
 def random_sidecar_puppet_class(key = nil)

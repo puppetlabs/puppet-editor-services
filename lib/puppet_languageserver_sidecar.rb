@@ -80,6 +80,7 @@ module PuppetLanguageServerSidecar
       puppet_parser_helper
       sidecar_protocol_extensions
       workspace
+      facter_helper
     ]
 
     # Load files based on feature flags
@@ -117,6 +118,7 @@ module PuppetLanguageServerSidecar
     workspace_datatypes
     workspace_functions
     workspace_types
+    facts
   ].freeze
 
   class CommandLineParser
@@ -388,6 +390,14 @@ module PuppetLanguageServerSidecar
       else
         PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(null_cache)
       end
+
+    when 'facts'
+      # Can't cache for facts
+      cache = PuppetLanguageServerSidecar::Cache::Null.new
+      # Inject the workspace etc. if present
+      injected = inject_workspace_as_module
+      inject_workspace_as_environment unless injected
+      PuppetLanguageServerSidecar::FacterHelper.retrieve_facts(cache)
 
     else
       log_message(:error, "Unknown action #{options[:action]}. Expected one of #{ACTION_LIST}")

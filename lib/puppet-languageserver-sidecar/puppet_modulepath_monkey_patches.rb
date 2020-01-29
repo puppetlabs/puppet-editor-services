@@ -122,3 +122,21 @@ class Puppet::Settings::EnvironmentConf # rubocop:disable Style/ClassAndModuleCh
     result
   end
 end
+
+# Inject the workspace into the facter search paths
+require 'puppet/indirector/facts/facter'
+class Puppet::Node::Facts::Facter # rubocop:disable Style/ClassAndModuleChildren
+  class << self
+    alias_method :original_setup_search_paths, :setup_search_paths
+    def setup_search_paths(request)
+      result = original_setup_search_paths(request)
+      return result unless PuppetLanguageServerSidecar::Workspace.has_module_metadata?
+
+      additional_dirs = %w[lib plugins].map { |path| File.join(PuppetLanguageServerSidecar::Workspace.root_path, path, 'facter') }
+                                       .select { |path| FileTest.directory?(path) }
+
+      return result if additional_dirs.empty?
+      Facter.search(*additional_dirs)
+    end
+  end
+end

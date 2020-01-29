@@ -70,6 +70,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
   end
 
   basepuppetobject_properties = [:key, :calling_source, :source, :line, :char, :length]
+  fact_properties = [:value]
   nodegraph_properties = [:dot_content, :error_content]
   puppetclass_properties = [:doc, :parameters]
   puppetdatatype_properties = [:doc, :alias_of, :attributes, :is_type_alias]
@@ -98,7 +99,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
         deserial = subject_klass.new.from_json!(serial)
 
         subject.keys.each do |key|
-          expect(deserial[key]).to eq(deserial[key])
+          expect(deserial[key]).to eq(subject[key])
         end
       end
     end
@@ -128,6 +129,53 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
           expect(deserial.send(testcase)).to eq(subject.send(testcase))
         end
       end
+    end
+  end
+
+  describe 'Fact' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::Fact }
+    let(:subject) {
+      value = subject_klass.new
+      value.value = 'value'
+      add_default_basepuppetobject_values!(value)
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol Puppet object'
+
+    fact_properties.each do |testcase|
+      it "instance should respond to #{testcase}" do
+        expect(subject).to respond_to(testcase)
+      end
+    end
+
+    describe '#from_json!' do
+      (basepuppetobject_properties + fact_properties).each do |testcase|
+        it "should deserialize a serialized #{testcase} value" do
+          serial = subject.to_json
+          deserial = subject_klass.new.from_json!(serial)
+
+          expect(deserial.send(testcase)).to eq(subject.send(testcase))
+        end
+      end
+    end
+  end
+
+  describe 'FactList' do
+    let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::FactList }
+    let(:subject) {
+      value = subject_klass.new
+      value << random_sidecar_fact
+      value << random_sidecar_fact
+      value << random_sidecar_fact
+      value
+    }
+
+    it_should_behave_like 'a base Sidecar Protocol Puppet object list'
+
+    it_should_behave_like 'a serializable object list'
+
+    it "instance should have a childtype of Fact" do
+      expect(subject.child_type).to eq(PuppetLanguageServer::Sidecar::Protocol::Fact)
     end
   end
 

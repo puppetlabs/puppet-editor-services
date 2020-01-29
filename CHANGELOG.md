@@ -6,6 +6,16 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.24.0 - 2020-01-28
+
+### Fixed
+
+- ([GH-199](https://github.com/lingua-pupuli/puppet-editor-services/issues/199)) Fixes for Puppet 5.5.18
+
+### Changed
+
+- ([GH-213](https://github.com/lingua-pupuli/puppet-editor-services/issues/213)) Gather Facts from the Sidecar instead of the Server process
+
 ## 0.23.0 - 2019-12-04
 
 ### Added

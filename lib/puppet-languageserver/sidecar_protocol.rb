@@ -520,6 +520,29 @@ module PuppetLanguageServer
           raise "Unknown object class #{klass.name}"
         end
       end
+
+      class Fact < BasePuppetObject
+        attr_accessor :value
+
+        def to_h
+          super.to_h.merge(
+            'value' => value
+          )
+        end
+
+        def from_h!(value)
+          super
+
+          self.value = value['value']
+          self
+        end
+      end
+
+      class FactList < BasePuppetObjectList
+        def child_type
+          Fact
+        end
+      end
     end
   end
 end
