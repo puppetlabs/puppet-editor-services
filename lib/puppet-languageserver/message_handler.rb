@@ -85,11 +85,8 @@ module PuppetLanguageServer
       session_state.documents
     end
 
-    def request_initialize(connection_id, json_rpc_message)
+    def request_initialize(_, json_rpc_message)
       PuppetLanguageServer.log_message(:debug, 'Received initialize method')
-
-      # This is a temporary module level variable.  It will be removed once refactored into a session_state style class
-      PuppetLanguageServer::FacterHelper.connection_id = connection_id
 
       language_client.parse_lsp_initialize!(json_rpc_message.params)
       # Setup static registrations if dynamic registration is not available

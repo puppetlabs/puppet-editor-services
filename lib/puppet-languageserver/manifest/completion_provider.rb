@@ -42,7 +42,7 @@ module PuppetLanguageServer
           expr = item.expr.value
 
           # Complete for `$facts[...`
-          all_facts { |x| items << x } if expr == 'facts'
+          all_facts(session_state) { |x| items << x } if expr == 'facts'
 
         when 'Puppet::Pops::Model::HostClassDefinition', 'Puppet::Pops::Model::ResourceTypeDefinition'
           # We are in the root of a `class` or `define` statement
@@ -143,8 +143,8 @@ module PuppetLanguageServer
         end
       end
 
-      def self.all_facts(&block)
-        PuppetLanguageServer::FacterHelper.fact_names.each do |name|
+      def self.all_facts(session_state, &block)
+        PuppetLanguageServer::FacterHelper.fact_names(session_state).each do |name|
           item = LSP::CompletionItem.new(
             'label'      => name.to_s,
             'insertText' => "'#{name}'",
@@ -206,7 +206,7 @@ module PuppetLanguageServer
         data = result.data
         case data['type']
         when 'variable_expr_fact'
-          value = PuppetLanguageServer::FacterHelper.fact_value(data['expr'])
+          value = PuppetLanguageServer::FacterHelper.fact_value(session_state, data['expr'])
           # TODO: More things?
           result.documentation = value.to_s
 

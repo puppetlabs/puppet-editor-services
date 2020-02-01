@@ -27,7 +27,7 @@ module PuppetLanguageServer
           if path[-1].class == Puppet::Pops::Model::AccessExpression
             expr = path[-1].left_expr.expr.value
 
-            content = get_hover_content_for_access_expression(path, expr)
+            content = get_hover_content_for_access_expression(session_state, path, expr)
           elsif path[-1].class == Puppet::Pops::Model::ResourceBody
             # We are hovering over the resource name
             content = get_resource_expression_content(session_state, path[-2])
@@ -35,7 +35,7 @@ module PuppetLanguageServer
         when 'Puppet::Pops::Model::VariableExpression'
           expr = item.expr.value
 
-          content = get_hover_content_for_access_expression(path, expr)
+          content = get_hover_content_for_access_expression(session_state, path, expr)
         when 'Puppet::Pops::Model::CallNamedFunctionExpression'
           content = get_call_named_function_expression_content(session_state, item, options[:tasks_mode])
         when 'Puppet::Pops::Model::AttributeOperation'
@@ -81,7 +81,7 @@ module PuppetLanguageServer
         LSP::Hover.new('contents' => content)
       end
 
-      def self.get_hover_content_for_access_expression(path, expr)
+      def self.get_hover_content_for_access_expression(session_state, path, expr)
         if expr == 'facts'
           # We are dealing with the facts variable
           # Just get the first part of the array and display that
@@ -95,23 +95,23 @@ module PuppetLanguageServer
 
           if fact_array_content.length > 1
             factname = fact_array_content[1].value
-            content = get_fact_content(factname)
+            content = get_fact_content(session_state, factname)
           end
         elsif expr.start_with?('::') && expr.rindex(':') == 1
           # We are dealing with a top local scope variable - Possible fact name
           factname = expr.slice(2, expr.length - 2)
-          content = get_fact_content(factname)
+          content = get_fact_content(session_state, factname)
         else
           # Could be a flatout fact name.  May not *shrugs*.  That method of access is deprecated
-          content = get_fact_content(expr)
+          content = get_fact_content(session_state, expr)
         end
 
         content
       end
 
       # Content generation functions
-      def self.get_fact_content(factname)
-        fact = PuppetLanguageServer::FacterHelper.fact(factname)
+      def self.get_fact_content(session_state, factname)
+        fact = PuppetLanguageServer::FacterHelper.fact(session_state, factname)
         return nil if fact.nil?
         value = fact.value
         content = "**#{factname}** Fact\n\n"
