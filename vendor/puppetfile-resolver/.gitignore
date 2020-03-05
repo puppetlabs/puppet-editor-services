@@ -12,3 +12,6 @@ Gemfile.lock
 tmp/
 vendor/
 .DS_Store
+
+# Gem building
+puppetfile-resolver*.gem

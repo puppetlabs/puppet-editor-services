@@ -27,3 +27,10 @@ namespace :ssl do
     puts "Ruby CA Certs file has been written to #{ca_cert_file}"
   end
 end
+
+namespace :generate do
+  desc 'Generate YARD docs for Github Pages'
+  task :docs do
+    `yard doc`
+  end
+end

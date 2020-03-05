@@ -27,12 +27,19 @@ module PuppetfileResolver
 
       attr_reader :module_type
 
+      # Array of flags that will instruct the resolver to change its default behaviour. Current flags are
+      # set out in the PuppetfileResolver::Puppetfile::..._FLAG constants
+      # @api private
+      # @return [Array[Symbol]] Array of flags that will instruct the resolver to change its default behaviour
+      attr_accessor :resolver_flags
+
       def initialize(title)
         @title = title
         unless title.nil? # rubocop:disable Style/IfUnlessModifier
           @owner, @name = parse_title(@title)
         end
         @location = DocumentLocation.new
+        @resolver_flags = []
       end
 
       def to_s

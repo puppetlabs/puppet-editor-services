@@ -78,7 +78,7 @@ Style/SymbolProc:
 Style/HashSyntax:
   Enabled: false
 
-Layout/AlignHash:
+Layout/HashAlignment:
   EnforcedHashRocketStyle: table
 
 Naming/RescuedExceptionsVariableName:

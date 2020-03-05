@@ -24,7 +24,7 @@ module PuppetfileResolver
             metadata = ::PuppetfileResolver::Util.symbolise_object(
               ::JSON.parse(File.open(metadata_file, 'rb:utf-8') { |f| f.read })
             )
-          rescue StandardError => _e # rubocop:disable Lint/HandleExceptions Todo
+          rescue StandardError => _e # rubocop:disable Lint/SuppressedException Todo
             # TODO: Should really do something?
           end
           resolver_ui.debug { "Found local module at #{metadata_file}" }
