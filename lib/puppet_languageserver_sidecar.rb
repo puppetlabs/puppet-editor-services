@@ -314,7 +314,7 @@ module PuppetLanguageServerSidecar
       end
       begin
         manifest = File.open(options[:action_parameters]['source'], 'r:UTF-8') { |f| f.read }
-        PuppetLanguageServerSidecar::PuppetParserHelper.compile_node_graph(manifest)
+        PuppetLanguageServerSidecar::PuppetParserHelper.compile_node_graph_to_json(manifest)
       rescue StandardError => e
         log_message(:error, "Unable to compile the manifest. #{e}")
         result.set_error("Unable to compile the manifest. #{e}")

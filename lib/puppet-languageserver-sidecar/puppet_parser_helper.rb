@@ -28,6 +28,25 @@ module PuppetLanguageServerSidecar
       result
     end
 
+    def self.compile_node_graph_to_json(content)
+      result = PuppetLanguageServerSidecar::Protocol::NodeGraph.new
+
+      begin
+        node_graph = compile_to_pretty_relationship_graph(content)
+        if node_graph.vertices.count.zero?
+          result.set_error('There were no resources created in the node graph. Is there an include statement missing?')
+        else
+          result.content = JSON.generate(node_graph.to_data_hash)
+        end
+      rescue StandardError => e
+        result.set_error("Error while parsing the file. #{e}")
+      rescue LoadError => e
+        result.set_error("Load error while parsing the file. #{e}")
+      end
+
+      result
+    end
+
     # Reference - https://github.com/puppetlabs/puppet/blob/master/spec/lib/puppet_spec/compiler.rb
     def self.compile_to_catalog(string, node = Puppet::Node.new('test'))
       Puppet[:code] = string
