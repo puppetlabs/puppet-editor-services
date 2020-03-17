@@ -17,7 +17,7 @@ describe 'PuppetLanguageServerSidecar::Protocol' do
     it "instance should respond to set_error" do
       expect(subject).to respond_to(:set_error)
       result = subject.set_error('test_error')
-      expect(result.dot_content).to eq('')
+      expect(result.json_content).to eq('')
       expect(result.error_content).to eq('test_error')
     end
   end

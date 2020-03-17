@@ -56,11 +56,11 @@ module LSP
   end
 
   # export interface CompileNodeGraphResponse {
-  #   dotContent: string;
+  #   jsonContent: string;
   #   data: string;
   # }
   class CompileNodeGraphResponse < LSPBase
-    attr_accessor :dotContent # type: string
+    attr_accessor :jsonContent # type: string
     attr_accessor :error # type: string
 
     def initialize(initial_hash = nil)
@@ -70,7 +70,7 @@ module LSP
 
     def from_h!(value)
       value = {} if value.nil?
-      self.dotContent = value['dotContent']
+      self.jsonContent = value['jsonContent']
       self.error = value['error']
       self
     end

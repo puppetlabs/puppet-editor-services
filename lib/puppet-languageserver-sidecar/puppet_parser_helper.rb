@@ -6,18 +6,11 @@ module PuppetLanguageServerSidecar
       result = PuppetLanguageServerSidecar::Protocol::NodeGraph.new
 
       begin
-        # The fontsize is inserted in the puppet code.  Need to remove it so the client can render appropriately.  Need to
-        # set it to blank.  The graph label is set to editorservices so that we can do text replacement client side to inject the
-        # appropriate styling.
-        options = {
-          'fontsize' => '""',
-          'name'     => 'editorservices'
-        }
         node_graph = compile_to_pretty_relationship_graph(content)
         if node_graph.vertices.count.zero?
           result.set_error('There were no resources created in the node graph. Is there an include statement missing?')
         else
-          result.dot_content = node_graph.to_dot(options)
+          result.json_content = JSON.generate(node_graph.to_data_hash)
         end
       rescue StandardError => e
         result.set_error("Error while parsing the file. #{e}")

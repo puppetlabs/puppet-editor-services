@@ -236,7 +236,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
       let(:request_rpc_method) { 'puppet/compileNodeGraph' }
       let(:file_uri) { MANIFEST_FILENAME }
       let(:file_content) { 'some file content' }
-      let(:dot_content) { 'some graph content' }
+      let(:json_content) { 'some graph content' }
       let(:request_params) {{
         'external' => file_uri
       }}
@@ -254,15 +254,15 @@ describe 'PuppetLanguageServer::MessageHandler' do
           expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:error => /Files of this type/)
         end
 
-        it 'should not reply with dotContent' do
-          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to_not have_attributes(:dotContent => /.+/)
+        it 'should not reply with jsonContent' do
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to_not have_attributes(:jsonContent => /.+/)
         end
       end
 
       context 'and an error during generation of the node graph' do
         let(:mock_return) {
           value = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
-          value.dot_content = ''
+          value.json_content = ''
           value.error_content = 'MockError'
           value
         }
@@ -275,15 +275,15 @@ describe 'PuppetLanguageServer::MessageHandler' do
           expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:error => /MockError/)
         end
 
-        it 'should not reply with dotContent' do
-          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:dotContent => '')
+        it 'should not reply with jsonContent' do
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:jsonContent => '')
         end
       end
 
       context 'and successfully generate the node graph' do
         let(:mock_return) {
           value = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
-          value.dot_content = 'success'
+          value.json_content = 'success'
           value.error_content = ''
           value
         }
@@ -292,8 +292,8 @@ describe 'PuppetLanguageServer::MessageHandler' do
           expect(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).with(file_content, Object).and_return(mock_return)
         end
 
-        it 'should reply with dotContent' do
-          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:dotContent => /success/)
+        it 'should reply with jsonContent' do
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:jsonContent => /success/)
         end
 
         it 'should not reply with error' do

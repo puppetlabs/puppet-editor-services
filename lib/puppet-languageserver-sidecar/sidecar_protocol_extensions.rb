@@ -7,7 +7,7 @@ module PuppetLanguageServerSidecar
     class NodeGraph < PuppetLanguageServer::Sidecar::Protocol::NodeGraph
       def set_error(message) # rubocop:disable Naming/AccessorMethodName
         self.error_content = message
-        self.dot_content = ''
+        self.json_content = ''
         self
       end
     end

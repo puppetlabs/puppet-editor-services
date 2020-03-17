@@ -64,8 +64,8 @@ module PuppetLanguageServer
 
       begin
         node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(content, documents.store_root_path)
-        LSP::CompileNodeGraphResponse.new('dotContent' => node_graph.dot_content,
-                                          'error'      => node_graph.error_content)
+        LSP::CompileNodeGraphResponse.new('jsonContent' => node_graph.json_content,
+                                          'error'       => node_graph.error_content)
       rescue StandardError => e
         PuppetLanguageServer.log_message(:error, "(puppet/compileNodeGraph) Error generating node graph. #{e}")
         LSP::CompileNodeGraphResponse.new('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.')

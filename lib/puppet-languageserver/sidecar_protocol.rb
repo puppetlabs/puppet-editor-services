@@ -142,19 +142,19 @@ module PuppetLanguageServer
       end
 
       class NodeGraph < BaseClass
-        attr_accessor :dot_content
+        attr_accessor :json_content
         attr_accessor :error_content
 
         def to_json(*options)
           {
-            'dot_content'   => dot_content,
+            'json_content'  => json_content,
             'error_content' => error_content
           }.to_json(options)
         end
 
         def from_json!(json_string)
           obj = ::JSON.parse(json_string)
-          self.dot_content = obj['dot_content']
+          self.json_content = obj['json_content']
           self.error_content = obj['error_content']
           self
         end

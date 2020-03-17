@@ -71,7 +71,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
 
   basepuppetobject_properties = [:key, :calling_source, :source, :line, :char, :length]
   fact_properties = [:value]
-  nodegraph_properties = [:dot_content, :error_content]
+  nodegraph_properties = [:json_content, :error_content]
   puppetclass_properties = [:doc, :parameters]
   puppetdatatype_properties = [:doc, :alias_of, :attributes, :is_type_alias]
   puppetdatatypeattribute_properties = [:key, :doc, :default_value, :types]
@@ -183,7 +183,7 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
     let(:subject_klass) { PuppetLanguageServer::Sidecar::Protocol::NodeGraph }
     let(:subject) {
       value = subject_klass.new
-      value.dot_content = 'dot_content_' + rand(1000).to_s
+      value.json_content = 'json_content_' + rand(1000).to_s
       value.error_content = 'error_content_' + rand(1000).to_s
       value
     }
