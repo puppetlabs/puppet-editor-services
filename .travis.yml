@@ -13,11 +13,6 @@ matrix:
 
 env:
   matrix:
-    # Latest 4.x Puppet (Covers LTS too)
-    - PUPPET_GEM_VERSION="~> 4.0"
-      RUBY_VER=2.1.9
-      RAKE_TASK="test_languageserver test_languageserver_sidecar test_debugserver"
-      BUNDLER_VERSION=1.17.3
     # Latest 5.x Puppet
     - PUPPET_GEM_VERSION="~> 5.0"
       RUBY_VER=2.4.1
