@@ -3,21 +3,26 @@
 module PuppetLanguageServerSidecar
   module PuppetParserHelper
     def self.compile_node_graph(content)
-      result = PuppetLanguageServerSidecar::Protocol::NodeGraph.new
+      result = PuppetLanguageServerSidecar::Protocol::Graph.new
 
       begin
-        # The fontsize is inserted in the puppet code.  Need to remove it so the client can render appropriately.  Need to
-        # set it to blank.  The graph label is set to editorservices so that we can do text replacement client side to inject the
-        # appropriate styling.
-        options = {
-          'fontsize' => '""',
-          'name'     => 'editorservices'
-        }
         node_graph = compile_to_pretty_relationship_graph(content)
         if node_graph.vertices.count.zero?
           result.set_error('There were no resources created in the node graph. Is there an include statement missing?')
-        else
-          result.dot_content = node_graph.to_dot(options)
+          return result
+        end
+
+        result.vertices = []
+        result.edges = []
+
+        node_graph.vertices.each do |vertex|
+          # TODO: more?
+          result.vertices << { label: vertex.to_s }
+        end
+
+        node_graph.edges.each do |edge|
+          # TODO: more?
+          result.edges << { source: edge.source.to_s, target: edge.target.to_s }
         end
       rescue StandardError => e
         result.set_error("Error while parsing the file. #{e}")

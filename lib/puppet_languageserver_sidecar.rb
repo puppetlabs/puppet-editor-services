@@ -307,7 +307,7 @@ module PuppetLanguageServerSidecar
 
     when 'node_graph'
       inject_workspace_as_module || inject_workspace_as_environment
-      result = PuppetLanguageServerSidecar::Protocol::NodeGraph.new
+      result = PuppetLanguageServerSidecar::Protocol::Graph.new
       if options[:action_parameters]['source'].nil?
         log_message(:error, 'Missing source action parameter')
         return result.set_error('Missing source action parameter')

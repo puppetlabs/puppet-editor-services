@@ -134,10 +134,10 @@ describe 'PuppetLanguageServerSidecar' do
 
           result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
 
-          deserial = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+          deserial = PuppetLanguageServer::Sidecar::Protocol::Graph.new()
           expect { deserial.from_json!(result) }.to_not raise_error
 
-          expect(deserial.dot_content).to match(/Fixture\[test\]/)
+          expect(deserial.vertices[0]).to eq('label' => 'Fixture[test]')
           expect(deserial.error_content.to_s).to eq('')
         end
       end
@@ -237,10 +237,10 @@ describe 'PuppetLanguageServerSidecar' do
 
           result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
 
-          deserial = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+          deserial = PuppetLanguageServer::Sidecar::Protocol::Graph.new()
           expect { deserial.from_json!(result) }.to_not raise_error
 
-          expect(deserial.dot_content).to match(/Envtype\[test\]/)
+          expect(deserial.vertices[0]).to eq('label' => 'Envtype[test]')
           expect(deserial.error_content.to_s).to eq('')
         end
       end
@@ -340,10 +340,10 @@ describe 'PuppetLanguageServerSidecar' do
 
         result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
 
-        deserial = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+        deserial = PuppetLanguageServer::Sidecar::Protocol::Graph.new()
         expect { deserial.from_json!(result) }.to_not raise_error
 
-        expect(deserial.dot_content).to_not eq('')
+        expect(deserial.vertices.count).to be > 0
         expect(deserial.error_content.to_s).to eq('')
       end
     end

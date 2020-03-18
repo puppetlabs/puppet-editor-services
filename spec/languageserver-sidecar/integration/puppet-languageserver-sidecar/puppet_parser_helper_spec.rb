@@ -24,14 +24,8 @@ describe 'PuppetLanguageServerSidecar::PuppetParserHelper' do
         result = subject.compile_node_graph(manifest)
         expect(result).to_not be_nil
 
-        # Make sure it's a DOT graph file
-        expect(result.dot_content).to match(/digraph/)
         # Make sure the resource is there
-        expect(result.dot_content).to match(/User\[test\]/)
-        # Make sure the fontsize is set to empty
-        expect(result.dot_content).to match(/fontsize = \"\"/)
-        # Make sure the label is editorservices
-        expect(result.dot_content).to match(/label = \"editorservices\"/)
+        expect(deserial.vertices[0]).to eq('label' => 'User[test]')
         # Expect no errors
         expect(result.error_content.to_s).to eq('')
       end
@@ -43,7 +37,8 @@ describe 'PuppetLanguageServerSidecar::PuppetParserHelper' do
       it 'should compile with an error' do
         result = subject.compile_node_graph(manifest)
         expect(result).to_not be_nil
-        expect(result.dot_content).to eq("")
+        expect(result.edges).to be_nil
+        expect(result.vertices).to be_nil
         expect(result.error_content).to match(/no resources created in the node graph/)
       end
     end
@@ -54,7 +49,8 @@ describe 'PuppetLanguageServerSidecar::PuppetParserHelper' do
       it 'should compile with an error' do
         result = subject.compile_node_graph(manifest)
         expect(result).to_not be_nil
-        expect(result.dot_content).to eq("")
+        expect(result.edges).to be_nil
+        expect(result.vertices).to be_nil
         expect(result.error_content).to match(/Error while parsing the file./)
       end
     end

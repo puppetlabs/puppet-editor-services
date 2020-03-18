@@ -55,12 +55,14 @@ module LSP
     end
   end
 
-  # export interface CompileNodeGraphResponse {
-  #   dotContent: string;
+  # export interface GraphResponse {
+  #   vertices: array;
+  #   edges: array;
   #   data: string;
   # }
-  class CompileNodeGraphResponse < LSPBase
-    attr_accessor :dotContent # type: string
+  class GraphResponse < LSPBase
+    attr_accessor :vertices # type: object[]
+    attr_accessor :edges # type: object[]
     attr_accessor :error # type: string
 
     def initialize(initial_hash = nil)
@@ -70,7 +72,8 @@ module LSP
 
     def from_h!(value)
       value = {} if value.nil?
-      self.dotContent = value['dotContent']
+      self.vertices = value['vertices']
+      self.edges = value['edges']
       self.error = value['error']
       self
     end

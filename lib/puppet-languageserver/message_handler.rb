@@ -59,16 +59,17 @@ module PuppetLanguageServer
 
     def request_puppet_compilenodegraph(_, json_rpc_message)
       file_uri = json_rpc_message.params['external']
-      return LSP::CompileNodeGraphResponse.new('error' => 'Files of this type can not be used to create a node graph.') unless documents.document_type(file_uri) == :manifest
+      return LSP::GraphResponse.new('error' => 'Files of this type can not be used to create a node graph.') unless documents.document_type(file_uri) == :manifest
       content = documents.document(file_uri)
 
       begin
         node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(content, documents.store_root_path)
-        LSP::CompileNodeGraphResponse.new('dotContent' => node_graph.dot_content,
-                                          'error'      => node_graph.error_content)
+        LSP::GraphResponse.new('vertices' => node_graph.vertices,
+                               'edges'    => node_graph.edges,
+                               'error'    => node_graph.error_content)
       rescue StandardError => e
         PuppetLanguageServer.log_message(:error, "(puppet/compileNodeGraph) Error generating node graph. #{e}")
-        LSP::CompileNodeGraphResponse.new('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.')
+        LSP::GraphResponse.new('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.')
       end
     end
 
