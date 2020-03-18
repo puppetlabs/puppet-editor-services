@@ -95,3 +95,13 @@ Style/SafeNavigation:
 # This is not valid on Ruby 2.1
 Layout/HeredocIndentation:
   Enabled: false
+
+# Rubocop 0.80.0 rules
+Style/HashEachMethods:
+  Enabled: false
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
