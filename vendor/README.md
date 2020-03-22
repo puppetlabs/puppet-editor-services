@@ -13,6 +13,6 @@ Gem List
 
 * puppet-lint (https://github.com/rodjek/puppet-lint.git ref 2.4.2)
 * hiera-eyaml (https://github.com/voxpupuli/hiera-eyaml ref v2.1.0)
-* puppetfile-resolver (https://github.com/lingua-pupuli/puppetfile-resolver.git ref 0.0.3)
+* puppetfile-resolver (https://github.com/glennsarti/puppetfile-resolver.git ref 0.2.0)
 * molinillo (https://github.com/CocoaPods/Molinillo.git ref 0.6.6)
 

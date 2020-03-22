@@ -58,8 +58,8 @@ task :gem_revendor do
     },
     {
       :directory => 'puppetfile-resolver',
-      :github_repo => 'https://github.com/lingua-pupuli/puppetfile-resolver.git',
-      :github_ref => '0.0.3',
+      :github_repo => 'https://github.com/glennsarti/puppetfile-resolver.git',
+      :github_ref => '0.2.0',
     },
     {
       :directory => 'molinillo',
@@ -91,6 +91,7 @@ task :gem_revendor do
     FileUtils.rm_rf(File.join(gem_dir,'.git'))
     FileUtils.rm_rf(File.join(gem_dir,'spec'))
     FileUtils.rm_rf(File.join(gem_dir,'features'))
+    FileUtils.rm_rf(File.join(gem_dir,'docs'))
   end
 
   # Generate the README

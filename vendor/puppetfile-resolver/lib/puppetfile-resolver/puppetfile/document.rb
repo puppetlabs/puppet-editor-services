@@ -75,6 +75,7 @@ module PuppetfileResolver
           next unless mod.version == :latest
           resolved_module = resolution_result.specifications[mod.name]
           next if resolved_module.nil? || resolved_module.is_a?(PuppetfileResolver::Models::MissingModuleSpecification)
+          next if mod.resolver_flags.include?(PuppetfileResolver::Puppetfile::DISABLE_LATEST_VALIDATION_FLAG)
           @validation_errors << DocumentLatestVersionError.new(
             "Latest version of #{mod.name} is #{resolved_module.version}",
             mod,
