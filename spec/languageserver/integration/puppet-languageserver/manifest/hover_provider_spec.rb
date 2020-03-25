@@ -299,12 +299,25 @@ mock_workspace_class { 'Dee':
   attr_name1 => 'string1',
   attr_name2 => 'string1',
 }
+
+::mock_workspace_class { 'Dah': }
 EOT
       }
 
       describe 'when cursor is on the resource type name' do
         let(:line_num) { 0 }
         let(:char_num) { 3 }
+
+        it 'should return resource description' do
+          result = subject.resolve(content, line_num, char_num)
+
+          expect(result.contents).to start_with("**mock_workspace_class** Resource\n")
+        end
+      end
+
+      describe 'when cursor is on the top-scoped resource type name' do
+        let(:line_num) { 5 }
+        let(:char_num) { 5 }
 
         it 'should return resource description' do
           result = subject.resolve(content, line_num, char_num)
