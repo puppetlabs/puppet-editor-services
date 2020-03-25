@@ -254,15 +254,16 @@ describe 'PuppetLanguageServer::MessageHandler' do
           expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:error => /Files of this type/)
         end
 
-        it 'should not reply with dotContent' do
-          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to_not have_attributes(:dotContent => /.+/)
+        it 'should not reply with node graph content' do
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:edges => nil, :vertices => nil)
         end
       end
 
       context 'and an error during generation of the node graph' do
         let(:mock_return) {
-          value = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
-          value.dot_content = ''
+          value = PuppetLanguageServer::Sidecar::Protocol::PuppetNodeGraph.new()
+          value.vertices = nil
+          value.edges = nil
           value.error_content = 'MockError'
           value
         }
@@ -275,15 +276,16 @@ describe 'PuppetLanguageServer::MessageHandler' do
           expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:error => /MockError/)
         end
 
-        it 'should not reply with dotContent' do
-          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:dotContent => '')
+        it 'should not reply with node graph content' do
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:edges => nil, :vertices => nil)
         end
       end
 
       context 'and successfully generate the node graph' do
         let(:mock_return) {
-          value = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
-          value.dot_content = 'success'
+          value = PuppetLanguageServer::Sidecar::Protocol::PuppetNodeGraph.new()
+          value.vertices = []
+          value.edges = []
           value.error_content = ''
           value
         }
@@ -292,8 +294,8 @@ describe 'PuppetLanguageServer::MessageHandler' do
           expect(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).with(file_content, Object).and_return(mock_return)
         end
 
-        it 'should reply with dotContent' do
-          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:dotContent => /success/)
+        it 'should reply with node graph content' do
+          expect(subject.request_puppet_compilenodegraph(connection_id, request_message)).to have_attributes(:edges => [], :vertices => [])
         end
 
         it 'should not reply with error' do

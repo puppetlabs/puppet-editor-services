@@ -134,10 +134,11 @@ describe 'PuppetLanguageServerSidecar' do
 
           result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
 
-          deserial = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+          deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetNodeGraph.new()
           expect { deserial.from_json!(result) }.to_not raise_error
 
-          expect(deserial.dot_content).to match(/Fixture\[test\]/)
+          expect(deserial.vertices).to eq([{"label"=>"Fixture[test]"}])
+          expect(deserial.edges).to eq([])
           expect(deserial.error_content.to_s).to eq('')
         end
       end
@@ -237,10 +238,11 @@ describe 'PuppetLanguageServerSidecar' do
 
           result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
 
-          deserial = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+          deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetNodeGraph.new()
           expect { deserial.from_json!(result) }.to_not raise_error
 
-          expect(deserial.dot_content).to match(/Envtype\[test\]/)
+          expect(deserial.vertices).to eq([{"label"=>"Envtype[test]"}])
+          expect(deserial.edges).to eq([])
           expect(deserial.error_content.to_s).to eq('')
         end
       end
@@ -340,10 +342,11 @@ describe 'PuppetLanguageServerSidecar' do
 
         result = run_sidecar(cmd_options.concat(['--action-parameters', action_params.to_json]))
 
-        deserial = PuppetLanguageServer::Sidecar::Protocol::NodeGraph.new()
+        deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetNodeGraph.new()
         expect { deserial.from_json!(result) }.to_not raise_error
 
-        expect(deserial.dot_content).to_not eq('')
+        expect(deserial.vertices).to eq([{"label"=>"User[test]"}])
+        expect(deserial.edges).to eq([])
         expect(deserial.error_content.to_s).to eq('')
       end
     end
@@ -384,7 +387,7 @@ describe 'PuppetLanguageServerSidecar' do
         deserial = PuppetLanguageServer::Sidecar::Protocol::ResourceList.new()
         expect { deserial.from_json!(result) }.to_not raise_error
 
-        expect(deserial.count).to be 1
+        expect(deserial.count).to be >= 1
       end
     end
   end
