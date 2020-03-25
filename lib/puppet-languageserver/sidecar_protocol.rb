@@ -141,6 +141,28 @@ module PuppetLanguageServer
         end
       end
 
+      class PuppetNodeGraph < BaseClass
+        attr_accessor :vertices
+        attr_accessor :edges
+        attr_accessor :error_content
+
+        def to_json(*options)
+          {
+            'vertices'      => vertices,
+            'edges'         => edges,
+            'error_content' => error_content
+          }.to_json(options)
+        end
+
+        def from_json!(json_string)
+          obj = ::JSON.parse(json_string)
+          self.vertices = obj['vertices']
+          self.edges = obj['edges']
+          self.error_content = obj['error_content']
+          self
+        end
+      end
+
       class NodeGraph < BaseClass
         attr_accessor :dot_content
         attr_accessor :error_content
