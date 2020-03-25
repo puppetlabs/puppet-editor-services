@@ -8,6 +8,12 @@ os:
 # OSX is REALLY slow to test
 #  - osx
 
+# safelist
+branches:
+  only:
+  - master
+  - "1.0"
+
 matrix:
   fast_finish: true
 
