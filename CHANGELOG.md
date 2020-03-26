@@ -6,6 +6,17 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.25.0 - 2020-03-26
+
+### Fixed
+
+- ([GH-207](https://github.com/lingua-pupuli/puppet-editor-services/issues/207)) Allow Qualified Resource Names in hover provider
+
+### Changed
+
+- ([GH-221](https://github.com/lingua-pupuli/puppet-editor-services/issues/221)) Puppet Node Graph Response
+- (maint) [puppetfile-resolver-0.2.0](https://github.com/glennsarti/puppetfile-resolver/releases/tag/0.2.0) Puppetfile Resolver v0.2.0
+
 ## 0.24.0 - 2020-01-28
 
 ### Fixed
