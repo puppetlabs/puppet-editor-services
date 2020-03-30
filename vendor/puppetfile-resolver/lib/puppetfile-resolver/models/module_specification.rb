@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'puppetfile-resolver/models/module_dependency'
+require 'puppetfile-resolver/models/puppet_dependency'
+require 'puppetfile-resolver/puppetfile'
 
 module PuppetfileResolver
   module Models
@@ -9,6 +11,7 @@ module PuppetfileResolver
       attr_accessor :owner
       attr_accessor :version
       attr_accessor :origin # Same as R10K module :type
+      attr_accessor :resolver_flags
 
       def initialize(options = {})
         require 'semantic_puppet'
@@ -36,6 +39,7 @@ module PuppetfileResolver
         @origin = options[:origin]
         @dependencies = nil
         @metadata = options[:metadata]
+        @resolver_flags = options[:resolver_flags].nil? ? [] : options[:resolver_flags]
         @version = ::SemanticPuppet::Version.parse(options[:version]) unless options[:version].nil?
       end
 
@@ -78,8 +82,9 @@ module PuppetfileResolver
       def dependencies(cache, resolver_ui)
         return @dependencies unless @dependencies.nil?
 
-        meta = metadata(cache, resolver_ui)
+        return (@dependencies = []) if resolver_flags.include?(PuppetfileResolver::Puppetfile::DISABLE_ALL_DEPENDENCIES_FLAG)
 
+        meta = metadata(cache, resolver_ui)
         @dependencies = []
         unless meta[:dependencies].nil? || meta[:dependencies].empty?
           @dependencies = meta[:dependencies].map do |dep|
@@ -90,14 +95,16 @@ module PuppetfileResolver
           end
         end
 
-        puppet_requirement = nil
-        unless meta[:requirements].nil? || meta[:requirements].empty? # rubocop:disable Style/IfUnlessModifier
-          puppet_requirement = meta[:requirements].find { |req| req[:name] == 'puppet' && !req[:version_requirement].nil? }
-        end
-        if puppet_requirement.nil?
-          @dependencies << PuppetDependency.new('>= 0')
-        else
-          @dependencies << PuppetDependency.new(puppet_requirement[:version_requirement])
+        unless resolver_flags.include?(PuppetfileResolver::Puppetfile::DISABLE_PUPPET_DEPENDENCY_FLAG)
+          puppet_requirement = nil
+          unless meta[:requirements].nil? || meta[:requirements].empty? # rubocop:disable Style/IfUnlessModifier
+            puppet_requirement = meta[:requirements].find { |req| req[:name] == 'puppet' && !req[:version_requirement].nil? }
+          end
+          if puppet_requirement.nil?
+            @dependencies << PuppetDependency.new('>= 0')
+          else
+            @dependencies << PuppetDependency.new(puppet_requirement[:version_requirement])
+          end
         end
 
         @dependencies

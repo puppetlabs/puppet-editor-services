@@ -137,9 +137,9 @@ module PuppetfileResolver
       unless mod.nil?
         case mod.module_type
         when Puppetfile::FORGE_MODULE
-          @module_info[dependency.name] = safe_spec_search { SpecSearchers::Forge.find_all(dependency, @cache, @resolver_ui) }
+          @module_info[dependency.name] = safe_spec_search(dependency) { SpecSearchers::Forge.find_all(dependency, @cache, @resolver_ui) }
         when Puppetfile::GIT_MODULE
-          @module_info[dependency.name] = safe_spec_search { SpecSearchers::Git.find_all(mod, dependency, @cache, @resolver_ui) }
+          @module_info[dependency.name] = safe_spec_search(dependency) { SpecSearchers::Git.find_all(mod, dependency, @cache, @resolver_ui) }
         else # rubocop:disable Style/EmptyElse
           # Errr.... Nothing
         end
@@ -147,13 +147,13 @@ module PuppetfileResolver
       return @module_info[dependency.name] unless @module_info[dependency.name].empty?
 
       # It's not in the Puppetfile, so perhaps it's in our modulepath?
-      @module_info[dependency.name] = safe_spec_search { SpecSearchers::Local.find_all(mod, @puppet_module_paths, dependency, @cache, @resolver_ui) }
+      @module_info[dependency.name] = safe_spec_search(dependency) { SpecSearchers::Local.find_all(mod, @puppet_module_paths, dependency, @cache, @resolver_ui) }
       return @module_info[dependency.name] unless @module_info[dependency.name].empty?
 
       # It's not in the Puppetfile and not on disk, so perhaps it's on the Forge?
       # The forge needs an owner and name to be able to resolve
       if dependency.name && dependency.owner # rubocop:disable Style/IfUnlessModifier
-        @module_info[dependency.name] = safe_spec_search { SpecSearchers::Forge.find_all(dependency, @cache, @resolver_ui) }
+        @module_info[dependency.name] = safe_spec_search(dependency) { SpecSearchers::Forge.find_all(dependency, @cache, @resolver_ui) }
       end
 
       # If we can't find any specifications for the module and we're allowing missing modules
@@ -164,8 +164,13 @@ module PuppetfileResolver
       @module_info[dependency.name]
     end
 
-    def safe_spec_search
-      yield
+    def safe_spec_search(dependency)
+      results = yield
+      # The PuppetfileDependency has the resolver flags, so we need to inject them into the specifications
+      return results unless dependency.is_a?(PuppetfileResolver::Models::PuppetfileDependency) || results.empty?
+      results.each { |spec| spec.resolver_flags = dependency.puppetfile_module.resolver_flags }
+
+      results
     rescue StandardError => e
       if @allow_missing_modules
         @resolver_ui.debug { "Error while querying a specification searcher #{e.inspect}" }

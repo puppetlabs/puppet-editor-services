@@ -11,13 +11,14 @@ describe 'PuppetLanguageServerSidecar::Protocol' do
   end
 
   describe 'NodeGraph' do
-    let(:subject_klass) { PuppetLanguageServerSidecar::Protocol::NodeGraph }
+    let(:subject_klass) { PuppetLanguageServerSidecar::Protocol::PuppetNodeGraph }
     let(:subject) { subject_klass.new }
 
     it "instance should respond to set_error" do
       expect(subject).to respond_to(:set_error)
       result = subject.set_error('test_error')
-      expect(result.dot_content).to eq('')
+      expect(result.vertices).to eq(nil)
+      expect(result.edges).to eq(nil)
       expect(result.error_content).to eq('test_error')
     end
   end

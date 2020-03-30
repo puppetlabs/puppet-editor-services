@@ -8,12 +8,16 @@ module PuppetLanguageServer
           :tasks_mode => false
         }.merge(options)
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
-                                                                              :disallowed_classes => [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression],
+                                                                              :disallowed_classes => [Puppet::Pops::Model::BlockExpression],
                                                                               :tasks_mode         => options[:tasks_mode])
         return LSP::Hover.new if result.nil?
 
         path = result[:path]
         item = result[:model]
+
+        # Munge the item
+        # We're not really interested in the Name of thing yet, we want the "thing" it's a name of
+        item = path.pop if item.instance_of?(Puppet::Pops::Model::QualifiedName) && !path.empty?
 
         content = nil
         case item.class.to_s
@@ -157,12 +161,15 @@ module PuppetLanguageServer
       end
 
       def self.get_resource_expression_content(item)
+        name = item.type_name.value
+        # Strip top scope colons if found
+        name = name[2..-1] if name.start_with?('::')
         # Get an instance of the type
-        item_object = PuppetLanguageServer::PuppetHelper.get_type(item.type_name.value)
+        item_object = PuppetLanguageServer::PuppetHelper.get_type(name)
         return get_puppet_type_content(item_object) unless item_object.nil?
-        item_object = PuppetLanguageServer::PuppetHelper.get_class(item.type_name.value)
+        item_object = PuppetLanguageServer::PuppetHelper.get_class(name)
         return get_puppet_class_content(item_object) unless item_object.nil?
-        raise "#{item.type_name.value} is not a valid puppet type"
+        raise "#{name} is not a valid puppet type"
       end
 
       def self.get_puppet_type_content(item_type)

@@ -1,0 +1,10 @@
+--exclude /vendor
+--exclude /docs
+--exclude /spec
+--markup-provider=redcarpet
+--markup=markdown
+--charset utf-8
+--output-dir docs/reference
+--title "Puppetfile Resolver"
+
+lib/**/*.rb
