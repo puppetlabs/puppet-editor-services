@@ -9,8 +9,8 @@ $LOAD_PATH.unshift(File.join(root,'vendor','molinillo','lib'))
 $LOAD_PATH.unshift(File.join(root,'vendor','puppetfile-resolver','lib'))
 
 require 'puppet_languageserver'
-$fixtures_dir = File.join(File.dirname(__FILE__),'fixtures')
-
+$fixtures_dir = File.join(File.dirname(__FILE__), 'fixtures')
+$root_dir = File.join(File.dirname(__FILE__), '..', '..')
 # Currently there is no way to re-initialize the puppet loader so for the moment
 # all tests must run off the single puppet config settings instead of per example setting
 server_options = PuppetLanguageServer::CommandLineParser.parse(['--slow-start'])
