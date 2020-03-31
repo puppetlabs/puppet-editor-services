@@ -180,6 +180,27 @@ module PuppetLanguageServer
 
       def run_sidecar(cmd)
         Open3.capture3(*cmd)
+
+        # The following code should ONLY be uncommented when debugging acceptance tests failures.
+        # It caches the sidecar responses so tests sidecar calls will be (VERY) quick, which speeds
+        # up feedback loops. It has a rubocop failure on purpose so that it fails automated CI checks
+        # and should never be merged in a Pull Request
+        #
+        # output_dir = File.expand_path(File.join(__dir__, '..', '..', '..', 'output'))
+        # FileUtils.mkdir_p(output_dir) unless Dir.exist?(output_dir)
+        # require 'digest'
+        # cache_file = File.join(output_dir, Digest::MD5.hexdigest(cmd.join(' ')) + '.json')
+        # if File.exist?(cache_file)
+        #   return [
+        #     File.read(cache_file, mode: 'rb', encoding: 'utf-8'),
+        #     '',
+        #     Struct.new(:exitstatus).new(0)
+        #   ]
+        # end
+        # # Rubocop failure is here on purpose
+        # stdout,stderr,status = Open3.capture3(*cmd)
+        # File.write(cache_file, stdout, mode: 'wb', encoding: 'utf-8')
+        # [stdout, stderr, status]
       end
 
       def sidecar_args_from_connection(connection)
