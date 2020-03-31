@@ -5,15 +5,12 @@ def pretty_string(value)
 end
 
 describe 'signature_provider' do
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => 'mock') }
   let(:subject) { PuppetLanguageServer::Manifest::SignatureProvider }
 
-  before(:all) do
-    wait_for_puppet_loading
-  end
-
   before(:each) do
+    populate_cache(session_state.object_cache)
     # Prepopulate the Object Cache with workspace objects
-    # Functions
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
     list << PuppetLanguageServer::Sidecar::Protocol::PuppetFunction.new.from_h!({
       'key'              => 'func_two_param',
@@ -56,12 +53,7 @@ describe 'signature_provider' do
         },
       ]
     })
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :function, :workspace)
-  end
-
-  after(:each) do
-    # Clear out the Object Cache of workspace objects
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
+    session_state.object_cache.import_sidecar_list!(list, :function, :workspace)
   end
 
   describe '#signature_help' do
@@ -81,13 +73,13 @@ describe 'signature_provider' do
       ].each do |testcase|
         describe "When the cursor is #{testcase[:name]}" do
           it "should use the first signature" do
-            result = subject.signature_help(content, 1, testcase[:character], { :tasks_mode => true})
+            result = subject.signature_help(session_state, content, 1, testcase[:character], { :tasks_mode => true})
 
             expect(result.activeSignature).to eq(0)
           end
 
           it "should have an active parameter of #{pretty_string(testcase[:activeParameter])}" do
-            result = subject.signature_help(content, 1, testcase[:character], { :tasks_mode => true})
+            result = subject.signature_help(session_state, content, 1, testcase[:character], { :tasks_mode => true})
 
             expect(result.activeParameter).to eq(testcase[:activeParameter])
           end
@@ -104,13 +96,13 @@ describe 'signature_provider' do
         ].each do |testcase|
           describe "When the cursor is in #{testcase[:name]}" do
             it "should have an active signature of #{pretty_string(testcase[:activeSignature])}" do
-              result = subject.signature_help(content, 1, testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, 1, testcase[:character], { :tasks_mode => true})
 
               expect(result.activeSignature).to eq(testcase[:activeSignature])
             end
 
             it "should have an active parameter of #{pretty_string(testcase[:activeParameter])}" do
-              result = subject.signature_help(content, 1, testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, 1, testcase[:character], { :tasks_mode => true})
 
               expect(result.activeParameter).to eq(testcase[:activeParameter])
             end
@@ -127,13 +119,13 @@ describe 'signature_provider' do
         ].each do |testcase|
           describe "When the cursor is in #{testcase[:name]}" do
             it "should have an active signature of #{pretty_string(testcase[:activeSignature])}" do
-              result = subject.signature_help(content, 1, testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, 1, testcase[:character], { :tasks_mode => true})
 
               expect(result.activeSignature).to eq(testcase[:activeSignature])
             end
 
             it "should have an active parameter of #{pretty_string(testcase[:activeParameter])}" do
-              result = subject.signature_help(content, 1, testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, 1, testcase[:character], { :tasks_mode => true})
 
               expect(result.activeParameter).to eq(testcase[:activeParameter])
             end
@@ -154,13 +146,13 @@ describe 'signature_provider' do
       ].each do |testcase|
         describe "When the cursor is #{testcase[:name]}" do
           it "should use the first signature" do
-            result = subject.signature_help(content, 0, testcase[:character], { :tasks_mode => true})
+            result = subject.signature_help(session_state, content, 0, testcase[:character], { :tasks_mode => true})
 
             expect(result.activeSignature).to eq(0)
           end
 
           it "should have an active parameter of #{pretty_string(testcase[:activeParameter])}" do
-            result = subject.signature_help(content, 0, testcase[:character], { :tasks_mode => true})
+            result = subject.signature_help(session_state, content, 0, testcase[:character], { :tasks_mode => true})
 
             expect(result.activeParameter).to eq(testcase[:activeParameter])
           end
@@ -184,20 +176,20 @@ describe 'signature_provider' do
         ].each do |testcase|
           describe "When the cursor is #{testcase[:name]}" do
             it "should return signatures for the first function" do
-              result = subject.signature_help(content, testcase[:line], testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, testcase[:line], testcase[:character], { :tasks_mode => true})
 
               expect(result.signatures.count).to be > 0
               expect(result.signatures[0].documentation).to match(/func_three_param/)
             end
 
             it "should have an active signature of #{pretty_string(testcase[:activeSignature])}" do
-              result = subject.signature_help(content, testcase[:line], testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, testcase[:line], testcase[:character], { :tasks_mode => true})
 
               expect(result.activeSignature).to eq(testcase[:activeSignature])
             end
 
             it "should have an active parameter of #{pretty_string(testcase[:activeParameter])}" do
-              result = subject.signature_help(content, testcase[:line], testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, testcase[:line], testcase[:character], { :tasks_mode => true})
 
               expect(result.activeParameter).to eq(testcase[:activeParameter])
             end
@@ -216,20 +208,20 @@ describe 'signature_provider' do
         ].each do |testcase|
           describe "When the cursor is #{testcase[:name]}" do
             it "should return signatures for the second function" do
-              result = subject.signature_help(content, testcase[:line], testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, testcase[:line], testcase[:character], { :tasks_mode => true})
 
               expect(result.signatures.count).to be > 0
               expect(result.signatures[0].documentation).to match(/func_two_param/)
             end
 
             it "should have an active signature of #{pretty_string(testcase[:activeSignature])}" do
-              result = subject.signature_help(content, testcase[:line], testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, testcase[:line], testcase[:character], { :tasks_mode => true})
 
               expect(result.activeSignature).to eq(testcase[:activeSignature])
             end
 
             it "should have an active parameter of #{pretty_string(testcase[:activeParameter])}" do
-              result = subject.signature_help(content, testcase[:line], testcase[:character], { :tasks_mode => true})
+              result = subject.signature_help(session_state, content, testcase[:line], testcase[:character], { :tasks_mode => true})
 
               expect(result.activeParameter).to eq(testcase[:activeParameter])
             end
@@ -245,7 +237,7 @@ describe 'signature_provider' do
       ].each do |testcase|
         describe "When the manifest has #{testcase[:name]}" do
           it "should raise a runtime error" do
-            expect {subject.signature_help(testcase[:manifest], 0, 18, { :tasks_mode => true}) }.to raise_error(RuntimeError)
+            expect {subject.signature_help(session_state, testcase[:manifest], 0, 18, { :tasks_mode => true}) }.to raise_error(RuntimeError)
           end
         end
       end
@@ -262,7 +254,7 @@ describe 'signature_provider' do
         ].each do |testcase|
           describe "When the cursor is #{testcase[:name]}" do
             it 'should raise a runtime error' do
-              expect {subject.signature_help(content, 1, testcase[:character], { :tasks_mode => true}) }.to raise_error(RuntimeError)
+              expect {subject.signature_help(session_state, content, 1, testcase[:character], { :tasks_mode => true}) }.to raise_error(RuntimeError)
             end
           end
         end
@@ -277,7 +269,7 @@ describe 'signature_provider' do
         ].each do |testcase|
           describe "When the cursor is #{testcase[:name]}" do
             it 'should raise a runtime error' do
-              expect {subject.signature_help(content, 0, testcase[:character], { :tasks_mode => true}) }.to raise_error(RuntimeError)
+              expect {subject.signature_help(session_state, content, 0, testcase[:character], { :tasks_mode => true}) }.to raise_error(RuntimeError)
             end
           end
         end

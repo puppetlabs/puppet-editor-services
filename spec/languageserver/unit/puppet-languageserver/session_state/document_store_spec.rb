@@ -1,7 +1,23 @@
 require 'spec_helper'
 
-describe 'PuppetLanguageServer::DocumentStore' do
-  let(:subject) { PuppetLanguageServer::DocumentStore }
+describe 'PuppetLanguageServer::SessionState::DocumentStore' do
+  let(:subject) { PuppetLanguageServer::SessionState::DocumentStore.new }
+
+  describe '#set_document' do
+    let(:content) { 'content' }
+    let(:version) { 1 }
+    [
+      { :name => 'n EPP document', :uri => '/template.epp', :klass => PuppetLanguageServer::SessionState::EppDocument },
+      { :name => ' Puppet Manifest', :uri => '/manifest.pp', :klass => PuppetLanguageServer::SessionState::ManifestDocument },
+      { :name => ' Puppetfile', :uri => '/Puppetfile', :klass => PuppetLanguageServer::SessionState::PuppetfileDocument },
+      { :name => 'n unknown document', :uri => '/unknown.txt', :klass => PuppetLanguageServer::SessionState::Document },
+    ].each do |testcase|
+      it "creates a #{testcase[:klass]} object for a#{testcase[:name]}" do
+        subject.set_document(testcase[:uri], content, version)
+        expect(subject.document(testcase[:uri], version)).to be_a(testcase[:klass])
+      end
+    end
+  end
 
   describe '#plan_file?' do
     before(:each) do
@@ -32,6 +48,7 @@ describe 'PuppetLanguageServer::DocumentStore' do
         prefixes.each do |prefix|
           it "should detect '#{prefix}#{testcase}' as a plan file" do
             file_uri = PuppetLanguageServer::UriHelper.build_file_uri(prefix + testcase)
+
             expect(subject.plan_file?(file_uri)).to be(true)
           end
         end

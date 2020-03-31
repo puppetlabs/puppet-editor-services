@@ -18,26 +18,37 @@ server_options[:puppet_settings] = ['--vardir',File.join($fixtures_dir,'cache'),
                                     '--confdir',File.join($fixtures_dir,'confdir')]
 PuppetLanguageServer::init_puppet(server_options)
 
-def wait_for_puppet_loading
-  interation = 0
-  loop do
-    break if PuppetLanguageServer::PuppetHelper.default_functions_loaded? &&
-             PuppetLanguageServer::PuppetHelper.default_types_loaded? &&
-             PuppetLanguageServer::PuppetHelper.default_classes_loaded? &&
-             PuppetLanguageServer::PuppetHelper.default_datatypes_loaded? &&
-             PuppetLanguageServer::FacterHelper.facts_loaded?
-    sleep(1)
-    interation += 1
-    next if interation < 90
-    raise <<-ERRORMSG
-            Puppet has not be initialised in time:
-            facts_loaded? = #{PuppetLanguageServer::FacterHelper.facts_loaded?}
-            functions_loaded? = #{PuppetLanguageServer::PuppetHelper.default_functions_loaded?}
-            types_loaded? = #{PuppetLanguageServer::PuppetHelper.default_types_loaded?}
-            classes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_classes_loaded?}
-            datatypes_loaded? = #{PuppetLanguageServer::PuppetHelper.default_datatypes_loaded?}
-          ERRORMSG
+def populate_cache(cache)
+  if $exemplar_cache.nil?
+    session_state = PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => '123')
+    session_state.load_static_data!(false)
+    $exemplar_cache = session_state.object_cache
+
+    # Emulate the result of running a sidecar job to load all of puppet.
+    # This comes from a saved JSON fixtures file to speed up testing.
+    puppet_data = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+    path = File.join($fixtures_dir, 'puppet_object_cache.json')
+    data = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new.from_json!(File.open(path, 'rb:UTF-8') { |f| f.read })
+    data.each_list { |_, list| puppet_data.concat!(list) }
+
+    $exemplar_cache.import_sidecar_list!(puppet_data.classes,   :class,    :default)
+    $exemplar_cache.import_sidecar_list!(puppet_data.datatypes, :datatype, :default)
+    $exemplar_cache.import_sidecar_list!(puppet_data.functions, :function, :default)
+    $exemplar_cache.import_sidecar_list!(puppet_data.types,     :type,     :default)
+
+    # Emulate the result of running a sidecar job to load facter.
+    # This comes from a saved JSON fixtures file to speed up testing.
+    path = File.join($fixtures_dir, 'fact_object_cache.json')
+    data = PuppetLanguageServer::Sidecar::Protocol::FactList.new.from_json!(File.open(path, 'rb:UTF-8') { |f| f.read })
+    $exemplar_cache.import_sidecar_list!(data, :fact, :default)
   end
+
+  # This is a little brittle, but will work for the moment.
+  cache.instance_variable_set(
+    :@inmemory_cache,
+    $exemplar_cache.instance_variable_get(:@inmemory_cache).dup
+  )
+  nil
 end
 
 # Sidecar Protocol Helpers

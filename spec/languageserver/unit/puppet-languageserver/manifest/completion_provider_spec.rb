@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 describe 'PuppetLanguageServer::Manifest::CompletionProvider' do
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => 'mock') }
   let(:subject) { PuppetLanguageServer::Manifest::CompletionProvider }
 
   def number_of_completion_item_with_type(completion_list, typename)
@@ -37,24 +38,18 @@ describe 'PuppetLanguageServer::Manifest::CompletionProvider' do
     object
   end
 
-  before(:all) do
-    # TODO: This shouldn't really be required, but the PuppetHelper seems to require the default types to be loaded
-    # in order to query the cache.  This is wrong.
-    wait_for_puppet_loading
-  end
-
   before(:each) do
     # Prepopulate the Object Cache with workspace objects
     # Types
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
     list << create_mock_type(['param1'], ['prop1']).tap { |i| i.key = :mocktype }
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :type, :workspace)
+    session_state.object_cache.import_sidecar_list!(list, :type, :workspace)
   end
 
   after(:each) do
     # Clear out the Object Cache of workspace objects
-    PuppetLanguageServer::PuppetHelper::Cache::SECTIONS.each do |section|
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], section, :workspace)
+    PuppetLanguageServer::SessionState::ObjectCache::SECTIONS.each do |section|
+      session_state.object_cache.import_sidecar_list!([], section, :workspace)
     end
   end
 
@@ -72,7 +67,7 @@ describe 'PuppetLanguageServer::Manifest::CompletionProvider' do
         let(:char_num) { 0 }
 
         it 'should return an empty completion list' do
-          result = subject.complete(content, line_num, char_num)
+          result = subject.complete(session_state, content, line_num, char_num)
           expect(result.items.count).to eq(0)
         end
       end
@@ -88,7 +83,7 @@ describe 'PuppetLanguageServer::Manifest::CompletionProvider' do
         let(:char_num) { 0 }
 
         it 'should raise an error' do
-          expect{ subject.complete(content, line_num, char_num) }.to raise_error(RuntimeError)
+          expect{ subject.complete(session_state, content, line_num, char_num) }.to raise_error(RuntimeError)
         end
       end
 
@@ -104,7 +99,7 @@ describe 'PuppetLanguageServer::Manifest::CompletionProvider' do
         let(:expected_types) { ['resource_parameter','resource_property'] }
 
         it 'should return only parameter and property items' do
-          result = subject.complete(content, line_num, char_num)
+          result = subject.complete(session_state, content, line_num, char_num)
 
           result.items.each do |item|
             expect(item).to be_completion_item_with_type(expected_types)
@@ -112,12 +107,12 @@ describe 'PuppetLanguageServer::Manifest::CompletionProvider' do
         end
 
         it 'should return the parameters of the class' do
-          result = subject.complete(content, line_num, char_num)
+          result = subject.complete(session_state, content, line_num, char_num)
           expect(number_of_completion_item_with_type(result, 'resource_parameter')).to eq(1)
         end
 
         it 'should return the properties of the class' do
-          result = subject.complete(content, line_num, char_num)
+          result = subject.complete(session_state, content, line_num, char_num)
           expect(number_of_completion_item_with_type(result, 'resource_property')).to eq(1)
         end
       end

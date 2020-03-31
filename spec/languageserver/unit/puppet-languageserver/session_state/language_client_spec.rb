@@ -98,11 +98,11 @@ RSpec.shared_examples "a setting with dynamic registrations" do |method_name, dy
   end
 end
 
-describe 'PuppetLanguageServer::LanguageClient' do
+describe 'PuppetLanguageServer::SessionState::LanguageClient' do
   let(:server) do
     MockServer.new({}, {}, { :class => PuppetEditorServices::Protocol::JsonRPC }, {})
   end
-  let(:subject) { PuppetLanguageServer::LanguageClient.new(server.handler_object) }
+  let(:subject) { PuppetLanguageServer::SessionState::LanguageClient.new(server.handler_object) }
   let(:protocol) { server.protocol_object }
   let(:mock_connection) { server.connection_object }
 
