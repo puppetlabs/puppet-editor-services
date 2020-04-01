@@ -1,8 +1,10 @@
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/arryulh580j47u26?svg=true)](https://ci.appveyor.com/project/lingua-pupuli/puppet-editor-services) [![Travis Build Status](https://travis-ci.com/lingua-pupuli/puppet-editor-services.svg?branch=master)](https://travis-ci.com/lingua-pupuli/puppet-editor-services)
+[![Build status](https://ci.appveyor.com/api/projects/status/ak9eht4vqavnmjf9?svg=true)](https://ci.appveyor.com/project/puppetlabs/puppet-editor-services)
+[![Build Status](https://travis-ci.com/puppetlabs/puppet-editor-services.svg?branch=master)](https://travis-ci.com/puppetlabs/puppet-editor-services)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/puppetlabs/puppet-editor-services)
 
 # Puppet Editor Services
 
-A ruby based implementation of a [Language Server](https://github.com/Microsoft/language-server-protocol) and [Debug Server](TODO) for the Puppet Langauge.
+A ruby based implementation of a [Language Server](https://github.com/Microsoft/language-server-protocol) and [Debug Server](TODO) for the Puppet Language.
 
 **Note** - This project is experimental until 1.0 is released
 
@@ -15,7 +17,7 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
 * Clone this repository
 
 ```
-> git clone https://github.com/lingua-pupuli/puppet-editor-services.git
+> git clone https://github.com/puppetlabs/puppet-editor-services.git
 
 > cd puppet-editor-services
 ```
