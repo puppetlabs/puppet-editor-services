@@ -6,76 +6,49 @@
 # rubocop:disable Layout/EmptyLinesAroundClassBody
 # rubocop:disable Lint/UselessAssignment
 # rubocop:disable Style/AsciiComments
+# rubocop:disable Naming/MethodName
 
 module LSP
   # export interface FoldingRangeClientCapabilities {
   #     /**
-  #      * The text document client capabilities
+  #      * Whether implementation supports dynamic registration for folding range providers. If this is set to `true`
+  #      * the client supports the new `FoldingRangeRegistrationOptions` return value for the corresponding server
+  #      * capability as well.
   #      */
-  #     textDocument?: {
-  #         /**
-  #          * Capabilities specific to `textDocument/foldingRange` requests
-  #          */
-  #         foldingRange?: {
-  #             /**
-  #              * Whether implementation supports dynamic registration for folding range providers. If this is set to `true`
-  #              * the client supports the new `(FoldingRangeProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-  #              * return value for the corresponding server capability as well.
-  #              */
-  #             dynamicRegistration?: boolean;
-  #             /**
-  #              * The maximum number of folding ranges that the client prefers to receive per document. The value serves as a
-  #              * hint, servers are free to follow the limit.
-  #              */
-  #             rangeLimit?: number;
-  #             /**
-  #              * If set, the client signals that it only supports folding complete lines. If set, client will
-  #              * ignore specified `startCharacter` and `endCharacter` properties in a FoldingRange.
-  #              */
-  #             lineFoldingOnly?: boolean;
-  #         };
-  #     };
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * The maximum number of folding ranges that the client prefers to receive per document. The value serves as a
+  #      * hint, servers are free to follow the limit.
+  #      */
+  #     rangeLimit?: number;
+  #     /**
+  #      * If set, the client signals that it only supports folding complete lines. If set, client will
+  #      * ignore specified `startCharacter` and `endCharacter` properties in a FoldingRange.
+  #      */
+  #     lineFoldingOnly?: boolean;
   # }
   class FoldingRangeClientCapabilities < LSPBase
-    attr_accessor :textDocument # type: {
-    #        /**
-    #         * Capabilities specific to `textDocument/foldingRange` requests
-    #         */
-    #        foldingRange?: {
-    #            /**
-    #             * Whether implementation supports dynamic registration for folding range providers. If this is set to `true`
-    #             * the client supports the new `(FoldingRangeProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-    #             * return value for the corresponding server capability as well.
-    #             */
-    #            dynamicRegistration?: boolean;
-    #            /**
-    #             * The maximum number of folding ranges that the client prefers to receive per document. The value serves as a
-    #             * hint, servers are free to follow the limit.
-    #             */
-    #            rangeLimit?: number;
-    #            /**
-    #             * If set, the client signals that it only supports folding complete lines. If set, client will
-    #             * ignore specified `startCharacter` and `endCharacter` properties in a FoldingRange.
-    #             */
-    #            lineFoldingOnly?: boolean;
-    #        };
-    #    }
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :rangeLimit # type: number
+    attr_accessor :lineFoldingOnly # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[textDocument]
+      @optional_method_names = %i[dynamicRegistration rangeLimit lineFoldingOnly]
     end
 
     def from_h!(value)
       value = {} if value.nil?
-      self.textDocument = value['textDocument'] # Unknown type
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.rangeLimit = value['rangeLimit']
+      self.lineFoldingOnly = value['lineFoldingOnly'] # Unknown type
       self
     end
   end
 
-  # export interface FoldingRangeProviderOptions {
+  # export interface FoldingRangeOptions extends WorkDoneProgressOptions {
   # }
-  class FoldingRangeProviderOptions < LSPBase
+  class FoldingRangeOptions < LSPBase
 
     def from_h!(value)
       value = {} if value.nil?
@@ -83,23 +56,12 @@ module LSP
     end
   end
 
-  # export interface FoldingRangeServerCapabilities {
-  #     /**
-  #      * The server provides folding provider support.
-  #      */
-  #     foldingRangeProvider?: boolean | FoldingRangeProviderOptions | (FoldingRangeProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions);
+  # export interface FoldingRangeRegistrationOptions extends TextDocumentRegistrationOptions, FoldingRangeOptions, StaticRegistrationOptions {
   # }
-  class FoldingRangeServerCapabilities < LSPBase
-    attr_accessor :foldingRangeProvider # type: boolean | FoldingRangeProviderOptions | (FoldingRangeProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions)
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[foldingRangeProvider]
-    end
+  class FoldingRangeRegistrationOptions < LSPBase
 
     def from_h!(value)
       value = {} if value.nil?
-      self.foldingRangeProvider = value['foldingRangeProvider'] # Unknown type
       self
     end
   end
@@ -151,7 +113,7 @@ module LSP
     end
   end
 
-  # export interface FoldingRangeParams {
+  # export interface FoldingRangeParams extends WorkDoneProgressParams, PartialResultParams {
   #     /**
   #      * The text document.
   #      */
@@ -171,3 +133,4 @@ end
 # rubocop:enable Layout/EmptyLinesAroundClassBody
 # rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
+# rubocop:enable Naming/MethodName

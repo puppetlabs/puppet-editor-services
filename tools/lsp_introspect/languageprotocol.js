@@ -21,8 +21,8 @@ const enumList = {
   'DocumentHighlightKind': lsptypes.DocumentHighlightKind,
   'SymbolKind': lsptypes.SymbolKind,
   'CodeActionKind': lsptypes.CodeActionKind,
-  'TextDocumentSaveReason': lsptypes.TextDocumentSaveReason,
   // Enums from the vscode-languageserver-protocol module
+  'TextDocumentSaveReason': lspproto.TextDocumentSaveReason,
   'ResourceOperationKind': lspproto.ResourceOperationKind,
   'FailureHandlingKind': lspproto.FailureHandlingKind,
   'TextDocumentSyncKind': lspproto.TextDocumentSyncKind,
@@ -171,7 +171,13 @@ function GenerateRubyFile(parsed, fileContent, ignoreInterfaces = []) {
 
     thisIface.rubyincludes.forEach( (thatName) => {
       var thatIface = interfaceList[thatName];
-      thatIface.properties.forEach( (thatProp) => {
+
+      if (thatIface == undefined) {
+        console.log("Unknown interface " + thatName + ". Is it in a different file?");
+        return;
+      }
+
+      thatIface.properties.forEach((thatProp) => {
         if (!thisProperties.includes(thatProp.name)) {
           thisIface.properties.push(thatProp);
         }
@@ -222,7 +228,6 @@ function GenerateRubyFile(parsed, fileContent, ignoreInterfaces = []) {
 
 function GenerateRubyEnums(enumList) {
   var rubyText = '';
-  var firstItem = true;
 
   Object.keys(enumList).forEach( (enumName, itemIndex) => {
     var enumType = enumList[enumName];
@@ -258,6 +263,7 @@ function GenerateRubyFileHeader(description) {
          "# rubocop:disable Layout/EmptyLinesAroundClassBody\n" +
          "# rubocop:disable Lint/UselessAssignment\n" +
          "# rubocop:disable Style/AsciiComments\n" +
+         "# rubocop:disable Naming/MethodName\n" +
          "\nmodule LSP\n";
 }
 
@@ -265,7 +271,8 @@ function GenerateRubyFileFooter() {
   return "end\n\n" +
          "# rubocop:enable Layout/EmptyLinesAroundClassBody\n" +
          "# rubocop:enable Lint/UselessAssignment\n" +
-         "# rubocop:enable Style/AsciiComments\n";
+         "# rubocop:enable Style/AsciiComments\n" +
+         "# rubocop:enable Naming/MethodName\n";
 }
 
 // ----------------------------
