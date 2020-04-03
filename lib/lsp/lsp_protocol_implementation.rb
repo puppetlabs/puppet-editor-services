@@ -6,78 +6,66 @@
 # rubocop:disable Layout/EmptyLinesAroundClassBody
 # rubocop:disable Lint/UselessAssignment
 # rubocop:disable Style/AsciiComments
+# rubocop:disable Naming/MethodName
 
 module LSP
   # export interface ImplementationClientCapabilities {
   #     /**
-  #      * The text document client capabilities
+  #      * Whether implementation supports dynamic registration. If this is set to `true`
+  #      * the client supports the new `ImplementationRegistrationOptions` return value
+  #      * for the corresponding server capability as well.
   #      */
-  #     textDocument?: {
-  #         /**
-  #          * Capabilities specific to the `textDocument/implementation`
-  #          */
-  #         implementation?: {
-  #             /**
-  #              * Whether implementation supports dynamic registration. If this is set to `true`
-  #              * the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-  #              * return value for the corresponding server capability as well.
-  #              */
-  #             dynamicRegistration?: boolean;
-  #             /**
-  #              * The client supports additional metadata in the form of definition links.
-  #              */
-  #             linkSupport?: boolean;
-  #         };
-  #     };
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * The client supports additional metadata in the form of definition links.
+  #      *
+  #      * Since 3.14.0
+  #      */
+  #     linkSupport?: boolean;
   # }
   class ImplementationClientCapabilities < LSPBase
-    attr_accessor :textDocument # type: {
-    #        /**
-    #         * Capabilities specific to the `textDocument/implementation`
-    #         */
-    #        implementation?: {
-    #            /**
-    #             * Whether implementation supports dynamic registration. If this is set to `true`
-    #             * the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-    #             * return value for the corresponding server capability as well.
-    #             */
-    #            dynamicRegistration?: boolean;
-    #            /**
-    #             * The client supports additional metadata in the form of definition links.
-    #             */
-    #            linkSupport?: boolean;
-    #        };
-    #    }
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :linkSupport # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[textDocument]
+      @optional_method_names = %i[dynamicRegistration linkSupport]
     end
 
     def from_h!(value)
       value = {} if value.nil?
-      self.textDocument = value['textDocument'] # Unknown type
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.linkSupport = value['linkSupport'] # Unknown type
       self
     end
   end
 
-  # export interface ImplementationServerCapabilities {
-  #     /**
-  #      * The server provides Goto Implementation support.
-  #      */
-  #     implementationProvider?: boolean | (TextDocumentRegistrationOptions & StaticRegistrationOptions);
+  # export interface ImplementationOptions extends WorkDoneProgressOptions {
   # }
-  class ImplementationServerCapabilities < LSPBase
-    attr_accessor :implementationProvider # type: boolean | (TextDocumentRegistrationOptions & StaticRegistrationOptions)
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[implementationProvider]
-    end
+  class ImplementationOptions < LSPBase
 
     def from_h!(value)
       value = {} if value.nil?
-      self.implementationProvider = value['implementationProvider'] # Unknown type
+      self
+    end
+  end
+
+  # export interface ImplementationRegistrationOptions extends TextDocumentRegistrationOptions, ImplementationOptions, StaticRegistrationOptions {
+  # }
+  class ImplementationRegistrationOptions < LSPBase
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self
+    end
+  end
+
+  # export interface ImplementationParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
+  # }
+  class ImplementationParams < LSPBase
+
+    def from_h!(value)
+      value = {} if value.nil?
       self
     end
   end
@@ -86,3 +74,4 @@ end
 # rubocop:enable Layout/EmptyLinesAroundClassBody
 # rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
+# rubocop:enable Naming/MethodName

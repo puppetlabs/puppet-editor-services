@@ -6,6 +6,7 @@
 # rubocop:disable Layout/EmptyLinesAroundClassBody
 # rubocop:disable Lint/UselessAssignment
 # rubocop:disable Style/AsciiComments
+# rubocop:disable Naming/MethodName
 
 module LSP
   # export interface WorkspaceFoldersInitializeParams {
@@ -116,8 +117,8 @@ module LSP
   #      */
   #     uri: string;
   #     /**
-  #      * The name of the workspace folder. Defaults to the
-  #      * uri's basename.
+  #      * The name of the workspace folder. Used to refer to this
+  #      * workspace folder in the user interface.
   #      */
   #     name: string;
   # }
@@ -175,3 +176,4 @@ end
 # rubocop:enable Layout/EmptyLinesAroundClassBody
 # rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
+# rubocop:enable Naming/MethodName

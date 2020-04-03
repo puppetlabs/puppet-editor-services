@@ -7,10 +7,11 @@
 # rubocop:disable Lint/UselessAssignment
 # rubocop:disable Style/AsciiComments
 # rubocop:disable Layout/TrailingWhitespace
+# rubocop:disable Naming/MethodName
 
 module DSP
   # interface ProtocolMessage {
-  #         /** Sequence number. */
+  #         /** Sequence number (also known as message ID). For protocol messages of type 'request' this ID can be used to cancel the request. */
   #         seq: number;
   #         /** Message type.
   #             Values: 'request', 'response', 'event', etc.
@@ -86,11 +87,20 @@ module DSP
   # interface Response extends ProtocolMessage {
   #         /** Sequence number of the corresponding request. */
   #         request_seq: number;
-  #         /** Outcome of the request. */
+  #         /** Outcome of the request.
+  #             If true, the request was successful and the 'body' attribute may contain the result of the request.
+  #             If the value is false, the attribute 'message' contains the error in short form and the 'body' may contain additional information (see 'ErrorResponse.body.error').
+  #         */
   #         success: boolean;
   #         /** The command requested. */
   #         command: string;
-  #         /** Contains error message if success == false. */
+  #         /** Contains the raw error in short form if 'success' is false.
+  #             This raw error might be interpreted by the frontend and is not shown in the UI.
+  #             Some predefined values exist.
+  #             Values:
+  #             'cancelled': request was cancelled.
+  #             etc.
+  #         */
   #         message?: string;
   #         /** Contains request result if success is true and optional error details if success is false. */
   #         body?: any;
@@ -152,6 +162,86 @@ module DSP
       self.success = value['success'] # Unknown type
       self.command = value['command']
       self.message = value['message']
+      self.seq = value['seq']
+      self.type = value['type']
+      self
+    end
+  end
+
+  # interface CancelRequest extends Request {
+  #         arguments?: CancelArguments;
+  #     }
+  class CancelRequest < DSPBase
+    attr_accessor :arguments # type: CancelArguments
+    attr_accessor :command # type: string
+    attr_accessor :seq # type: number
+    attr_accessor :type # type: string
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[arguments]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.arguments = CancelArguments.new(value['arguments']) unless value['arguments'].nil?
+      self.command = value['command']
+      self.seq = value['seq']
+      self.type = value['type']
+      self
+    end
+  end
+
+  # interface CancelArguments {
+  #         /** The ID (attribute 'seq') of the request to cancel. If missing no request is cancelled.
+  #             Both a 'requestId' and a 'progressId' can be specified in one request.
+  #         */
+  #         requestId?: number;
+  #         /** The ID (attribute 'progressId') of the progress to cancel. If missing no progress is cancelled.
+  #             Both a 'requestId' and a 'progressId' can be specified in one request.
+  #         */
+  #         progressId?: string;
+  #     }
+  class CancelArguments < DSPBase
+    attr_accessor :requestId # type: number
+    attr_accessor :progressId # type: string
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[requestId progressId]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.requestId = value['requestId']
+      self.progressId = value['progressId']
+      self
+    end
+  end
+
+  # interface CancelResponse extends Response {
+  #     }
+  class CancelResponse < DSPBase
+    attr_accessor :request_seq # type: number
+    attr_accessor :success # type: boolean
+    attr_accessor :command # type: string
+    attr_accessor :message # type: string
+    attr_accessor :body # type: any
+    attr_accessor :seq # type: number
+    attr_accessor :type # type: string
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[message body]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.request_seq = value['request_seq']
+      self.success = value['success'] # Unknown type
+      self.command = value['command']
+      self.message = value['message']
+      self.body = value['body']
       self.seq = value['seq']
       self.type = value['type']
       self
@@ -367,7 +457,16 @@ module DSP
   #             category?: string;
   #             /** The output to report. */
   #             output: string;
-  #             /** If an attribute 'variablesReference' exists and its value is > 0, the output contains objects which can be retrieved by passing 'variablesReference' to the 'variables' request. */
+  #             /** Support for keeping an output log organized by grouping related messages.
+  #                 'start': Start a new group in expanded mode. Subsequent output events are members of the group and should be shown indented.
+  #                 The 'output' attribute becomes the name of the group and is not indented.
+  #                 'startCollapsed': Start a new group in collapsed mode. Subsequent output events are members of the group and should be shown indented (as soon as the group is expanded).
+  #                 The 'output' attribute becomes the name of the group and is not indented.
+  #                 'end': End the current group and decreases the indentation of subsequent output events.
+  #                 A non empty 'output' attribute is shown as the unindented end of the group.
+  #             */
+  #             group?: 'start' | 'startCollapsed' | 'end';
+  #             /** If an attribute 'variablesReference' exists and its value is > 0, the output contains objects which can be retrieved by passing 'variablesReference' to the 'variables' request. The value should be less than or equal to 2147483647 (2^31 - 1). */
   #             variablesReference?: number;
   #             /** An optional source location where the output was produced. */
   #             source?: Source;
@@ -387,7 +486,16 @@ module DSP
     #            category?: string;
     #            /** The output to report. */
     #            output: string;
-    #            /** If an attribute 'variablesReference' exists and its value is > 0, the output contains objects which can be retrieved by passing 'variablesReference' to the 'variables' request. */
+    #            /** Support for keeping an output log organized by grouping related messages.
+    #                'start': Start a new group in expanded mode. Subsequent output events are members of the group and should be shown indented.
+    #                The 'output' attribute becomes the name of the group and is not indented.
+    #                'startCollapsed': Start a new group in collapsed mode. Subsequent output events are members of the group and should be shown indented (as soon as the group is expanded).
+    #                The 'output' attribute becomes the name of the group and is not indented.
+    #                'end': End the current group and decreases the indentation of subsequent output events.
+    #                A non empty 'output' attribute is shown as the unindented end of the group.
+    #            */
+    #            group?: 'start' | 'startCollapsed' | 'end';
+    #            /** If an attribute 'variablesReference' exists and its value is > 0, the output contains objects which can be retrieved by passing 'variablesReference' to the 'variables' request. The value should be less than or equal to 2147483647 (2^31 - 1). */
     #            variablesReference?: number;
     #            /** An optional source location where the output was produced. */
     #            source?: Source;
@@ -577,6 +685,129 @@ module DSP
     end
   end
 
+  # interface ProgressStartEvent extends Event {
+  #         body: {
+  #             /** An ID that must be used in subsequent 'progressUpdate' and 'progressEnd' events to make them refer to the same progress reporting.
+  #                 IDs must be unique within a debug session.
+  #             */
+  #             progressId: string;
+  #             /** Mandatory (short) title of the progress reporting. Shown in the UI to describe the long running operation. */
+  #             title: string;
+  #             /** The request ID that this progress report is related to. If specified a debug adapter is expected to emit
+  #                 progress events for the long running request until the request has been either completed or cancelled.
+  #                 If the request ID is omitted, the progress report is assumed to be related to some general activity of the debug adapter.
+  #             */
+  #             requestId?: number;
+  #             /** If true, the request that reports progress may be canceled with a 'cancel' request.
+  #                 So this property basically controls whether the client should use UX that supports cancellation.
+  #                 Clients that don't support cancellation are allowed to ignore the setting.
+  #             */
+  #             cancellable?: boolean;
+  #             /** Optional, more detailed progress message. */
+  #             message?: string;
+  #             /** Optional progress percentage to display (value range: 0 to 100). If omitted no percentage will be shown. */
+  #             percentage?: number;
+  #         };
+  #     }
+  class ProgressStartEvent < DSPBase
+    attr_accessor :body # type: {
+    #            /** An ID that must be used in subsequent 'progressUpdate' and 'progressEnd' events to make them refer to the same progress reporting.
+    #                IDs must be unique within a debug session.
+    #            */
+    #            progressId: string;
+    #            /** Mandatory (short) title of the progress reporting. Shown in the UI to describe the long running operation. */
+    #            title: string;
+    #            /** The request ID that this progress report is related to. If specified a debug adapter is expected to emit
+    #                progress events for the long running request until the request has been either completed or cancelled.
+    #                If the request ID is omitted, the progress report is assumed to be related to some general activity of the debug adapter.
+    #            */
+    #            requestId?: number;
+    #            /** If true, the request that reports progress may be canceled with a 'cancel' request.
+    #                So this property basically controls whether the client should use UX that supports cancellation.
+    #                Clients that don't support cancellation are allowed to ignore the setting.
+    #            */
+    #            cancellable?: boolean;
+    #            /** Optional, more detailed progress message. */
+    #            message?: string;
+    #            /** Optional progress percentage to display (value range: 0 to 100). If omitted no percentage will be shown. */
+    #            percentage?: number;
+    #        }
+    attr_accessor :event # type: string
+    attr_accessor :seq # type: number
+    attr_accessor :type # type: string
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.body = value['body'] # Unknown type
+      self.event = value['event']
+      self.seq = value['seq']
+      self.type = value['type']
+      self
+    end
+  end
+
+  # interface ProgressUpdateEvent extends Event {
+  #         body: {
+  #             /** The ID that was introduced in the initial 'progressStart' event. */
+  #             progressId: string;
+  #             /** Optional, more detailed progress message. If omitted, the previous message (if any) is used. */
+  #             message?: string;
+  #             /** Optional progress percentage to display (value range: 0 to 100). If omitted no percentage will be shown. */
+  #             percentage?: number;
+  #         };
+  #     }
+  class ProgressUpdateEvent < DSPBase
+    attr_accessor :body # type: {
+    #            /** The ID that was introduced in the initial 'progressStart' event. */
+    #            progressId: string;
+    #            /** Optional, more detailed progress message. If omitted, the previous message (if any) is used. */
+    #            message?: string;
+    #            /** Optional progress percentage to display (value range: 0 to 100). If omitted no percentage will be shown. */
+    #            percentage?: number;
+    #        }
+    attr_accessor :event # type: string
+    attr_accessor :seq # type: number
+    attr_accessor :type # type: string
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.body = value['body'] # Unknown type
+      self.event = value['event']
+      self.seq = value['seq']
+      self.type = value['type']
+      self
+    end
+  end
+
+  # interface ProgressEndEvent extends Event {
+  #         body: {
+  #             /** The ID that was introduced in the initial 'ProgressStartEvent'. */
+  #             progressId: string;
+  #             /** Optional, more detailed progress message. If omitted, the previous message (if any) is used. */
+  #             message?: string;
+  #         };
+  #     }
+  class ProgressEndEvent < DSPBase
+    attr_accessor :body # type: {
+    #            /** The ID that was introduced in the initial 'ProgressStartEvent'. */
+    #            progressId: string;
+    #            /** Optional, more detailed progress message. If omitted, the previous message (if any) is used. */
+    #            message?: string;
+    #        }
+    attr_accessor :event # type: string
+    attr_accessor :seq # type: number
+    attr_accessor :type # type: string
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.body = value['body'] # Unknown type
+      self.event = value['event']
+      self.seq = value['seq']
+      self.type = value['type']
+      self
+    end
+  end
+
   # interface RunInTerminalRequest extends Request {
   #         arguments: RunInTerminalRequestArguments;
   #     }
@@ -637,17 +868,17 @@ module DSP
 
   # interface RunInTerminalResponse extends Response {
   #         body: {
-  #             /** The process ID. */
+  #             /** The process ID. The value should be less than or equal to 2147483647 (2^31 - 1). */
   #             processId?: number;
-  #             /** The process ID of the terminal shell. */
+  #             /** The process ID of the terminal shell. The value should be less than or equal to 2147483647 (2^31 - 1). */
   #             shellProcessId?: number;
   #         };
   #     }
   class RunInTerminalResponse < DSPBase
     attr_accessor :body # type: {
-    #            /** The process ID. */
+    #            /** The process ID. The value should be less than or equal to 2147483647 (2^31 - 1). */
     #            processId?: number;
-    #            /** The process ID of the terminal shell. */
+    #            /** The process ID of the terminal shell. The value should be less than or equal to 2147483647 (2^31 - 1). */
     #            shellProcessId?: number;
     #        }
     attr_accessor :request_seq # type: number
@@ -719,6 +950,8 @@ module DSP
   #         supportsRunInTerminalRequest?: boolean;
   #         /** Client supports memory references. */
   #         supportsMemoryReferences?: boolean;
+  #         /** Client supports progress reporting. */
+  #         supportsProgressReporting?: boolean;
   #     }
   class InitializeRequestArguments < DSPBase
     attr_accessor :clientID # type: string
@@ -732,10 +965,11 @@ module DSP
     attr_accessor :supportsVariablePaging # type: boolean
     attr_accessor :supportsRunInTerminalRequest # type: boolean
     attr_accessor :supportsMemoryReferences # type: boolean
+    attr_accessor :supportsProgressReporting # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[clientID clientName locale linesStartAt1 columnsStartAt1 pathFormat supportsVariableType supportsVariablePaging supportsRunInTerminalRequest supportsMemoryReferences]
+      @optional_method_names = %i[clientID clientName locale linesStartAt1 columnsStartAt1 pathFormat supportsVariableType supportsVariablePaging supportsRunInTerminalRequest supportsMemoryReferences supportsProgressReporting]
     end
 
     def from_h!(value)
@@ -751,6 +985,7 @@ module DSP
       self.supportsVariablePaging = value['supportsVariablePaging'] # Unknown type
       self.supportsRunInTerminalRequest = value['supportsRunInTerminalRequest'] # Unknown type
       self.supportsMemoryReferences = value['supportsMemoryReferences'] # Unknown type
+      self.supportsProgressReporting = value['supportsProgressReporting'] # Unknown type
       self
     end
   end
@@ -1085,7 +1320,7 @@ module DSP
   #         restart?: boolean;
   #         /** Indicates whether the debuggee should be terminated when the debugger is disconnected.
   #             If unspecified, the debug adapter is free to do whatever it thinks is best.
-  #             A client can only rely on this attribute being properly honored if a debug adapter returns true for the 'supportTerminateDebuggee' capability.
+  #             The attribute is only honored by a debug adapter if the capability 'supportTerminateDebuggee' is true.
   #         */
   #         terminateDebuggee?: boolean;
   #     }
@@ -1207,6 +1442,101 @@ module DSP
     end
   end
 
+  # interface BreakpointLocationsRequest extends Request {
+  #         arguments?: BreakpointLocationsArguments;
+  #     }
+  class BreakpointLocationsRequest < DSPBase
+    attr_accessor :arguments # type: BreakpointLocationsArguments
+    attr_accessor :command # type: string
+    attr_accessor :seq # type: number
+    attr_accessor :type # type: string
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[arguments]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.arguments = BreakpointLocationsArguments.new(value['arguments']) unless value['arguments'].nil?
+      self.command = value['command']
+      self.seq = value['seq']
+      self.type = value['type']
+      self
+    end
+  end
+
+  # interface BreakpointLocationsArguments {
+  #         /** The source location of the breakpoints; either 'source.path' or 'source.reference' must be specified. */
+  #         source: Source;
+  #         /** Start line of range to search possible breakpoint locations in. If only the line is specified, the request returns all possible locations in that line. */
+  #         line: number;
+  #         /** Optional start column of range to search possible breakpoint locations in. If no start column is given, the first column in the start line is assumed. */
+  #         column?: number;
+  #         /** Optional end line of range to search possible breakpoint locations in. If no end line is given, then the end line is assumed to be the start line. */
+  #         endLine?: number;
+  #         /** Optional end column of range to search possible breakpoint locations in. If no end column is given, then it is assumed to be in the last column of the end line. */
+  #         endColumn?: number;
+  #     }
+  class BreakpointLocationsArguments < DSPBase
+    attr_accessor :source # type: Source
+    attr_accessor :line # type: number
+    attr_accessor :column # type: number
+    attr_accessor :endLine # type: number
+    attr_accessor :endColumn # type: number
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[column endLine endColumn]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.source = Source.new(value['source']) unless value['source'].nil?
+      self.line = value['line']
+      self.column = value['column']
+      self.endLine = value['endLine']
+      self.endColumn = value['endColumn']
+      self
+    end
+  end
+
+  # interface BreakpointLocationsResponse extends Response {
+  #         body: {
+  #             /** Sorted set of possible breakpoint locations. */
+  #             breakpoints: BreakpointLocation[];
+  #         };
+  #     }
+  class BreakpointLocationsResponse < DSPBase
+    attr_accessor :body # type: {
+    #            /** Sorted set of possible breakpoint locations. */
+    #            breakpoints: BreakpointLocation[];
+    #        }
+    attr_accessor :request_seq # type: number
+    attr_accessor :success # type: boolean
+    attr_accessor :command # type: string
+    attr_accessor :message # type: string
+    attr_accessor :seq # type: number
+    attr_accessor :type # type: string
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[message]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.body = value['body'] # Unknown type
+      self.request_seq = value['request_seq']
+      self.success = value['success'] # Unknown type
+      self.command = value['command']
+      self.message = value['message']
+      self.seq = value['seq']
+      self.type = value['type']
+      self
+    end
+  end
+
   # interface SetBreakpointsRequest extends Request {
   #         arguments: SetBreakpointsArguments;
   #     }
@@ -1259,13 +1589,17 @@ module DSP
 
   # interface SetBreakpointsResponse extends Response {
   #         body: {
-  #             /** Information about the breakpoints. The array elements are in the same order as the elements of the 'breakpoints' (or the deprecated 'lines') array in the arguments. */
+  #             /** Information about the breakpoints.
+  #                 The array elements are in the same order as the elements of the 'breakpoints' (or the deprecated 'lines') array in the arguments.
+  #             */
   #             breakpoints: Breakpoint[];
   #         };
   #     }
   class SetBreakpointsResponse < DSPBase
     attr_accessor :body # type: {
-    #            /** Information about the breakpoints. The array elements are in the same order as the elements of the 'breakpoints' (or the deprecated 'lines') array in the arguments. */
+    #            /** Information about the breakpoints.
+    #                The array elements are in the same order as the elements of the 'breakpoints' (or the deprecated 'lines') array in the arguments.
+    #            */
     #            breakpoints: Breakpoint[];
     #        }
     attr_accessor :request_seq # type: number
@@ -1384,7 +1718,9 @@ module DSP
   # interface SetExceptionBreakpointsArguments {
   #         /** IDs of checked exception options. The set of IDs is returned via the 'exceptionBreakpointFilters' capability. */
   #         filters: string[];
-  #         /** Configuration options for selected exceptions. */
+  #         /** Configuration options for selected exceptions.
+  #             The attribute is only honored by a debug adapter if the capability 'supportsExceptionOptions' is true.
+  #         */
   #         exceptionOptions?: ExceptionOptions[];
   #     }
   class SetExceptionBreakpointsArguments < DSPBase
@@ -1455,7 +1791,9 @@ module DSP
   # interface DataBreakpointInfoArguments {
   #         /** Reference to the Variable container if the data breakpoint is requested for a child of the container. */
   #         variablesReference?: number;
-  #         /** The name of the Variable's child to obtain data breakpoint information for. If variableReference isn’t provided, this can be an expression. */
+  #         /** The name of the Variable's child to obtain data breakpoint information for.
+  #             If variableReference isn’t provided, this can be an expression.
+  #         */
   #         name: string;
   #     }
   class DataBreakpointInfoArguments < DSPBase
@@ -1612,7 +1950,9 @@ module DSP
   end
 
   # interface ContinueArguments {
-  #         /** Continue execution for the specified thread (if possible). If the backend cannot continue on a single thread but will continue on all threads, it should set the 'allThreadsContinued' attribute in the response to true. */
+  #         /** Continue execution for the specified thread (if possible).
+  #             If the backend cannot continue on a single thread but will continue on all threads, it should set the 'allThreadsContinued' attribute in the response to true.
+  #         */
   #         threadId: number;
   #     }
   class ContinueArguments < DSPBase
@@ -1627,13 +1967,17 @@ module DSP
 
   # interface ContinueResponse extends Response {
   #         body: {
-  #             /** If true, the 'continue' request has ignored the specified thread and continued all threads instead. If this attribute is missing a value of 'true' is assumed for backward compatibility. */
+  #             /** If true, the 'continue' request has ignored the specified thread and continued all threads instead.
+  #                 If this attribute is missing a value of 'true' is assumed for backward compatibility.
+  #             */
   #             allThreadsContinued?: boolean;
   #         };
   #     }
   class ContinueResponse < DSPBase
     attr_accessor :body # type: {
-    #            /** If true, the 'continue' request has ignored the specified thread and continued all threads instead. If this attribute is missing a value of 'true' is assumed for backward compatibility. */
+    #            /** If true, the 'continue' request has ignored the specified thread and continued all threads instead.
+    #                If this attribute is missing a value of 'true' is assumed for backward compatibility.
+    #            */
     #            allThreadsContinued?: boolean;
     #        }
     attr_accessor :request_seq # type: number
@@ -2196,7 +2540,9 @@ module DSP
   #         startFrame?: number;
   #         /** The maximum number of frames to return. If levels is not specified or 0, all frames are returned. */
   #         levels?: number;
-  #         /** Specifies details on how to format the stack frames. */
+  #         /** Specifies details on how to format the stack frames.
+  #             The attribute is only honored by a debug adapter if the capability 'supportsValueFormattingOptions' is true.
+  #         */
   #         format?: StackFrameFormat;
   #     }
   class StackTraceArguments < DSPBase
@@ -2355,13 +2701,15 @@ module DSP
   # interface VariablesArguments {
   #         /** The Variable reference. */
   #         variablesReference: number;
-  #         /** Optional filter to limit the child variables to either named or indexed. If ommited, both types are fetched. */
+  #         /** Optional filter to limit the child variables to either named or indexed. If omitted, both types are fetched. */
   #         filter?: 'indexed' | 'named';
   #         /** The index of the first variable to return; if omitted children start at 0. */
   #         start?: number;
   #         /** The number of variables to return. If count is missing or 0, all variables are returned. */
   #         count?: number;
-  #         /** Specifies details on how to format the Variable values. */
+  #         /** Specifies details on how to format the Variable values.
+  #             The attribute is only honored by a debug adapter if the capability 'supportsValueFormattingOptions' is true.
+  #         */
   #         format?: ValueFormat;
   #     }
   class VariablesArguments < DSPBase
@@ -2479,14 +2827,18 @@ module DSP
   #             value: string;
   #             /** The type of the new value. Typically shown in the UI when hovering over the value. */
   #             type?: string;
-  #             /** If variablesReference is > 0, the new value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest. */
+  #             /** If variablesReference is > 0, the new value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
+  #                 The value should be less than or equal to 2147483647 (2^31 - 1).
+  #             */
   #             variablesReference?: number;
   #             /** The number of named child variables.
   #                 The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+  #                 The value should be less than or equal to 2147483647 (2^31 - 1).
   #             */
   #             namedVariables?: number;
   #             /** The number of indexed child variables.
   #                 The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+  #                 The value should be less than or equal to 2147483647 (2^31 - 1).
   #             */
   #             indexedVariables?: number;
   #         };
@@ -2497,14 +2849,18 @@ module DSP
     #            value: string;
     #            /** The type of the new value. Typically shown in the UI when hovering over the value. */
     #            type?: string;
-    #            /** If variablesReference is > 0, the new value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest. */
+    #            /** If variablesReference is > 0, the new value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
+    #                The value should be less than or equal to 2147483647 (2^31 - 1).
+    #            */
     #            variablesReference?: number;
     #            /** The number of named child variables.
     #                The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+    #                The value should be less than or equal to 2147483647 (2^31 - 1).
     #            */
     #            namedVariables?: number;
     #            /** The number of indexed child variables.
     #                The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+    #                The value should be less than or equal to 2147483647 (2^31 - 1).
     #            */
     #            indexedVariables?: number;
     #        }
@@ -2555,7 +2911,9 @@ module DSP
   # interface SourceArguments {
   #         /** Specifies the source content to load. Either source.path or source.sourceReference must be specified. */
   #         source?: Source;
-  #         /** The reference to the source. This is the same as source.sourceReference. This is provided for backward compatibility since old backends do not understand the 'source' attribute. */
+  #         /** The reference to the source. This is the same as source.sourceReference.
+  #             This is provided for backward compatibility since old backends do not understand the 'source' attribute.
+  #         */
   #         sourceReference: number;
   #     }
   class SourceArguments < DSPBase
@@ -2922,10 +3280,14 @@ module DSP
   #             'watch': evaluate is run in a watch.
   #             'repl': evaluate is run from REPL console.
   #             'hover': evaluate is run from a data hover.
+  #             'clipboard': evaluate is run to generate the value that will be stored in the clipboard.
+  #             The attribute is only honored by a debug adapter if the capability 'supportsClipboardContext' is true.
   #             etc.
   #         */
   #         context?: string;
-  #         /** Specifies details on how to format the Evaluate result. */
+  #         /** Specifies details on how to format the Evaluate result.
+  #             The attribute is only honored by a debug adapter if the capability 'supportsValueFormattingOptions' is true.
+  #         */
   #         format?: ValueFormat;
   #     }
   class EvaluateArguments < DSPBase
@@ -2953,21 +3315,30 @@ module DSP
   #         body: {
   #             /** The result of the evaluate request. */
   #             result: string;
-  #             /** The optional type of the evaluate result. */
+  #             /** The optional type of the evaluate result.
+  #                 This attribute should only be returned by a debug adapter if the client has passed the value true for the 'supportsVariableType' capability of the 'initialize' request.
+  #             */
   #             type?: string;
   #             /** Properties of a evaluate result that can be used to determine how to render the result in the UI. */
   #             presentationHint?: VariablePresentationHint;
-  #             /** If variablesReference is > 0, the evaluate result is structured and its children can be retrieved by passing variablesReference to the VariablesRequest. */
+  #             /** If variablesReference is > 0, the evaluate result is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
+  #                 The value should be less than or equal to 2147483647 (2^31 - 1).
+  #             */
   #             variablesReference: number;
   #             /** The number of named child variables.
   #                 The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+  #                 The value should be less than or equal to 2147483647 (2^31 - 1).
   #             */
   #             namedVariables?: number;
   #             /** The number of indexed child variables.
   #                 The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+  #                 The value should be less than or equal to 2147483647 (2^31 - 1).
   #             */
   #             indexedVariables?: number;
-  #             /** Memory reference to a location appropriate for this result. For pointer type eval results, this is generally a reference to the memory address contained in the pointer. */
+  #             /** Optional memory reference to a location appropriate for this result.
+  #                 For pointer type eval results, this is generally a reference to the memory address contained in the pointer.
+  #                 This attribute should be returned by a debug adapter if the client has passed the value true for the 'supportsMemoryReferences' capability of the 'initialize' request.
+  #             */
   #             memoryReference?: string;
   #         };
   #     }
@@ -2975,21 +3346,30 @@ module DSP
     attr_accessor :body # type: {
     #            /** The result of the evaluate request. */
     #            result: string;
-    #            /** The optional type of the evaluate result. */
+    #            /** The optional type of the evaluate result.
+    #                This attribute should only be returned by a debug adapter if the client has passed the value true for the 'supportsVariableType' capability of the 'initialize' request.
+    #            */
     #            type?: string;
     #            /** Properties of a evaluate result that can be used to determine how to render the result in the UI. */
     #            presentationHint?: VariablePresentationHint;
-    #            /** If variablesReference is > 0, the evaluate result is structured and its children can be retrieved by passing variablesReference to the VariablesRequest. */
+    #            /** If variablesReference is > 0, the evaluate result is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
+    #                The value should be less than or equal to 2147483647 (2^31 - 1).
+    #            */
     #            variablesReference: number;
     #            /** The number of named child variables.
     #                The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+    #                The value should be less than or equal to 2147483647 (2^31 - 1).
     #            */
     #            namedVariables?: number;
     #            /** The number of indexed child variables.
     #                The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+    #                The value should be less than or equal to 2147483647 (2^31 - 1).
     #            */
     #            indexedVariables?: number;
-    #            /** Memory reference to a location appropriate for this result. For pointer type eval results, this is generally a reference to the memory address contained in the pointer. */
+    #            /** Optional memory reference to a location appropriate for this result.
+    #                For pointer type eval results, this is generally a reference to the memory address contained in the pointer.
+    #                This attribute should be returned by a debug adapter if the client has passed the value true for the 'supportsMemoryReferences' capability of the 'initialize' request.
+    #            */
     #            memoryReference?: string;
     #        }
     attr_accessor :request_seq # type: number
@@ -3071,18 +3451,24 @@ module DSP
   #         body: {
   #             /** The new value of the expression. */
   #             value: string;
-  #             /** The optional type of the value. */
+  #             /** The optional type of the value.
+  #                 This attribute should only be returned by a debug adapter if the client has passed the value true for the 'supportsVariableType' capability of the 'initialize' request.
+  #             */
   #             type?: string;
   #             /** Properties of a value that can be used to determine how to render the result in the UI. */
   #             presentationHint?: VariablePresentationHint;
-  #             /** If variablesReference is > 0, the value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest. */
+  #             /** If variablesReference is > 0, the value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
+  #                 The value should be less than or equal to 2147483647 (2^31 - 1).
+  #             */
   #             variablesReference?: number;
   #             /** The number of named child variables.
   #                 The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+  #                 The value should be less than or equal to 2147483647 (2^31 - 1).
   #             */
   #             namedVariables?: number;
   #             /** The number of indexed child variables.
   #                 The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+  #                 The value should be less than or equal to 2147483647 (2^31 - 1).
   #             */
   #             indexedVariables?: number;
   #         };
@@ -3091,18 +3477,24 @@ module DSP
     attr_accessor :body # type: {
     #            /** The new value of the expression. */
     #            value: string;
-    #            /** The optional type of the value. */
+    #            /** The optional type of the value.
+    #                This attribute should only be returned by a debug adapter if the client has passed the value true for the 'supportsVariableType' capability of the 'initialize' request.
+    #            */
     #            type?: string;
     #            /** Properties of a value that can be used to determine how to render the result in the UI. */
     #            presentationHint?: VariablePresentationHint;
-    #            /** If variablesReference is > 0, the value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest. */
+    #            /** If variablesReference is > 0, the value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
+    #                The value should be less than or equal to 2147483647 (2^31 - 1).
+    #            */
     #            variablesReference?: number;
     #            /** The number of named child variables.
     #                The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+    #                The value should be less than or equal to 2147483647 (2^31 - 1).
     #            */
     #            namedVariables?: number;
     #            /** The number of indexed child variables.
     #                The client can use this optional information to present the variables in a paged UI and fetch them in chunks.
+    #                The value should be less than or equal to 2147483647 (2^31 - 1).
     #            */
     #            indexedVariables?: number;
     #        }
@@ -3497,9 +3889,13 @@ module DSP
 
   # interface ReadMemoryResponse extends Response {
   #         body?: {
-  #             /** The address of the first byte of data returned. Treated as a hex value if prefixed with '0x', or as a decimal value otherwise. */
+  #             /** The address of the first byte of data returned.
+  #                 Treated as a hex value if prefixed with '0x', or as a decimal value otherwise.
+  #             */
   #             address: string;
-  #             /** The number of unreadable bytes encountered after the last successfully read byte. This can be used to determine the number of bytes that must be skipped before a subsequent 'readMemory' request will succeed. */
+  #             /** The number of unreadable bytes encountered after the last successfully read byte.
+  #                 This can be used to determine the number of bytes that must be skipped before a subsequent 'readMemory' request will succeed.
+  #             */
   #             unreadableBytes?: number;
   #             /** The bytes read from memory, encoded using base64. */
   #             data?: string;
@@ -3507,9 +3903,13 @@ module DSP
   #     }
   class ReadMemoryResponse < DSPBase
     attr_accessor :body # type: {
-    #            /** The address of the first byte of data returned. Treated as a hex value if prefixed with '0x', or as a decimal value otherwise. */
+    #            /** The address of the first byte of data returned.
+    #                Treated as a hex value if prefixed with '0x', or as a decimal value otherwise.
+    #            */
     #            address: string;
-    #            /** The number of unreadable bytes encountered after the last successfully read byte. This can be used to determine the number of bytes that must be skipped before a subsequent 'readMemory' request will succeed. */
+    #            /** The number of unreadable bytes encountered after the last successfully read byte.
+    #                This can be used to determine the number of bytes that must be skipped before a subsequent 'readMemory' request will succeed.
+    #            */
     #            unreadableBytes?: number;
     #            /** The bytes read from memory, encoded using base64. */
     #            data?: string;
@@ -3565,7 +3965,9 @@ module DSP
   #         offset?: number;
   #         /** Optional offset (in instructions) to be applied after the byte offset (if any) before disassembling. Can be negative. */
   #         instructionOffset?: number;
-  #         /** Number of instructions to disassemble starting at the specified location and offset. An adapter must return exactly this number of instructions - any unavailable instructions should be replaced with an implementation-defined 'invalid instruction' value. */
+  #         /** Number of instructions to disassemble starting at the specified location and offset.
+  #             An adapter must return exactly this number of instructions - any unavailable instructions should be replaced with an implementation-defined 'invalid instruction' value.
+  #         */
   #         instructionCount: number;
   #         /** If true, the adapter should attempt to resolve memory addresses and other values to symbolic names. */
   #         resolveSymbols?: boolean;
@@ -3654,6 +4056,8 @@ module DSP
   #         supportsStepInTargetsRequest?: boolean;
   #         /** The debug adapter supports the 'completions' request. */
   #         supportsCompletionsRequest?: boolean;
+  #         /** The set of characters that should trigger completion in a REPL. If not specified, the UI should assume the '.' character. */
+  #         completionTriggerCharacters?: string[];
   #         /** The debug adapter supports the 'modules' request. */
   #         supportsModulesRequest?: boolean;
   #         /** The set of additional module information exposed by the debug adapter. */
@@ -3688,6 +4092,12 @@ module DSP
   #         supportsReadMemoryRequest?: boolean;
   #         /** The debug adapter supports the 'disassemble' request. */
   #         supportsDisassembleRequest?: boolean;
+  #         /** The debug adapter supports the 'cancel' request. */
+  #         supportsCancelRequest?: boolean;
+  #         /** The debug adapter supports the 'breakpointLocations' request. */
+  #         supportsBreakpointLocationsRequest?: boolean;
+  #         /** The debug adapter supports the 'clipboard' context value in the 'evaluate' request. */
+  #         supportsClipboardContext?: boolean;
   #     }
   class Capabilities < DSPBase
     attr_accessor :supportsConfigurationDoneRequest # type: boolean
@@ -3702,6 +4112,7 @@ module DSP
     attr_accessor :supportsGotoTargetsRequest # type: boolean
     attr_accessor :supportsStepInTargetsRequest # type: boolean
     attr_accessor :supportsCompletionsRequest # type: boolean
+    attr_accessor :completionTriggerCharacters # type: string[]
     attr_accessor :supportsModulesRequest # type: boolean
     attr_accessor :additionalModuleColumns # type: ColumnDescriptor[]
     attr_accessor :supportedChecksumAlgorithms # type: ChecksumAlgorithm[]
@@ -3719,10 +4130,13 @@ module DSP
     attr_accessor :supportsDataBreakpoints # type: boolean
     attr_accessor :supportsReadMemoryRequest # type: boolean
     attr_accessor :supportsDisassembleRequest # type: boolean
+    attr_accessor :supportsCancelRequest # type: boolean
+    attr_accessor :supportsBreakpointLocationsRequest # type: boolean
+    attr_accessor :supportsClipboardContext # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[supportsConfigurationDoneRequest supportsFunctionBreakpoints supportsConditionalBreakpoints supportsHitConditionalBreakpoints supportsEvaluateForHovers exceptionBreakpointFilters supportsStepBack supportsSetVariable supportsRestartFrame supportsGotoTargetsRequest supportsStepInTargetsRequest supportsCompletionsRequest supportsModulesRequest additionalModuleColumns supportedChecksumAlgorithms supportsRestartRequest supportsExceptionOptions supportsValueFormattingOptions supportsExceptionInfoRequest supportTerminateDebuggee supportsDelayedStackTraceLoading supportsLoadedSourcesRequest supportsLogPoints supportsTerminateThreadsRequest supportsSetExpression supportsTerminateRequest supportsDataBreakpoints supportsReadMemoryRequest supportsDisassembleRequest]
+      @optional_method_names = %i[supportsConfigurationDoneRequest supportsFunctionBreakpoints supportsConditionalBreakpoints supportsHitConditionalBreakpoints supportsEvaluateForHovers exceptionBreakpointFilters supportsStepBack supportsSetVariable supportsRestartFrame supportsGotoTargetsRequest supportsStepInTargetsRequest supportsCompletionsRequest completionTriggerCharacters supportsModulesRequest additionalModuleColumns supportedChecksumAlgorithms supportsRestartRequest supportsExceptionOptions supportsValueFormattingOptions supportsExceptionInfoRequest supportTerminateDebuggee supportsDelayedStackTraceLoading supportsLoadedSourcesRequest supportsLogPoints supportsTerminateThreadsRequest supportsSetExpression supportsTerminateRequest supportsDataBreakpoints supportsReadMemoryRequest supportsDisassembleRequest supportsCancelRequest supportsBreakpointLocationsRequest supportsClipboardContext]
     end
 
     def from_h!(value)
@@ -3739,6 +4153,7 @@ module DSP
       self.supportsGotoTargetsRequest = value['supportsGotoTargetsRequest'] # Unknown type
       self.supportsStepInTargetsRequest = value['supportsStepInTargetsRequest'] # Unknown type
       self.supportsCompletionsRequest = value['supportsCompletionsRequest'] # Unknown type
+      self.completionTriggerCharacters = value['completionTriggerCharacters'].map { |val| val } unless value['completionTriggerCharacters'].nil?
       self.supportsModulesRequest = value['supportsModulesRequest'] # Unknown type
       self.additionalModuleColumns = to_typed_aray(value['additionalModuleColumns'], ColumnDescriptor)
       self.supportedChecksumAlgorithms = value['supportedChecksumAlgorithms'].map { |val| val } unless value['supportedChecksumAlgorithms'].nil? # Unknown array type
@@ -3756,6 +4171,9 @@ module DSP
       self.supportsDataBreakpoints = value['supportsDataBreakpoints'] # Unknown type
       self.supportsReadMemoryRequest = value['supportsReadMemoryRequest'] # Unknown type
       self.supportsDisassembleRequest = value['supportsDisassembleRequest'] # Unknown type
+      self.supportsCancelRequest = value['supportsCancelRequest'] # Unknown type
+      self.supportsBreakpointLocationsRequest = value['supportsBreakpointLocationsRequest'] # Unknown type
+      self.supportsClipboardContext = value['supportsClipboardContext'] # Unknown type
       self
     end
   end
@@ -3962,19 +4380,30 @@ module DSP
   end
 
   # interface Source {
-  #         /** The short name of the source. Every source returned from the debug adapter has a name. When sending a source to the debug adapter this name is optional. */
+  #         /** The short name of the source. Every source returned from the debug adapter has a name.
+  #             When sending a source to the debug adapter this name is optional.
+  #         */
   #         name?: string;
-  #         /** The path of the source to be shown in the UI. It is only used to locate and load the content of the source if no sourceReference is specified (or its value is 0). */
+  #         /** The path of the source to be shown in the UI.
+  #             It is only used to locate and load the content of the source if no sourceReference is specified (or its value is 0).
+  #         */
   #         path?: string;
-  #         /** If sourceReference > 0 the contents of the source must be retrieved through the SourceRequest (even if a path is specified). A sourceReference is only valid for a session, so it must not be used to persist a source. */
+  #         /** If sourceReference > 0 the contents of the source must be retrieved through the SourceRequest (even if a path is specified).
+  #             A sourceReference is only valid for a session, so it must not be used to persist a source.
+  #             The value should be less than or equal to 2147483647 (2^31 - 1).
+  #         */
   #         sourceReference?: number;
-  #         /** An optional hint for how to present the source in the UI. A value of 'deemphasize' can be used to indicate that the source is not available or that it is skipped on stepping. */
+  #         /** An optional hint for how to present the source in the UI.
+  #             A value of 'deemphasize' can be used to indicate that the source is not available or that it is skipped on stepping.
+  #         */
   #         presentationHint?: 'normal' | 'emphasize' | 'deemphasize';
   #         /** The (optional) origin of this source: possible values 'internal module', 'inlined content from source map', etc. */
   #         origin?: string;
   #         /** An optional list of sources that are related to this source. These may be the source that generated this source. */
   #         sources?: Source[];
-  #         /** Optional data that a debug adapter might want to loop through the client. The client should leave the data intact and persist it across sessions. The client should not interpret the data. */
+  #         /** Optional data that a debug adapter might want to loop through the client.
+  #             The client should leave the data intact and persist it across sessions. The client should not interpret the data.
+  #         */
   #         adapterData?: any;
   #         /** The checksums associated with this file. */
   #         checksums?: Checksum[];
@@ -4009,7 +4438,9 @@ module DSP
   end
 
   # interface StackFrame {
-  #         /** An identifier for the stack frame. It must be unique across all threads. This id can be used to retrieve the scopes of the frame with the 'scopesRequest' or to restart the execution of a stackframe. */
+  #         /** An identifier for the stack frame. It must be unique across all threads.
+  #             This id can be used to retrieve the scopes of the frame with the 'scopesRequest' or to restart the execution of a stackframe.
+  #         */
   #         id: number;
   #         /** The name of the stack frame, typically a method name. */
   #         name: string;
@@ -4027,7 +4458,9 @@ module DSP
   #         instructionPointerReference?: string;
   #         /** The module associated with this frame, if any. */
   #         moduleId?: number | string;
-  #         /** An optional hint for how to present this frame in the UI. A value of 'label' can be used to indicate that the frame is an artificial frame that is used as a visual label or separator. A value of 'subtle' can be used to change the appearance of a frame in a 'subtle' way. */
+  #         /** An optional hint for how to present this frame in the UI.
+  #             A value of 'label' can be used to indicate that the frame is an artificial frame that is used as a visual label or separator. A value of 'subtle' can be used to change the appearance of a frame in a 'subtle' way.
+  #         */
   #         presentationHint?: 'normal' | 'label' | 'subtle';
   #     }
   class StackFrame < DSPBase
@@ -4137,7 +4570,9 @@ module DSP
   #         name: string;
   #         /** The variable's value. This can be a multi-line text, e.g. for a function the body of a function. */
   #         value: string;
-  #         /** The type of the variable's value. Typically shown in the UI when hovering over the value. */
+  #         /** The type of the variable's value. Typically shown in the UI when hovering over the value.
+  #             This attribute should only be returned by a debug adapter if the client has passed the value true for the 'supportsVariableType' capability of the 'initialize' request.
+  #         */
   #         type?: string;
   #         /** Properties of a variable that can be used to determine how to render the variable in the UI. */
   #         presentationHint?: VariablePresentationHint;
@@ -4153,7 +4588,9 @@ module DSP
   #             The client can use this optional information to present the children in a paged UI and fetch them in chunks.
   #         */
   #         indexedVariables?: number;
-  #         /** Optional memory reference for the variable if the variable represents executable code, such as a function pointer. */
+  #         /** Optional memory reference for the variable if the variable represents executable code, such as a function pointer.
+  #             This attribute is only required if the client has passed the value true for the 'supportsMemoryReferences' capability of the 'initialize' request.
+  #         */
   #         memoryReference?: string;
   #     }
   class Variable < DSPBase
@@ -4199,7 +4636,8 @@ module DSP
   #             'innerClass': Indicates that the object is an inner class.
   #             'interface': Indicates that the object is an interface.
   #             'mostDerivedClass': Indicates that the object is the most derived class.
-  #             'virtual': Indicates that the object is virtual, that means it is a synthetic object introduced by the adapter for rendering purposes, e.g. an index range for large arrays.
+  #             'virtual': Indicates that the object is virtual, that means it is a synthetic object introducedby the
+  #             adapter for rendering purposes, e.g. an index range for large arrays.
   #             'dataBreakpoint': Indicates that a data breakpoint is registered for the object.
   #             etc.
   #         */
@@ -4240,16 +4678,55 @@ module DSP
     end
   end
 
+  # interface BreakpointLocation {
+  #         /** Start line of breakpoint location. */
+  #         line: number;
+  #         /** Optional start column of breakpoint location. */
+  #         column?: number;
+  #         /** Optional end line of breakpoint location if the location covers a range. */
+  #         endLine?: number;
+  #         /** Optional end column of breakpoint location if the location covers a range. */
+  #         endColumn?: number;
+  #     }
+  class BreakpointLocation < DSPBase
+    attr_accessor :line # type: number
+    attr_accessor :column # type: number
+    attr_accessor :endLine # type: number
+    attr_accessor :endColumn # type: number
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[column endLine endColumn]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.line = value['line']
+      self.column = value['column']
+      self.endLine = value['endLine']
+      self.endColumn = value['endColumn']
+      self
+    end
+  end
+
   # interface SourceBreakpoint {
   #         /** The source line of the breakpoint or logpoint. */
   #         line: number;
   #         /** An optional source column of the breakpoint. */
   #         column?: number;
-  #         /** An optional expression for conditional breakpoints. */
+  #         /** An optional expression for conditional breakpoints.
+  #             It is only honored by a debug adapter if the capability 'supportsConditionalBreakpoints' is true.
+  #         */
   #         condition?: string;
-  #         /** An optional expression that controls how many hits of the breakpoint are ignored. The backend is expected to interpret the expression as needed. */
+  #         /** An optional expression that controls how many hits of the breakpoint are ignored.
+  #             The backend is expected to interpret the expression as needed.
+  #             The attribute is only honored by a debug adapter if the capability 'supportsHitConditionalBreakpoints' is true.
+  #         */
   #         hitCondition?: string;
-  #         /** If this attribute exists and is non-empty, the backend must not 'break' (stop) but log the message instead. Expressions within {} are interpolated. */
+  #         /** If this attribute exists and is non-empty, the backend must not 'break' (stop)
+  #             but log the message instead. Expressions within {} are interpolated.
+  #             The attribute is only honored by a debug adapter if the capability 'supportsLogPoints' is true.
+  #         */
   #         logMessage?: string;
   #     }
   class SourceBreakpoint < DSPBase
@@ -4278,9 +4755,14 @@ module DSP
   # interface FunctionBreakpoint {
   #         /** The name of the function. */
   #         name: string;
-  #         /** An optional expression for conditional breakpoints. */
+  #         /** An optional expression for conditional breakpoints.
+  #             It is only honored by a debug adapter if the capability 'supportsConditionalBreakpoints' is true.
+  #         */
   #         condition?: string;
-  #         /** An optional expression that controls how many hits of the breakpoint are ignored. The backend is expected to interpret the expression as needed. */
+  #         /** An optional expression that controls how many hits of the breakpoint are ignored.
+  #             The backend is expected to interpret the expression as needed.
+  #             The attribute is only honored by a debug adapter if the capability 'supportsHitConditionalBreakpoints' is true.
+  #         */
   #         hitCondition?: string;
   #     }
   class FunctionBreakpoint < DSPBase
@@ -4309,7 +4791,9 @@ module DSP
   #         accessType?: DataBreakpointAccessType;
   #         /** An optional expression for conditional breakpoints. */
   #         condition?: string;
-  #         /** An optional expression that controls how many hits of the breakpoint are ignored. The backend is expected to interpret the expression as needed. */
+  #         /** An optional expression that controls how many hits of the breakpoint are ignored.
+  #             The backend is expected to interpret the expression as needed.
+  #         */
   #         hitCondition?: string;
   #     }
   class DataBreakpoint < DSPBase
@@ -4338,7 +4822,9 @@ module DSP
   #         id?: number;
   #         /** If true breakpoint could be set (but not necessarily at the desired location). */
   #         verified: boolean;
-  #         /** An optional message about the state of the breakpoint. This is shown to the user and can be used to explain why a breakpoint could not be verified. */
+  #         /** An optional message about the state of the breakpoint.
+  #             This is shown to the user and can be used to explain why a breakpoint could not be verified.
+  #         */
   #         message?: string;
   #         /** The source where the breakpoint is located. */
   #         source?: Source;
@@ -4348,7 +4834,9 @@ module DSP
   #         column?: number;
   #         /** An optional end line of the actual range covered by the breakpoint. */
   #         endLine?: number;
-  #         /** An optional end column of the actual range covered by the breakpoint. If no end line is given, then the end column is assumed to be in the start line. */
+  #         /** An optional end column of the actual range covered by the breakpoint.
+  #             If no end line is given, then the end column is assumed to be in the start line.
+  #         */
   #         endColumn?: number;
   #     }
   class Breakpoint < DSPBase
@@ -4446,6 +4934,8 @@ module DSP
   #         label: string;
   #         /** If text is not falsy then it is inserted instead of the label. */
   #         text?: string;
+  #         /** A string that should be used when comparing this item with other items. When `falsy` the label is used. */
+  #         sortText?: string;
   #         /** The item's type. Typically the client uses this information to render the item in the UI with an icon. */
   #         type?: CompletionItemType;
   #         /** This value determines the location (in the CompletionsRequest's 'text' attribute) where the completion text is added.
@@ -4456,26 +4946,42 @@ module DSP
   #             If missing the value 0 is assumed which results in the completion text being inserted.
   #         */
   #         length?: number;
+  #         /** Determines the start of the new selection after the text has been inserted (or replaced).
+  #             The start position must in the range 0 and length of the completion text.
+  #             If omitted the selection starts at the end of the completion text.
+  #         */
+  #         selectionStart?: number;
+  #         /** Determines the length of the new selection after the text has been inserted (or replaced).
+  #             The selection can not extend beyond the bounds of the completion text.
+  #             If omitted the length is assumed to be 0.
+  #         */
+  #         selectionLength?: number;
   #     }
   class CompletionItem < DSPBase
     attr_accessor :label # type: string
     attr_accessor :text # type: string
+    attr_accessor :sortText # type: string
     attr_accessor :type # type: CompletionItemType
     attr_accessor :start # type: number
     attr_accessor :length # type: number
+    attr_accessor :selectionStart # type: number
+    attr_accessor :selectionLength # type: number
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[text type start length]
+      @optional_method_names = %i[text sortText type start length selectionStart selectionLength]
     end
 
     def from_h!(value)
       value = {} if value.nil?
       self.label = value['label']
       self.text = value['text']
+      self.sortText = value['sortText']
       self.type = value['type'] # Unknown type
       self.start = value['start']
       self.length = value['length']
+      self.selectionStart = value['selectionStart']
+      self.selectionLength = value['selectionLength']
       self
     end
   end
@@ -4563,7 +5069,9 @@ module DSP
   end
 
   # interface ExceptionOptions {
-  #         /** A path that selects a single or multiple exceptions in a tree. If 'path' is missing, the whole tree is selected. By convention the first segment of the path is a category that is used to group exceptions in the UI. */
+  #         /** A path that selects a single or multiple exceptions in a tree. If 'path' is missing, the whole tree is selected.
+  #             By convention the first segment of the path is a category that is used to group exceptions in the UI.
+  #         */
   #         path?: ExceptionPathSegment[];
   #         /** Condition when a thrown exception should result in a break. */
   #         breakMode: ExceptionBreakMode;
@@ -4654,9 +5162,12 @@ module DSP
   #         instructionBytes?: string;
   #         /** Text representing the instruction and its operands, in an implementation-defined format. */
   #         instruction: string;
-  #         /** Name of the symbol that correponds with the location of this instruction, if any. */
+  #         /** Name of the symbol that corresponds with the location of this instruction, if any. */
   #         symbol?: string;
-  #         /** Source location that corresponds to this instruction, if any. Should always be set (if available) on the first instruction returned, but can be omitted afterwards if this instruction maps to the same source file as the previous instruction. */
+  #         /** Source location that corresponds to this instruction, if any.
+  #             Should always be set (if available) on the first instruction returned,
+  #             but can be omitted afterwards if this instruction maps to the same source file as the previous instruction.
+  #         */
   #         location?: Source;
   #         /** The line within the source location that corresponds to this instruction, if any. */
   #         line?: number;
@@ -4703,3 +5214,4 @@ end
 # rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
 # rubocop:enable Layout/TrailingWhitespace
+# rubocop:enable Naming/MethodName

@@ -6,6 +6,7 @@
 # rubocop:disable Layout/EmptyLinesAroundClassBody
 # rubocop:disable Lint/UselessAssignment
 # rubocop:disable Style/AsciiComments
+# rubocop:disable Naming/MethodName
 
 module LSP
   module DiagnosticSeverity
@@ -89,6 +90,7 @@ module LSP
   end
 
   module CodeActionKind
+    EMPTY = ''
     QUICKFIX = 'quickfix'
     REFACTOR = 'refactor'
     REFACTOREXTRACT = 'refactor.extract'
@@ -96,6 +98,7 @@ module LSP
     REFACTORREWRITE = 'refactor.rewrite'
     SOURCE = 'source'
     SOURCEORGANIZEIMPORTS = 'source.organizeImports'
+    SOURCEFIXALL = 'source.fixAll'
   end
 
   module TextDocumentSaveReason
@@ -145,3 +148,4 @@ end
 # rubocop:enable Layout/EmptyLinesAroundClassBody
 # rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
+# rubocop:enable Naming/MethodName

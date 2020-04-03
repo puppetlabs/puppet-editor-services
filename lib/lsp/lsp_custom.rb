@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 # Custom LSP Messages
+# rubocop:disable Naming/MethodName
 
 module LSP
   # export interface PuppetVersionDetails {
@@ -139,3 +140,4 @@ module LSP
     end
   end
 end
+# rubocop:enable Naming/MethodName

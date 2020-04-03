@@ -6,78 +6,64 @@
 # rubocop:disable Layout/EmptyLinesAroundClassBody
 # rubocop:disable Lint/UselessAssignment
 # rubocop:disable Style/AsciiComments
+# rubocop:disable Naming/MethodName
 
 module LSP
   # export interface DeclarationClientCapabilities {
   #     /**
-  #      * The text document client capabilities
+  #      * Whether declaration supports dynamic registration. If this is set to `true`
+  #      * the client supports the new `DeclarationRegistrationOptions` return value
+  #      * for the corresponding server capability as well.
   #      */
-  #     textDocument?: {
-  #         /**
-  #          * Capabilities specific to the `textDocument/declaration`
-  #          */
-  #         declaration?: {
-  #             /**
-  #              * Whether declaration supports dynamic registration. If this is set to `true`
-  #              * the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-  #              * return value for the corresponding server capability as well.
-  #              */
-  #             dynamicRegistration?: boolean;
-  #             /**
-  #              * The client supports additional metadata in the form of declaration links.
-  #              */
-  #             linkSupport?: boolean;
-  #         };
-  #     };
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * The client supports additional metadata in the form of declaration links.
+  #      */
+  #     linkSupport?: boolean;
   # }
   class DeclarationClientCapabilities < LSPBase
-    attr_accessor :textDocument # type: {
-    #        /**
-    #         * Capabilities specific to the `textDocument/declaration`
-    #         */
-    #        declaration?: {
-    #            /**
-    #             * Whether declaration supports dynamic registration. If this is set to `true`
-    #             * the client supports the new `(TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-    #             * return value for the corresponding server capability as well.
-    #             */
-    #            dynamicRegistration?: boolean;
-    #            /**
-    #             * The client supports additional metadata in the form of declaration links.
-    #             */
-    #            linkSupport?: boolean;
-    #        };
-    #    }
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :linkSupport # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[textDocument]
+      @optional_method_names = %i[dynamicRegistration linkSupport]
     end
 
     def from_h!(value)
       value = {} if value.nil?
-      self.textDocument = value['textDocument'] # Unknown type
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.linkSupport = value['linkSupport'] # Unknown type
       self
     end
   end
 
-  # export interface DeclarationServerCapabilities {
-  #     /**
-  #      * The server provides Goto Type Definition support.
-  #      */
-  #     declarationProvider?: boolean | (TextDocumentRegistrationOptions & StaticRegistrationOptions);
+  # export interface DeclarationOptions extends WorkDoneProgressOptions {
   # }
-  class DeclarationServerCapabilities < LSPBase
-    attr_accessor :declarationProvider # type: boolean | (TextDocumentRegistrationOptions & StaticRegistrationOptions)
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[declarationProvider]
-    end
+  class DeclarationOptions < LSPBase
 
     def from_h!(value)
       value = {} if value.nil?
-      self.declarationProvider = value['declarationProvider'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DeclarationRegistrationOptions extends DeclarationOptions, TextDocumentRegistrationOptions, StaticRegistrationOptions {
+  # }
+  class DeclarationRegistrationOptions < LSPBase
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self
+    end
+  end
+
+  # export interface DeclarationParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
+  # }
+  class DeclarationParams < LSPBase
+
+    def from_h!(value)
+      value = {} if value.nil?
       self
     end
   end
@@ -86,3 +72,4 @@ end
 # rubocop:enable Layout/EmptyLinesAroundClassBody
 # rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
+# rubocop:enable Naming/MethodName
