@@ -17,7 +17,7 @@ Style/NumericLiterals:
   Enabled: false
 
 # Length is not useful indicator
-Metrics/LineLength:
+Layout/LineLength:
   Enabled: false
 Metrics/MethodLength:
   Enabled: false
@@ -95,3 +95,20 @@ Style/SafeNavigation:
 # This is not valid on Ruby 2.1
 Layout/HeredocIndentation:
   Enabled: false
+
+# Rubocop 0.80.0 rules
+Style/HashEachMethods:
+  Enabled: false
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
+
+# Rubocop 0.80.1 rules
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true
