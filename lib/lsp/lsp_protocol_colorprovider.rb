@@ -6,56 +6,35 @@
 # rubocop:disable Layout/EmptyLinesAroundClassBody
 # rubocop:disable Lint/UselessAssignment
 # rubocop:disable Style/AsciiComments
+# rubocop:disable Naming/MethodName
 
 module LSP
-  # export interface ColorClientCapabilities {
+  # export interface DocumentColorClientCapabilities {
   #     /**
-  #      * The text document client capabilities
+  #      * Whether implementation supports dynamic registration. If this is set to `true`
+  #      * the client supports the new `DocumentColorRegistrationOptions` return value
+  #      * for the corresponding server capability as well.
   #      */
-  #     textDocument?: {
-  #         /**
-  #          * Capabilities specific to the colorProvider
-  #          */
-  #         colorProvider?: {
-  #             /**
-  #              * Whether implementation supports dynamic registration. If this is set to `true`
-  #              * the client supports the new `(ColorProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-  #              * return value for the corresponding server capability as well.
-  #              */
-  #             dynamicRegistration?: boolean;
-  #         };
-  #     };
+  #     dynamicRegistration?: boolean;
   # }
-  class ColorClientCapabilities < LSPBase
-    attr_accessor :textDocument # type: {
-    #        /**
-    #         * Capabilities specific to the colorProvider
-    #         */
-    #        colorProvider?: {
-    #            /**
-    #             * Whether implementation supports dynamic registration. If this is set to `true`
-    #             * the client supports the new `(ColorProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions)`
-    #             * return value for the corresponding server capability as well.
-    #             */
-    #            dynamicRegistration?: boolean;
-    #        };
-    #    }
+  class DocumentColorClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[textDocument]
+      @optional_method_names = %i[dynamicRegistration]
     end
 
     def from_h!(value)
       value = {} if value.nil?
-      self.textDocument = value['textDocument'] # Unknown type
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
       self
     end
   end
 
-  # export interface ColorProviderOptions {
+  # export interface DocumentColorOptions extends WorkDoneProgressOptions {
   # }
-  class ColorProviderOptions < LSPBase
+  class DocumentColorOptions < LSPBase
 
     def from_h!(value)
       value = {} if value.nil?
@@ -63,28 +42,17 @@ module LSP
     end
   end
 
-  # export interface ColorServerCapabilities {
-  #     /**
-  #      * The server provides color provider support.
-  #      */
-  #     colorProvider?: boolean | ColorProviderOptions | (ColorProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions);
+  # export interface DocumentColorRegistrationOptions extends TextDocumentRegistrationOptions, StaticRegistrationOptions, DocumentColorOptions {
   # }
-  class ColorServerCapabilities < LSPBase
-    attr_accessor :colorProvider # type: boolean | ColorProviderOptions | (ColorProviderOptions & TextDocumentRegistrationOptions & StaticRegistrationOptions)
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[colorProvider]
-    end
+  class DocumentColorRegistrationOptions < LSPBase
 
     def from_h!(value)
       value = {} if value.nil?
-      self.colorProvider = value['colorProvider'] # Unknown type
       self
     end
   end
 
-  # export interface DocumentColorParams {
+  # export interface DocumentColorParams extends WorkDoneProgressParams, PartialResultParams {
   #     /**
   #      * The text document.
   #      */
@@ -100,7 +68,7 @@ module LSP
     end
   end
 
-  # export interface ColorPresentationParams {
+  # export interface ColorPresentationParams extends WorkDoneProgressParams, PartialResultParams {
   #     /**
   #      * The text document.
   #      */
@@ -132,3 +100,4 @@ end
 # rubocop:enable Layout/EmptyLinesAroundClassBody
 # rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
+# rubocop:enable Naming/MethodName

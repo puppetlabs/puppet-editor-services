@@ -6,6 +6,7 @@
 # rubocop:disable Layout/EmptyLinesAroundClassBody
 # rubocop:disable Lint/UselessAssignment
 # rubocop:disable Style/AsciiComments
+# rubocop:disable Naming/MethodName
 
 module LSP
   # export interface Registration {
@@ -91,6 +92,49 @@ module LSP
     end
   end
 
+  # export interface WorkDoneProgressParams {
+  #     /**
+  #      * An optional token that a server can use to report work done progress.
+  #      */
+  #     workDoneToken?: ProgressToken;
+  # }
+  class WorkDoneProgressParams < LSPBase
+    attr_accessor :workDoneToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface PartialResultParams {
+  #     /**
+  #      * An optional token that a server can use to report partial results (e.g. streaming) to
+  #      * the client.
+  #      */
+  #     partialResultToken?: ProgressToken;
+  # }
+  class PartialResultParams < LSPBase
+    attr_accessor :partialResultToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[partialResultToken]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.partialResultToken = value['partialResultToken'] # Unknown type
+      self
+    end
+  end
+
   # export interface TextDocumentPositionParams {
   #     /**
   #      * The text document.
@@ -152,193 +196,6 @@ module LSP
     end
   end
 
-  # export interface CompletionOptions {
-  #     /**
-  #      * Most tools trigger completion request automatically without explicitly requesting
-  #      * it using a keyboard shortcut (e.g. Ctrl+Space). Typically they do so when the user
-  #      * starts to type an identifier. For example if the user types `c` in a JavaScript file
-  #      * code complete will automatically pop up present `console` besides others as a
-  #      * completion item. Characters that make up identifiers don't need to be listed here.
-  #      *
-  #      * If code complete should automatically be trigger on characters not being valid inside
-  #      * an identifier (for example `.` in JavaScript) list them in `triggerCharacters`.
-  #      */
-  #     triggerCharacters?: string[];
-  #     /**
-  #      * The server provides support to resolve additional
-  #      * information for a completion item.
-  #      */
-  #     resolveProvider?: boolean;
-  # }
-  class CompletionOptions < LSPBase
-    attr_accessor :triggerCharacters # type: string[]
-    attr_accessor :resolveProvider # type: boolean
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[triggerCharacters resolveProvider]
-    end
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.triggerCharacters = value['triggerCharacters'].map { |val| val } unless value['triggerCharacters'].nil?
-      self.resolveProvider = value['resolveProvider'] # Unknown type
-      self
-    end
-  end
-
-  # export interface SignatureHelpOptions {
-  #     /**
-  #      * The characters that trigger signature help
-  #      * automatically.
-  #      */
-  #     triggerCharacters?: string[];
-  # }
-  class SignatureHelpOptions < LSPBase
-    attr_accessor :triggerCharacters # type: string[]
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[triggerCharacters]
-    end
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.triggerCharacters = value['triggerCharacters'].map { |val| val } unless value['triggerCharacters'].nil?
-      self
-    end
-  end
-
-  # export interface CodeActionOptions {
-  #     /**
-  #      * CodeActionKinds that this server may return.
-  #      *
-  #      * The list of kinds may be generic, such as `CodeActionKind.Refactor`, or the server
-  #      * may list out every specific kind they provide.
-  #      */
-  #     codeActionKinds?: CodeActionKind[];
-  # }
-  class CodeActionOptions < LSPBase
-    attr_accessor :codeActionKinds # type: CodeActionKind[]
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[codeActionKinds]
-    end
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.codeActionKinds = value['codeActionKinds'].map { |val| val } unless value['codeActionKinds'].nil? # Unknown array type
-      self
-    end
-  end
-
-  # export interface CodeLensOptions {
-  #     /**
-  #      * Code lens has a resolve provider as well.
-  #      */
-  #     resolveProvider?: boolean;
-  # }
-  class CodeLensOptions < LSPBase
-    attr_accessor :resolveProvider # type: boolean
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[resolveProvider]
-    end
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.resolveProvider = value['resolveProvider'] # Unknown type
-      self
-    end
-  end
-
-  # export interface DocumentOnTypeFormattingOptions {
-  #     /**
-  #      * A character on which formatting should be triggered, like `}`.
-  #      */
-  #     firstTriggerCharacter: string;
-  #     /**
-  #      * More trigger characters.
-  #      */
-  #     moreTriggerCharacter?: string[];
-  # }
-  class DocumentOnTypeFormattingOptions < LSPBase
-    attr_accessor :firstTriggerCharacter # type: string
-    attr_accessor :moreTriggerCharacter # type: string[]
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[moreTriggerCharacter]
-    end
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.firstTriggerCharacter = value['firstTriggerCharacter']
-      self.moreTriggerCharacter = value['moreTriggerCharacter'].map { |val| val } unless value['moreTriggerCharacter'].nil?
-      self
-    end
-  end
-
-  # export interface RenameOptions {
-  #     /**
-  #      * Renames should be checked and tested before being executed.
-  #      */
-  #     prepareProvider?: boolean;
-  # }
-  class RenameOptions < LSPBase
-    attr_accessor :prepareProvider # type: boolean
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[prepareProvider]
-    end
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.prepareProvider = value['prepareProvider'] # Unknown type
-      self
-    end
-  end
-
-  # export interface DocumentLinkOptions {
-  #     /**
-  #      * Document links have a resolve provider as well.
-  #      */
-  #     resolveProvider?: boolean;
-  # }
-  class DocumentLinkOptions < LSPBase
-    attr_accessor :resolveProvider # type: boolean
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[resolveProvider]
-    end
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.resolveProvider = value['resolveProvider'] # Unknown type
-      self
-    end
-  end
-
-  # export interface ExecuteCommandOptions {
-  #     /**
-  #      * The commands to be executed on the server
-  #      */
-  #     commands: string[];
-  # }
-  class ExecuteCommandOptions < LSPBase
-    attr_accessor :commands # type: string[]
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.commands = value['commands'].map { |val| val } unless value['commands'].nil?
-      self
-    end
-  end
-
   # export interface SaveOptions {
   #     /**
   #      * The client is supposed to include the content on save.
@@ -360,68 +217,71 @@ module LSP
     end
   end
 
-  # export interface TextDocumentSyncOptions {
-  #     /**
-  #      * Open and close notifications are sent to the server.
-  #      */
-  #     openClose?: boolean;
-  #     /**
-  #      * Change notifications are sent to the server. See TextDocumentSyncKind.None, TextDocumentSyncKind.Full
-  #      * and TextDocumentSyncKind.Incremental.
-  #      */
-  #     change?: TextDocumentSyncKind;
-  #     /**
-  #      * Will save notifications are sent to the server.
-  #      */
-  #     willSave?: boolean;
-  #     /**
-  #      * Will save wait until requests are sent to the server.
-  #      */
-  #     willSaveWaitUntil?: boolean;
-  #     /**
-  #      * Save notifications are sent to the server.
-  #      */
-  #     save?: SaveOptions;
+  # export interface WorkDoneProgressOptions {
+  #     workDoneProgress?: boolean;
   # }
-  class TextDocumentSyncOptions < LSPBase
-    attr_accessor :openClose # type: boolean
-    attr_accessor :change # type: TextDocumentSyncKind
-    attr_accessor :willSave # type: boolean
-    attr_accessor :willSaveWaitUntil # type: boolean
-    attr_accessor :save # type: SaveOptions
+  class WorkDoneProgressOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[openClose change willSave willSaveWaitUntil save]
+      @optional_method_names = %i[workDoneProgress]
     end
 
     def from_h!(value)
       value = {} if value.nil?
-      self.openClose = value['openClose'] # Unknown type
-      self.change = value['change'] # Unknown type
-      self.willSave = value['willSave'] # Unknown type
-      self.willSaveWaitUntil = value['willSaveWaitUntil'] # Unknown type
-      self.save = SaveOptions.new(value['save']) unless value['save'].nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
       self
     end
   end
 
-  # export interface InitializeResult {
+  # export interface InitializeResult<T = any> {
   #     /**
   #      * The capabilities the language server provides.
   #      */
-  #     capabilities: ServerCapabilities;
+  #     capabilities: ServerCapabilities<T>;
+  #     /**
+  #      * Information about the server.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     serverInfo?: {
+  #         /**
+  #          * The name of the server as defined by the server.
+  #          */
+  #         name: string;
+  #         /**
+  #          * The servers's version as defined by the server.
+  #          */
+  #         version?: string;
+  #     };
   #     /**
   #      * Custom initialization results.
   #      */
   #     [custom: string]: any;
   # }
   class InitializeResult < LSPBase
-    attr_accessor :capabilities # type: ServerCapabilities
+    attr_accessor :capabilities # type: ServerCapabilities<T>
+    attr_accessor :serverInfo # type: {
+    #        /**
+    #         * The name of the server as defined by the server.
+    #         */
+    #        name: string;
+    #        /**
+    #         * The servers's version as defined by the server.
+    #         */
+    #        version?: string;
+    #    }
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[serverInfo]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.capabilities = value['capabilities'] # Unknown type
+      self.serverInfo = value['serverInfo'] # Unknown type
       self
     end
   end
@@ -451,6 +311,27 @@ module LSP
 
     def from_h!(value)
       value = {} if value.nil?
+      self
+    end
+  end
+
+  # export interface DidChangeConfigurationClientCapabilities {
+  #     /**
+  #      * Did change configuration notification supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  # }
+  class DidChangeConfigurationClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
       self
     end
   end
@@ -582,6 +463,97 @@ module LSP
     end
   end
 
+  # export interface TextDocumentSyncClientCapabilities {
+  #     /**
+  #      * Whether text document synchronization supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * The client supports sending will save notifications.
+  #      */
+  #     willSave?: boolean;
+  #     /**
+  #      * The client supports sending a will save request and
+  #      * waits for a response providing text edits which will
+  #      * be applied to the document before it is saved.
+  #      */
+  #     willSaveWaitUntil?: boolean;
+  #     /**
+  #      * The client supports did save notifications.
+  #      */
+  #     didSave?: boolean;
+  # }
+  class TextDocumentSyncClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :willSave # type: boolean
+    attr_accessor :willSaveWaitUntil # type: boolean
+    attr_accessor :didSave # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration willSave willSaveWaitUntil didSave]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.willSave = value['willSave'] # Unknown type
+      self.willSaveWaitUntil = value['willSaveWaitUntil'] # Unknown type
+      self.didSave = value['didSave'] # Unknown type
+      self
+    end
+  end
+
+  # export interface TextDocumentSyncOptions {
+  #     /**
+  #      * Open and close notifications are sent to the server. If omitted open close notification should not
+  #      * be sent.
+  #      */
+  #     openClose?: boolean;
+  #     /**
+  #      * Change notifications are sent to the server. See TextDocumentSyncKind.None, TextDocumentSyncKind.Full
+  #      * and TextDocumentSyncKind.Incremental. If omitted it defaults to TextDocumentSyncKind.None.
+  #      */
+  #     change?: TextDocumentSyncKind;
+  #     /**
+  #      * If present will save notifications are sent to the server. If omitted the notification should not be
+  #      * sent.
+  #      */
+  #     willSave?: boolean;
+  #     /**
+  #      * If present will save wait until requests are sent to the server. If omitted the request should not be
+  #      * sent.
+  #      */
+  #     willSaveWaitUntil?: boolean;
+  #     /**
+  #      * If present save notifications are sent to the server. If omitted the notification should not be
+  #      * sent.
+  #      */
+  #     save?: SaveOptions;
+  # }
+  class TextDocumentSyncOptions < LSPBase
+    attr_accessor :openClose # type: boolean
+    attr_accessor :change # type: TextDocumentSyncKind
+    attr_accessor :willSave # type: boolean
+    attr_accessor :willSaveWaitUntil # type: boolean
+    attr_accessor :save # type: SaveOptions
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[openClose change willSave willSaveWaitUntil save]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.openClose = value['openClose'] # Unknown type
+      self.change = value['change'] # Unknown type
+      self.willSave = value['willSave'] # Unknown type
+      self.willSaveWaitUntil = value['willSaveWaitUntil'] # Unknown type
+      self.save = SaveOptions.new(value['save']) unless value['save'].nil?
+      self
+    end
+  end
+
   # export interface DidOpenTextDocumentParams {
   #     /**
   #      * The document that was opened.
@@ -607,8 +579,16 @@ module LSP
   #     textDocument: VersionedTextDocumentIdentifier;
   #     /**
   #      * The actual content changes. The content changes describe single state changes
-  #      * to the document. So if there are two content changes c1 and c2 for a document
-  #      * in state S then c1 move the document to S' and c2 to S''.
+  #      * to the document. So if there are two content changes c1 (at array index 0) and
+  #      * c2 (at array index 1) for a document in state S then c1 moves the document from
+  #      * S to S' and c2 from S' to S''. So c1 is computed on the state S and c2 is computed
+  #      * on the state S'.
+  #      *
+  #      * To mirror the content of a document using change events use the following approach:
+  #      * - start with the same initial content
+  #      * - apply the 'textDocument/didChange' notifications in the order you recevie them.
+  #      * - apply the `TextDocumentContentChangeEvent`s in a single notification in the order
+  #      *   you receive them.
   #      */
   #     contentChanges: TextDocumentContentChangeEvent[];
   # }
@@ -727,6 +707,29 @@ module LSP
     end
   end
 
+  # export interface DidChangeWatchedFilesClientCapabilities {
+  #     /**
+  #      * Did change watched files notification supports dynamic registration. Please note
+  #      * that the current protocol doesn't support static configuration for file changes
+  #      * from the server side.
+  #      */
+  #     dynamicRegistration?: boolean;
+  # }
+  class DidChangeWatchedFilesClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self
+    end
+  end
+
   # export interface DidChangeWatchedFilesParams {
   #     /**
   #      * The actual file events.
@@ -747,19 +750,19 @@ module LSP
   #     /**
   #      * The file's uri.
   #      */
-  #     uri: string;
+  #     uri: DocumentUri;
   #     /**
   #      * The change type.
   #      */
   #     type: FileChangeType;
   # }
   class FileEvent < LSPBase
-    attr_accessor :uri # type: string
+    attr_accessor :uri # type: DocumentUri
     attr_accessor :type # type: FileChangeType
 
     def from_h!(value)
       value = {} if value.nil?
-      self.uri = value['uri']
+      self.uri = value['uri'] # Unknown type
       self.type = value['type'] # Unknown type
       self
     end
@@ -816,45 +819,230 @@ module LSP
     end
   end
 
+  # export interface PublishDiagnosticsClientCapabilities {
+  #     /**
+  #      * Whether the clients accepts diagnostics with related information.
+  #      */
+  #     relatedInformation?: boolean;
+  #     /**
+  #      * Client supports the tag property to provide meta data about a diagnostic.
+  #      * Clients supporting tags have to handle unknown tags gracefully.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     tagSupport?: {
+  #         /**
+  #          * The tags supported by the client.
+  #          */
+  #         valueSet: DiagnosticTag[];
+  #     };
+  #     /**
+  #      * Whether the client interprets the version property of the
+  #      * `textDocument/publishDiagnostics` notification`s parameter.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     versionSupport?: boolean;
+  # }
+  class PublishDiagnosticsClientCapabilities < LSPBase
+    attr_accessor :relatedInformation # type: boolean
+    attr_accessor :tagSupport # type: {
+    #        /**
+    #         * The tags supported by the client.
+    #         */
+    #        valueSet: DiagnosticTag[];
+    #    }
+    attr_accessor :versionSupport # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[relatedInformation tagSupport versionSupport]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.relatedInformation = value['relatedInformation'] # Unknown type
+      self.tagSupport = value['tagSupport'] # Unknown type
+      self.versionSupport = value['versionSupport'] # Unknown type
+      self
+    end
+  end
+
   # export interface PublishDiagnosticsParams {
   #     /**
   #      * The URI for which diagnostic information is reported.
   #      */
-  #     uri: string;
+  #     uri: DocumentUri;
+  #     /**
+  #      * Optional the version number of the document the diagnostics are published for.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     version?: number;
   #     /**
   #      * An array of diagnostic information items.
   #      */
   #     diagnostics: Diagnostic[];
   # }
   class PublishDiagnosticsParams < LSPBase
-    attr_accessor :uri # type: string
+    attr_accessor :uri # type: DocumentUri
+    attr_accessor :version # type: number
     attr_accessor :diagnostics # type: Diagnostic[]
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[version]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
-      self.uri = value['uri']
+      self.uri = value['uri'] # Unknown type
+      self.version = value['version']
       self.diagnostics = value['diagnostics'].map { |val| val } unless value['diagnostics'].nil? # Unknown array type
       self
     end
   end
 
-  # export interface CompletionRegistrationOptions extends TextDocumentRegistrationOptions, CompletionOptions {
+  # export interface CompletionClientCapabilities {
+  #     /**
+  #      * Whether completion supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * The client supports the following `CompletionItem` specific
+  #      * capabilities.
+  #      */
+  #     completionItem?: {
+  #         /**
+  #          * Client supports snippets as insert text.
+  #          *
+  #          * A snippet can define tab stops and placeholders with `$1`, `$2`
+  #          * and `${3:foo}`. `$0` defines the final tab stop, it defaults to
+  #          * the end of the snippet. Placeholders with equal identifiers are linked,
+  #          * that is typing in one will update others too.
+  #          */
+  #         snippetSupport?: boolean;
+  #         /**
+  #          * Client supports commit characters on a completion item.
+  #          */
+  #         commitCharactersSupport?: boolean;
+  #         /**
+  #          * Client supports the follow content formats for the documentation
+  #          * property. The order describes the preferred format of the client.
+  #          */
+  #         documentationFormat?: MarkupKind[];
+  #         /**
+  #          * Client supports the deprecated property on a completion item.
+  #          */
+  #         deprecatedSupport?: boolean;
+  #         /**
+  #          * Client supports the preselect property on a completion item.
+  #          */
+  #         preselectSupport?: boolean;
+  #         /**
+  #          * Client supports the tag property on a completion item. Clients supporting
+  #          * tags have to handle unknown tags gracefully. Clients especially need to
+  #          * preserve unknown tags when sending a completion item back to the server in
+  #          * a resolve call.
+  #          *
+  #          * @since 3.15.0
+  #          */
+  #         tagSupport?: {
+  #             /**
+  #              * The tags supported by the client.
+  #              */
+  #             valueSet: CompletionItemTag[];
+  #         };
+  #     };
+  #     completionItemKind?: {
+  #         /**
+  #          * The completion item kind values the client supports. When this
+  #          * property exists the client also guarantees that it will
+  #          * handle values outside its set gracefully and falls back
+  #          * to a default value when unknown.
+  #          *
+  #          * If this property is not present the client only supports
+  #          * the completion items kinds from `Text` to `Reference` as defined in
+  #          * the initial version of the protocol.
+  #          */
+  #         valueSet?: CompletionItemKind[];
+  #     };
+  #     /**
+  #      * The client supports to send additional context information for a
+  #      * `textDocument/completion` requestion.
+  #      */
+  #     contextSupport?: boolean;
   # }
-  class CompletionRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :triggerCharacters # type: string[]
-    attr_accessor :resolveProvider # type: boolean
+  class CompletionClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :completionItem # type: {
+    #        /**
+    #         * Client supports snippets as insert text.
+    #         *
+    #         * A snippet can define tab stops and placeholders with `$1`, `$2`
+    #         * and `${3:foo}`. `$0` defines the final tab stop, it defaults to
+    #         * the end of the snippet. Placeholders with equal identifiers are linked,
+    #         * that is typing in one will update others too.
+    #         */
+    #        snippetSupport?: boolean;
+    #        /**
+    #         * Client supports commit characters on a completion item.
+    #         */
+    #        commitCharactersSupport?: boolean;
+    #        /**
+    #         * Client supports the follow content formats for the documentation
+    #         * property. The order describes the preferred format of the client.
+    #         */
+    #        documentationFormat?: MarkupKind[];
+    #        /**
+    #         * Client supports the deprecated property on a completion item.
+    #         */
+    #        deprecatedSupport?: boolean;
+    #        /**
+    #         * Client supports the preselect property on a completion item.
+    #         */
+    #        preselectSupport?: boolean;
+    #        /**
+    #         * Client supports the tag property on a completion item. Clients supporting
+    #         * tags have to handle unknown tags gracefully. Clients especially need to
+    #         * preserve unknown tags when sending a completion item back to the server in
+    #         * a resolve call.
+    #         *
+    #         * @since 3.15.0
+    #         */
+    #        tagSupport?: {
+    #            /**
+    #             * The tags supported by the client.
+    #             */
+    #            valueSet: CompletionItemTag[];
+    #        };
+    #    }
+    attr_accessor :completionItemKind # type: {
+    #        /**
+    #         * The completion item kind values the client supports. When this
+    #         * property exists the client also guarantees that it will
+    #         * handle values outside its set gracefully and falls back
+    #         * to a default value when unknown.
+    #         *
+    #         * If this property is not present the client only supports
+    #         * the completion items kinds from `Text` to `Reference` as defined in
+    #         * the initial version of the protocol.
+    #         */
+    #        valueSet?: CompletionItemKind[];
+    #    }
+    attr_accessor :contextSupport # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[triggerCharacters resolveProvider]
+      @optional_method_names = %i[dynamicRegistration completionItem completionItemKind contextSupport]
     end
 
     def from_h!(value)
       value = {} if value.nil?
-      self.documentSelector = value['documentSelector'] # Unknown type
-      self.triggerCharacters = value['triggerCharacters'].map { |val| val } unless value['triggerCharacters'].nil?
-      self.resolveProvider = value['resolveProvider'] # Unknown type
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.completionItem = value['completionItem'] # Unknown type
+      self.completionItemKind = value['completionItemKind'] # Unknown type
+      self.contextSupport = value['contextSupport'] # Unknown type
       self
     end
   end
@@ -887,10 +1075,10 @@ module LSP
     end
   end
 
-  # export interface CompletionParams extends TextDocumentPositionParams {
+  # export interface CompletionParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
   #     /**
   #      * The completion context. This is only available it the client specifies
-  #      * to send this using `ClientCapabilities.textDocument.completion.contextSupport === true`
+  #      * to send this using the client capability `textDocument.completion.contextSupport === true`
   #      */
   #     context?: CompletionContext;
   # }
@@ -898,10 +1086,12 @@ module LSP
     attr_accessor :context # type: CompletionContext
     attr_accessor :textDocument # type: TextDocumentIdentifier
     attr_accessor :position # type: Position
+    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :partialResultToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[context]
+      @optional_method_names = %i[context workDoneToken partialResultToken]
     end
 
     def from_h!(value)
@@ -909,6 +1099,354 @@ module LSP
       self.context = CompletionContext.new(value['context']) unless value['context'].nil?
       self.textDocument = value['textDocument'] # Unknown type
       self.position = value['position'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self.partialResultToken = value['partialResultToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface CompletionOptions extends WorkDoneProgressOptions {
+  #     /**
+  #      * Most tools trigger completion request automatically without explicitly requesting
+  #      * it using a keyboard shortcut (e.g. Ctrl+Space). Typically they do so when the user
+  #      * starts to type an identifier. For example if the user types `c` in a JavaScript file
+  #      * code complete will automatically pop up present `console` besides others as a
+  #      * completion item. Characters that make up identifiers don't need to be listed here.
+  #      *
+  #      * If code complete should automatically be trigger on characters not being valid inside
+  #      * an identifier (for example `.` in JavaScript) list them in `triggerCharacters`.
+  #      */
+  #     triggerCharacters?: string[];
+  #     /**
+  #      * The list of all possible characters that commit a completion. This field can be used
+  #      * if clients don't support individual commmit characters per completion item. See
+  #      * `ClientCapabilities.textDocument.completion.completionItem.commitCharactersSupport`
+  #      *
+  #      * If a server provides both `allCommitCharacters` and commit characters on an individual
+  #      * completion item the ones on the completion item win.
+  #      *
+  #      * @since 3.2.0
+  #      */
+  #     allCommitCharacters?: string[];
+  #     /**
+  #      * The server provides support to resolve additional
+  #      * information for a completion item.
+  #      */
+  #     resolveProvider?: boolean;
+  # }
+  class CompletionOptions < LSPBase
+    attr_accessor :triggerCharacters # type: string[]
+    attr_accessor :allCommitCharacters # type: string[]
+    attr_accessor :resolveProvider # type: boolean
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[triggerCharacters allCommitCharacters resolveProvider workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.triggerCharacters = value['triggerCharacters'].map { |val| val } unless value['triggerCharacters'].nil?
+      self.allCommitCharacters = value['allCommitCharacters'].map { |val| val } unless value['allCommitCharacters'].nil?
+      self.resolveProvider = value['resolveProvider'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface CompletionRegistrationOptions extends TextDocumentRegistrationOptions, CompletionOptions {
+  # }
+  class CompletionRegistrationOptions < LSPBase
+    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :triggerCharacters # type: string[]
+    attr_accessor :allCommitCharacters # type: string[]
+    attr_accessor :resolveProvider # type: boolean
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[triggerCharacters allCommitCharacters resolveProvider workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentSelector = value['documentSelector'] # Unknown type
+      self.triggerCharacters = value['triggerCharacters'].map { |val| val } unless value['triggerCharacters'].nil?
+      self.allCommitCharacters = value['allCommitCharacters'].map { |val| val } unless value['allCommitCharacters'].nil?
+      self.resolveProvider = value['resolveProvider'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface HoverClientCapabilities {
+  #     /**
+  #      * Whether hover supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * Client supports the follow content formats for the content
+  #      * property. The order describes the preferred format of the client.
+  #      */
+  #     contentFormat?: MarkupKind[];
+  # }
+  class HoverClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :contentFormat # type: MarkupKind[]
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration contentFormat]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.contentFormat = value['contentFormat'].map { |val| val } unless value['contentFormat'].nil? # Unknown array type
+      self
+    end
+  end
+
+  # export interface HoverOptions extends WorkDoneProgressOptions {
+  # }
+  class HoverOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface HoverParams extends TextDocumentPositionParams, WorkDoneProgressParams {
+  # }
+  class HoverParams < LSPBase
+    attr_accessor :textDocument # type: TextDocumentIdentifier
+    attr_accessor :position # type: Position
+    attr_accessor :workDoneToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.textDocument = value['textDocument'] # Unknown type
+      self.position = value['position'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface HoverRegistrationOptions extends TextDocumentRegistrationOptions, HoverOptions {
+  # }
+  class HoverRegistrationOptions < LSPBase
+    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentSelector = value['documentSelector'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface SignatureHelpClientCapabilities {
+  #     /**
+  #      * Whether signature help supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * The client supports the following `SignatureInformation`
+  #      * specific properties.
+  #      */
+  #     signatureInformation?: {
+  #         /**
+  #          * Client supports the follow content formats for the documentation
+  #          * property. The order describes the preferred format of the client.
+  #          */
+  #         documentationFormat?: MarkupKind[];
+  #         /**
+  #          * Client capabilities specific to parameter information.
+  #          */
+  #         parameterInformation?: {
+  #             /**
+  #              * The client supports processing label offsets instead of a
+  #              * simple label string.
+  #              *
+  #              * @since 3.14.0
+  #              */
+  #             labelOffsetSupport?: boolean;
+  #         };
+  #     };
+  #     /**
+  #      * The client supports to send additional context information for a
+  #      * `textDocument/signatureHelp` request. A client that opts into
+  #      * contextSupport will also support the `retriggerCharacters` on
+  #      * `SignatureHelpOptions`.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     contextSupport?: boolean;
+  # }
+  class SignatureHelpClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :signatureInformation # type: {
+    #        /**
+    #         * Client supports the follow content formats for the documentation
+    #         * property. The order describes the preferred format of the client.
+    #         */
+    #        documentationFormat?: MarkupKind[];
+    #        /**
+    #         * Client capabilities specific to parameter information.
+    #         */
+    #        parameterInformation?: {
+    #            /**
+    #             * The client supports processing label offsets instead of a
+    #             * simple label string.
+    #             *
+    #             * @since 3.14.0
+    #             */
+    #            labelOffsetSupport?: boolean;
+    #        };
+    #    }
+    attr_accessor :contextSupport # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration signatureInformation contextSupport]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.signatureInformation = value['signatureInformation'] # Unknown type
+      self.contextSupport = value['contextSupport'] # Unknown type
+      self
+    end
+  end
+
+  # export interface SignatureHelpOptions extends WorkDoneProgressOptions {
+  #     /**
+  #      * List of characters that trigger signature help.
+  #      */
+  #     triggerCharacters?: string[];
+  #     /**
+  #      * List of characters that re-trigger signature help.
+  #      *
+  #      * These trigger characters are only active when signature help is already showing. All trigger characters
+  #      * are also counted as re-trigger characters.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     retriggerCharacters?: string[];
+  # }
+  class SignatureHelpOptions < LSPBase
+    attr_accessor :triggerCharacters # type: string[]
+    attr_accessor :retriggerCharacters # type: string[]
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[triggerCharacters retriggerCharacters workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.triggerCharacters = value['triggerCharacters'].map { |val| val } unless value['triggerCharacters'].nil?
+      self.retriggerCharacters = value['retriggerCharacters'].map { |val| val } unless value['retriggerCharacters'].nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface SignatureHelpContext {
+  #     /**
+  #      * Action that caused signature help to be triggered.
+  #      */
+  #     triggerKind: SignatureHelpTriggerKind;
+  #     /**
+  #      * Character that caused signature help to be triggered.
+  #      *
+  #      * This is undefined when `triggerKind !== SignatureHelpTriggerKind.TriggerCharacter`
+  #      */
+  #     triggerCharacter?: string;
+  #     /**
+  #      * `true` if signature help was already showing when it was triggered.
+  #      *
+  #      * Retriggers occur when the signature help is already active and can be caused by actions such as
+  #      * typing a trigger character, a cursor move, or document content changes.
+  #      */
+  #     isRetrigger: boolean;
+  #     /**
+  #      * The currently active `SignatureHelp`.
+  #      *
+  #      * The `activeSignatureHelp` has its `SignatureHelp.activeSignature` field updated based on
+  #      * the user navigating through available signatures.
+  #      */
+  #     activeSignatureHelp?: SignatureHelp;
+  # }
+  class SignatureHelpContext < LSPBase
+    attr_accessor :triggerKind # type: SignatureHelpTriggerKind
+    attr_accessor :triggerCharacter # type: string
+    attr_accessor :isRetrigger # type: boolean
+    attr_accessor :activeSignatureHelp # type: SignatureHelp
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[triggerCharacter activeSignatureHelp]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.triggerKind = value['triggerKind'] # Unknown type
+      self.triggerCharacter = value['triggerCharacter']
+      self.isRetrigger = value['isRetrigger'] # Unknown type
+      self.activeSignatureHelp = value['activeSignatureHelp'] # Unknown type
+      self
+    end
+  end
+
+  # export interface SignatureHelpParams extends TextDocumentPositionParams, WorkDoneProgressParams {
+  #     /**
+  #      * The signature help context. This is only available if the client specifies
+  #      * to send this using the client capability `textDocument.signatureHelp.contextSupport === true`
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     context?: SignatureHelpContext;
+  # }
+  class SignatureHelpParams < LSPBase
+    attr_accessor :context # type: SignatureHelpContext
+    attr_accessor :textDocument # type: TextDocumentIdentifier
+    attr_accessor :position # type: Position
+    attr_accessor :workDoneToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[context workDoneToken]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.context = SignatureHelpContext.new(value['context']) unless value['context'].nil?
+      self.textDocument = value['textDocument'] # Unknown type
+      self.position = value['position'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
       self
     end
   end
@@ -918,38 +1456,459 @@ module LSP
   class SignatureHelpRegistrationOptions < LSPBase
     attr_accessor :documentSelector # type: DocumentSelector | null
     attr_accessor :triggerCharacters # type: string[]
+    attr_accessor :retriggerCharacters # type: string[]
+    attr_accessor :workDoneProgress # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[triggerCharacters]
+      @optional_method_names = %i[triggerCharacters retriggerCharacters workDoneProgress]
     end
 
     def from_h!(value)
       value = {} if value.nil?
       self.documentSelector = value['documentSelector'] # Unknown type
       self.triggerCharacters = value['triggerCharacters'].map { |val| val } unless value['triggerCharacters'].nil?
+      self.retriggerCharacters = value['retriggerCharacters'].map { |val| val } unless value['retriggerCharacters'].nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
       self
     end
   end
 
-  # export interface ReferenceParams extends TextDocumentPositionParams {
+  # export interface DefinitionClientCapabilities {
+  #     /**
+  #      * Whether definition supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * The client supports additional metadata in the form of definition links.
+  #      *
+  #      * @since 3.14.0
+  #      */
+  #     linkSupport?: boolean;
+  # }
+  class DefinitionClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :linkSupport # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration linkSupport]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.linkSupport = value['linkSupport'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DefinitionOptions extends WorkDoneProgressOptions {
+  # }
+  class DefinitionOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DefinitionParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
+  # }
+  class DefinitionParams < LSPBase
+    attr_accessor :textDocument # type: TextDocumentIdentifier
+    attr_accessor :position # type: Position
+    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :partialResultToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken partialResultToken]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.textDocument = value['textDocument'] # Unknown type
+      self.position = value['position'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self.partialResultToken = value['partialResultToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DefinitionRegistrationOptions extends TextDocumentRegistrationOptions, DefinitionOptions {
+  # }
+  class DefinitionRegistrationOptions < LSPBase
+    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentSelector = value['documentSelector'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface ReferenceClientCapabilities {
+  #     /**
+  #      * Whether references supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  # }
+  class ReferenceClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self
+    end
+  end
+
+  # export interface ReferenceParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
   #     context: ReferenceContext;
   # }
   class ReferenceParams < LSPBase
     attr_accessor :context # type: ReferenceContext
     attr_accessor :textDocument # type: TextDocumentIdentifier
     attr_accessor :position # type: Position
+    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :partialResultToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken partialResultToken]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.context = value['context'] # Unknown type
       self.textDocument = value['textDocument'] # Unknown type
       self.position = value['position'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self.partialResultToken = value['partialResultToken'] # Unknown type
       self
     end
   end
 
-  # export interface CodeActionParams {
+  # export interface ReferenceOptions extends WorkDoneProgressOptions {
+  # }
+  class ReferenceOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface ReferenceRegistrationOptions extends TextDocumentRegistrationOptions, ReferenceOptions {
+  # }
+  class ReferenceRegistrationOptions < LSPBase
+    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentSelector = value['documentSelector'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentHighlightClientCapabilities {
+  #     /**
+  #      * Whether document highlight supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  # }
+  class DocumentHighlightClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentHighlightParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
+  # }
+  class DocumentHighlightParams < LSPBase
+    attr_accessor :textDocument # type: TextDocumentIdentifier
+    attr_accessor :position # type: Position
+    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :partialResultToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken partialResultToken]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.textDocument = value['textDocument'] # Unknown type
+      self.position = value['position'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self.partialResultToken = value['partialResultToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentHighlightOptions extends WorkDoneProgressOptions {
+  # }
+  class DocumentHighlightOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentHighlightRegistrationOptions extends TextDocumentRegistrationOptions, DocumentHighlightOptions {
+  # }
+  class DocumentHighlightRegistrationOptions < LSPBase
+    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentSelector = value['documentSelector'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentSymbolClientCapabilities {
+  #     /**
+  #      * Whether document symbol supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * Specific capabilities for the `SymbolKind`.
+  #      */
+  #     symbolKind?: {
+  #         /**
+  #          * The symbol kind values the client supports. When this
+  #          * property exists the client also guarantees that it will
+  #          * handle values outside its set gracefully and falls back
+  #          * to a default value when unknown.
+  #          *
+  #          * If this property is not present the client only supports
+  #          * the symbol kinds from `File` to `Array` as defined in
+  #          * the initial version of the protocol.
+  #          */
+  #         valueSet?: SymbolKind[];
+  #     };
+  #     /**
+  #      * The client support hierarchical document symbols.
+  #      */
+  #     hierarchicalDocumentSymbolSupport?: boolean;
+  # }
+  class DocumentSymbolClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :symbolKind # type: {
+    #        /**
+    #         * The symbol kind values the client supports. When this
+    #         * property exists the client also guarantees that it will
+    #         * handle values outside its set gracefully and falls back
+    #         * to a default value when unknown.
+    #         *
+    #         * If this property is not present the client only supports
+    #         * the symbol kinds from `File` to `Array` as defined in
+    #         * the initial version of the protocol.
+    #         */
+    #        valueSet?: SymbolKind[];
+    #    }
+    attr_accessor :hierarchicalDocumentSymbolSupport # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration symbolKind hierarchicalDocumentSymbolSupport]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.symbolKind = value['symbolKind'] # Unknown type
+      self.hierarchicalDocumentSymbolSupport = value['hierarchicalDocumentSymbolSupport'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentSymbolParams extends WorkDoneProgressParams, PartialResultParams {
+  #     /**
+  #      * The text document.
+  #      */
+  #     textDocument: TextDocumentIdentifier;
+  # }
+  class DocumentSymbolParams < LSPBase
+    attr_accessor :textDocument # type: TextDocumentIdentifier
+    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :partialResultToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken partialResultToken]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.textDocument = value['textDocument'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self.partialResultToken = value['partialResultToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentSymbolOptions extends WorkDoneProgressOptions {
+  # }
+  class DocumentSymbolOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentSymbolRegistrationOptions extends TextDocumentRegistrationOptions, DocumentSymbolOptions {
+  # }
+  class DocumentSymbolRegistrationOptions < LSPBase
+    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentSelector = value['documentSelector'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface CodeActionClientCapabilities {
+  #     /**
+  #      * Whether code action supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * The client support code action literals as a valid
+  #      * response of the `textDocument/codeAction` request.
+  #      *
+  #      * @since 3.8.0
+  #      */
+  #     codeActionLiteralSupport?: {
+  #         /**
+  #          * The code action kind is support with the following value
+  #          * set.
+  #          */
+  #         codeActionKind: {
+  #             /**
+  #              * The code action kind values the client supports. When this
+  #              * property exists the client also guarantees that it will
+  #              * handle values outside its set gracefully and falls back
+  #              * to a default value when unknown.
+  #              */
+  #             valueSet: CodeActionKind[];
+  #         };
+  #     };
+  #     /**
+  #      * Whether code action supports the `isPreferred` property.
+  #      * @since 3.15.0
+  #      */
+  #     isPreferredSupport?: boolean;
+  # }
+  class CodeActionClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :codeActionLiteralSupport # type: {
+    #        /**
+    #         * The code action kind is support with the following value
+    #         * set.
+    #         */
+    #        codeActionKind: {
+    #            /**
+    #             * The code action kind values the client supports. When this
+    #             * property exists the client also guarantees that it will
+    #             * handle values outside its set gracefully and falls back
+    #             * to a default value when unknown.
+    #             */
+    #            valueSet: CodeActionKind[];
+    #        };
+    #    }
+    attr_accessor :isPreferredSupport # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration codeActionLiteralSupport isPreferredSupport]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.codeActionLiteralSupport = value['codeActionLiteralSupport'] # Unknown type
+      self.isPreferredSupport = value['isPreferredSupport'] # Unknown type
+      self
+    end
+  end
+
+  # export interface CodeActionParams extends WorkDoneProgressParams, PartialResultParams {
   #     /**
   #      * The document in which the command was invoked.
   #      */
@@ -967,12 +1926,47 @@ module LSP
     attr_accessor :textDocument # type: TextDocumentIdentifier
     attr_accessor :range # type: Range
     attr_accessor :context # type: CodeActionContext
+    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :partialResultToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken partialResultToken]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.textDocument = value['textDocument'] # Unknown type
       self.range = value['range'] # Unknown type
       self.context = value['context'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self.partialResultToken = value['partialResultToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface CodeActionOptions extends WorkDoneProgressOptions {
+  #     /**
+  #      * CodeActionKinds that this server may return.
+  #      *
+  #      * The list of kinds may be generic, such as `CodeActionKind.Refactor`, or the server
+  #      * may list out every specific kind they provide.
+  #      */
+  #     codeActionKinds?: CodeActionKind[];
+  # }
+  class CodeActionOptions < LSPBase
+    attr_accessor :codeActionKinds # type: CodeActionKind[]
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[codeActionKinds workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.codeActionKinds = value['codeActionKinds'].map { |val| val } unless value['codeActionKinds'].nil? # Unknown array type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
       self
     end
   end
@@ -982,21 +1976,155 @@ module LSP
   class CodeActionRegistrationOptions < LSPBase
     attr_accessor :documentSelector # type: DocumentSelector | null
     attr_accessor :codeActionKinds # type: CodeActionKind[]
+    attr_accessor :workDoneProgress # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[codeActionKinds]
+      @optional_method_names = %i[codeActionKinds workDoneProgress]
     end
 
     def from_h!(value)
       value = {} if value.nil?
       self.documentSelector = value['documentSelector'] # Unknown type
       self.codeActionKinds = value['codeActionKinds'].map { |val| val } unless value['codeActionKinds'].nil? # Unknown array type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
       self
     end
   end
 
-  # export interface CodeLensParams {
+  # export interface WorkspaceSymbolClientCapabilities {
+  #     /**
+  #      * Symbol request supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * Specific capabilities for the `SymbolKind` in the `workspace/symbol` request.
+  #      */
+  #     symbolKind?: {
+  #         /**
+  #          * The symbol kind values the client supports. When this
+  #          * property exists the client also guarantees that it will
+  #          * handle values outside its set gracefully and falls back
+  #          * to a default value when unknown.
+  #          *
+  #          * If this property is not present the client only supports
+  #          * the symbol kinds from `File` to `Array` as defined in
+  #          * the initial version of the protocol.
+  #          */
+  #         valueSet?: SymbolKind[];
+  #     };
+  # }
+  class WorkspaceSymbolClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :symbolKind # type: {
+    #        /**
+    #         * The symbol kind values the client supports. When this
+    #         * property exists the client also guarantees that it will
+    #         * handle values outside its set gracefully and falls back
+    #         * to a default value when unknown.
+    #         *
+    #         * If this property is not present the client only supports
+    #         * the symbol kinds from `File` to `Array` as defined in
+    #         * the initial version of the protocol.
+    #         */
+    #        valueSet?: SymbolKind[];
+    #    }
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration symbolKind]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.symbolKind = value['symbolKind'] # Unknown type
+      self
+    end
+  end
+
+  # export interface WorkspaceSymbolParams extends WorkDoneProgressParams, PartialResultParams {
+  #     /**
+  #      * A query string to filter symbols by. Clients may send an empty
+  #      * string here to request all symbols.
+  #      */
+  #     query: string;
+  # }
+  class WorkspaceSymbolParams < LSPBase
+    attr_accessor :query # type: string
+    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :partialResultToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken partialResultToken]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.query = value['query']
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self.partialResultToken = value['partialResultToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface WorkspaceSymbolOptions extends WorkDoneProgressOptions {
+  # }
+  class WorkspaceSymbolOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface WorkspaceSymbolRegistrationOptions extends WorkspaceSymbolOptions {
+  # }
+  class WorkspaceSymbolRegistrationOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface CodeLensClientCapabilities {
+  #     /**
+  #      * Whether code lens supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  # }
+  class CodeLensClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self
+    end
+  end
+
+  # export interface CodeLensParams extends WorkDoneProgressParams, PartialResultParams {
   #     /**
   #      * The document to request code lens for.
   #      */
@@ -1004,10 +2132,42 @@ module LSP
   # }
   class CodeLensParams < LSPBase
     attr_accessor :textDocument # type: TextDocumentIdentifier
+    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :partialResultToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken partialResultToken]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.textDocument = value['textDocument'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self.partialResultToken = value['partialResultToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface CodeLensOptions extends WorkDoneProgressOptions {
+  #     /**
+  #      * Code lens has a resolve provider as well.
+  #      */
+  #     resolveProvider?: boolean;
+  # }
+  class CodeLensOptions < LSPBase
+    attr_accessor :resolveProvider # type: boolean
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[resolveProvider workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.resolveProvider = value['resolveProvider'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
       self
     end
   end
@@ -1017,21 +2177,142 @@ module LSP
   class CodeLensRegistrationOptions < LSPBase
     attr_accessor :documentSelector # type: DocumentSelector | null
     attr_accessor :resolveProvider # type: boolean
+    attr_accessor :workDoneProgress # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[resolveProvider]
+      @optional_method_names = %i[resolveProvider workDoneProgress]
     end
 
     def from_h!(value)
       value = {} if value.nil?
       self.documentSelector = value['documentSelector'] # Unknown type
       self.resolveProvider = value['resolveProvider'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
       self
     end
   end
 
-  # export interface DocumentFormattingParams {
+  # export interface DocumentLinkClientCapabilities {
+  #     /**
+  #      * Whether document link supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * Whether the client support the `tooltip` property on `DocumentLink`.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     tooltipSupport?: boolean;
+  # }
+  class DocumentLinkClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :tooltipSupport # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration tooltipSupport]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.tooltipSupport = value['tooltipSupport'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentLinkParams extends WorkDoneProgressParams, PartialResultParams {
+  #     /**
+  #      * The document to provide document links for.
+  #      */
+  #     textDocument: TextDocumentIdentifier;
+  # }
+  class DocumentLinkParams < LSPBase
+    attr_accessor :textDocument # type: TextDocumentIdentifier
+    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :partialResultToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken partialResultToken]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.textDocument = value['textDocument'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self.partialResultToken = value['partialResultToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentLinkOptions extends WorkDoneProgressOptions {
+  #     /**
+  #      * Document links have a resolve provider as well.
+  #      */
+  #     resolveProvider?: boolean;
+  # }
+  class DocumentLinkOptions < LSPBase
+    attr_accessor :resolveProvider # type: boolean
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[resolveProvider workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.resolveProvider = value['resolveProvider'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentLinkRegistrationOptions extends TextDocumentRegistrationOptions, DocumentLinkOptions {
+  # }
+  class DocumentLinkRegistrationOptions < LSPBase
+    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :resolveProvider # type: boolean
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[resolveProvider workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentSelector = value['documentSelector'] # Unknown type
+      self.resolveProvider = value['resolveProvider'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentFormattingClientCapabilities {
+  #     /**
+  #      * Whether formatting supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  # }
+  class DocumentFormattingClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentFormattingParams extends WorkDoneProgressParams {
   #     /**
   #      * The document to format.
   #      */
@@ -1044,16 +2325,80 @@ module LSP
   class DocumentFormattingParams < LSPBase
     attr_accessor :textDocument # type: TextDocumentIdentifier
     attr_accessor :options # type: FormattingOptions
+    attr_accessor :workDoneToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.textDocument = value['textDocument'] # Unknown type
       self.options = value['options'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
       self
     end
   end
 
-  # export interface DocumentRangeFormattingParams {
+  # export interface DocumentFormattingOptions extends WorkDoneProgressOptions {
+  # }
+  class DocumentFormattingOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentFormattingRegistrationOptions extends TextDocumentRegistrationOptions, DocumentFormattingOptions {
+  # }
+  class DocumentFormattingRegistrationOptions < LSPBase
+    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentSelector = value['documentSelector'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentRangeFormattingClientCapabilities {
+  #     /**
+  #      * Whether range formatting supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  # }
+  class DocumentRangeFormattingClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentRangeFormattingParams extends WorkDoneProgressParams {
   #     /**
   #      * The document to format.
   #      */
@@ -1071,12 +2416,76 @@ module LSP
     attr_accessor :textDocument # type: TextDocumentIdentifier
     attr_accessor :range # type: Range
     attr_accessor :options # type: FormattingOptions
+    attr_accessor :workDoneToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.textDocument = value['textDocument'] # Unknown type
       self.range = value['range'] # Unknown type
       self.options = value['options'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentRangeFormattingOptions extends WorkDoneProgressOptions {
+  # }
+  class DocumentRangeFormattingOptions < LSPBase
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentRangeFormattingRegistrationOptions extends TextDocumentRegistrationOptions, DocumentRangeFormattingOptions {
+  # }
+  class DocumentRangeFormattingRegistrationOptions < LSPBase
+    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentSelector = value['documentSelector'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface DocumentOnTypeFormattingClientCapabilities {
+  #     /**
+  #      * Whether on type formatting supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  # }
+  class DocumentOnTypeFormattingClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
       self
     end
   end
@@ -1115,6 +2524,33 @@ module LSP
     end
   end
 
+  # export interface DocumentOnTypeFormattingOptions {
+  #     /**
+  #      * A character on which formatting should be triggered, like `}`.
+  #      */
+  #     firstTriggerCharacter: string;
+  #     /**
+  #      * More trigger characters.
+  #      */
+  #     moreTriggerCharacter?: string[];
+  # }
+  class DocumentOnTypeFormattingOptions < LSPBase
+    attr_accessor :firstTriggerCharacter # type: string
+    attr_accessor :moreTriggerCharacter # type: string[]
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[moreTriggerCharacter]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.firstTriggerCharacter = value['firstTriggerCharacter']
+      self.moreTriggerCharacter = value['moreTriggerCharacter'].map { |val| val } unless value['moreTriggerCharacter'].nil?
+      self
+    end
+  end
+
   # export interface DocumentOnTypeFormattingRegistrationOptions extends TextDocumentRegistrationOptions, DocumentOnTypeFormattingOptions {
   # }
   class DocumentOnTypeFormattingRegistrationOptions < LSPBase
@@ -1136,7 +2572,37 @@ module LSP
     end
   end
 
-  # export interface RenameParams {
+  # export interface RenameClientCapabilities {
+  #     /**
+  #      * Whether rename supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
+  #     /**
+  #      * Client supports testing for validity of rename operations
+  #      * before execution.
+  #      *
+  #      * @since version 3.12.0
+  #      */
+  #     prepareSupport?: boolean;
+  # }
+  class RenameClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
+    attr_accessor :prepareSupport # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[dynamicRegistration prepareSupport]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
+      self.prepareSupport = value['prepareSupport'] # Unknown type
+      self
+    end
+  end
+
+  # export interface RenameParams extends WorkDoneProgressParams {
   #     /**
   #      * The document to rename.
   #      */
@@ -1156,12 +2622,44 @@ module LSP
     attr_accessor :textDocument # type: TextDocumentIdentifier
     attr_accessor :position # type: Position
     attr_accessor :newName # type: string
+    attr_accessor :workDoneToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.textDocument = value['textDocument'] # Unknown type
       self.position = value['position'] # Unknown type
       self.newName = value['newName']
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface RenameOptions extends WorkDoneProgressOptions {
+  #     /**
+  #      * Renames should be checked and tested before being executed.
+  #      *
+  #      * @since version 3.12.0
+  #      */
+  #     prepareProvider?: boolean;
+  # }
+  class RenameOptions < LSPBase
+    attr_accessor :prepareProvider # type: boolean
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[prepareProvider workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.prepareProvider = value['prepareProvider'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
       self
     end
   end
@@ -1171,56 +2669,65 @@ module LSP
   class RenameRegistrationOptions < LSPBase
     attr_accessor :documentSelector # type: DocumentSelector | null
     attr_accessor :prepareProvider # type: boolean
+    attr_accessor :workDoneProgress # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[prepareProvider]
+      @optional_method_names = %i[prepareProvider workDoneProgress]
     end
 
     def from_h!(value)
       value = {} if value.nil?
       self.documentSelector = value['documentSelector'] # Unknown type
       self.prepareProvider = value['prepareProvider'] # Unknown type
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
       self
     end
   end
 
-  # export interface DocumentLinkParams {
-  #     /**
-  #      * The document to provide document links for.
-  #      */
-  #     textDocument: TextDocumentIdentifier;
+  # export interface PrepareRenameParams extends TextDocumentPositionParams, WorkDoneProgressParams {
   # }
-  class DocumentLinkParams < LSPBase
+  class PrepareRenameParams < LSPBase
     attr_accessor :textDocument # type: TextDocumentIdentifier
+    attr_accessor :position # type: Position
+    attr_accessor :workDoneToken # type: ProgressToken
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneToken]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.textDocument = value['textDocument'] # Unknown type
+      self.position = value['position'] # Unknown type
+      self.workDoneToken = value['workDoneToken'] # Unknown type
       self
     end
   end
 
-  # export interface DocumentLinkRegistrationOptions extends TextDocumentRegistrationOptions, DocumentLinkOptions {
+  # export interface ExecuteCommandClientCapabilities {
+  #     /**
+  #      * Execute command supports dynamic registration.
+  #      */
+  #     dynamicRegistration?: boolean;
   # }
-  class DocumentLinkRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :resolveProvider # type: boolean
+  class ExecuteCommandClientCapabilities < LSPBase
+    attr_accessor :dynamicRegistration # type: boolean
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[resolveProvider]
+      @optional_method_names = %i[dynamicRegistration]
     end
 
     def from_h!(value)
       value = {} if value.nil?
-      self.documentSelector = value['documentSelector'] # Unknown type
-      self.resolveProvider = value['resolveProvider'] # Unknown type
+      self.dynamicRegistration = value['dynamicRegistration'] # Unknown type
       self
     end
   end
 
-  # export interface ExecuteCommandParams {
+  # export interface ExecuteCommandParams extends WorkDoneProgressParams {
   #     /**
   #      * The identifier of the actual command handler.
   #      */
@@ -1233,16 +2740,41 @@ module LSP
   class ExecuteCommandParams < LSPBase
     attr_accessor :command # type: string
     attr_accessor :arguments # type: any[]
+    attr_accessor :workDoneToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[arguments]
+      @optional_method_names = %i[arguments workDoneToken]
     end
 
     def from_h!(value)
       value = {} if value.nil?
       self.command = value['command']
       self.arguments = value['arguments'].map { |val| val } unless value['arguments'].nil?
+      self.workDoneToken = value['workDoneToken'] # Unknown type
+      self
+    end
+  end
+
+  # export interface ExecuteCommandOptions extends WorkDoneProgressOptions {
+  #     /**
+  #      * The commands to be executed on the server
+  #      */
+  #     commands: string[];
+  # }
+  class ExecuteCommandOptions < LSPBase
+    attr_accessor :commands # type: string[]
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.commands = value['commands'].map { |val| val } unless value['commands'].nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
       self
     end
   end
@@ -1251,10 +2783,56 @@ module LSP
   # }
   class ExecuteCommandRegistrationOptions < LSPBase
     attr_accessor :commands # type: string[]
+    attr_accessor :workDoneProgress # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[workDoneProgress]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.commands = value['commands'].map { |val| val } unless value['commands'].nil?
+      self.workDoneProgress = value['workDoneProgress'] # Unknown type
+      self
+    end
+  end
+
+  # export interface WorkspaceEditClientCapabilities {
+  #     /**
+  #      * The client supports versioned document changes in `WorkspaceEdit`s
+  #      */
+  #     documentChanges?: boolean;
+  #     /**
+  #      * The resource operations the client supports. Clients should at least
+  #      * support 'create', 'rename' and 'delete' files and folders.
+  #      *
+  #      * @since 3.13.0
+  #      */
+  #     resourceOperations?: ResourceOperationKind[];
+  #     /**
+  #      * The failure handling strategy of a client if applying the workspace edit
+  #      * fails.
+  #      *
+  #      * @since 3.13.0
+  #      */
+  #     failureHandling?: FailureHandlingKind;
+  # }
+  class WorkspaceEditClientCapabilities < LSPBase
+    attr_accessor :documentChanges # type: boolean
+    attr_accessor :resourceOperations # type: ResourceOperationKind[]
+    attr_accessor :failureHandling # type: FailureHandlingKind
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[documentChanges resourceOperations failureHandling]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.documentChanges = value['documentChanges'] # Unknown type
+      self.resourceOperations = value['resourceOperations'].map { |val| val } unless value['resourceOperations'].nil? # Unknown array type
+      self.failureHandling = value['failureHandling'] # Unknown type
       self
     end
   end
@@ -1294,6 +2872,12 @@ module LSP
   #      */
   #     applied: boolean;
   #     /**
+  #      * An optional textual description for why the edit was not applied.
+  #      * This may be used by the server for diagnostic logging or to provide
+  #      * a suitable error for a request that triggered the edit.
+  #      */
+  #     failureReason?: string;
+  #     /**
   #      * Depending on the client's failure handling strategy `failedChange` might
   #      * contain the index of the change that failed. This property is only available
   #      * if the client signals a `failureHandlingStrategy` in its client capabilities.
@@ -1302,16 +2886,18 @@ module LSP
   # }
   class ApplyWorkspaceEditResponse < LSPBase
     attr_accessor :applied # type: boolean
+    attr_accessor :failureReason # type: string
     attr_accessor :failedChange # type: number
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[failedChange]
+      @optional_method_names = %i[failureReason failedChange]
     end
 
     def from_h!(value)
       value = {} if value.nil?
       self.applied = value['applied'] # Unknown type
+      self.failureReason = value['failureReason']
       self.failedChange = value['failedChange']
       self
     end
@@ -1321,3 +2907,4 @@ end
 # rubocop:enable Layout/EmptyLinesAroundClassBody
 # rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
+# rubocop:enable Naming/MethodName

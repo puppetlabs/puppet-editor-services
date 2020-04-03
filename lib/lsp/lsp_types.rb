@@ -6,6 +6,7 @@
 # rubocop:disable Layout/EmptyLinesAroundClassBody
 # rubocop:disable Lint/UselessAssignment
 # rubocop:disable Style/AsciiComments
+# rubocop:disable Naming/MethodName
 
 module LSP
   # export interface Position {
@@ -61,16 +62,16 @@ module LSP
   end
 
   # export interface Location {
-  #     uri: string;
+  #     uri: DocumentUri;
   #     range: Range;
   # }
   class Location < LSPBase
-    attr_accessor :uri # type: string
+    attr_accessor :uri # type: DocumentUri
     attr_accessor :range # type: Range
 
     def from_h!(value)
       value = {} if value.nil?
-      self.uri = value['uri']
+      self.uri = value['uri'] # Unknown type
       self.range = Range.new(value['range']) unless value['range'].nil?
       self
     end
@@ -87,7 +88,7 @@ module LSP
   #     /**
   #      * The target resource identifier of this link.
   #      */
-  #     targetUri: string;
+  #     targetUri: DocumentUri;
   #     /**
   #      * The full target range of this link. If the target for example is a symbol then target range is the
   #      * range enclosing this symbol not including leading/trailing whitespace but everything else
@@ -102,7 +103,7 @@ module LSP
   # }
   class LocationLink < LSPBase
     attr_accessor :originSelectionRange # type: Range
-    attr_accessor :targetUri # type: string
+    attr_accessor :targetUri # type: DocumentUri
     attr_accessor :targetRange # type: Range
     attr_accessor :targetSelectionRange # type: Range
 
@@ -114,7 +115,7 @@ module LSP
     def from_h!(value)
       value = {} if value.nil?
       self.originSelectionRange = Range.new(value['originSelectionRange']) unless value['originSelectionRange'].nil?
-      self.targetUri = value['targetUri']
+      self.targetUri = value['targetUri'] # Unknown type
       self.targetRange = Range.new(value['targetRange']) unless value['targetRange'].nil?
       self.targetSelectionRange = Range.new(value['targetSelectionRange']) unless value['targetSelectionRange'].nil?
       self
@@ -309,6 +310,10 @@ module LSP
   #      */
   #     message: string;
   #     /**
+  #      * Additional metadata about the diagnostic.
+  #      */
+  #     tags?: DiagnosticTag[];
+  #     /**
   #      * An array of related diagnostic information, e.g. when symbol-names within
   #      * a scope collide all definitions can be marked via this property.
   #      */
@@ -320,11 +325,12 @@ module LSP
     attr_accessor :code # type: number | string
     attr_accessor :source # type: string
     attr_accessor :message # type: string
+    attr_accessor :tags # type: DiagnosticTag[]
     attr_accessor :relatedInformation # type: DiagnosticRelatedInformation[]
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[severity code source relatedInformation]
+      @optional_method_names = %i[severity code source tags relatedInformation]
     end
 
     def from_h!(value)
@@ -334,6 +340,7 @@ module LSP
       self.code = value['code'] # Unknown type
       self.source = value['source']
       self.message = value['message']
+      self.tags = value['tags'].map { |val| val } unless value['tags'].nil? # Unknown array type
       self.relatedInformation = to_typed_aray(value['relatedInformation'], DiagnosticRelatedInformation)
       self
     end
@@ -467,7 +474,7 @@ module LSP
   #     /**
   #      * The resource to create.
   #      */
-  #     uri: string;
+  #     uri: DocumentUri;
   #     /**
   #      * Additional options
   #      */
@@ -475,7 +482,7 @@ module LSP
   # }
   class CreateFile < LSPBase
     attr_accessor :kind # type: string with value 'create'
-    attr_accessor :uri # type: string
+    attr_accessor :uri # type: DocumentUri
     attr_accessor :options # type: CreateFileOptions
 
     def initialize(initial_hash = nil)
@@ -486,7 +493,7 @@ module LSP
     def from_h!(value)
       value = {} if value.nil?
       self.kind = value['kind'] # Unknown type
-      self.uri = value['uri']
+      self.uri = value['uri'] # Unknown type
       self.options = CreateFileOptions.new(value['options']) unless value['options'].nil?
       self
     end
@@ -527,11 +534,11 @@ module LSP
   #     /**
   #      * The old (existing) location.
   #      */
-  #     oldUri: string;
+  #     oldUri: DocumentUri;
   #     /**
   #      * The new location.
   #      */
-  #     newUri: string;
+  #     newUri: DocumentUri;
   #     /**
   #      * Rename options.
   #      */
@@ -539,8 +546,8 @@ module LSP
   # }
   class RenameFile < LSPBase
     attr_accessor :kind # type: string with value 'rename'
-    attr_accessor :oldUri # type: string
-    attr_accessor :newUri # type: string
+    attr_accessor :oldUri # type: DocumentUri
+    attr_accessor :newUri # type: DocumentUri
     attr_accessor :options # type: RenameFileOptions
 
     def initialize(initial_hash = nil)
@@ -551,8 +558,8 @@ module LSP
     def from_h!(value)
       value = {} if value.nil?
       self.kind = value['kind'] # Unknown type
-      self.oldUri = value['oldUri']
-      self.newUri = value['newUri']
+      self.oldUri = value['oldUri'] # Unknown type
+      self.newUri = value['newUri'] # Unknown type
       self.options = RenameFileOptions.new(value['options']) unless value['options'].nil?
       self
     end
@@ -593,7 +600,7 @@ module LSP
   #     /**
   #      * The file to delete.
   #      */
-  #     uri: string;
+  #     uri: DocumentUri;
   #     /**
   #      * Delete options.
   #      */
@@ -601,7 +608,7 @@ module LSP
   # }
   class DeleteFile < LSPBase
     attr_accessor :kind # type: string with value 'delete'
-    attr_accessor :uri # type: string
+    attr_accessor :uri # type: DocumentUri
     attr_accessor :options # type: DeleteFileOptions
 
     def initialize(initial_hash = nil)
@@ -612,7 +619,7 @@ module LSP
     def from_h!(value)
       value = {} if value.nil?
       self.kind = value['kind'] # Unknown type
-      self.uri = value['uri']
+      self.uri = value['uri'] # Unknown type
       self.options = DeleteFileOptions.new(value['options']) unless value['options'].nil?
       self
     end
@@ -666,24 +673,22 @@ module LSP
   #      * Returns the underlying [WorkspaceEdit](#WorkspaceEdit) literal
   #      * use to be returned from a workspace edit operation like rename.
   #      */
-  #     readonly edit: WorkspaceEdit;
+  #     get edit(): WorkspaceEdit;
   #     /**
   #      * Returns the [TextEditChange](#TextEditChange) to manage text edits
   #      * for resources.
   #      */
   #     getTextEditChange(textDocument: VersionedTextDocumentIdentifier): TextEditChange;
-  #     getTextEditChange(uri: string): TextEditChange;
-  #     createFile(uri: string, options?: CreateFileOptions): void;
-  #     renameFile(oldUri: string, newUri: string, options?: RenameFileOptions): void;
-  #     deleteFile(uri: string, options?: DeleteFileOptions): void;
+  #     getTextEditChange(uri: DocumentUri): TextEditChange;
+  #     createFile(uri: DocumentUri, options?: CreateFileOptions): void;
+  #     renameFile(oldUri: DocumentUri, newUri: DocumentUri, options?: RenameFileOptions): void;
+  #     deleteFile(uri: DocumentUri, options?: DeleteFileOptions): void;
   #     private checkDocumentChanges;
   # }
   class WorkspaceChange < LSPBase
-    attr_accessor :edit # type: WorkspaceEdit
 
     def from_h!(value)
       value = {} if value.nil?
-      self.edit = WorkspaceEdit.new(value['edit']) unless value['edit'].nil?
       self
     end
   end
@@ -692,14 +697,14 @@ module LSP
   #     /**
   #      * The text document's uri.
   #      */
-  #     uri: string;
+  #     uri: DocumentUri;
   # }
   class TextDocumentIdentifier < LSPBase
-    attr_accessor :uri # type: string
+    attr_accessor :uri # type: DocumentUri
 
     def from_h!(value)
       value = {} if value.nil?
-      self.uri = value['uri']
+      self.uri = value['uri'] # Unknown type
       self
     end
   end
@@ -716,12 +721,12 @@ module LSP
   # }
   class VersionedTextDocumentIdentifier < LSPBase
     attr_accessor :version # type: number | null
-    attr_accessor :uri # type: string
+    attr_accessor :uri # type: DocumentUri
 
     def from_h!(value)
       value = {} if value.nil?
       self.version = value['version'] # Unknown type
-      self.uri = value['uri']
+      self.uri = value['uri'] # Unknown type
       self
     end
   end
@@ -730,7 +735,7 @@ module LSP
   #     /**
   #      * The text document's uri.
   #      */
-  #     uri: string;
+  #     uri: DocumentUri;
   #     /**
   #      * The text document's language identifier
   #      */
@@ -746,14 +751,14 @@ module LSP
   #     text: string;
   # }
   class TextDocumentItem < LSPBase
-    attr_accessor :uri # type: string
+    attr_accessor :uri # type: DocumentUri
     attr_accessor :languageId # type: string
     attr_accessor :version # type: number
     attr_accessor :text # type: string
 
     def from_h!(value)
       value = {} if value.nil?
-      self.uri = value['uri']
+      self.uri = value['uri'] # Unknown type
       self.languageId = value['languageId']
       self.version = value['version']
       self.text = value['text']
@@ -796,6 +801,12 @@ module LSP
   #      */
   #     kind?: CompletionItemKind;
   #     /**
+  #      * Tags for this completion item.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     tags?: CompletionItemTag[];
+  #     /**
   #      * A human-readable string with additional information
   #      * about this item, like type or symbol information.
   #      */
@@ -806,6 +817,7 @@ module LSP
   #     documentation?: string | MarkupContent;
   #     /**
   #      * Indicates if this item is deprecated.
+  #      * @deprecated Use `tags` instead.
   #      */
   #     deprecated?: boolean;
   #     /**
@@ -839,13 +851,12 @@ module LSP
   #      * and a completion item with an `insertText` of `console` is provided it
   #      * will only insert `sole`. Therefore it is recommended to use `textEdit` instead
   #      * since it avoids additional client side interpretation.
-  #      *
-  #      * @deprecated Use textEdit instead.
   #      */
   #     insertText?: string;
   #     /**
   #      * The format of the insert text. The format applies to both the `insertText` property
-  #      * and the `newText` property of a provided `textEdit`.
+  #      * and the `newText` property of a provided `textEdit`. If ommitted defaults to
+  #      * `InsertTextFormat.PlainText`.
   #      */
   #     insertTextFormat?: InsertTextFormat;
   #     /**
@@ -889,6 +900,7 @@ module LSP
   class CompletionItem < LSPBase
     attr_accessor :label # type: string
     attr_accessor :kind # type: CompletionItemKind
+    attr_accessor :tags # type: CompletionItemTag[]
     attr_accessor :detail # type: string
     attr_accessor :documentation # type: string | MarkupContent
     attr_accessor :deprecated # type: boolean
@@ -905,13 +917,14 @@ module LSP
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[kind detail documentation deprecated preselect sortText filterText insertText insertTextFormat textEdit additionalTextEdits commitCharacters command data]
+      @optional_method_names = %i[kind tags detail documentation deprecated preselect sortText filterText insertText insertTextFormat textEdit additionalTextEdits commitCharacters command data]
     end
 
     def from_h!(value)
       value = {} if value.nil?
       self.label = value['label']
       self.kind = value['kind'] # Unknown type
+      self.tags = value['tags'].map { |val| val } unless value['tags'].nil? # Unknown array type
       self.detail = value['detail']
       self.documentation = value['documentation'] # Unknown type
       self.deprecated = value['deprecated'] # Unknown type
@@ -982,9 +995,12 @@ module LSP
   #     /**
   #      * The label of this parameter information.
   #      *
-  #      * Either a string or inclusive start and exclusive end offsets within its containing
-  #      * [signature label](#SignatureInformation.label). *Note*: A label of type string must be
-  #      * a substring of its containing signature information's [label](#SignatureInformation.label).
+  #      * Either a string or an inclusive start and exclusive end offsets within its containing
+  #      * signature label. (see SignatureInformation.label). The offsets are based on a UTF-16
+  #      * string representation as `Position` and `Range` does.
+  #      *
+  #      * *Note*: a label of type string should be a substring of its containing signature label.
+  #      * Its intended use case is to highlight the parameter label part in the `SignatureInformation.label`.
   #      */
   #     label: string | [number, number];
   #     /**
@@ -1174,9 +1190,10 @@ module LSP
     end
   end
 
-  # export declare class DocumentSymbol {
+  # export interface DocumentSymbol {
   #     /**
-  #      * The name of this symbol.
+  #      * The name of this symbol. Will be displayed in the user interface and therefore must not be
+  #      * an empty string or a string only consisting of white spaces.
   #      */
   #     name: string;
   #     /**
@@ -1234,38 +1251,6 @@ module LSP
     end
   end
 
-  # export interface DocumentSymbolParams {
-  #     /**
-  #      * The text document.
-  #      */
-  #     textDocument: TextDocumentIdentifier;
-  # }
-  class DocumentSymbolParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.textDocument = TextDocumentIdentifier.new(value['textDocument']) unless value['textDocument'].nil?
-      self
-    end
-  end
-
-  # export interface WorkspaceSymbolParams {
-  #     /**
-  #      * A non-empty query string
-  #      */
-  #     query: string;
-  # }
-  class WorkspaceSymbolParams < LSPBase
-    attr_accessor :query # type: string
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.query = value['query']
-      self
-    end
-  end
-
   # export interface CodeActionContext {
   #     /**
   #      * An array of diagnostics known on the client side overlapping the range provided to the
@@ -1316,6 +1301,16 @@ module LSP
   #      */
   #     diagnostics?: Diagnostic[];
   #     /**
+  #      * Marks this as a preferred action. Preferred actions are used by the `auto fix` command and can be targeted
+  #      * by keybindings.
+  #      *
+  #      * A quick fix should be marked preferred if it properly addresses the underlying error.
+  #      * A refactoring should be marked preferred if it is the most reasonable choice of actions to take.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     isPreferred?: boolean;
+  #     /**
   #      * The workspace edit this code action performs.
   #      */
   #     edit?: WorkspaceEdit;
@@ -1330,12 +1325,13 @@ module LSP
     attr_accessor :title # type: string
     attr_accessor :kind # type: CodeActionKind
     attr_accessor :diagnostics # type: Diagnostic[]
+    attr_accessor :isPreferred # type: boolean
     attr_accessor :edit # type: WorkspaceEdit
     attr_accessor :command # type: Command
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[kind diagnostics edit command]
+      @optional_method_names = %i[kind diagnostics isPreferred edit command]
     end
 
     def from_h!(value)
@@ -1343,6 +1339,7 @@ module LSP
       self.title = value['title']
       self.kind = value['kind'] # Unknown type
       self.diagnostics = to_typed_aray(value['diagnostics'], Diagnostic)
+      self.isPreferred = value['isPreferred'] # Unknown type
       self.edit = WorkspaceEdit.new(value['edit']) unless value['edit'].nil?
       self.command = Command.new(value['command']) unless value['command'].nil?
       self
@@ -1394,23 +1391,52 @@ module LSP
   #      */
   #     insertSpaces: boolean;
   #     /**
+  #      * Trim trailing whitespaces on a line.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     trimTrailingWhitespace?: boolean;
+  #     /**
+  #      * Insert a newline character at the end of the file if one does not exist.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     insertFinalNewline?: boolean;
+  #     /**
+  #      * Trim all newlines after the final newline at the end of the file.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     trimFinalNewlines?: boolean;
+  #     /**
   #      * Signature for further properties.
   #      */
-  #     [key: string]: boolean | number | string;
+  #     [key: string]: boolean | number | string | undefined;
   # }
   class FormattingOptions < LSPBase
     attr_accessor :tabSize # type: number
     attr_accessor :insertSpaces # type: boolean
+    attr_accessor :trimTrailingWhitespace # type: boolean
+    attr_accessor :insertFinalNewline # type: boolean
+    attr_accessor :trimFinalNewlines # type: boolean
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[trimTrailingWhitespace insertFinalNewline trimFinalNewlines]
+    end
 
     def from_h!(value)
       value = {} if value.nil?
       self.tabSize = value['tabSize']
       self.insertSpaces = value['insertSpaces'] # Unknown type
+      self.trimTrailingWhitespace = value['trimTrailingWhitespace'] # Unknown type
+      self.insertFinalNewline = value['insertFinalNewline'] # Unknown type
+      self.trimFinalNewlines = value['trimFinalNewlines'] # Unknown type
       self
     end
   end
 
-  # export declare class DocumentLink {
+  # export interface DocumentLink {
   #     /**
   #      * The range this link applies to.
   #      */
@@ -1420,6 +1446,16 @@ module LSP
   #      */
   #     target?: string;
   #     /**
+  #      * The tooltip text when you hover over this link.
+  #      *
+  #      * If a tooltip is provided, is will be displayed in a string that includes instructions on how to
+  #      * trigger the link, such as `{0} (ctrl + click)`. The specific instructions vary depending on OS,
+  #      * user settings, and localization.
+  #      *
+  #      * @since 3.15.0
+  #      */
+  #     tooltip?: string;
+  #     /**
   #      * A data entry field that is preserved on a document link between a
   #      * DocumentLinkRequest and a DocumentLinkResolveRequest.
   #      */
@@ -1428,18 +1464,47 @@ module LSP
   class DocumentLink < LSPBase
     attr_accessor :range # type: Range
     attr_accessor :target # type: string
+    attr_accessor :tooltip # type: string
     attr_accessor :data # type: any
 
     def initialize(initial_hash = nil)
       super
-      @optional_method_names = %i[target data]
+      @optional_method_names = %i[target tooltip data]
     end
 
     def from_h!(value)
       value = {} if value.nil?
       self.range = Range.new(value['range']) unless value['range'].nil?
       self.target = value['target']
+      self.tooltip = value['tooltip']
       self.data = value['data']
+      self
+    end
+  end
+
+  # export interface SelectionRange {
+  #     /**
+  #      * The [range](#Range) of this selection range.
+  #      */
+  #     range: Range;
+  #     /**
+  #      * The parent selection range containing this range. Therefore `parent.range` must contain `this.range`.
+  #      */
+  #     parent?: SelectionRange;
+  # }
+  class SelectionRange < LSPBase
+    attr_accessor :range # type: Range
+    attr_accessor :parent # type: SelectionRange
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[parent]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.range = Range.new(value['range']) unless value['range'].nil?
+      self.parent = SelectionRange.new(value['parent']) unless value['parent'].nil?
       self
     end
   end
@@ -1452,7 +1517,7 @@ module LSP
   #      *
   #      * @readonly
   #      */
-  #     readonly uri: string;
+  #     readonly uri: DocumentUri;
   #     /**
   #      * The identifier of the language associated with this document.
   #      *
@@ -1505,14 +1570,14 @@ module LSP
   #     readonly lineCount: number;
   # }
   class TextDocument < LSPBase
-    attr_accessor :uri # type: string
+    attr_accessor :uri # type: DocumentUri
     attr_accessor :languageId # type: string
     attr_accessor :version # type: number
     attr_accessor :lineCount # type: number
 
     def from_h!(value)
       value = {} if value.nil?
-      self.uri = value['uri']
+      self.uri = value['uri'] # Unknown type
       self.languageId = value['languageId']
       self.version = value['version']
       self.lineCount = value['lineCount']
@@ -1544,11 +1609,11 @@ module LSP
   #     /**
   #      * The reason why save was triggered.
   #      */
-  #     reason: TextDocumentSaveReason;
+  #     reason: 1 | 2 | 3;
   # }
   class TextDocumentWillSaveEvent < LSPBase
     attr_accessor :document # type: TextDocument
-    attr_accessor :reason # type: TextDocumentSaveReason
+    attr_accessor :reason # type: 1 | 2 | 3
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1557,41 +1622,9 @@ module LSP
       self
     end
   end
-
-  # export interface TextDocumentContentChangeEvent {
-  #     /**
-  #      * The range of the document that changed.
-  #      */
-  #     range?: Range;
-  #     /**
-  #      * The length of the range that got replaced.
-  #      */
-  #     rangeLength?: number;
-  #     /**
-  #      * The new text of the document.
-  #      */
-  #     text: string;
-  # }
-  class TextDocumentContentChangeEvent < LSPBase
-    attr_accessor :range # type: Range
-    attr_accessor :rangeLength # type: number
-    attr_accessor :text # type: string
-
-    def initialize(initial_hash = nil)
-      super
-      @optional_method_names = %i[range rangeLength]
-    end
-
-    def from_h!(value)
-      value = {} if value.nil?
-      self.range = Range.new(value['range']) unless value['range'].nil?
-      self.rangeLength = value['rangeLength']
-      self.text = value['text']
-      self
-    end
-  end
 end
 
 # rubocop:enable Layout/EmptyLinesAroundClassBody
 # rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
+# rubocop:enable Naming/MethodName

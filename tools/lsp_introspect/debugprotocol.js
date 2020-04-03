@@ -198,6 +198,7 @@ function GenerateRubyFileHeader(description) {
          "# rubocop:disable Lint/UselessAssignment\n" +
          "# rubocop:disable Style/AsciiComments\n" +
          "# rubocop:disable Layout/TrailingWhitespace\n" +
+         "# rubocop:disable Naming/MethodName\n" +
          "\nmodule DSP\n";
 }
 
@@ -206,7 +207,8 @@ function GenerateRubyFileFooter() {
          "# rubocop:enable Layout/EmptyLinesAroundClassBody\n" +
          "# rubocop:enable Lint/UselessAssignment\n" +
          "# rubocop:enable Style/AsciiComments\n" +
-         "# rubocop:enable Layout/TrailingWhitespace\n";
+         "# rubocop:enable Layout/TrailingWhitespace\n" +
+         "# rubocop:enable Naming/MethodName\n";
 }
 
 parser.parseFile('./node_modules/vscode-debugprotocol/lib/debugProtocol.d.ts', 'workspace root').then(
