@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Thanks for taking the time to reach out to us!
 
 Please provide the following information with as much detail as you can.
@@ -23,6 +23,6 @@ PDK Version (if applicable):
 
 ### Output Log
 
-<!-- 
-For information how to capture verbose logs, look [here](https://github.com/lingua-pupuli/puppet-vscode/blob/master/client/README.md#2-capture-verbose-logs-and-send-them-to-us)
+<!--
+For information how to capture verbose logs, look [here](https://puppet-vscode.github.io/docs/experience-a-problem)
 -->

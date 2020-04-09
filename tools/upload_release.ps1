@@ -142,7 +142,7 @@ Update-GitHubRelease -versionNumber $releaseVersion `
                -preRelease $false `
                -releaseNotes (Get-ReleaseNotes -Version $releaseVersion) `
                -artifactOutputDirectory 'output' `
-               -gitHubUsername 'lingua-pupuli' `
+               -gitHubUsername 'puppetlabs' `
                -gitHubRepository 'puppet-editor-services' `
                -gitHubApiUsername $GitHubUsername `
                -gitHubApiKey $GitHubToken
