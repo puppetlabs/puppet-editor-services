@@ -80,6 +80,30 @@ module Puppet
   end
 end
 
+# Due to Facter 4.0.16 calling reset as part of to_hash, we need to monkey patch the reset
+# method so it only gets called once during to_hash, not multiple times. Otherwise it drops the
+# puppet cache dir for facts. We could monkey patch the Puppet Facts indirector, but as this was
+# only introduced in Factor 4.0.16, that seems like the wrong place to patch.
+# Reference - https://github.com/puppetlabs/facter-ng/commit/bc2aca66d6f69d5f958ba7685b6e143416617e2c#diff-0e966bb45d33ec9251cfcda152227f1bR189
+require 'facter'
+module Facter
+  class << self
+    alias_method :original_reset, :reset
+
+    @singleton_reset = false
+
+    def reset
+      return nil if @singleton_reset
+      @singleton_reset = true
+      original_reset
+    end
+
+    def monkey_allow_reset
+      @singleton_reset = false
+    end
+  end
+end
+
 # MUST BE LAST!!!!!!
 # Suppress any warning messages to STDOUT.  It can pollute stdout when running in STDIO mode
 Puppet::Util::Log.newdesttype :null_logger do
