@@ -21,7 +21,6 @@ module PuppetLanguageServerSidecar
       facts = PuppetLanguageServer::Sidecar::Protocol::FactList.new
       begin
         req = Puppet::Indirector::Request.new(:facts, :find, 'language_server', nil, environment: current_environment)
-        Facter.monkey_allow_reset # This is a monkey patched method onto Facter
         result = Puppet::Node::Facts::Facter.new.find(req)
         result.values.each do |key, value|
           # TODO: This isn't strictly correct e.g. fully qualified facts will look a bit odd.
