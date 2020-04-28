@@ -45,6 +45,11 @@ module PuppetLanguageServer
       )
     end
 
+    def request_puppet_getfacts(_, _json_rpc_message)
+      results = PuppetLanguageServer::PuppetHelper.get_all_facts(documents.store_root_path)
+      LSP::PuppetFactResponse.new('facts' => results)
+    end
+
     def request_puppet_getresource(_, json_rpc_message)
       type_name = json_rpc_message.params['typename']
       title = json_rpc_message.params['title']

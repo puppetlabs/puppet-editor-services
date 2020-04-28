@@ -54,6 +54,15 @@ module PuppetLanguageServer
       end
     end
 
+    def self.get_all_facts(local_workspace)
+      ap = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new
+
+      args = ['--action-parameters=' + ap.to_json]
+      args << "--local-workspace=#{local_workspace}" unless local_workspace.nil?
+
+      sidecar_queue.execute_sync('facts_all', args, false)
+    end
+
     def self.get_puppet_resource(typename, title, local_workspace)
       ap = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new
       ap['typename'] = typename

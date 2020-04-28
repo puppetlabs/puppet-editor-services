@@ -6,6 +6,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+### Added
+
+- ([GH-242](https://github.com/puppetlabs/puppet-editor-services/issues/242)) Add Puppet Facts Endpoint
+
 ## 0.25.0 - 2020-03-26
 
 ### Fixed
