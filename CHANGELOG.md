@@ -6,9 +6,18 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.26.0 - 2020-05-01
+
 ### Added
 
 - ([GH-242](https://github.com/puppetlabs/puppet-editor-services/issues/242)) Add Puppet Facts Endpoint
+- ([GH-245](https://github.com/puppetlabs/puppet-editor-services/issues/245)) Use object cache for Puppet Facts Endpoint
+- ([GH-168](https://github.com/puppetlabs/puppet-editor-services/issues/168)) Add acceptance tests
+
+### Changed
+
+- (maint) Update branding and links
+- (maint) Update Bolt static data and Protocol definitions
 
 ## 0.25.0 - 2020-03-26
 
