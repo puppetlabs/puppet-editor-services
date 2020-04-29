@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'open3'
 require 'tempfile'
 
-describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0') do
+describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings', :if => Gem::Version.new(Puppet.version) >= Gem::Version.new('5.0.0') do
   def run_sidecar(cmd_options)
     # Use a new array so we don't affect the original cmd_options)
     cmd = cmd_options.dup

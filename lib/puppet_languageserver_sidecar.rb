@@ -59,9 +59,9 @@ module PuppetLanguageServerSidecar
       flags = options[:flags]
       log_message(:debug, "Detected feature flags [#{options[:flags].join(', ')}]")
 
-      if flags.include?('puppetstrings') && Gem::Version.new(Puppet.version) < Gem::Version.new('6.0.0')
-        # The puppetstrings flag is only valid on Puppet 6.0.0+
-        PuppetEditorServices.log_message(:error, "The feature flag 'puppetstrings' has been specified but it is not capable due to low Puppet version (< 6). Turning off the flag.")
+      if flags.include?('puppetstrings') && Gem::Version.new(Puppet.version) < Gem::Version.new('5.0.0')
+        # The puppetstrings flag is only valid on Puppet 5.0.0+
+        PuppetEditorServices.log_message(:error, "The feature flag 'puppetstrings' has been specified but it is not capable due to low Puppet version (< 5). Turning off the flag.")
         flags -= ['puppetstrings']
       end
       configure_featureflags(flags)

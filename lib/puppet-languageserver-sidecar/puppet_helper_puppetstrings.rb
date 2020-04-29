@@ -5,25 +5,13 @@ require 'puppet/indirector/face'
 module PuppetLanguageServerSidecar
   module PuppetHelper
     SIDECAR_PUPPET_ENVIRONMENT = 'sidecarenvironment'
-    DISCOVERER_LOADER = 'path-discoverer-null-loader'
 
-    IGNORE_TYPEFACTORY_METHODS = %i[clear].freeze
     # Ignore certain data types. For more information see https://tickets.puppetlabs.com/browse/DOCUMENT-1020
     # TypeReference - Internal to the Puppet Data Type system
     # TypeAlias - Internal to the Puppet Data Type system
     # Object - While useful, typically only needed when extended the type system as opposed to general use
     # TypeSet - While useful, typically only needed when extended the type system as opposed to general use
-    IGNORE_DATATYPE_NAMES = %w[TypeReference TypeAlias Object TypeSet].freeze
-
-    def self.path_has_child?(path, child)
-      # Doesn't matter what the child is, if the path is nil it's true.
-      return true if path.nil?
-      return false if path.length >= child.length
-
-      value = child.slice(0, path.length)
-      return true if value.casecmp(path).zero?
-      false
-    end
+    IGNORE_DATATYPE_NAMES = %w[TypeReference TypeAlias Object TypeSet ObjectTypeExten Iterable AbstractTimeData TypeWithContained].freeze
 
     # Resource Face
     def self.get_puppet_resource(typename, title = nil)
@@ -48,33 +36,31 @@ module PuppetLanguageServerSidecar
       %I[class datatype function type]
     end
 
-    def self.retrieve_default_data_types(loaders)
-      # This is global. Need to be very careful using this.
-      Puppet.push_context(:loaders => loaders)
+    def self.retrieve_default_data_types
       default_types = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
-      # There's no actual record of all available types, but we can use the TypeFactory to implicitly get their names
+      # There's no actual record of all available types, but we can use the Puppet::Pops::Types to implicitly get their names
       name_list = []
-      Puppet::Pops::Types::TypeFactory.singleton_methods.each do |method_name|
-        # Don't even try on known method names
-        next if IGNORE_TYPEFACTORY_METHODS.include?(method_name)
-        actual_method = Puppet::Pops::Types::TypeFactory.method(method_name)
-        # We can't call methods that require parameters so ignore them too
-        next unless actual_method.arity == 0 || actual_method.arity == -1
-        data_type = Puppet::Pops::Types::TypeFactory.send(method_name)
-        # If the returned object doesn't inherit from PAnyType "this isn't the type we're looking for"
-        next unless data_type.is_a?(Puppet::Pops::Types::PAnyType)
+
+      Puppet::Pops::Types.constants.each do |const|
+        thing = Puppet::Pops::Types.const_get(const)
+        # Not that this is a reference to a type, not an INSTANCE of that type.
+        # So we can't do .is_a? checks. But instead look for methods on the thing
+        # that would indicate it's a Puppet Type
+        #   _pcore_type : is present on all Pops type objects
+        #   simple_name : comes from PAnyType
+        next unless thing.respond_to?(:_pcore_type) && thing.respond_to?(:simple_name)
         # Ignore certain data types
-        next if IGNORE_DATATYPE_NAMES.include?(data_type.simple_name)
+        next if IGNORE_DATATYPE_NAMES.include?(thing.simple_name)
         # Don't need duplicates
-        next if name_list.include?(data_type.simple_name)
-        name_list << data_type.simple_name
+        next if name_list.include?(thing.simple_name)
+        name_list << thing.simple_name
 
         obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new
-        obj.key            = data_type.simple_name
+        obj.key            = thing.simple_name
         obj.source         = nil
         obj.calling_source = nil
         obj.line           = nil
-        obj.doc            = "The #{data_type.simple_name} core data type"
+        obj.doc            = "The #{thing.simple_name} core data type"
         obj.is_type_alias  = false
         obj.alias_of       = nil
         # So far, no core data types have attributes
@@ -98,20 +84,12 @@ module PuppetLanguageServerSidecar
 
       current_env = current_environment
       for_agent = options[:for_agent].nil? ? true : options[:for_agent]
-      loaders = Puppet::Pops::Loaders.new(current_env, for_agent)
-      # Add any custom loaders
-      path_discoverer_loader = Puppet::Pops::Loader::PathDiscoveryNullLoader.new(nil, DISCOVERER_LOADER)
-      loaders.add_loader_by_name(path_discoverer_loader)
+      Puppet::Pops::Loaders.new(current_env, for_agent)
 
-      paths = []
-      # :sidecar_manifest isn't technically a Loadable thing. This is useful because we know that any type
-      # of loader will just ignore it.
-      paths.concat(discover_type_paths(:sidecar_manifest, loaders)) if object_types.include?(:class)
-      paths.concat(discover_type_paths(:function, loaders)) if object_types.include?(:function)
-      # The :type loader includes puppet types and datatypes
-      paths.concat(discover_type_paths(:type, loaders)) if object_types.include?(:datatype) || object_types.include?(:type)
+      finder = PuppetPathFinder.new(current_env, object_types)
+      paths = finder.find(options[:root_path])
+
       paths.each do |path|
-        next unless path_has_child?(options[:root_path], path)
         file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path, cache)
         next if file_doc.nil?
 
@@ -138,17 +116,10 @@ module PuppetLanguageServerSidecar
       end
 
       # Add the inbuilt data types if there's no root path
-      result.datatypes.concat(retrieve_default_data_types(loaders)) if object_types.include?(:datatype) && options[:root_path].nil?
+      result.concat!(retrieve_default_data_types) if object_types.include?(:datatype) && options[:root_path].nil?
 
       result.each_list { |key, item| PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_puppet_strings] Finished loading #{item.count} #{key}") }
       result
-    end
-
-    def self.discover_type_paths(type, loaders)
-      [].concat(
-        loaders.private_environment_loader.discover_paths(type),
-        loaders[DISCOVERER_LOADER].discover_paths(type)
-      )
     end
 
     # Private functions
@@ -175,5 +146,105 @@ module PuppetLanguageServerSidecar
       Puppet.lookup(:current_environment)
     end
     private_class_method :current_environment
+
+    class PuppetPathFinder
+      attr_reader :object_types
+
+      def initialize(puppet_env, object_types)
+        # Path to every module
+        @module_paths = puppet_env.modules.map(&:path)
+        # Path to the environment
+        @env_path = puppet_env.configuration.path_to_env
+        # Path to the puppet installation
+        @puppet_path = if puppet_env.loaders.nil? # No loaders have been created yet
+                         nil
+                       elsif puppet_env.loaders.puppet_system_loader.nil?
+                         nil
+                       elsif puppet_env.loaders.puppet_system_loader.lib_root?
+                         File.join(puppet_env.loaders.puppet_system_loader.path, '..')
+                       else
+                         puppet_env.loaders.puppet_system_loader.path
+                       end
+        # Path to the cached puppet files e.g. pluginsync
+        @vardir_path = Puppet.settings[:vardir]
+
+        @object_types = object_types
+      end
+
+      def find(from_root_path = nil)
+        paths = []
+        search_paths = @module_paths.nil? ? [] : @module_paths
+        search_paths << @env_path unless @env_path.nil?
+        search_paths << @vardir_path unless @vardir_path.nil?
+        search_paths << @puppet_path unless @puppet_path.nil?
+
+        searched_globs = []
+        search_paths.each do |search_root|
+          PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Potential search root '#{search_root}'")
+          next if search_root.nil?
+          # We need absolute paths from here on in.
+          search_root = File.expand_path(search_root)
+          next unless path_in_root?(from_root_path, search_root) && Dir.exist?(search_root)
+          PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Using '#{search_root}' as a directory to search")
+
+          all_object_info.each do |object_type, paths_to_search|
+            next unless object_types.include?(object_type)
+            # TODO: next unless object_type is included
+            paths_to_search.each do |path_info|
+              path = File.join(search_root, path_info[:relative_dir])
+              glob = path + path_info[:glob]
+              next if searched_globs.include?(glob) # No point searching twice
+              next unless Dir.exist?(path)
+
+              searched_globs << glob
+              PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Searching glob '#{glob}''")
+
+              Dir.glob(glob) do |filename|
+                paths << filename
+              end
+            end
+          end
+        end
+
+        paths
+      end
+
+      private
+
+      # Simple text based path checking
+      # Is [path] in the [root]
+      def path_in_root?(root, path)
+        # Doesn't matter what the root is, if the path is nil, it's false
+        return false if path.nil?
+        # Doesn't matter what the path is, if the root is nil it's true.
+        return true if root.nil?
+        # If the path is less than root, then it has to be false
+        return false if root.length > path.length
+
+        # Is the beginning of the path, the same as the root
+        value = path.slice(0, root.length)
+        value.casecmp(root).zero?
+      end
+
+      def all_object_info
+        {
+          :class    => [
+            { relative_dir: 'manifests',                   glob: '/**/*.pp' } # Pretty much everything in most modules
+          ],
+          :datatype => [
+            { relative_dir: 'lib/puppet/datatypes',        glob: '/**/*.rb' }, # Custom Data Types
+            { relative_dir: 'types',                       glob: '/**/*.pp' } # Data Type aliases
+          ],
+          :function => [
+            { relative_dir: 'functions',                   glob: '/**/*.pp' }, # Contains custom functions written in the Puppet language.
+            { relative_dir: 'lib/puppet/functions',        glob: '/**/*.rb' }, # Contains functions written in Ruby for the modern Puppet::Functions API
+            { relative_dir: 'lib/puppet/parser/functions', glob: '/**/*.rb' } # Contains functions written in Ruby for the legacy Puppet::Parser::Functions API
+          ],
+          :type     => [
+            { relative_dir: 'lib/puppet/type',             glob: '/*.rb' } # Contains Puppet resource types. We don't care about providers. Types cannot exist in subdirs
+          ]
+        }
+      end
+    end
   end
 end

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings' do
   before(:each) do
-    skip('Puppet 6.0.0 or above is required') unless Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
+    skip('Puppet 5.0.0 or above is required') unless Gem::Version.new(Puppet.version) >= Gem::Version.new('5.0.0')
 
     # Load files based on feature flags
     ['puppet_strings_helper', 'puppet_strings_monkey_patches'].each do |lib|
