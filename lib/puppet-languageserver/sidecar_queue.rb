@@ -118,6 +118,16 @@ module PuppetLanguageServer
 
         PuppetLanguageServer::FacterHelper.assert_facts_loaded
 
+      when 'facts_all'
+        list = {}
+        PuppetLanguageServer::Sidecar::Protocol::FactList
+          .new
+          .from_json!(result)
+          .map { |element| list[element.key] = element.value }
+        PuppetLanguageServer.log_message(:debug, "SidecarQueue Thread: facts returned #{list.count} items")
+
+        return list
+
       when 'node_graph'
         return PuppetLanguageServer::Sidecar::Protocol::PuppetNodeGraph.new.from_json!(result)
 

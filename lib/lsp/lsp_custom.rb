@@ -35,6 +35,27 @@ module LSP
     end
   end
 
+  # export interface GetPuppetFactResponse {
+  #   data: string;
+  #   error: string;
+  # }
+  class PuppetFactResponse < LSPBase
+    attr_accessor :facts # type: string
+    attr_accessor :error # type: string
+
+    def initialize(initial_hash = nil)
+      super
+      @optional_method_names = %i[error]
+    end
+
+    def from_h!(value)
+      value = {} if value.nil?
+      self.facts = value['facts']
+      self.error = value['error']
+      self
+    end
+  end
+
   # export interface GetPuppetResourceResponse {
   #   data: string;
   #   error: string;
