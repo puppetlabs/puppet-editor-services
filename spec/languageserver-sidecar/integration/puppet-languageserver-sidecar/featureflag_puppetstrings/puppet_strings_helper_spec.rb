@@ -2,7 +2,6 @@ require 'spec_helper'
 
 describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings' do
   before(:each) do
-    skip('Puppet Strings is not available') if Gem::Specification.select { |item| item.name.casecmp('puppet-strings') }.count.zero?
     skip('Puppet 6.0.0 or above is required') unless Gem::Version.new(Puppet.version) >= Gem::Version.new('6.0.0')
 
     # Load files based on feature flags
