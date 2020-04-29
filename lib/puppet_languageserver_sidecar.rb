@@ -119,7 +119,6 @@ module PuppetLanguageServerSidecar
     workspace_functions
     workspace_types
     facts
-    facts_all
   ].freeze
 
   class CommandLineParser
@@ -393,14 +392,6 @@ module PuppetLanguageServerSidecar
       end
 
     when 'facts'
-      # Can't cache for facts
-      cache = PuppetLanguageServerSidecar::Cache::Null.new
-      # Inject the workspace etc. if present
-      injected = inject_workspace_as_module
-      inject_workspace_as_environment unless injected
-      PuppetLanguageServerSidecar::FacterHelper.retrieve_facts(cache)
-
-    when 'facts_all'
       # Can't cache for facts
       cache = PuppetLanguageServerSidecar::Cache::Null.new
       # Inject the workspace etc. if present

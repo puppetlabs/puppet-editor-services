@@ -191,6 +191,15 @@ class EditorClient
     })
   end
 
+  def puppet_getfacts_request(seq_id)
+    ::JSON.generate({
+      'jsonrpc' => '2.0',
+      'id'      => seq_id,
+      'method'  => 'puppet/getFacts',
+      'params'  => {}
+    })
+  end
+
   def puppet_getresource_request(seq_id, type_name)
     ::JSON.generate({
       'jsonrpc' => '2.0',

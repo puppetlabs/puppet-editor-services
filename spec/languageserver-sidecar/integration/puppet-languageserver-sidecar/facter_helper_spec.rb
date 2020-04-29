@@ -51,23 +51,6 @@ describe 'PuppetLanguageServerSidecar::FacterHelper' do
     end
   end
 
-  describe 'when running facts_all action' do
-    let (:cmd_options) { ['--action', 'facts_all'] }
-
-    it 'should return a deserializable facts object with all default facts' do
-      result = run_sidecar(cmd_options)
-      deserial = PuppetLanguageServer::Sidecar::Protocol::FactList.new
-      expect { deserial.from_json!(result) }.to_not raise_error
-      default_fact_names.each do |name|
-        expect(deserial).to contain_child_with_key(name)
-      end
-
-      module_fact_names.each do |name|
-        expect(deserial).to_not contain_child_with_key(name)
-      end
-    end
-  end
-
   context 'given a workspace containing a module' do
     # Test fixtures used is fixtures/valid_module_workspace
     let(:workspace) { File.join($fixtures_dir, 'valid_module_workspace') }

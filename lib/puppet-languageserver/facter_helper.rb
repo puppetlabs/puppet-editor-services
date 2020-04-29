@@ -46,5 +46,11 @@ module PuppetLanguageServer
       return [] if @facts_loaded == false
       cache.object_names_by_section(:fact).map(&:to_s)
     end
+
+    def self.facts_to_hash
+      fact_hash = {}
+      cache.objects_by_section(:fact) { |factname, fact| fact_hash[factname.to_s] = fact.value }
+      fact_hash
+    end
   end
 end

@@ -46,7 +46,7 @@ module PuppetLanguageServer
     end
 
     def request_puppet_getfacts(_, _json_rpc_message)
-      results = PuppetLanguageServer::PuppetHelper.get_all_facts(documents.store_root_path)
+      results = PuppetLanguageServer::FacterHelper.facts_to_hash
       LSP::PuppetFactResponse.new('facts' => results)
     end
 
