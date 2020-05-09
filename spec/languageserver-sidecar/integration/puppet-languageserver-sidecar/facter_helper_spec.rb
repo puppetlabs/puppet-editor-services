@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'open3'
 
-describe 'PuppetLanguageServerSidecar::FacterHelper' do
+describe 'PuppetLanguageServerSidecar::FacterHelper', :if => Gem::Version.new(Puppet.version) >= Gem::Version.new('5.0.0') do
   let(:subject) { PuppetLanguageServerSidecar::FacterHelper }
 
   def run_sidecar(cmd_options)

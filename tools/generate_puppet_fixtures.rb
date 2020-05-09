@@ -80,7 +80,6 @@ class Introspecter
       '--action=default_aggregate',
       # Don't use the cache. Force fresh data
       '--no-cache',
-      '--feature-flags=puppetstrings',
       '--debug=STDOUT',
       # Stop processing any environment based things on my local computer
       # Use directories which do not exist

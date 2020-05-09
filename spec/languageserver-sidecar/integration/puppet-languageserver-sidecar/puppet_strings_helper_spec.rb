@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'PuppetLanguageServerSidecar with Feature Flag puppetstrings' do
+describe 'PuppetLanguageServerSidecar' do
   before(:each) do
     skip('Puppet 5.0.0 or above is required') unless Gem::Version.new(Puppet.version) >= Gem::Version.new('5.0.0')
 
