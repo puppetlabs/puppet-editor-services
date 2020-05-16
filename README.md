@@ -30,6 +30,14 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
   ... < lots of text >
 ```
 
+* Installed vendored gems
+
+```
+> bundle exec rake gem_revendor
+
+  ... < lots of text >
+```
+
 # Language Server
 
 ## How to run the Language Server for Development

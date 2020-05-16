@@ -121,7 +121,7 @@ HEREDOC
 end
 
 desc "Create compressed files of the language and debug servers for release"
-task :build do
+task build: [:gem_revendor] do
   require 'fileutils'
   require 'archive/zip'
   require 'zlib'
