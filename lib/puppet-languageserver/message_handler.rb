@@ -67,7 +67,7 @@ module PuppetLanguageServer
     end
 
     def request_puppet_getfacts(_, _json_rpc_message)
-      results = PuppetLanguageServer::FacterHelper.facts_to_hash
+      results = PuppetLanguageServer::FacterHelper.facts_to_hash(session_state)
       LSP::PuppetFactResponse.new('facts' => results)
     end
 
