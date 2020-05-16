@@ -15,5 +15,11 @@ module PuppetLanguageServer
     def self.fact_names(session_state)
       session_state.object_cache.object_names_by_section(:fact).map(&:to_s)
     end
+
+    def self.facts_to_hash(session_state)
+      fact_hash = {}
+      session_state.object_cache.objects_by_section(:fact) { |factname, fact| fact_hash[factname.to_s] = fact.value }
+      fact_hash
+    end
   end
 end

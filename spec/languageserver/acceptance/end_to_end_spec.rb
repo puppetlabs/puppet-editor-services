@@ -14,6 +14,7 @@ require 'open3'
 # Diagnostics response       |      X      |        |              |
 # Hover (Class)              |      X      |        |              |
 # Puppet resource            |      X      |        |              |
+# Puppet facts               |      X      |        |              |
 # Node graph preview         |      X      |        |              |
 # Completion (Typing)        |      X      |    -   |       -      |
 # Completion (Invoked)       |      X      |    -   |       -      |
@@ -126,6 +127,23 @@ describe 'End to End Testing' do
       #   Expect something to be returned
       expect(result['result']['contents']).not_to be_nil
       expect(result['result']['contents']).not_to be_empty
+
+      # Puppet Facts request
+      @client.clear_messages!
+      @client.send_data(@client.puppet_getfacts_request(@client.next_seq_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 15])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      #   Expect there to be some facts
+      expect(result['result']['facts']).not_to be_nil
+      expect(result['result']['facts']).not_to be_empty
+      #   Expect core facts. Ref https://puppet.com/docs/facter/latest/core_facts.html
+      %w[facterversion kernel os system_uptime].each do |factname|
+        expect(result['result']['facts'][factname]).not_to be_nil
+        expect(result['result']['facts'][factname]).not_to be_empty
+      end
+      #   Expect nested core facts. Ref https://puppet.com/docs/facter/latest/core_facts.html
+      expect(result['result']['facts']['os']['release']).not_to be_nil
+      expect(result['result']['facts']['os']['release']).not_to be_empty
 
       # Puppet Resource request
       @client.clear_messages!
