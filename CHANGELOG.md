@@ -6,197 +6,210 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.26.0 - 2020-05-01
+
+### Added
+
+- ([GH-242](https://github.com/puppetlabs/puppet-editor-services/issues/242)) Add Puppet Facts Endpoint
+- ([GH-245](https://github.com/puppetlabs/puppet-editor-services/issues/245)) Use object cache for Puppet Facts Endpoint
+- ([GH-168](https://github.com/puppetlabs/puppet-editor-services/issues/168)) Add acceptance tests
+
+### Changed
+
+- (maint) Update branding and links
+- (maint) Update Bolt static data and Protocol definitions
+
 ## 0.25.0 - 2020-03-26
 
 ### Fixed
 
-- ([GH-207](https://github.com/lingua-pupuli/puppet-editor-services/issues/207)) Allow Qualified Resource Names in hover provider
+- ([GH-207](https://github.com/puppetlabs/puppet-editor-services/issues/207)) Allow Qualified Resource Names in hover provider
 
 ### Changed
 
-- ([GH-221](https://github.com/lingua-pupuli/puppet-editor-services/issues/221)) Puppet Node Graph Response
+- ([GH-221](https://github.com/puppetlabs/puppet-editor-services/issues/221)) Puppet Node Graph Response
 - (maint) [puppetfile-resolver-0.2.0](https://github.com/glennsarti/puppetfile-resolver/releases/tag/0.2.0) Puppetfile Resolver v0.2.0
 
 ## 0.24.0 - 2020-01-28
 
 ### Fixed
 
-- ([GH-199](https://github.com/lingua-pupuli/puppet-editor-services/issues/199)) Fixes for Puppet 5.5.18
+- ([GH-199](https://github.com/puppetlabs/puppet-editor-services/issues/199)) Fixes for Puppet 5.5.18
 
 ### Changed
 
-- ([GH-213](https://github.com/lingua-pupuli/puppet-editor-services/issues/213)) Gather Facts from the Sidecar instead of the Server process
+- ([GH-213](https://github.com/puppetlabs/puppet-editor-services/issues/213)) Gather Facts from the Sidecar instead of the Server process
 
 ## 0.23.0 - 2019-12-04
 
 ### Added
 
-- ([GH-198](https://github.com/lingua-pupuli/puppet-editor-services/issues/198)) Added the Puppetfile Resolver for more in-depth Puppetfile validation
-- ([GH-94](https://github.com/lingua-pupuli/puppet-editor-services/issues/94)) Added better intellisense when inside Bolt plans
+- ([GH-198](https://github.com/puppetlabs/puppet-editor-services/issues/198)) Added the Puppetfile Resolver for more in-depth Puppetfile validation
+- ([GH-94](https://github.com/puppetlabs/puppet-editor-services/issues/94)) Added better intellisense when inside Bolt plans
 
 ### Fixed
 
-- ([GH-199](https://github.com/lingua-pupuli/puppet-editor-services/issues/199)) Fixes for Puppet 6.11.0
-- ([GH-139](https://github.com/lingua-pupuli/puppet-editor-services/issues/139)) Provide completions for defined types
+- ([GH-199](https://github.com/puppetlabs/puppet-editor-services/issues/199)) Fixes for Puppet 6.11.0
+- ([GH-139](https://github.com/puppetlabs/puppet-editor-services/issues/139)) Provide completions for defined types
 
 ### Changed
 
-- ([GH-193](https://github.com/lingua-pupuli/puppet-editor-services/issues/193)) Refactor the TCP and STDIO servers, protocols and handlers
-- ([Commit](https://github.com/lingua-pupuli/puppet-editor-services/commit/c3bd86f5b9a237b92f4c0e2d6c2ddc7aa5b0d9e5)) Update puppet-lint to version 2.4.2
+- ([GH-193](https://github.com/puppetlabs/puppet-editor-services/issues/193)) Refactor the TCP and STDIO servers, protocols and handlers
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/c3bd86f5b9a237b92f4c0e2d6c2ddc7aa5b0d9e5)) Update puppet-lint to version 2.4.2
 
 ## 0.22.0 - 2019-09-20
 
 ### Added
 
-- ([GH-181](https://github.com/lingua-pupuli/puppet-editor-services/issues/181)) Added completion for resource-like class ([Julio Sueiras](https://github.com/juliosueiras))
-- ([GH-177](https://github.com/lingua-pupuli/puppet-editor-services/issues/177)) Add auto-align hash rocket formatter
-- ([GH-174](https://github.com/lingua-pupuli/puppet-editor-services/issues/174)) Understand Puppet Data Types and hover provider support
+- ([GH-181](https://github.com/puppetlabs/puppet-editor-services/issues/181)) Added completion for resource-like class ([Julio Sueiras](https://github.com/juliosueiras))
+- ([GH-177](https://github.com/puppetlabs/puppet-editor-services/issues/177)) Add auto-align hash rocket formatter
+- ([GH-174](https://github.com/puppetlabs/puppet-editor-services/issues/174)) Understand Puppet Data Types and hover provider support
 
 ### Fixed
 
-- ([GH-169](https://github.com/lingua-pupuli/puppet-editor-services/issues/169)) Respond to protocol dependant messages correctly
+- ([GH-169](https://github.com/puppetlabs/puppet-editor-services/issues/169)) Respond to protocol dependant messages correctly
 
 ## 0.21.0 - 2019-08-26
 
 ### Added
 
-- ([GH-144](https://github.com/lingua-pupuli/puppet-editor-services/issues/144)) Add a Signature Helper Provider
-- ([GH-163](https://github.com/lingua-pupuli/puppet-editor-services/issues/163)) Add aggregate sidecar tasks
+- ([GH-144](https://github.com/puppetlabs/puppet-editor-services/issues/144)) Add a Signature Helper Provider
+- ([GH-163](https://github.com/puppetlabs/puppet-editor-services/issues/163)) Add aggregate sidecar tasks
 
 ### Fixed
 
-- ([GH-55](https://github.com/lingua-pupuli/puppet-editor-services/issues/55)) Debug Server is now supported on Puppet 6
+- ([GH-55](https://github.com/puppetlabs/puppet-editor-services/issues/55)) Debug Server is now supported on Puppet 6
 
 ### Changed
 
-- ([GH-106](https://github.com/lingua-pupuli/puppet-editor-services/issues/106)) Update puppet-lint to 2.3.6
-- ([GH-167](https://github.com/lingua-pupuli/puppet-editor-services/issues/167)) Refactor Language Server inmemory caching
+- ([GH-106](https://github.com/puppetlabs/puppet-editor-services/issues/106)) Update puppet-lint to 2.3.6
+- ([GH-167](https://github.com/puppetlabs/puppet-editor-services/issues/167)) Refactor Language Server inmemory caching
 
 ## 0.20.0 - 2019-07-16
 
 ### Added
 
-- ([GH-141](https://github.com/lingua-pupuli/puppet-editor-services/issues/141)) [Puppet4 API Project Task 7] Modify the Puppet Function loading to use all of the new Puppet 4 API features
-- ([GH-137](https://github.com/lingua-pupuli/puppet-editor-services/issues/137)) [Puppet4 API Project Task 4-6] Load Puppet Custom Types, Defined Types and Classes via Puppet API v4
-- ([GH-121](https://github.com/lingua-pupuli/puppet-editor-services/issues/121)) [Puppet4 API Project Task 1-3] Load Puppet Functions via Puppet API v4 and present as Puppet API v3 functions
+- ([GH-141](https://github.com/puppetlabs/puppet-editor-services/issues/141)) [Puppet4 API Project Task 7] Modify the Puppet Function loading to use all of the new Puppet 4 API features
+- ([GH-137](https://github.com/puppetlabs/puppet-editor-services/issues/137)) [Puppet4 API Project Task 4-6] Load Puppet Custom Types, Defined Types and Classes via Puppet API v4
+- ([GH-121](https://github.com/puppetlabs/puppet-editor-services/issues/121)) [Puppet4 API Project Task 1-3] Load Puppet Functions via Puppet API v4 and present as Puppet API v3 functions
 
 ### Fixed
 
-- ([GH-147](https://github.com/lingua-pupuli/puppet-editor-services/issues/147)) Error generating node graph
-- ([GH-129](https://github.com/lingua-pupuli/puppet-editor-services/issues/129)) Better Bolt/Puppet plan detection
+- ([GH-147](https://github.com/puppetlabs/puppet-editor-services/issues/147)) Error generating node graph
+- ([GH-129](https://github.com/puppetlabs/puppet-editor-services/issues/129)) Better Bolt/Puppet plan detection
 
 ## 0.19.1 - 2019-05-31
 
 ### Fixed
 
-- ([GH-132](https://github.com/lingua-pupuli/puppet-editor-services/issues/132)) Suppress $stdout usage for STDIO transport
-- ([GH-118](https://github.com/lingua-pupuli/puppet-editor-services/issues/118)) Fail gracefully when critical gems cannot load
+- ([GH-132](https://github.com/puppetlabs/puppet-editor-services/issues/132)) Suppress $stdout usage for STDIO transport
+- ([GH-118](https://github.com/puppetlabs/puppet-editor-services/issues/118)) Fail gracefully when critical gems cannot load
 
 ## 0.19.0 - 2019-03-24
 
 ### Added
 
-- ([GH-111](https://github.com/lingua-pupuli/puppet-editor-services/issues/111)) Add puppet-version command line argument
+- ([GH-111](https://github.com/puppetlabs/puppet-editor-services/issues/111)) Add puppet-version command line argument
 
 ### Fixed
 
-- ([Commit](https://github.com/lingua-pupuli/puppet-editor-services/commit/7d14081eaa793a0382321391ba234db8126c5916)) Use UTF8 for JSON files in the Language Server Sidecar
-- ([GH-113](https://github.com/lingua-pupuli/puppet-editor-services/issues/113)) Rescue errors when running Facter 2.x
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/7d14081eaa793a0382321391ba234db8126c5916)) Use UTF8 for JSON files in the Language Server Sidecar
+- ([GH-113](https://github.com/puppetlabs/puppet-editor-services/issues/113)) Rescue errors when running Facter 2.x
 
 ### Changed
 
-- ([GH-110](https://github.com/lingua-pupuli/puppet-editor-services/issues/110)) Autogenerate Ruby Language Server Protocol files from Typescript
+- ([GH-110](https://github.com/puppetlabs/puppet-editor-services/issues/110)) Autogenerate Ruby Language Server Protocol files from Typescript
 
 ## 0.18.0 - 2019-02-05
 
 ### Added
 
-- ([GH-24](https://github.com/lingua-pupuli/puppet-editor-services/issues/24)) Allow parsing of manifests in tasks mode
+- ([GH-24](https://github.com/puppetlabs/puppet-editor-services/issues/24)) Allow parsing of manifests in tasks mode
 
 ### Fixed
 
-- ([Commit](https://github.com/lingua-pupuli/puppet-editor-services/commit/1a294920702dc95ff11e50c68e4fa12e5da09d98)) Fix validation of puppetfiles
-- ([Commit](https://github.com/lingua-pupuli/puppet-editor-services/commit/6758afaefcde90809a7b2457c23c72fa487a2dd7)) Fix parsing at beginning of a document
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/1a294920702dc95ff11e50c68e4fa12e5da09d98)) Fix validation of puppetfiles
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/6758afaefcde90809a7b2457c23c72fa487a2dd7)) Fix parsing at beginning of a document
 
 ## 0.17.0 - 2018-12-14
 
 ### Added
 
-- ([GH-20](https://github.com/lingua-pupuli/puppet-editor-services/issues/20)) Add support for Control Repositories for intellisense e.g. hover, completion
-- ([GH-88](https://github.com/lingua-pupuli/puppet-editor-services/issues/20)) Add a workspace symbol provider
+- ([GH-20](https://github.com/puppetlabs/puppet-editor-services/issues/20)) Add support for Control Repositories for intellisense e.g. hover, completion
+- ([GH-88](https://github.com/puppetlabs/puppet-editor-services/issues/20)) Add a workspace symbol provider
 
 ### Changed
 
-- ([GH-35](https://github.com/lingua-pupuli/puppet-editor-services/issues/35)) Update Language Server command arguments to be like Sidecar
+- ([GH-35](https://github.com/puppetlabs/puppet-editor-services/issues/35)) Update Language Server command arguments to be like Sidecar
 
 ## 0.16.0 - 2018-11-30
 
 ### Added
 
-- ([GH-75](https://github.com/lingua-pupuli/puppet-editor-services/issues/75)) Add a node completion item snippet
-- ([GH-68](https://github.com/lingua-pupuli/puppet-editor-services/issues/68)) Language Server should evaluate the locally edited workspace
+- ([GH-75](https://github.com/puppetlabs/puppet-editor-services/issues/75)) Add a node completion item snippet
+- ([GH-68](https://github.com/puppetlabs/puppet-editor-services/issues/68)) Language Server should evaluate the locally edited workspace
 
 ### Fixed
 
-- ([GH-67](https://github.com/lingua-pupuli/puppet-editor-services/issues/67)) Make resource completion smarter
-- ([GH-34](https://github.com/lingua-pupuli/puppet-editor-services/issues/34)) Autocomplete and hover should retrieve defined types and classes
+- ([GH-67](https://github.com/puppetlabs/puppet-editor-services/issues/67)) Make resource completion smarter
+- ([GH-34](https://github.com/puppetlabs/puppet-editor-services/issues/34)) Autocomplete and hover should retrieve defined types and classes
 
 ## 0.15.1 - 2018-10-30
 
 ### Fixed
 
-- ([GH-66](https://github.com/lingua-pupuli/puppet-editor-services/issues/66)) Go to defintion does not work with paths with leading slash
+- ([GH-66](https://github.com/puppetlabs/puppet-editor-services/issues/66)) Go to defintion does not work with paths with leading slash
 
 ## 0.15.0 - 2018-08-18
 
 ### Added
 
-- ([GH-56](https://github.com/lingua-pupuli/puppet-editor-services/issues/56)) Add DocumentSymbol Support
-- ([GH-40](https://github.com/lingua-pupuli/puppet-editor-services/issues/40)) Add Sidecar process for the Language Server
+- ([GH-56](https://github.com/puppetlabs/puppet-editor-services/issues/56)) Add DocumentSymbol Support
+- ([GH-40](https://github.com/puppetlabs/puppet-editor-services/issues/40)) Add Sidecar process for the Language Server
 
 ### Fixed
 
-- ([GH-54](https://github.com/lingua-pupuli/puppet-editor-services/issues/54)) Support Puppet 6 in the Language Server
-- ([GH-51](https://github.com/lingua-pupuli/puppet-editor-services/issues/51)) Fixed handling of errors during class loading
+- ([GH-54](https://github.com/puppetlabs/puppet-editor-services/issues/54)) Support Puppet 6 in the Language Server
+- ([GH-51](https://github.com/puppetlabs/puppet-editor-services/issues/51)) Fixed handling of errors during class loading
 
 ## 0.14.0 - 2018-08-17
 
 ### Fixed
 
-- ([GH-49](https://github.com/lingua-pupuli/puppet-editor-services/issues/49)) Prevent an infinite loop when using stdio
+- ([GH-49](https://github.com/puppetlabs/puppet-editor-services/issues/49)) Prevent an infinite loop when using stdio
 
 ## 0.13.0 - 2018-07-21
 
 ### Changed
 
-- ([GH-36](https://github.com/lingua-pupuli/puppet-editor-services/issues/36)) Use automatic port assignment as default
+- ([GH-36](https://github.com/puppetlabs/puppet-editor-services/issues/36)) Use automatic port assignment as default
 
 ### Fixed
 
-- ([GH-31](https://github.com/lingua-pupuli/puppet-editor-services/issues/31)) Use canonical names for line based breakpoints
-- ([GH-46](https://github.com/lingua-pupuli/puppet-editor-services/issues/46)) Detect Puppet Environment correctly
+- ([GH-31](https://github.com/puppetlabs/puppet-editor-services/issues/31)) Use canonical names for line based breakpoints
+- ([GH-46](https://github.com/puppetlabs/puppet-editor-services/issues/46)) Detect Puppet Environment correctly
 - Minor fixes for rubocop
 
 ## 0.12.0 - 2018-06-01
 
 ### Added
 
-- ([GH-28](https://github.com/lingua-pupuli/puppet-editor-services/issues/28)) Added basic Puppetfile validation
+- ([GH-28](https://github.com/puppetlabs/puppet-editor-services/issues/28)) Added basic Puppetfile validation
 
 ### Changed
 
-- ([GH-22](https://github.com/lingua-pupuli/puppet-editor-services/issues/22)) Refactored language server files to have consistent names
+- ([GH-22](https://github.com/puppetlabs/puppet-editor-services/issues/22)) Refactored language server files to have consistent names
 
 ### Fixed
 
-- ([GH-26](https://github.com/lingua-pupuli/puppet-editor-services/issues/26)) `.puppet-lint.rc` was ignored in Control Repos
-- ([GH-14](https://github.com/lingua-pupuli/puppet-editor-services/issues/14)) Ignore environmentpath puppet setting if it does not exist
-- ([GH-10](https://github.com/lingua-pupuli/puppet-editor-services/issues/10)) Disabled the file cache if temp directory doesn't exist
+- ([GH-26](https://github.com/puppetlabs/puppet-editor-services/issues/26)) `.puppet-lint.rc` was ignored in Control Repos
+- ([GH-14](https://github.com/puppetlabs/puppet-editor-services/issues/14)) Ignore environmentpath puppet setting if it does not exist
+- ([GH-10](https://github.com/puppetlabs/puppet-editor-services/issues/10)) Disabled the file cache if temp directory doesn't exist
 
 ## 0.11.0 - 2018-04-26
 
-- ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Refactor the transport layers to loosen object coupling
-- ([GH-11](https://github.com/lingua-pupuli/puppet-editor-services/issues/11)) Fix STDIO server
+- ([GH-11](https://github.com/puppetlabs/puppet-editor-services/issues/11)) Refactor the transport layers to loosen object coupling
+- ([GH-11](https://github.com/puppetlabs/puppet-editor-services/issues/11)) Fix STDIO server
 - Stop bad logfile destinations from crashing the language and debug servers
 - Add a packaging process
 - Rename PuppetVSCode namespace to editor services

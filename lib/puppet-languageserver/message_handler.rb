@@ -66,6 +66,11 @@ module PuppetLanguageServer
       )
     end
 
+    def request_puppet_getfacts(_, _json_rpc_message)
+      results = PuppetLanguageServer::FacterHelper.facts_to_hash
+      LSP::PuppetFactResponse.new('facts' => results)
+    end
+
     def request_puppet_getresource(_, json_rpc_message)
       type_name = json_rpc_message.params['typename']
       title = json_rpc_message.params['title']

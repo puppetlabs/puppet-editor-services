@@ -13,7 +13,7 @@ group :development do
   gem 'rspec', '>= 3.2',            :require => false
 
   if Gem::Version.create(RUBY_VERSION) >= Gem::Version.create('2.3.0')
-    gem "rubocop", ">= 0.77.0", :require => false, :platforms => [:ruby, :x64_mingw]
+    gem "rubocop", ">= 0.80.0", :require => false, :platforms => [:ruby, :x64_mingw]
   end
 
   if ENV['PUPPET_GEM_VERSION']
