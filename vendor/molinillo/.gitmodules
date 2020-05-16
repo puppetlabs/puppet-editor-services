@@ -1,3 +1,0 @@
-[submodule "spec/resolver_integration_specs"]
-	path = spec/resolver_integration_specs
-	url = https://github.com/CocoaPods/Resolver-Integration-Specs.git
