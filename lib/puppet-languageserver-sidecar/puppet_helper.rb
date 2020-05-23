@@ -147,9 +147,13 @@ module PuppetLanguageServerSidecar
     end
     private_class_method :current_environment
 
+    # A helper class to find the paths for different kinds of things related to Puppet, for example
+    # DataType ruby files or manifests.
     class PuppetPathFinder
       attr_reader :object_types
 
+      # @param puppet_env [Puppet::Node::Environment] The environment to search within
+      # @param object_types [Symbol] The types of objects that will be searched for. See available_documentation_types for the complete list
       def initialize(puppet_env, object_types)
         # Path to every module
         @module_paths = puppet_env.modules.map(&:path)
@@ -171,6 +175,9 @@ module PuppetLanguageServerSidecar
         @object_types = object_types
       end
 
+      # Find all puppet related files, optionally from within a root path
+      # @param from_root_path [String] The path which files can be found within.  If nil, only the default Puppet locations are searched e.g. vardir
+      # @return [Array[String]] A list of all files that are found. This is the absolute path to the file.
       def find(from_root_path = nil)
         paths = []
         search_paths = @module_paths.nil? ? [] : @module_paths
@@ -213,6 +220,9 @@ module PuppetLanguageServerSidecar
 
       # Simple text based path checking
       # Is [path] in the [root]
+      # @param root [String] The Root path
+      # @param path [String] The path to check if it's within the root
+      # @return [Boolean]
       def path_in_root?(root, path)
         # Doesn't matter what the root is, if the path is nil, it's false
         return false if path.nil?
@@ -226,6 +236,8 @@ module PuppetLanguageServerSidecar
         value.casecmp(root).zero?
       end
 
+      # The metadata for all object types and where they can be found on the filesystem
+      # @return [Hash[Symbol => Hash[Symbol => String]]]
       def all_object_info
         {
           :class    => [
@@ -233,12 +245,12 @@ module PuppetLanguageServerSidecar
           ],
           :datatype => [
             { relative_dir: 'lib/puppet/datatypes',        glob: '/**/*.rb' }, # Custom Data Types
-            { relative_dir: 'types',                       glob: '/**/*.pp' } # Data Type aliases
+            { relative_dir: 'types',                       glob: '/**/*.pp' }  # Data Type aliases
           ],
           :function => [
             { relative_dir: 'functions',                   glob: '/**/*.pp' }, # Contains custom functions written in the Puppet language.
             { relative_dir: 'lib/puppet/functions',        glob: '/**/*.rb' }, # Contains functions written in Ruby for the modern Puppet::Functions API
-            { relative_dir: 'lib/puppet/parser/functions', glob: '/**/*.rb' } # Contains functions written in Ruby for the legacy Puppet::Parser::Functions API
+            { relative_dir: 'lib/puppet/parser/functions', glob: '/**/*.rb' }  # Contains functions written in Ruby for the legacy Puppet::Parser::Functions API
           ],
           :type     => [
             { relative_dir: 'lib/puppet/type',             glob: '/*.rb' } # Contains Puppet resource types. We don't care about providers. Types cannot exist in subdirs
