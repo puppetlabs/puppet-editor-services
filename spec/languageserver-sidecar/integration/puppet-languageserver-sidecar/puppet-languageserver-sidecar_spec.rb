@@ -2,15 +2,17 @@ require 'spec_helper'
 require 'open3'
 require 'tempfile'
 
-describe 'PuppetLanguageServerSidecar' do
+describe 'PuppetLanguageServerSidecar', :if => Gem::Version.new(Puppet.version) >= Gem::Version.new('5.0.0') do
   def run_sidecar(cmd_options)
-    cmd_options << '--no-cache'
+    # Use a new array so we don't affect the original cmd_options)
+    cmd = cmd_options.dup
 
     # Append the puppet test-fixtures
-    cmd_options << '--puppet-settings'
-    cmd_options << "--vardir,#{File.join($fixtures_dir, 'real_agent', 'cache')},--confdir,#{File.join($fixtures_dir, 'real_agent', 'confdir')}"
+    cmd << '--puppet-settings'
+    cmd << "--vardir,#{File.join($fixtures_dir, 'real_agent', 'cache')},--confdir,#{File.join($fixtures_dir, 'real_agent', 'confdir')}"
 
-    cmd = ['ruby', 'puppet-languageserver-sidecar'].concat(cmd_options)
+    cmd.unshift('puppet-languageserver-sidecar')
+    cmd.unshift('ruby')
     stdout, _stderr, status = Open3.capture3(*cmd)
 
     raise "Expected exit code of 0, but got #{status.exitstatus} #{_stderr}" unless status.exitstatus.zero?
@@ -45,19 +47,72 @@ describe 'PuppetLanguageServerSidecar' do
     end
   end
 
+  def should_not_contain_default_functions(deserial)
+    # These functions should not appear in the deserialised list as they're part
+    # of the default function set, not the workspace.
+    #
+    # They are defined in the fixtures/real_agent/cache/lib/...
+    expect(deserial).to_not contain_child_with_key(:default_cache_function)
+    expect(deserial).to_not contain_child_with_key(:default_pup4_function)
+    expect(deserial).to_not contain_child_with_key(:'environment::default_env_pup4_function')
+    expect(deserial).to_not contain_child_with_key(:'modname::default_mod_pup4_function')
+    expect(deserial).to_not contain_child_with_key(:'defaultmodule::puppetfunc')
+  end
+
+  before(:each) do
+    # Purge the File Cache
+    cache = PuppetLanguageServerSidecar::Cache::FileSystem.new
+    cache.clear!
+  end
+
+  after(:all) do
+    # Purge the File Cache
+    cache = PuppetLanguageServerSidecar::Cache::FileSystem.new
+    cache.clear!
+  end
+
+  def expect_empty_cache
+    cache = PuppetLanguageServerSidecar::Cache::FileSystem.new
+    expect(Dir.exists?(cache.cache_dir)).to eq(true), "Expected the cache directory #{cache.cache_dir} to exist"
+    expect(Dir.glob(File.join(cache.cache_dir,'*')).count).to eq(0), "Expected the cache directory #{cache.cache_dir} to be empty"
+  end
+
+  def expect_populated_cache
+    cache = PuppetLanguageServerSidecar::Cache::FileSystem.new
+    expect(Dir.glob(File.join(cache.cache_dir,'*')).count).to be > 0, "Expected the cache directory #{cache.cache_dir} to be populated"
+  end
+
+  def expect_same_array_content(a, b)
+    expect(a.count).to eq(b.count), "Expected array with #{b.count} items to have #{a.count} items"
+
+    a.each_with_index do |item, index|
+      expect(item.to_json).to eq(b[index].to_json), "Expected item at index #{index} to have content #{item.to_json} but got #{b[index].to_json}"
+    end
+  end
+
   describe 'when running default_aggregate action' do
     let (:cmd_options) { ['--action', 'default_aggregate'] }
 
-    it 'should return a deserializable aggregate object with all default metadata' do
+    it 'should return a cachable deserializable aggregate object with all default metadata' do
+      expect_empty_cache
+
       result = run_sidecar(cmd_options)
       deserial = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
       expect { deserial.from_json!(result) }.to_not raise_error
 
       # The contents of the result are tested later
 
-      # There should be at least one item per list in the aggregate
-      deserial.each_list do |_, v|
-        expect(v.count).to be > 0
+      # Now run using cached information
+      expect_populated_cache
+
+      result2 = run_sidecar(cmd_options)
+      deserial2 = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new()
+      expect { deserial2.from_json!(result2) }.to_not raise_error
+
+      deserial.each_list do |key, value|
+        # There should be at least one item per list in the aggregate
+        expect(value.count).to be > 0
+        expect_same_array_content(value, deserial2.send(key))
       end
     end
   end
@@ -65,7 +120,9 @@ describe 'PuppetLanguageServerSidecar' do
   describe 'when running default_classes action' do
     let (:cmd_options) { ['--action', 'default_classes'] }
 
-    it 'should return a deserializable class list with default classes' do
+    it 'should return a cachable deserializable class list with default classes' do
+      expect_empty_cache
+
       result = run_sidecar(cmd_options)
       deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new()
       expect { deserial.from_json!(result) }.to_not raise_error
@@ -76,13 +133,77 @@ describe 'PuppetLanguageServerSidecar' do
       # These are defined in the fixtures/real_agent/environments/testfixtures/modules/defaultmodule
       expect(deserial).to contain_child_with_key(:defaultdefinedtype)
       expect(deserial).to contain_child_with_key(:defaultmodule)
+
+      # Make sure the classes have the right properties
+      obj = child_with_key(deserial, :defaultdefinedtype)
+      expect(obj.doc).to match(/This is an example of how to document a defined type/)
+      expect(obj.source).to match(/defaultmodule/)
+      expect(obj.parameters.count).to eq 2
+      expect(obj.parameters['ensure'][:type]).to eq 'Any'
+      expect(obj.parameters['ensure'][:doc]).to match(/Ensure parameter documentation/)
+      expect(obj.parameters['param2'][:type]).to eq 'String'
+      expect(obj.parameters['param2'][:doc]).to match(/param2 documentation/)
+
+      obj = child_with_key(deserial, :defaultmodule)
+      expect(obj.doc).to match(/This is an example of how to document a Puppet class/)
+      expect(obj.source).to match(/defaultmodule/)
+      expect(obj.parameters.count).to eq 2
+      expect(obj.parameters['first'][:type]).to eq 'String'
+      expect(obj.parameters['first'][:doc]).to match(/The first parameter for this class/)
+      expect(obj.parameters['second'][:type]).to eq 'Integer'
+      expect(obj.parameters['second'][:doc]).to match(/The second parameter for this class/)
+
+      # Now run using cached information
+      expect_populated_cache
+
+      result2 = run_sidecar(cmd_options)
+      deserial2 = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new()
+      expect { deserial2.from_json!(result2) }.to_not raise_error
+
+      # The second result should be the same as the first
+      expect_same_array_content(deserial, deserial2)
+    end
+  end
+
+  describe 'when running default_datatypes action' do
+    let (:cmd_options) { ['--action', 'default_datatypes'] }
+
+    it 'should return a cachable deserializable datatype list with default datatypes' do
+      expect_empty_cache
+
+      result = run_sidecar(cmd_options)
+      deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new()
+      expect { deserial.from_json!(result) }.to_not raise_error
+
+      expect(deserial.count).to be > 0
+
+      # These datatypes always exist
+      expect(deserial).to contain_child_with_key(:String)
+      expect(deserial).to contain_child_with_key(:Numeric)
+
+      # This is defined in the fixtures/real_agent/cache/lib/puppet/datatypes
+      expect(deserial).to contain_child_with_key(:RubyDataType)
+      # This is defined in the fixtures/real_agent/environments/testfixtures/modules/defaultmodule/types
+      expect(deserial).to contain_child_with_key(:'Defaultmodule::Modultetypealias')
+
+      # Now run using cached information
+      expect_populated_cache
+
+      result2 = run_sidecar(cmd_options)
+      deserial2 = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new()
+      expect { deserial2.from_json!(result2) }.to_not raise_error
+
+      # The second result should be the same as the first
+      expect_same_array_content(deserial, deserial2)
     end
   end
 
   describe 'when running default_functions action' do
     let (:cmd_options) { ['--action', 'default_functions'] }
 
-    it 'should return a deserializable function list with default functions' do
+    it 'should return a cachable deserializable function list with default functions' do
+      expect_empty_cache
+
       result = run_sidecar(cmd_options)
       deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new()
       expect { deserial.from_json!(result) }.to_not raise_error
@@ -95,13 +216,33 @@ describe 'PuppetLanguageServerSidecar' do
 
       # These are defined in the fixtures/real_agent/cache/lib/puppet/parser/functions
       expect(deserial).to contain_child_with_key(:default_cache_function)
+      # These are defined in the fixtures/real_agent/cache/lib/puppet/functions
+      expect(deserial).to contain_child_with_key(:default_pup4_function)
+      # These are defined in the fixtures/real_agent/cache/lib/puppet/functions/environment (Special environent namespace)
+      expect(deserial).to contain_child_with_key(:'environment::default_env_pup4_function')
+      # These are defined in the fixtures/real_agent/cache/lib/puppet/functions/modname (module namespaced function)
+      expect(deserial).to contain_child_with_key(:'modname::default_mod_pup4_function')
+      # These are defined in the fixtures/real_agent/environments/testfixtures/modules/defaultmodules/functions/puppetfunc.pp
+      expect(deserial).to contain_child_with_key(:'defaultmodule::puppetfunc')
+
+      # Now run using cached information
+      expect_populated_cache
+
+      result2 = run_sidecar(cmd_options)
+      deserial2 = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new()
+      expect { deserial2.from_json!(result2) }.to_not raise_error
+
+      # The second result should be the same as the first
+      expect_same_array_content(deserial, deserial2)
     end
   end
 
   describe 'when running default_types action' do
     let (:cmd_options) { ['--action', 'default_types'] }
 
-    it 'should return a deserializable type list with default types' do
+    it 'should return a cachable deserializable type list with default types' do
+      expect_empty_cache
+
       result = run_sidecar(cmd_options)
       deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new()
       expect { deserial.from_json!(result) }.to_not raise_error
@@ -116,6 +257,16 @@ describe 'PuppetLanguageServerSidecar' do
 
       # These are defined in the fixtures/real_agent/cache/lib/puppet/type
       expect(deserial).to contain_child_with_key(:default_type)
+
+      # Now run using cached information
+      expect_populated_cache
+
+      result2 = run_sidecar(cmd_options)
+      deserial2 = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new()
+      expect { deserial2.from_json!(result2) }.to_not raise_error
+
+      # The second result should be the same as the first
+      expect_same_array_content(deserial, deserial2)
     end
   end
 
@@ -147,16 +298,26 @@ describe 'PuppetLanguageServerSidecar' do
     describe 'when running workspace_aggregate action' do
       let (:cmd_options) { ['--action', 'workspace_aggregate', '--local-workspace', workspace] }
 
-      it 'should return a deserializable aggregate object with all workspace metadata' do
+      it 'should return a cachable deserializable aggregate object with all workspace metadata' do
+        expect_empty_cache
+
         result = run_sidecar(cmd_options)
         deserial = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
         expect { deserial.from_json!(result) }.to_not raise_error
 
         # The contents of the result are tested later
 
-        # There should be at least one item per list in the aggregate
-        deserial.each_list do |_, v|
-          expect(v.count).to be > 0
+        # Now run using cached information
+        expect_populated_cache
+
+        result2 = run_sidecar(cmd_options)
+        deserial2 = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new()
+        expect { deserial2.from_json!(result2) }.to_not raise_error
+
+        deserial.each_list do |key, value|
+          # There should be at least one item per list in the aggregate
+          expect(value.count).to be > 0
+          expect_same_array_content(value, deserial2.send(key))
         end
       end
     end
@@ -177,6 +338,51 @@ describe 'PuppetLanguageServerSidecar' do
       end
     end
 
+    describe 'when running workspace_datatypes action' do
+      let (:cmd_options) { ['--action', 'workspace_datatypes', '--local-workspace', workspace] }
+
+      it 'should return a deserializable datatype list with the named fixtures' do
+        expect_empty_cache
+
+        result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        # These default datatypes should not exist
+        expect(deserial).to_not contain_child_with_key(:String)
+        expect(deserial).to_not contain_child_with_key(:Numeric)
+
+        # Ruby datatype
+        expect(deserial).to contain_child_with_key(:ValidModuleDataType)
+
+        # Puppet data typealias
+        expect(deserial).to contain_child_with_key(:'Valid::TestType')
+
+        # Make sure the datatype has the right properties
+        obj = child_with_key(deserial, :ValidModuleDataType)
+        expect(obj.doc).to match(/A Puppet Data Type in Ruby\./)
+        expect(obj.source).to match(/valid_module_workspace/)
+        expect(obj.is_type_alias).to be false
+        expect(obj.alias_of).to be_nil
+        expect(obj.attributes[0].key).to eq('arg1')
+        expect(obj.attributes[0].doc).to eq('A message parameter.')
+        expect(obj.attributes[0].default_value).to eq('defaultvalue')
+        expect(obj.attributes[0].types).to eq('String')
+        expect(obj.attributes[1].key).to eq('arg2')
+        expect(obj.attributes[1].doc).to eq('An Optional Numeric parameter.')
+        expect(obj.attributes[1].default_value).to eq(12)
+        expect(obj.attributes[1].types).to eq('Optional[Numeric]')
+
+        # Make sure the datatype alias has the right properties
+        obj = child_with_key(deserial, :'Valid::TestType')
+        expect(obj.doc).to eq('Documentation for Valid::TestType')
+        expect(obj.source).to match(/valid_module_workspace/)
+        expect(obj.is_type_alias).to be true
+        expect(obj.alias_of).to eq('String[2, 20]')
+        expect(obj.attributes).to eq([])
+      end
+    end
+
     describe 'when running workspace_functions action' do
       let (:cmd_options) { ['--action', 'workspace_functions', '--local-workspace', workspace] }
 
@@ -185,14 +391,41 @@ describe 'PuppetLanguageServerSidecar' do
         deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new()
         expect { deserial.from_json!(result) }.to_not raise_error
 
+        should_not_contain_default_functions(deserial)
+
+        # Puppet 3 API Functions
         expect(deserial).to_not contain_child_with_key(:badfile)
         expect(deserial).to contain_child_with_key(:bad_function)
         expect(deserial).to contain_child_with_key(:fixture_function)
+
+        # Puppet 4 API Functions
+        # The strings based parser will still see 'fixture_pup4_badfile' because it's never _actually_ loaded
+        # in Puppet therefore it will never error
+        expect(deserial).to contain_child_with_key(:fixture_pup4_badfile)
+        # The strings based parser will still see 'badname::fixture_pup4_badname_function' because it's never _actually_ loaded
+        # in Puppet therefore it will never error
+        expect(deserial).to contain_child_with_key(:'badname::fixture_pup4_badname_function')
+        expect(deserial).to contain_child_with_key(:fixture_pup4_function)
+        expect(deserial).to contain_child_with_key(:'valid::fixture_pup4_mod_function')
+        expect(deserial).to contain_child_with_key(:fixture_pup4_badfunction)
+        expect(deserial).to contain_child_with_key(:'valid::modulefunc')
 
         # Make sure the function has the right properties
         func = child_with_key(deserial, :fixture_function)
         expect(func.doc).to match(/doc_fixture_function/)
         expect(func.source).to match(/valid_module_workspace/)
+
+        # Make sure the function has the right properties
+        func = child_with_key(deserial, :fixture_pup4_function)
+        expect(func.doc).to match(/Example function using the Puppet 4 API in a module/)
+        expect(func.source).to match(/valid_module_workspace/)
+
+        # Make sure the function has the right properties
+        func = child_with_key(deserial, :'valid::modulefunc')
+        expect(func.function_version).to eq(4) # Puppet Langauge functions are V4
+        expect(func.doc).to match(/An example puppet function in a module, as opposed to a ruby custom function/)
+        expect(func.source).to match(/valid_module_workspace/)
+        expect(func.signatures.count).to be > 0
       end
     end
 
@@ -214,11 +447,10 @@ describe 'PuppetLanguageServerSidecar' do
         expect(obj.attributes.key?(:name)).to be true
         expect(obj.attributes.key?(:when)).to be true
         expect(obj.attributes[:name][:type]).to eq(:param)
-        expect(obj.attributes[:name][:doc]).to eq("name_parameter\n\n")
-        expect(obj.attributes[:name][:required?]).to be true
+        expect(obj.attributes[:name][:doc]).to eq("name_parameter")
+        expect(obj.attributes[:name][:isnamevar?]).to be true
         expect(obj.attributes[:when][:type]).to eq(:property)
-        expect(obj.attributes[:when][:doc]).to eq("when_property\n\n")
-        expect(obj.attributes[:when][:required?]).to be_nil
+        expect(obj.attributes[:when][:doc]).to eq("when_property")
       end
     end
   end
@@ -251,16 +483,26 @@ describe 'PuppetLanguageServerSidecar' do
     describe 'when running workspace_aggregate action' do
       let (:cmd_options) { ['--action', 'workspace_aggregate', '--local-workspace', workspace] }
 
-      it 'should return a deserializable aggregate object with all workspace metadata' do
+      it 'should return a cachable deserializable aggregate object with all default metadata' do
+        expect_empty_cache
+
         result = run_sidecar(cmd_options)
         deserial = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
         expect { deserial.from_json!(result) }.to_not raise_error
 
         # The contents of the result are tested later
 
-        # There should be at least one item per list in the aggregate
-        deserial.each_list do |_, v|
-          expect(v.count).to be > 0
+        # Now run using cached information
+        expect_populated_cache
+
+        result2 = run_sidecar(cmd_options)
+        deserial2 = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new()
+        expect { deserial2.from_json!(result2) }.to_not raise_error
+
+        deserial.each_list do |key, value|
+          # There should be at least one item per list in the aggregate
+          expect(value.count).to be > 0
+          expect_same_array_content(value, deserial2.send(key))
         end
       end
     end
@@ -281,10 +523,55 @@ describe 'PuppetLanguageServerSidecar' do
 
         # Make sure the class has the right properties
         obj = child_with_key(deserial, :envdeftype)
-        expect(obj.doc).to be_nil # We don't yet get documentation for classes or defined types
+        expect(obj.doc).to_not be_nil
         expect(obj.parameters['ensure']).to_not be_nil
         expect(obj.parameters['ensure'][:type]).to eq('String')
         expect(obj.source).to match(/valid_environment_workspace/)
+      end
+    end
+
+    describe 'when running workspace_datatypes action' do
+      let (:cmd_options) { ['--action', 'workspace_datatypes', '--local-workspace', workspace] }
+
+      it 'should return a deserializable datatype list with the named fixtures' do
+        expect_empty_cache
+
+        result = run_sidecar(cmd_options)
+        deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new()
+        expect { deserial.from_json!(result) }.to_not raise_error
+
+        # These default datatypes should not exist
+        expect(deserial).to_not contain_child_with_key(:String)
+        expect(deserial).to_not contain_child_with_key(:Numeric)
+
+        # Ruby datatype
+        expect(deserial).to contain_child_with_key(:ProfileDataType)
+
+        # Puppet data typealias
+        expect(deserial).to contain_child_with_key(:'Role::TestType')
+
+        # Make sure the datatype has the right properties
+        obj = child_with_key(deserial, :ProfileDataType)
+        expect(obj.doc).to match(/A Puppet Data Type in Ruby\./)
+        expect(obj.source).to match(/valid_environment_workspace/)
+        expect(obj.is_type_alias).to be false
+        expect(obj.alias_of).to be_nil
+        expect(obj.attributes[0].key).to eq('arg1')
+        expect(obj.attributes[0].doc).to eq('A message parameter.')
+        expect(obj.attributes[0].default_value).to eq('defaultvalue')
+        expect(obj.attributes[0].types).to eq('String')
+        expect(obj.attributes[1].key).to eq('arg2')
+        expect(obj.attributes[1].doc).to eq('An Optional Numeric parameter.')
+        expect(obj.attributes[1].default_value).to eq(12)
+        expect(obj.attributes[1].types).to eq('Optional[Numeric]')
+
+        # Make sure the datatype alias has the right properties
+        obj = child_with_key(deserial, :'Role::TestType')
+        expect(obj.doc).to eq('Documentation for Role::TestType')
+        expect(obj.source).to match(/valid_environment_workspace/)
+        expect(obj.is_type_alias).to be true
+        expect(obj.alias_of).to eq('Numeric')
+        expect(obj.attributes).to eq([])
       end
     end
 
@@ -296,11 +583,27 @@ describe 'PuppetLanguageServerSidecar' do
         deserial = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new()
         expect { deserial.from_json!(result) }.to_not raise_error
 
+        should_not_contain_default_functions(deserial)
+
+        # The strings based parser will still see 'pup4_env_badfile' because it's never _actually_ loaded
+        # in Puppet therefore it will never error
+        expect(deserial).to contain_child_with_key(:pup4_env_badfile)
+        # The strings based parser will still see 'badname::pup4_function' because it's never _actually_ loaded
+        # in Puppet therefore it will never error
+        expect(deserial).to contain_child_with_key(:'badname::pup4_function')
         expect(deserial).to contain_child_with_key(:env_function)
+        expect(deserial).to contain_child_with_key(:pup4_env_function)
+        expect(deserial).to contain_child_with_key(:pup4_env_badfunction)
+        expect(deserial).to contain_child_with_key(:'profile::pup4_envprofile_function')
 
         # Make sure the function has the right properties
         func = child_with_key(deserial, :env_function)
         expect(func.doc).to match(/doc_env_function/)
+        expect(func.source).to match(/valid_environment_workspace/)
+
+        # Make sure the function has the right properties
+        func = child_with_key(deserial, :pup4_env_function)
+        expect(func.doc).to match(/Example function using the Puppet 4 API in a module/)
         expect(func.source).to match(/valid_environment_workspace/)
       end
     end
@@ -323,11 +626,10 @@ describe 'PuppetLanguageServerSidecar' do
         expect(obj.attributes.key?(:name)).to be true
         expect(obj.attributes.key?(:when)).to be true
         expect(obj.attributes[:name][:type]).to eq(:param)
-        expect(obj.attributes[:name][:doc]).to eq("name_env_parameter\n\n")
-        expect(obj.attributes[:name][:required?]).to be true
+        expect(obj.attributes[:name][:doc]).to eq("name_env_parameter")
+        expect(obj.attributes[:name][:isnamevar?]).to be true
         expect(obj.attributes[:when][:type]).to eq(:property)
-        expect(obj.attributes[:when][:doc]).to eq("when_env_property\n\n")
-        expect(obj.attributes[:when][:required?]).to be_nil
+        expect(obj.attributes[:when][:doc]).to eq("when_env_property")
       end
     end
   end

@@ -4,6 +4,8 @@ root = File.join(File.dirname(__FILE__),'..','..')
 # Add the language server into the load path
 $LOAD_PATH.unshift(File.join(root,'lib'))
 # Add the vendored gems into the load path
+$LOAD_PATH.unshift(File.join(root, 'vendor', 'yard', 'lib'))
+$LOAD_PATH.unshift(File.join(root, 'vendor', 'puppet-strings', 'lib'))
 
 require 'puppet_languageserver_sidecar'
 # rubocop:disable Style/GlobalVars

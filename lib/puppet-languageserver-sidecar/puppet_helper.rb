@@ -6,15 +6,12 @@ module PuppetLanguageServerSidecar
   module PuppetHelper
     SIDECAR_PUPPET_ENVIRONMENT = 'sidecarenvironment'
 
-    def self.path_has_child?(path, child)
-      # Doesn't matter what the child is, if the path is nil it's true.
-      return true if path.nil?
-      return false if path.length >= child.length
-
-      value = child.slice(0, path.length)
-      return true if value.casecmp(path).zero?
-      false
-    end
+    # Ignore certain data types. For more information see https://tickets.puppetlabs.com/browse/DOCUMENT-1020
+    # TypeReference - Internal to the Puppet Data Type system
+    # TypeAlias - Internal to the Puppet Data Type system
+    # Object - While useful, typically only needed when extended the type system as opposed to general use
+    # TypeSet - While useful, typically only needed when extended the type system as opposed to general use
+    IGNORE_DATATYPE_NAMES = %w[TypeReference TypeAlias Object TypeSet ObjectTypeExten Iterable AbstractTimeData TypeWithContained].freeze
 
     # Resource Face
     def self.get_puppet_resource(typename, title = nil)
@@ -34,119 +31,95 @@ module PuppetLanguageServerSidecar
       result
     end
 
-    # Class and Defined Type loading
-    def self.retrieve_classes(cache, options = {})
-      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_classes] Starting')
-
-      # TODO: Can probably do this better, but this works.
-      current_env = current_environment
-      module_path_list = current_env
-                         .modules
-                         .select { |mod| Dir.exist?(File.join(mod.path, 'manifests')) }
-                         .map { |mod| mod.path }
-      manifest_path_list = module_path_list.map { |mod_path| File.join(mod_path, 'manifests') }
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_classes] Loading classes from #{module_path_list}")
-
-      # Find and parse all manifests in the manifest paths
-      classes = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
-      manifest_path_list.each do |manifest_path|
-        Dir.glob("#{manifest_path}/**/*.pp").each do |manifest_file|
-          begin
-            if path_has_child?(options[:root_path], manifest_file) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-              classes.concat(load_classes_from_manifest(cache, manifest_file))
-            end
-          rescue StandardError => e
-            PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::retrieve_classes] Error loading manifest #{manifest_file}: #{e} #{e.backtrace}")
-          end
-        end
-      end
-
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_classes] Finished loading #{classes.count} classes")
-      classes
+    # Puppet Strings loading
+    def self.available_documentation_types
+      %I[class datatype function type]
     end
 
-    # Function loading
-    def self.retrieve_functions(cache, options = {})
-      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::load_functions] Starting')
+    def self.retrieve_default_data_types
+      default_types = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
+      # There's no actual record of all available types, but we can use the Puppet::Pops::Types to implicitly get their names
+      name_list = []
 
-      autoloader = Puppet::Util::Autoload.new(self, 'puppet/parser/functions')
-      current_env = current_environment
-      funcs = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
+      Puppet::Pops::Types.constants.each do |const|
+        thing = Puppet::Pops::Types.const_get(const)
+        # Not that this is a reference to a type, not an INSTANCE of that type.
+        # So we can't do .is_a? checks. But instead look for methods on the thing
+        # that would indicate it's a Puppet Type
+        #   _pcore_type : is present on all Pops type objects
+        #   simple_name : comes from PAnyType
+        next unless thing.respond_to?(:_pcore_type) && thing.respond_to?(:simple_name)
+        # Ignore certain data types
+        next if IGNORE_DATATYPE_NAMES.include?(thing.simple_name)
+        # Don't need duplicates
+        next if name_list.include?(thing.simple_name)
+        name_list << thing.simple_name
 
-      # Functions that are already loaded (e.g. system default functions like alert)
-      # should already be populated so insert them into the function results
-      #
-      # Find the unique filename list
-      filenames = []
-      Puppet::Parser::Functions.monkey_function_list.each_value do |data|
-        filenames << data[:source_location][:source] unless data[:source_location].nil? || data[:source_location][:source].nil?
-      end
-      # Now add the functions in each file to the cache
-      filenames.uniq.compact.each do |filename|
-        Puppet::Parser::Functions.monkey_function_list
-                                 .select { |_k, i| filename.casecmp(i[:source_location][:source].to_s).zero? }
-                                 .select { |_k, i| path_has_child?(options[:root_path], i[:source_location][:source]) }
-                                 .each do |name, item|
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(name, item)
-          funcs << obj
-        end
-      end
-
-      # Now we can load functions from the default locations
-      if autoloader.method(:files_to_load).arity.zero?
-        params = []
-      else
-        params = [current_env]
-      end
-      autoloader.files_to_load(*params).each do |file|
-        name = file.gsub(autoloader.path + '/', '')
-        begin
-          expanded_name = autoloader.expand(name)
-          absolute_name = Puppet::Util::Autoload.get_file(expanded_name, current_env)
-          raise("Could not find absolute path of function #{name}") if absolute_name.nil?
-          if path_has_child?(options[:root_path], absolute_name) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-            funcs.concat(load_function_file(cache, name, absolute_name, autoloader, current_env))
-          end
-        rescue StandardError => e
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_functions] Error loading function #{file}: #{e} #{e.backtrace}")
-        end
+        obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new
+        obj.key            = thing.simple_name
+        obj.source         = nil
+        obj.calling_source = nil
+        obj.line           = nil
+        obj.doc            = "The #{thing.simple_name} core data type"
+        obj.is_type_alias  = false
+        obj.alias_of       = nil
+        # So far, no core data types have attributes
+        obj.attributes     = []
+        default_types << obj
       end
 
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::load_functions] Finished loading #{funcs.count} functions")
-      funcs
+      default_types
     end
+    private_class_method :retrieve_default_data_types
 
-    def self.retrieve_types(cache, options = {})
-      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_types] Starting')
+    # Retrieve objects via the Puppet 4 API loaders
+    def self.retrieve_via_puppet_strings(cache, options = {})
+      PuppetLanguageServerSidecar.log_message(:debug, '[PuppetHelper::retrieve_via_puppet_strings] Starting')
 
-      # From https://github.com/puppetlabs/puppet/blob/ebd96213cab43bb2a8071b7ac0206c3ed0be8e58/lib/puppet/metatype/manager.rb#L182-L189
-      autoloader = Puppet::Util::Autoload.new(self, 'puppet/type')
+      object_types = options[:object_types].nil? ? available_documentation_types : options[:object_types]
+      object_types.select! { |i| available_documentation_types.include?(i) }
+
+      result = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+      return result if object_types.empty?
+
       current_env = current_environment
-      types = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
+      for_agent = options[:for_agent].nil? ? true : options[:for_agent]
+      Puppet::Pops::Loaders.new(current_env, for_agent)
 
-      # This is an expensive call
-      if autoloader.method(:files_to_load).arity.zero?
-        params = []
-      else
-        params = [current_env]
-      end
-      autoloader.files_to_load(*params).each do |file|
-        name = file.gsub(autoloader.path + '/', '')
-        begin
-          expanded_name = autoloader.expand(name)
-          absolute_name = Puppet::Util::Autoload.get_file(expanded_name, current_env)
-          raise("Could not find absolute path of type #{name}") if absolute_name.nil?
-          if path_has_child?(options[:root_path], absolute_name) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-            types.concat(load_type_file(cache, name, absolute_name, autoloader, current_env))
+      finder = PuppetPathFinder.new(current_env, object_types)
+      paths = finder.find(options[:root_path])
+
+      paths.each do |path|
+        file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path, cache)
+        next if file_doc.nil?
+
+        if object_types.include?(:class) # rubocop:disable Style/IfUnlessModifier   This reads better
+          file_doc.classes.each { |item| result.append!(item) }
+        end
+        if object_types.include?(:datatype) # rubocop:disable Style/IfUnlessModifier   This reads better
+          file_doc.datatypes.each { |item| result.append!(item) }
+        end
+        if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better
+          file_doc.functions.each { |item| result.append!(item) }
+        end
+        if object_types.include?(:type)
+          file_doc.types.each do |item|
+            result.append!(item) unless name == 'whit' || name == 'component' # rubocop:disable Style/MultipleComparison
           end
-        rescue StandardError => e
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::retrieve_types] Error loading type #{file}: #{e} #{e.backtrace}")
         end
       end
 
-      PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_types] Finished loading #{types.count} type/s")
+      # Remove Puppet3 functions which have a Puppet4 function already loaded
+      if object_types.include?(:function) && !result.functions.nil?
+        pup4_functions = result.functions.select { |i| i.function_version == 4 }.map { |i| i.key }
+        result.functions.reject! { |i| i.function_version == 3 && pup4_functions.include?(i.key) }
+      end
 
-      types
+      # Add the inbuilt data types if there's no root path
+      result.concat!(retrieve_default_data_types) if object_types.include?(:datatype) && options[:root_path].nil?
+
+      result.each_list { |key, item| PuppetLanguageServerSidecar.log_message(:debug, "[PuppetHelper::retrieve_via_puppet_strings] Finished loading #{item.count} #{key}") }
+      result
     end
 
     # Private functions
@@ -174,186 +147,116 @@ module PuppetLanguageServerSidecar
     end
     private_class_method :current_environment
 
-    def self.load_classes_from_manifest(cache, manifest_file)
-      class_info = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
+    # A helper class to find the paths for different kinds of things related to Puppet, for example
+    # DataType ruby files or manifests.
+    class PuppetPathFinder
+      attr_reader :object_types
 
-      if cache.active?
-        cached_result = cache.load(manifest_file, PuppetLanguageServerSidecar::Cache::CLASSES_SECTION)
-        unless cached_result.nil?
-          begin
-            class_info.from_json!(cached_result)
-            return class_info
-          rescue StandardError => e
-            PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_classes_from_manifest] Error while deserializing #{manifest_file} from cache: #{e}")
-            class_info = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
-          end
-        end
+      # @param puppet_env [Puppet::Node::Environment] The environment to search within
+      # @param object_types [Symbol] The types of objects that will be searched for. See available_documentation_types for the complete list
+      def initialize(puppet_env, object_types)
+        # Path to every module
+        @module_paths = puppet_env.modules.map(&:path)
+        # Path to the environment
+        @env_path = puppet_env.configuration.path_to_env
+        # Path to the puppet installation
+        @puppet_path = if puppet_env.loaders.nil? # No loaders have been created yet
+                         nil
+                       elsif puppet_env.loaders.puppet_system_loader.nil?
+                         nil
+                       elsif puppet_env.loaders.puppet_system_loader.lib_root?
+                         File.join(puppet_env.loaders.puppet_system_loader.path, '..')
+                       else
+                         puppet_env.loaders.puppet_system_loader.path
+                       end
+        # Path to the cached puppet files e.g. pluginsync
+        @vardir_path = Puppet.settings[:vardir]
+
+        @object_types = object_types
       end
 
-      file_content = File.open(manifest_file, 'r:UTF-8') { |f| f.read }
+      # Find all puppet related files, optionally from within a root path
+      # @param from_root_path [String] The path which files can be found within.  If nil, only the default Puppet locations are searched e.g. vardir
+      # @return [Array[String]] A list of all files that are found. This is the absolute path to the file.
+      def find(from_root_path = nil)
+        paths = []
+        search_paths = @module_paths.nil? ? [] : @module_paths
+        search_paths << @env_path unless @env_path.nil?
+        search_paths << @vardir_path unless @vardir_path.nil?
+        search_paths << @puppet_path unless @puppet_path.nil?
 
-      parser = Puppet::Pops::Parser::Parser.new
-      result = nil
-      begin
-        result = parser.parse_string(file_content, '')
-      rescue Puppet::ParseErrorWithIssue
-        # Any parsing errors means we can't inspect the document
-        return class_info
+        searched_globs = []
+        search_paths.each do |search_root|
+          PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Potential search root '#{search_root}'")
+          next if search_root.nil?
+          # We need absolute paths from here on in.
+          search_root = File.expand_path(search_root)
+          next unless path_in_root?(from_root_path, search_root) && Dir.exist?(search_root)
+          PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Using '#{search_root}' as a directory to search")
+
+          all_object_info.each do |object_type, paths_to_search|
+            next unless object_types.include?(object_type)
+            # TODO: next unless object_type is included
+            paths_to_search.each do |path_info|
+              path = File.join(search_root, path_info[:relative_dir])
+              glob = path + path_info[:glob]
+              next if searched_globs.include?(glob) # No point searching twice
+              next unless Dir.exist?(path)
+
+              searched_globs << glob
+              PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Searching glob '#{glob}''")
+
+              Dir.glob(glob) do |filename|
+                paths << filename
+              end
+            end
+          end
+        end
+
+        paths
       end
 
-      # Enumerate the entire AST looking for classes and defined types
-      # TODO: Need to learn how to read the help/docs for hover support
-      if result.model.respond_to? :eAllContents
-        # Puppet 4 AST
-        result.model.eAllContents.select do |item|
-          puppet_class = {}
-          case item.class.to_s
-          when 'Puppet::Pops::Model::HostClassDefinition'
-            puppet_class['type'] = :class
-          when 'Puppet::Pops::Model::ResourceTypeDefinition'
-            puppet_class['type'] = :typedefinition
-          else
-            next
-          end
-          puppet_class['name']       = item.name
-          puppet_class['doc']        = nil
-          puppet_class['parameters'] = item.parameters
-          puppet_class['source']     = manifest_file
-          puppet_class['line']       = result.locator.line_for_offset(item.offset) - 1
-          puppet_class['char']       = result.locator.offset_on_line(item.offset)
+      private
 
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetClass.from_puppet(item.name, puppet_class, result.locator)
-          class_info << obj
-        end
-      else
-        result.model._pcore_all_contents([]) do |item|
-          puppet_class = {}
-          case item.class.to_s
-          when 'Puppet::Pops::Model::HostClassDefinition'
-            puppet_class['type'] = :class
-          when 'Puppet::Pops::Model::ResourceTypeDefinition'
-            puppet_class['type'] = :typedefinition
-          else
-            next
-          end
-          puppet_class['name']       = item.name
-          puppet_class['doc']        = nil
-          puppet_class['parameters'] = item.parameters
-          puppet_class['source']     = manifest_file
-          puppet_class['line']       = item.line
-          puppet_class['char']       = item.pos
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetClass.from_puppet(item.name, puppet_class, item.locator)
-          class_info << obj
-        end
+      # Simple text based path checking
+      # Is [path] in the [root]
+      # @param root [String] The Root path
+      # @param path [String] The path to check if it's within the root
+      # @return [Boolean]
+      def path_in_root?(root, path)
+        # Doesn't matter what the root is, if the path is nil, it's false
+        return false if path.nil?
+        # Doesn't matter what the path is, if the root is nil it's true.
+        return true if root.nil?
+        # If the path is less than root, then it has to be false
+        return false if root.length > path.length
+
+        # Is the beginning of the path, the same as the root
+        value = path.slice(0, root.length)
+        value.casecmp(root).zero?
       end
-      cache.save(manifest_file, PuppetLanguageServerSidecar::Cache::CLASSES_SECTION, class_info.to_json) if cache.active?
 
-      class_info
+      # The metadata for all object types and where they can be found on the filesystem
+      # @return [Hash[Symbol => Hash[Symbol => String]]]
+      def all_object_info
+        {
+          :class    => [
+            { relative_dir: 'manifests',                   glob: '/**/*.pp' } # Pretty much everything in most modules
+          ],
+          :datatype => [
+            { relative_dir: 'lib/puppet/datatypes',        glob: '/**/*.rb' }, # Custom Data Types
+            { relative_dir: 'types',                       glob: '/**/*.pp' }  # Data Type aliases
+          ],
+          :function => [
+            { relative_dir: 'functions',                   glob: '/**/*.pp' }, # Contains custom functions written in the Puppet language.
+            { relative_dir: 'lib/puppet/functions',        glob: '/**/*.rb' }, # Contains functions written in Ruby for the modern Puppet::Functions API
+            { relative_dir: 'lib/puppet/parser/functions', glob: '/**/*.rb' }  # Contains functions written in Ruby for the legacy Puppet::Parser::Functions API
+          ],
+          :type     => [
+            { relative_dir: 'lib/puppet/type',             glob: '/*.rb' } # Contains Puppet resource types. We don't care about providers. Types cannot exist in subdirs
+          ]
+        }
+      end
     end
-    private_class_method :load_classes_from_manifest
-
-    def self.load_function_file(cache, name, absolute_name, autoloader, env)
-      funcs = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-
-      if cache.active?
-        cached_result = cache.load(absolute_name, PuppetLanguageServerSidecar::Cache::FUNCTIONS_SECTION)
-        unless cached_result.nil?
-          begin
-            funcs.from_json!(cached_result)
-            return funcs
-          rescue StandardError => e
-            PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_function_file] Error while deserializing #{absolute_name} from cache: #{e}")
-            funcs = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-          end
-        end
-      end
-
-      unless autoloader.loaded?(name)
-        # This is an expensive call
-        unless autoloader.load(name, env) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_function_file] function #{absolute_name} did not load")
-        end
-      end
-
-      # Find the functions that were loaded based on source file name (case insensitive)
-      Puppet::Parser::Functions.monkey_function_list
-                               .select { |_k, i| absolute_name.casecmp(i[:source_location][:source].to_s).zero? }
-                               .each do |func_name, item|
-        obj = PuppetLanguageServerSidecar::Protocol::PuppetFunction.from_puppet(func_name, item)
-        obj.calling_source = absolute_name
-        funcs << obj
-      end
-      PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_function_file] file #{absolute_name} did load any functions") if funcs.count.zero?
-      cache.save(absolute_name, PuppetLanguageServerSidecar::Cache::FUNCTIONS_SECTION, funcs.to_json) if cache.active?
-
-      funcs
-    end
-    private_class_method :load_function_file
-
-    def self.load_type_file(cache, name, absolute_name, autoloader, env)
-      types = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
-      if cache.active?
-        cached_result = cache.load(absolute_name, PuppetLanguageServerSidecar::Cache::TYPES_SECTION)
-        unless cached_result.nil?
-          begin
-            types.from_json!(cached_result)
-            return types
-          rescue StandardError => e
-            PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_type_file] Error while deserializing #{absolute_name} from cache: #{e}")
-            types = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
-          end
-        end
-      end
-
-      # Get the list of currently loaded types
-      loaded_types = []
-      # Due to PUP-8301, if no types have been loaded yet then Puppet::Type.eachtype
-      # will throw instead of not yielding.
-      begin
-        Puppet::Type.eachtype { |item| loaded_types << item.name }
-      rescue NoMethodError => e
-        # Detect PUP-8301
-        if e.respond_to?(:receiver)
-          raise unless e.name == :each && e.receiver.nil?
-        else
-          raise unless e.name == :each && e.message =~ /nil:NilClass/
-        end
-      end
-
-      unless autoloader.loaded?(name)
-        # This is an expensive call
-        unless autoloader.load(name, env) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
-          PuppetLanguageServerSidecar.log_message(:error, "[PuppetHelper::load_type_file] type #{absolute_name} did not load")
-        end
-      end
-
-      # Find the types that were loaded
-      # Due to PUP-8301, if no types have been loaded yet then Puppet::Type.eachtype
-      # will throw instead of not yielding.
-      begin
-        Puppet::Type.eachtype do |item|
-          next if loaded_types.include?(item.name)
-          # Ignore the internal only Puppet Types
-          next if item.name == :component || item.name == :whit
-          obj = PuppetLanguageServerSidecar::Protocol::PuppetType.from_puppet(item.name, item)
-          # TODO: Need to use calling_source in the cache backing store
-          # Perhaps I should be incrementally adding items to the cache instead of batch mode?
-          obj.calling_source = absolute_name
-          types << obj
-        end
-      rescue NoMethodError => e
-        # Detect PUP-8301
-        if e.respond_to?(:receiver)
-          raise unless e.name == :each && e.receiver.nil?
-        else
-          raise unless e.name == :each && e.message =~ /nil:NilClass/
-        end
-      end
-      PuppetLanguageServerSidecar.log_message(:warn, "[PuppetHelper::load_type_file] type #{absolute_name} did not load any types") if types.empty?
-      cache.save(absolute_name, PuppetLanguageServerSidecar::Cache::TYPES_SECTION, types.to_json) if cache.active?
-
-      types
-    end
-    private_class_method :load_type_file
   end
 end
