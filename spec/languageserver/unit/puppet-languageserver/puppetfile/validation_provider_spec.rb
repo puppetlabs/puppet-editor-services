@@ -430,4 +430,46 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
       end
     end
   end
+
+  describe "#find_dependencies" do
+    context 'with a valid Puppetfile' do
+      let(:content) do <<-EOT
+        forge 'https://forge.puppetlabs.com/'
+
+        # Modules from the Puppet Forge
+        mod 'puppetlabs-somemodule',      '1.0.0'
+
+        # Git style modules
+        mod 'gitcommitmodule',
+          :git => 'https://github.com/username/repo',
+          :commit => 'abc123'
+        mod 'gittagmodule',
+          :git => 'https://github.com/username/repo',
+          :tag => '0.1'
+
+        # Svn style modules
+        mod 'svnmodule',
+          :svn => 'svn://host/repo',
+          :rev => 'abc123'
+
+        # local style modules
+        mod 'localmodule',
+          :local => 'true'
+        EOT
+      end
+
+      it 'should return no validation errors' do
+        result = subject.find_dependencies(content)
+
+        expect(result).to eq([{:end_line=>3,
+          :name=>"somemodule",
+          :owner=>"puppetlabs",
+          :start_line=>3,
+          :title=>"puppetlabs-somemodule",
+          :version=>"1.0.0"}])
+      end
+    end
+
+  end
+
 end
