@@ -6,6 +6,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 0.26.1 - 2020-06-04
+
 ### Added
 
 - ([GH-256](https://github.com/puppetlabs/puppet-editor-services/issues/256)) Add Puppetfile dependency endpoint
