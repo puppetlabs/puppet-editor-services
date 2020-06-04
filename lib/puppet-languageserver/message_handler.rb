@@ -78,6 +78,23 @@ module PuppetLanguageServer
       end
     end
 
+    def request_puppetfile_getdependencies(_, json_rpc_message)
+      file_uri = json_rpc_message.params['uri']
+      return LSP::PuppetfileDependencyResponse.new('error' => 'Must be a puppetfile in order to find dependencies.') unless documents.document_type(file_uri) == :puppetfile
+
+      content = documents.document(file_uri)
+
+      result = []
+      begin
+        result = PuppetLanguageServer::Puppetfile::ValidationProvider.find_dependencies(content)
+      rescue StandardError => e
+        PuppetLanguageServer.log_message(:error, "(puppetfile/getdependencies) Error parsing puppetfile. #{e}")
+        return LSP::PuppetfileDependencyResponse.new('error' => 'An internal error occured while parsing the puppetfile. Please see the debug log files for more information.')
+      end
+
+      LSP::PuppetfileDependencyResponse.new('dependencies' => result)
+    end
+
     def request_puppet_fixdiagnosticerrors(_, json_rpc_message)
       formatted_request = LSP::PuppetFixDiagnosticErrorsRequest.new(json_rpc_message.params)
       file_uri = formatted_request.documentUri
