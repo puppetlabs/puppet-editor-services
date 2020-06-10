@@ -218,6 +218,15 @@ class EditorClient
     })
   end
 
+  def puppetfile_getdependencies_request(seq_id, uri)
+    ::JSON.generate({
+      'jsonrpc' => '2.0',
+      'id'      => seq_id,
+      'method'  => 'puppetfile/getDependencies',
+      'params'  => { 'uri' => uri }
+    })
+  end
+
   def completion_request(seq_id, uri, line, char, trigger_kind = LSP::CompletionTriggerKind::INVOKED, trigger_character = nil)
     hash = {
       'jsonrpc' => '2.0',
