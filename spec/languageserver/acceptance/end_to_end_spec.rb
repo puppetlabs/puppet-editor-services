@@ -16,6 +16,7 @@ require 'open3'
 # Puppet resource            |      X      |        |              |
 # Puppet facts               |      X      |        |              |
 # Node graph preview         |      X      |        |              |
+# Puppetfile Dependencies    |      -      |    -   |       X      |
 # Completion (Typing)        |      X      |    -   |       -      |
 # Completion (Invoked)       |      X      |    -   |       -      |
 # Completion Resolution      |      X      |    -   |       -      |
@@ -270,5 +271,73 @@ describe 'End to End Testing' do
   end
 
   context 'Processing a Control Repo' do
+    let(:workspace) { File.join($fixtures_dir, 'control_repos', 'valid') }
+    let(:puppetfile) { File.join(workspace, 'Puppetfile') }
+    let(:puppetfile_uri) { path_to_uri(puppetfile) }
+
+    it 'should act like a valid language server' do
+      # initialize_request
+      @client.send_data(@client.initialize_request(@client.next_seq_id, workspace))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      # Ensure required capabilites are enabled
+      expect(result['result']['capabilities']).to include(
+        {
+          'textDocumentSync' => 1,
+          'hoverProvider' => true,
+          'completionProvider' => {
+            'resolveProvider' => true,
+            'triggerCharacters' => ['>', '$', '[', '=']
+          },
+          'definitionProvider' => true,
+          'documentSymbolProvider' => true,
+          'workspaceSymbolProvider' => true,
+          'signatureHelpProvider' => {
+            'triggerCharacters' => ['(', ',']
+          },
+          'documentOnTypeFormattingProvider' => {
+            'firstTriggerCharacter' => '>' # Dynamic Registration is disabled in acceptance tests
+          }
+        }
+      )
+
+      # initialized event
+      @client.send_data(@client.initialized_notification)
+
+      # Send the client settings
+      @client.send_client_settings
+
+      # Wait for the language server to finish loading the Puppet information
+      @client.clear_messages!
+      @client.wait_for_puppet_loading(120)
+
+      # Open the Puppetfile
+      @client.clear_messages!
+      @client.send_data(@client.did_open_notification(puppetfile, 1))
+      # Wait a moment for it to load.
+      sleep(1)
+
+      # Puppetfile Dependencies
+      @client.send_data(@client.puppetfile_getdependencies_request(@client.next_seq_id, puppetfile_uri))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 10])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+       #   Expect something to be returned
+       expect(result['result']).not_to be_nil
+       expect(result['result']['dependencies']).not_to be_nil
+       expect(result['result']['dependencies']).not_to be_empty
+
+      # Start shutdown process
+      @client.clear_messages!
+      @client.send_data(@client.shutdown_request(@client.next_seq_id))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      #   Expect something to be returned
+      expect(result['result']).to be_nil
+
+      # Exit process
+      @client.clear_messages!
+      @client.send_data(@client.exit_notification)
+      expect(@client).to close_within_timeout(5)
+    end
   end
 end
