@@ -103,11 +103,11 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['uri']
       return LSP::PuppetfileDependencyResponse.new('error' => 'Must be a puppetfile in order to find dependencies.') unless documents.document_type(file_uri) == :puppetfile
 
-      content = documents.document(file_uri)
+      document = documents.document(file_uri)
 
       result = []
       begin
-        result = PuppetLanguageServer::Puppetfile::ValidationProvider.find_dependencies(content)
+        result = PuppetLanguageServer::Puppetfile::ValidationProvider.find_dependencies(document.content)
       rescue StandardError => e
         PuppetLanguageServer.log_message(:error, "(puppetfile/getdependencies) Error parsing puppetfile. #{e}")
         return LSP::PuppetfileDependencyResponse.new('error' => 'An internal error occured while parsing the puppetfile. Please see the debug log files for more information.')
