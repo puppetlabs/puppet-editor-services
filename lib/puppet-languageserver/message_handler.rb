@@ -3,27 +3,48 @@
 require 'puppet_editor_services/handler/json_rpc'
 require 'puppet_editor_services/protocol/json_rpc_messages'
 require 'puppet-languageserver/server_capabilities'
+require 'puppet-languageserver/client_session_state'
+require 'puppet-languageserver/global_queues'
 
 module PuppetLanguageServer
   class MessageHandler < PuppetEditorServices::Handler::JsonRPC
-    attr_reader :language_client
-
     def initialize(*_)
       super
-      @language_client = LanguageClient.new(self)
+      @session_state = ClientSessionState.new(self)
+    end
+
+    def session_state # rubocop:disable Style/TrivialAccessors During the refactor, this is fine.
+      @session_state
+    end
+
+    def language_client
+      session_state.language_client
     end
 
     def documents
-      PuppetLanguageServer::DocumentStore
+      session_state.documents
     end
 
     def request_initialize(_, json_rpc_message)
       PuppetLanguageServer.log_message(:debug, 'Received initialize method')
+
       language_client.parse_lsp_initialize!(json_rpc_message.params)
       # Setup static registrations if dynamic registration is not available
       info = {
         :documentOnTypeFormattingProvider => !language_client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration')
       }
+
+      # Configure the document store
+      documents.initialize_store(
+        :workspace => workspace_root_from_initialize_params(json_rpc_message.params)
+      )
+
+      # Initiate loading the object_cache
+      session_state.load_default_data!
+      session_state.load_static_data!
+
+      # Initiate loading of the workspace if needed
+      session_state.load_workspace_data! if documents.store_has_module_metadata? || documents.store_has_environmentconf?
 
       { 'capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities(info) }
     end
@@ -38,15 +59,15 @@ module PuppetLanguageServer
         'languageServerVersion' => PuppetEditorServices.version,
         'puppetVersion'         => Puppet.version,
         'facterVersion'         => Facter.version,
-        'factsLoaded'           => PuppetLanguageServer::FacterHelper.facts_loaded?,
-        'functionsLoaded'       => PuppetLanguageServer::PuppetHelper.default_functions_loaded?,
-        'typesLoaded'           => PuppetLanguageServer::PuppetHelper.default_types_loaded?,
-        'classesLoaded'         => PuppetLanguageServer::PuppetHelper.default_classes_loaded?
+        'factsLoaded'           => session_state.facts_loaded?,
+        'functionsLoaded'       => session_state.default_functions_loaded?,
+        'typesLoaded'           => session_state.default_types_loaded?,
+        'classesLoaded'         => session_state.default_classes_loaded?
       )
     end
 
     def request_puppet_getfacts(_, _json_rpc_message)
-      results = PuppetLanguageServer::FacterHelper.facts_to_hash
+      results = PuppetLanguageServer::FacterHelper.facts_to_hash(session_state)
       LSP::PuppetFactResponse.new('facts' => results)
     end
 
@@ -55,7 +76,7 @@ module PuppetLanguageServer
       title = json_rpc_message.params['title']
       return LSP::PuppetResourceResponse.new('error' => 'Missing Typename') if type_name.nil?
 
-      resource_list = PuppetLanguageServer::PuppetHelper.get_puppet_resource(type_name, title, documents.store_root_path)
+      resource_list = PuppetLanguageServer::PuppetHelper.get_puppet_resource(session_state, type_name, title, documents.store_root_path)
       return LSP::PuppetResourceResponse.new('data' => '') if resource_list.nil? || resource_list.length.zero?
 
       content = resource_list.map(&:manifest).join("\n\n") + "\n"
@@ -65,10 +86,10 @@ module PuppetLanguageServer
     def request_puppet_compilenodegraph(_, json_rpc_message)
       file_uri = json_rpc_message.params['external']
       return LSP::PuppetNodeGraphResponse.new('error' => 'Files of this type can not be used to create a node graph.') unless documents.document_type(file_uri) == :manifest
-      content = documents.document(file_uri)
+      document = documents.document(file_uri)
 
       begin
-        node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(content, documents.store_root_path)
+        node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(session_state, document.content, documents.store_root_path)
         LSP::PuppetNodeGraphResponse.new('vertices' => node_graph.vertices,
                                          'edges'    => node_graph.edges,
                                          'error'    => node_graph.error_content)
@@ -82,11 +103,11 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['uri']
       return LSP::PuppetfileDependencyResponse.new('error' => 'Must be a puppetfile in order to find dependencies.') unless documents.document_type(file_uri) == :puppetfile
 
-      content = documents.document(file_uri)
+      document = documents.document(file_uri)
 
       result = []
       begin
-        result = PuppetLanguageServer::Puppetfile::ValidationProvider.find_dependencies(content)
+        result = PuppetLanguageServer::Puppetfile::ValidationProvider.find_dependencies(document.content)
       rescue StandardError => e
         PuppetLanguageServer.log_message(:error, "(puppetfile/getdependencies) Error parsing puppetfile. #{e}")
         return LSP::PuppetfileDependencyResponse.new('error' => 'An internal error occured while parsing the puppetfile. Please see the debug log files for more information.')
@@ -98,11 +119,11 @@ module PuppetLanguageServer
     def request_puppet_fixdiagnosticerrors(_, json_rpc_message)
       formatted_request = LSP::PuppetFixDiagnosticErrorsRequest.new(json_rpc_message.params)
       file_uri = formatted_request.documentUri
-      content = documents.document(file_uri)
+      content = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest
-        changes, new_content = PuppetLanguageServer::Manifest::ValidationProvider.fix_validate_errors(content)
+        changes, new_content = PuppetLanguageServer::Manifest::ValidationProvider.fix_validate_errors(session_state, content)
       else
         raise "Unable to fixDiagnosticErrors on #{file_uri}"
       end
@@ -127,12 +148,12 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content = documents.document(file_uri)
+      content = documents.document_content(file_uri)
       context = json_rpc_message.params['context'].nil? ? nil : LSP::CompletionContext.new(json_rpc_message.params['context'])
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::CompletionProvider.complete(content, line_num, char_num, :context => context, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::CompletionProvider.complete(session_state, content, line_num, char_num, :context => context, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide completion on #{file_uri}"
       end
@@ -142,7 +163,7 @@ module PuppetLanguageServer
     end
 
     def request_completionitem_resolve(_, json_rpc_message)
-      PuppetLanguageServer::Manifest::CompletionProvider.resolve(LSP::CompletionItem.new(json_rpc_message.params))
+      PuppetLanguageServer::Manifest::CompletionProvider.resolve(session_state, LSP::CompletionItem.new(json_rpc_message.params))
     rescue StandardError => e
       PuppetLanguageServer.log_message(:error, "(completionItem/resolve) #{e}")
       # Spit back the same params if an error happens
@@ -153,10 +174,10 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content = documents.document(file_uri)
+      content = documents.document_content(file_uri)
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::HoverProvider.resolve(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::HoverProvider.resolve(session_state, content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide hover on #{file_uri}"
       end
@@ -169,11 +190,11 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content = documents.document(file_uri)
+      content = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(content, line_num, char_num, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(session_state, content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -184,11 +205,11 @@ module PuppetLanguageServer
 
     def request_textdocument_documentsymbol(_, json_rpc_message)
       file_uri = json_rpc_message.params['textDocument']['uri']
-      content  = documents.document(file_uri)
+      content  = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => documents.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -202,7 +223,7 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content  = documents.document(file_uri)
+      content  = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest
@@ -225,15 +246,16 @@ module PuppetLanguageServer
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
-      content  = documents.document(file_uri)
+      content  = documents.document_content(file_uri)
 
       case documents.document_type(file_uri)
       when :manifest
         PuppetLanguageServer::Manifest::SignatureProvider.signature_help(
+          session_state,
           content,
           line_num,
           char_num,
-          :tasks_mode => PuppetLanguageServer::DocumentStore.plan_file?(file_uri)
+          :tasks_mode => documents.plan_file?(file_uri)
         )
       else
         raise "Unable to provide signatures on #{file_uri}"
@@ -245,7 +267,7 @@ module PuppetLanguageServer
 
     def request_workspace_symbol(_, json_rpc_message)
       result = []
-      result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(json_rpc_message.params['query'], PuppetLanguageServer::PuppetHelper.cache))
+      result.concat(PuppetLanguageServer::Manifest::DocumentSymbolProvider.workspace_symbols(json_rpc_message.params['query'], session_state.object_cache))
       result
     rescue StandardError => e
       PuppetLanguageServer.log_message(:error, "(workspace/symbol) #{e}")
@@ -302,13 +324,13 @@ module PuppetLanguageServer
     def notification_textdocument_didsave(_, _json_rpc_message)
       PuppetLanguageServer.log_message(:info, 'Received textDocument/didSave notification.')
       # Expire the store cache so that the store information can re-evaluated
-      PuppetLanguageServer::DocumentStore.expire_store_information
-      if PuppetLanguageServer::DocumentStore.store_has_module_metadata? || PuppetLanguageServer::DocumentStore.store_has_environmentconf?
+      documents.expire_store_information
+      if documents.store_has_module_metadata? || documents.store_has_environmentconf?
         # Load the workspace information
-        PuppetLanguageServer::PuppetHelper.load_workspace_async
+        session_state.load_workspace_data!
       else
         # Purge the workspace information
-        PuppetLanguageServer::PuppetHelper.purge_workspace
+        session_state.purge_workspace_data!
       end
     end
 
@@ -340,7 +362,7 @@ module PuppetLanguageServer
 
     def unhandled_exception(error, options)
       super(error, options)
-      PuppetLanguageServer::CrashDump.write_crash_file(error, nil, options)
+      PuppetLanguageServer::CrashDump.write_crash_file(error, session_state, nil, options)
     end
 
     private
@@ -352,7 +374,17 @@ module PuppetLanguageServer
         options[:puppet_version]     = Puppet.version
         options[:module_path]        = PuppetLanguageServer::PuppetHelper.module_path
       end
-      PuppetLanguageServer::ValidationQueue.enqueue(file_uri, doc_version, client_handler_id, options)
+      GlobalQueues.validate_queue.enqueue(file_uri, doc_version, client_handler_id, options)
+    end
+
+    def workspace_root_from_initialize_params(params)
+      if params.key?('workspaceFolders')
+        return nil if params['workspaceFolders'].nil? || params['workspaceFolders'].empty?
+        # We don't support multiple workspace folders yet, so just select the first one
+        return UriHelper.uri_path(params['workspaceFolders'][0]['uri'])
+      end
+      return UriHelper.uri_path(params['rootUri']) if params.key?('rootUri')
+      params['rootPath']
     end
   end
 

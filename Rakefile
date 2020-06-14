@@ -72,6 +72,16 @@ task :gem_revendor do
       :github_repo => 'https://github.com/CocoaPods/Molinillo.git',
       :github_ref => '0.6.6',
     },
+    {
+      :directory => 'puppet-strings',
+      :github_repo => 'https://github.com/puppetlabs/puppet-strings.git',
+      :github_ref => 'v2.4.0',
+    },
+    {
+      :directory => 'yard',
+      :github_repo => 'https://github.com/lsegal/yard.git',
+      :github_ref => 'v0.9.24',
+    },
   ]
 
   # Clean out the vendor directory first
@@ -121,7 +131,7 @@ HEREDOC
 end
 
 desc "Create compressed files of the language and debug servers for release"
-task :build do
+task build: [:gem_revendor] do
   require 'fileutils'
   require 'archive/zip'
   require 'zlib'

@@ -11,8 +11,8 @@ module PuppetLanguageServer
       #  [ <Int> Number of problems fixed,
       #    <String> New Content
       #  ]
-      def self.fix_validate_errors(content)
-        module_root = PuppetLanguageServer::DocumentStore.store_root_path
+      def self.fix_validate_errors(session_state, content)
+        module_root = session_state.documents.store_root_path
         linter_options = nil
         if module_root.nil?
           linter_options = PuppetLint::OptParser.build
@@ -30,7 +30,7 @@ module PuppetLanguageServer
         [problems_fixed, linter.manifest]
       end
 
-      def self.validate(content, options = {})
+      def self.validate(session_state, content, options = {})
         options = {
           :max_problems => 100,
           :tasks_mode   => false
@@ -40,7 +40,7 @@ module PuppetLanguageServer
         # TODO: Need to implement max_problems
         problems = 0
 
-        module_root = PuppetLanguageServer::DocumentStore.store_root_path
+        module_root = session_state.documents.store_root_path
         linter_options = nil
         if module_root.nil?
           linter_options = PuppetLint::OptParser.build

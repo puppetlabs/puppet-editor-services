@@ -64,7 +64,6 @@ class Introspecter
       File.join(root_dir, 'puppet-languageserver-sidecar'),
       '--action=workspace_aggregate',
       "--local-workspace=#{absolute_module_path}",
-      '--feature-flags=puppetstrings',
       '--no-cache',
       '--debug=STDOUT',
       "--output=#{output_file}"

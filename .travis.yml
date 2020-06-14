@@ -8,34 +8,35 @@ os:
 # OSX is REALLY slow to test
 #  - osx
 
+# safelist
+branches:
+  only:
+  - master
+  - "1.0"
+
 matrix:
   fast_finish: true
 
 env:
   matrix:
-    # Latest 4.x Puppet (Covers LTS too)
-    - PUPPET_GEM_VERSION="~> 4.0"
-      RUBY_VER=2.1.9
-      RAKE_TASK="test_languageserver test_languageserver_sidecar test_debugserver"
-      BUNDLER_VERSION=1.17.3
     # Latest 5.x Puppet
     - PUPPET_GEM_VERSION="~> 5.0"
       RUBY_VER=2.4.1
-      RAKE_TASK="test_languageserver test_languageserver_sidecar test_debugserver"
+      RAKE_TASK="gem_revendor test_languageserver test_languageserver_sidecar test_debugserver"
     # Latest 6.x Puppet
     - PUPPET_GEM_VERSION="~> 6.0"
       RUBY_VER=2.5.1
-      RAKE_TASK="test_languageserver test_languageserver_sidecar test_debugserver"
+      RAKE_TASK="gem_revendor test_languageserver test_languageserver_sidecar test_debugserver"
 
     # Specific Puppet version testing
     - PUPPET_GEM_VERSION="5.1.0"
       RUBY_VER=2.4.1
-      RAKE_TASK="test_languageserver"
+      RAKE_TASK="gem_revendor test_languageserver"
 
     # Acceptance tests.
     - PUPPET_GEM_VERSION="~> 6.0"
       RUBY_VER=2.5.1
-      RAKE_TASK="acceptance_languageserver"
+      RAKE_TASK="gem_revendor acceptance_languageserver"
 
     # Ruby tasks (style).  Puppet version is irrelevant
     - PUPPET_GEM_VERSION="> 0.0"

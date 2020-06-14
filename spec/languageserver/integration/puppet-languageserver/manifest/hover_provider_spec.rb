@@ -1,11 +1,8 @@
 require 'spec_helper'
 
 describe 'hover_provider' do
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => 'mock') }
   let(:subject) { PuppetLanguageServer::Manifest::HoverProvider }
-
-  before(:all) do
-    wait_for_puppet_loading
-  end
 
   describe '#resolve' do
     let(:content) { <<-EOT
@@ -27,48 +24,38 @@ EOT
     }
 
     before(:each) do
+      populate_cache(session_state.object_cache)
       # Prepopulate the Object Cache with workspace objects
       # Classes / Defined Types
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
       obj = random_sidecar_puppet_class
       obj.key = :mock_workspace_class
       list << obj
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :class, :workspace)
+      session_state.object_cache.import_sidecar_list!(list, :class, :workspace)
       # Functions
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
       list << random_sidecar_puppet_function
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :function, :workspace)
+      session_state.object_cache.import_sidecar_list!(list, :function, :workspace)
       # Types
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
       list << random_sidecar_puppet_type
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :type, :workspace)
+      session_state.object_cache.import_sidecar_list!(list, :type, :workspace)
       # Datatypes
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
       list << random_sidecar_puppet_datatype
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :datatype, :workspace)
+      session_state.object_cache.import_sidecar_list!(list, :datatype, :workspace)
       # Currently the DataTypes are only loaded behind a feature flag. As we only test without
       # the flag, simulate it the purposes of this test
       list = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
       # The String datatype
       obj = PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new.from_h!({"key" => "String", "doc"=>"The String core data type", "attributes"=>[], "is_type_alias" => false })
       list << obj
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :datatype, :default)
-    end
-
-    after(:each) do
-      # Clear out the Object Cache of workspace objects
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :type, :workspace)
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :workspace)
-      # Currently the DataTypes are only loaded behind a feature flag. As we only test without
-      # the flag, simulate it the purposes of this test
-      PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :datatype, :default)
+      session_state.object_cache.import_sidecar_list!(list, :datatype, :default)
     end
 
     describe "Given a manifest which has syntax errors" do
       it "should raise an error" do
-        expect{subject.resolve('user { "Bob"', 0, 1)}.to raise_error(RuntimeError)
+        expect{subject.resolve(session_state, 'user { "Bob"', 0, 1)}.to raise_error(RuntimeError)
       end
     end
 
@@ -83,16 +70,16 @@ EOT
       }
 
       it "should not raise an error" do
-        result = subject.resolve(content, 0, 1, { :tasks_mode => true})
+        result = subject.resolve(session_state, content, 0, 1, { :tasks_mode => true})
       end
 
       it 'should find bolt specific data types' do
-        result = subject.resolve(content, 1, 15, { :tasks_mode => true})
+        result = subject.resolve(session_state, content, 1, 15, { :tasks_mode => true})
         expect(result.contents).to start_with("**TargetSpec** Data Type Alias\n")
       end
 
       it 'should find bolt specific functions' do
-        result = subject.resolve(content, 3, 36, { :tasks_mode => true})
+        result = subject.resolve(session_state, content, 3, 36, { :tasks_mode => true})
         expect(result.contents).to start_with("**get_targets** Function\n")
       end
     end
@@ -108,11 +95,11 @@ EOT
       }
 
       it "should raise an error for Bolt datatypes" do
-        expect{subject.resolve(content, 1, 15, { :tasks_mode => false})}.to raise_error(RuntimeError)
+        expect{subject.resolve(session_state, content, 1, 15, { :tasks_mode => false})}.to raise_error(RuntimeError)
       end
 
       it "should raise an error for Bolt functions" do
-        expect{subject.resolve(content, 3, 36, { :tasks_mode => false})}.to raise_error(RuntimeError)
+        expect{subject.resolve(session_state, content, 3, 36, { :tasks_mode => false})}.to raise_error(RuntimeError)
       end
     end
 
@@ -121,7 +108,7 @@ EOT
       let(:char_num) { 3 }
 
       it 'should return nil' do
-        result = subject.resolve(content, line_num, char_num)
+        result = subject.resolve(session_state, content, line_num, char_num)
 
         expect(result.contents).to eq(nil)
       end
@@ -151,7 +138,7 @@ EOT
 
         it 'should return class description' do
           pending('Not implemented')
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**class** keyword\n")
         end
@@ -163,7 +150,7 @@ EOT
 
         it 'should return class description' do
           pending('Not implemented')
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**class** keyword\n")
         end
@@ -175,7 +162,7 @@ EOT
 
         it 'should return type information' do
           pending('Not implemented')
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**String** keyword\n")
         end
@@ -187,7 +174,7 @@ EOT
 
         it 'should not return any information' do
           pending('Not implemented')
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to eq('')
         end
@@ -199,7 +186,7 @@ EOT
 
         it 'should not return any information' do
           pending('Not implemented')
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to eq('')
         end
@@ -220,7 +207,7 @@ EOT
         let(:char_num) { 3 }
 
         it 'should return resource description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**user** Resource\n")
         end
@@ -231,7 +218,7 @@ EOT
         let(:char_num) { 10 }
 
         it 'should return resource description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**user** Resource\n")
         end
@@ -242,7 +229,7 @@ EOT
         let(:char_num) { 1 }
 
         it 'should return resource description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**user** Resource\n")
         end
@@ -253,7 +240,7 @@ EOT
         let(:char_num) { 5 }
 
         it 'should return property description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**ensure** Property\n")
         end
@@ -264,7 +251,7 @@ EOT
         let(:char_num) { 10 }
 
         it 'should return property description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**ensure** Property\n")
         end
@@ -275,7 +262,7 @@ EOT
         let(:char_num) { 5 }
 
         it 'should return parameter description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**name** Parameter\n")
         end
@@ -286,7 +273,7 @@ EOT
         let(:char_num) { 10 }
 
         it 'should return parameter description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**name** Parameter\n")
         end
@@ -309,7 +296,7 @@ EOT
         let(:char_num) { 3 }
 
         it 'should return resource description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**mock_workspace_class** Resource\n")
         end
@@ -320,7 +307,7 @@ EOT
         let(:char_num) { 5 }
 
         it 'should return resource description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**mock_workspace_class** Resource\n")
         end
@@ -331,7 +318,7 @@ EOT
         let(:char_num) { 26 }
 
         it 'should return resource description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**mock_workspace_class** Resource\n")
         end
@@ -342,7 +329,7 @@ EOT
         let(:char_num) { 1 }
 
         it 'should return resource description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**mock_workspace_class** Resource\n")
         end
@@ -353,7 +340,7 @@ EOT
         let(:char_num) { 5 }
 
         it 'should return parameter description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**attr_name1** Parameter\n")
         end
@@ -364,7 +351,7 @@ EOT
         let(:char_num) { 15 }
 
         it 'should return parameter description' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
           expect(result.contents).to start_with("**attr_name1** Parameter\n")
         end
       end
@@ -383,7 +370,7 @@ EOT
         let(:char_num) { 16 }
 
         it 'should return fact information' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**operatingsystem** Fact\n")
         end
@@ -394,7 +381,7 @@ EOT
         let(:char_num) { 16 }
 
         it 'should return fact information' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**operatingsystem** Fact\n")
         end
@@ -405,7 +392,7 @@ EOT
         let(:char_num) { 12 }
 
         it 'should return fact information' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**operatingsystem** Fact\n")
         end
@@ -416,7 +403,7 @@ EOT
         let(:char_num) { 22 }
 
         it 'should return fact information' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**operatingsystem** Fact\n")
         end
@@ -435,7 +422,7 @@ EOT
         let(:char_num) { 17 }
 
         it 'should return function information' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**split** Function\n")
         end
@@ -461,7 +448,7 @@ class firewall {
         it 'should not complete to service resource' do
           pending("(PUP-7668) parser is assigning an incorrect offset")
 
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
           expect(result.contents).not_to start_with("**service** Resource\n")
         end
       end
@@ -470,7 +457,7 @@ class firewall {
         let(:line_num) { 3 }
         let(:char_num) { 6 }
         it 'should complete to service resource documentation' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**service** Resource\n")
         end
@@ -494,21 +481,11 @@ class module::foo (
         let(:line_num) { 1 }
         let(:char_num) { 6 }
         it 'should complete an inbuilt Puppet type' do
-          result = subject.resolve(content, line_num, char_num)
+          result = subject.resolve(session_state, content, line_num, char_num)
 
           expect(result.contents).to start_with("**String** Data Type\n")
         end
       end
-
-      # describe 'when cursor is hovering on service resource' do
-      #   let(:line_num) { 3 }
-      #   let(:char_num) { 6 }
-      #   it 'should complete to service resource documentation' do
-      #     result = subject.resolve(content, line_num, char_num)
-
-      #     expect(result.contents).to start_with("**service** Resource\n")
-      #   end
-      # end
     end
   end
 end

@@ -2,7 +2,7 @@ require 'spec_helper'
 
 RSpec.shared_examples "a single definition result" do |filename_regex|
   it "should return a single definition result which matches #{filename_regex.to_s}" do
-    result = subject.find_definition(content, line_num, char_num)
+    result = subject.find_definition(session_state, content, line_num, char_num)
 
     expect(result).to be_a(Array)
     expect(result.count).to eq(1)
@@ -15,24 +15,19 @@ RSpec.shared_examples "a single definition result" do |filename_regex|
 end
 
 def puppetclass_cache_object(key, source)
-  value = PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new
-  value.key = key
-  value.calling_source = source
-  value.source = source
-  value.line = rand(1000)
-  value.char = rand(1000)
-  value.length = rand(1000)
-  value
+  random_sidecar_puppet_class(key).tap do |obj|
+    obj.source = source
+    obj.calling_source = source
+  end
 end
 
 describe 'definition_provider' do
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => 'mock') }
   let(:subject) { PuppetLanguageServer::Manifest::DefinitionProvider }
 
-  before(:all) do
-    # This is a little brittle
-    cache = PuppetLanguageServer::PuppetHelper.instance_variable_get(:@inmemory_cache)
-
-    cache.import_sidecar_list!([
+  before(:each) do
+    populate_cache(session_state.object_cache)
+    session_state.object_cache.import_sidecar_list!([
       puppetclass_cache_object(:deftypeone, '/root/deftypeone.pp'),
       puppetclass_cache_object(:puppetclassone, '/root/puppetclassone.pp'),
       puppetclass_cache_object(:testclasses, '/root/init.pp'),
@@ -40,17 +35,7 @@ describe 'definition_provider' do
     ], :class, :rspec)
   end
 
-  after(:all) do
-    # This is a little brittle
-    cache = PuppetLanguageServer::PuppetHelper.instance_variable_get(:@inmemory_cache)
-    cache.remove_section!(:class, :rspec)
-  end
-
   describe '#find_defintion' do
-    before(:all) do
-      wait_for_puppet_loading
-    end
-
     context 'Given a Puppet Plan', :if => Puppet.tasks_supported? do
       let(:content) { <<-EOT
         plan mymodule::my_plan(
@@ -59,7 +44,7 @@ describe 'definition_provider' do
         EOT
       }
       it "should not raise an error" do
-        result = subject.find_definition(content, 0, 1, { :tasks_mode => true})
+        result = subject.find_definition(session_state, content, 0, 1, { :tasks_mode => true})
       end
     end
 
@@ -73,7 +58,7 @@ EOT
       let(:line_num) { 1 }
       let(:char_num) { 5 }
 
-      it_should_behave_like "a single definition result", /functions\.rb/
+      it_should_behave_like "a single definition result", /alert\.rb/
     end
 
     context 'When cursor is on a custom puppet type' do
@@ -218,6 +203,5 @@ EOT
 
       it_should_behave_like "a single definition result", /include\.rb/
     end
-
   end
 end

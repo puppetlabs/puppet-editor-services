@@ -113,6 +113,8 @@ module PuppetDebugServer
     require 'puppet'
     log_message(:info, "Using Puppet v#{::Puppet.version}")
 
+    raise("Detected Puppet #{Puppet.version} however the Debug Server requires Puppet 5.0 and above") if Gem::Version.new(Puppet.version) < Gem::Version.new('5.0.0')
+
     true
   end
 

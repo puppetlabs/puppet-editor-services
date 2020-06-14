@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'PuppetLanguageServerSidecar::PuppetHelper' do
+describe 'PuppetLanguageServerSidecar::PuppetHelper', :if => Gem::Version.new(Puppet.version) >= Gem::Version.new('5.0.0') do
   let (:subject) { PuppetLanguageServerSidecar::PuppetHelper }
 
   describe '#get_puppet_resource' do

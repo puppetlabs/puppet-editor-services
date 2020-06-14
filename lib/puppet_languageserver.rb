@@ -57,9 +57,8 @@ module PuppetLanguageServer
     # These libraries do not require the puppet gem and required for the
     # server to respond to clients.
     %w[
-      document_store
+      client_session_state
       crash_dump
-      language_client
       message_handler
       server_capabilities
     ].each do |lib|
@@ -80,9 +79,8 @@ module PuppetLanguageServer
 
     # These libraries require the puppet and LSP gems.
     %w[
-      validation_queue
       sidecar_protocol
-      sidecar_queue
+      global_queues
       puppet_parser_helper
       puppet_helper
       facter_helper
@@ -157,7 +155,7 @@ module PuppetLanguageServer
           args[:debug] = debug
         end
 
-        opts.on('-s', '--slow-start', 'Delay starting the Language Server until Puppet initialisation has completed.  Default is to start fast') do |_misc|
+        opts.on('-s', '--slow-start', '** DEPRECATED ** Delay starting the Language Server until Puppet initialisation has completed.  Default is to start fast') do |_misc|
           args[:fast_start_langserver] = false
         end
 
@@ -185,8 +183,7 @@ module PuppetLanguageServer
           args[:puppet_version] = text
         end
 
-        opts.on('--local-workspace=PATH', 'The workspace or file path that will be used to provide module-specific functionality. Default is no workspace path.') do |path|
-          args[:workspace] = path
+        opts.on('--local-workspace=PATH', '** DEPRECATED ** The workspace or file path that will be used to provide module-specific functionality. Default is no workspace path.') do |_path|
         end
 
         opts.on('-h', '--help', 'Prints this help') do
@@ -217,68 +214,20 @@ module PuppetLanguageServer
     return unless active?
 
     log_message(:info, "Using Puppet v#{Puppet.version}")
+    log_message(:info, "Using Facter v#{Facter.version}")
+
+    raise("Detected Puppet #{Puppet.version} however the Language Server requires Puppet 5.0 and above") if Gem::Version.new(Puppet.version) < Gem::Version.new('5.0.0')
 
     log_message(:debug, "Detected additional puppet settings #{options[:puppet_settings]}")
     options[:puppet_settings].nil? ? Puppet.initialize_settings : Puppet.initialize_settings(options[:puppet_settings])
 
-    log_message(:info, 'Initializing Puppet Helper...')
-    PuppetLanguageServer::PuppetHelper.initialize_helper(options)
-
-    log_message(:debug, 'Initializing Document Store...')
-    PuppetLanguageServer::DocumentStore.initialize_store(options)
-
     log_message(:info, 'Initializing settings...')
-    if options[:fast_start_langserver]
-      Thread.new do
-        init_puppet_worker(options)
-      end
-    else
-      init_puppet_worker(options)
-    end
 
-    true
-  end
-
-  def self.init_puppet_worker(options)
     # Remove all other logging destinations except for ours
     Puppet::Util::Log.destinations.clear
     Puppet::Util::Log.newdestination('null_logger')
 
-    log_message(:info, "Using Facter v#{Facter.version}")
-    if options[:preload_puppet]
-      if featureflag?('puppetstrings')
-        log_message(:info, 'Preloading Default metadata (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_aggregate_async
-
-        log_message(:info, 'Preloading Facter (Async)...')
-        PuppetLanguageServer::FacterHelper.load_facts_async
-      else
-        log_message(:info, 'Preloading Puppet Types (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_types_async
-
-        log_message(:info, 'Preloading Facter (Async)...')
-        PuppetLanguageServer::FacterHelper.load_facts_async
-
-        log_message(:info, 'Preloading Functions (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_functions_async
-
-        log_message(:info, 'Preloading Classes (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_classes_async
-
-        log_message(:info, 'Preloading DataTypes (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_default_datatypes_async
-      end
-
-      if PuppetLanguageServer::DocumentStore.store_has_module_metadata? || PuppetLanguageServer::DocumentStore.store_has_environmentconf?
-        log_message(:info, 'Preloading Workspace (Async)...')
-        PuppetLanguageServer::PuppetHelper.load_workspace_async
-      end
-
-      log_message(:info, 'Preloading static data (Async)...')
-      PuppetLanguageServer::PuppetHelper.load_static_data_async
-    else
-      log_message(:info, 'Skipping preloading Puppet')
-    end
+    true
   end
 
   def self.rpc_server(options)
