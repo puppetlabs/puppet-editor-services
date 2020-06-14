@@ -6,6 +6,23 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 1.0.0 - ????-??-??
+
+Major release 🎉🎉 which drops support for Puppet 4
+
+> This (commit) removes Puppet 4 from the testing matrix and
+modifies the Debug Server, Language Server and Language Server Sidecar to
+terminate early with an error if run under Puppet 4.
+
+### Changed
+
+- ([GH-209](https://github.com/puppetlabs/puppet-editor-services/issues/209)) Refactor the session state to be a class and pass that instead of global modules
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/f7caae3f7b0db4e1debecafe8bd4c3485a334732)) Removed vendored gems and update development and building workflows
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/2f6e0fc143ddd50be5256bf9abb62d91d2e49466)) Fix Facter Helper for 1.0
+- ([GH-252](https://github.com/puppetlabs/puppet-editor-services/issues/252)) Use puppet-strings by default and remove feature flag
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/bc3db27182ad47253e29a86a6cace73292b86d30)) Vendor puppet-strings and Yard
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/5a4800434dbed1756148905464011f882b7e2191)) Remove support for Puppet 4
+
 ## 0.26.1 - 2020-06-04
 
 ### Added
