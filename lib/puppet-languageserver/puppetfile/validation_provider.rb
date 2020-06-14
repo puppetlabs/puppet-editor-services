@@ -106,6 +106,32 @@ module PuppetLanguageServer
         end
       end
 
+      def self.find_dependencies(content)
+        require 'puppetfile-resolver'
+        require 'puppetfile-resolver/puppetfile/parser/r10k_eval'
+        parser = PuppetfileResolver::Puppetfile::Parser::R10KEval
+
+        result = []
+        puppetfile = parser.parse(content)
+
+        return result if puppetfile.nil?
+
+        raise 'Puppetfile is not valid' unless puppetfile.valid?
+
+        puppetfile.modules.select { |d| d.module_type == :forge }.each do |dep|
+          result << {
+            name: dep.name,
+            title: dep.title,
+            owner: dep.owner,
+            version: dep.version.to_s,
+            start_line: dep.location.start_line,
+            end_line: dep.location.end_line
+          }
+        end
+
+        result
+      end
+
       def self.resolver_cache
         return @resolver_cache unless @resolver_cache.nil?
         require 'puppetfile-resolver/cache/base'
