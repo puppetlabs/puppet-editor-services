@@ -139,12 +139,14 @@ module PuppetLanguageServerSidecar
           obj.doc            = item[:docstring][:text]
           obj.parameters     = {}
           # Extract the class parameters
-          item[:docstring][:tags]&.select { |tag| tag[:tag_name] == 'param' }&.each do |tag|
-            param_name = tag[:name]
-            obj.parameters[param_name] = {
-              :doc  => tag[:text],
-              :type => tag[:types].join(', ')
-            }
+          unless item[:docstring][:tags].nil?
+            item[:docstring][:tags].select { |tag| tag[:tag_name] == 'param' }.each do |tag|
+              param_name = tag[:name]
+              obj.parameters[param_name] = {
+                :doc  => tag[:text],
+                :type => tag[:types].join(', ')
+              }
+            end
           end
 
           @cache[source_path].classes << obj
@@ -168,13 +170,15 @@ module PuppetLanguageServerSidecar
         obj.alias_of       = nil
 
         defaults = item[:defaults] || {}
-        item[:docstring][:tags]&.select { |tag| tag[:tag_name] == 'param' }&.each do |tag|
-          obj.attributes << PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeAttribute.new.from_h!(
-            'key'           => tag[:name],
-            'default_value' => defaults[tag[:name]],
-            'doc'           => tag[:text],
-            'types'         => tag[:types].nil? ? nil : tag[:types].join(', ')
-          )
+        unless item[:docstring][:tags].nil?
+          item[:docstring][:tags].select { |tag| tag[:tag_name] == 'param' }.each do |tag|
+            obj.attributes << PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeAttribute.new.from_h!(
+              'key'           => tag[:name],
+              'default_value' => defaults[tag[:name]],
+              'doc'           => tag[:text],
+              'types'         => tag[:types].nil? ? nil : tag[:types].join(', ')
+            )
+          end
         end
 
         @cache[source_path].datatypes << obj
@@ -268,18 +272,22 @@ module PuppetLanguageServerSidecar
         obj.doc            = item[:docstring][:text]
 
         obj.attributes = {}
-        item[:properties]&.each do |prop|
-          obj.attributes[prop[:name]] = {
-            :type => :property,
-            :doc  => prop[:description]
-          }
+        unless item[:properties].nil?
+          item[:properties].each do |prop|
+            obj.attributes[prop[:name]] = {
+              :type => :property,
+              :doc  => prop[:description]
+            }
+          end
         end
-        item[:parameters]&.each do |prop|
-          obj.attributes[prop[:name]] = {
-            :type       => :param,
-            :doc        => prop[:description],
-            :isnamevar? => prop[:isnamevar]
-          }
+        unless item[:parameters].nil?
+          item[:parameters].each do |prop|
+            obj.attributes[prop[:name]] = {
+              :type       => :param,
+              :doc        => prop[:description],
+              :isnamevar? => prop[:isnamevar]
+            }
+          end
         end
 
         @cache[source_path].types << obj

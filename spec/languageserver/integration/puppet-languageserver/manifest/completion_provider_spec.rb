@@ -68,41 +68,32 @@ def create_ensurable_property
 end
 
 describe 'completion_provider' do
+  let(:session_state) { PuppetLanguageServer::ClientSessionState.new(nil, :connection_id => 'mock') }
   let(:subject) { PuppetLanguageServer::Manifest::CompletionProvider }
 
-  before(:all) do
-    wait_for_puppet_loading
-  end
-
   before(:each) do
+    populate_cache(session_state.object_cache)
     # Prepopulate the Object Cache with workspace objects
     # Classes / Defined Types
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
     obj = random_sidecar_puppet_class
     obj.key = :mock_workspace_class
     list << obj
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :class, :workspace)
+    session_state.object_cache.import_sidecar_list!(list, :class, :workspace)
     # Functions
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
     list << random_sidecar_puppet_function
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :function, :workspace)
+    session_state.object_cache.import_sidecar_list!(list, :function, :workspace)
     # Types
     list = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
     list << random_sidecar_puppet_type
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!(list, :type, :workspace)
-  end
-
-  after(:each) do
-    # Clear out the Object Cache of workspace objects
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :class, :workspace)
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :function, :workspace)
-    PuppetLanguageServer::PuppetHelper.cache.import_sidecar_list!([], :type, :workspace)
+    session_state.object_cache.import_sidecar_list!(list, :type, :workspace)
   end
 
   describe '#complete' do
     describe "Given an incomplete manifest which has syntax errors" do
       it "should raise an error" do
-        expect{subject.complete('user { "Bob"', 0, 1)}.to raise_error(RuntimeError)
+        expect{subject.complete(session_state, 'user { "Bob"', 0, 1)}.to raise_error(RuntimeError)
       end
     end
 
@@ -116,11 +107,12 @@ describe 'completion_provider' do
       }
 
       it "should not raise an error" do
-        result = subject.complete(content, 0, 1, { :tasks_mode => true})
+        result = subject.complete(session_state, content, 0, 1, { :tasks_mode => true})
       end
 
       it 'should suggest Bolt functions' do
-        result = subject.complete(content, 2, 1, { :tasks_mode => true})
+        expect(session_state.static_data_loaded?).to eq(true)
+        result = subject.complete(session_state, content, 2, 1, { :tasks_mode => true})
 
         expect(completion_item_with_type_and_name(result, 'function', 'run_task')).to_not be_nil
       end
@@ -158,7 +150,7 @@ EOT
 
         [0, 9].each do |line_num|
           it "should return a list of keyword, resource_type, function, resource_class regardless of cursor location (Testing line #{line_num})" do
-            result = subject.complete(content, line_num, char_num)
+            result = subject.complete(session_state, content, line_num, char_num)
 
             result.items.each do |item|
               expect(item).to be_completion_item_with_type(expected_types)
@@ -180,7 +172,7 @@ EOT
           let(:expected_types) { ['keyword','resource_type','resource_class'] }
 
           it 'should return a list of keyword, resource_type, resource_class' do
-            result = subject.complete(content, testcase[:line_num], char_num)
+            result = subject.complete(session_state, content, testcase[:line_num], char_num)
 
             result.items.each do |item|
               expect(item).to be_completion_item_with_type(expected_types)
@@ -199,7 +191,7 @@ EOT
         let(:expected_types) { ['resource_parameter','resource_property'] }
 
         it 'should return a list of resource_parameter, resource_property' do
-          result = subject.complete(content, line_num, char_num)
+          result = subject.complete(session_state, content, line_num, char_num)
 
           result.items.each do |item|
             expect(item).to be_completion_item_with_type(expected_types)
@@ -235,7 +227,7 @@ EOT
         let(:expected_types) { ['keyword','resource_type','function','resource_class'] }
 
         it "should return a list of keyword, resource_type, function, resource_class" do
-          result = subject.complete(content_empty, line_num, char_num)
+          result = subject.complete(session_state, content_empty, line_num, char_num)
 
           result.items.each do |item|
             expect(item).to be_completion_item_with_type(expected_types)
@@ -253,7 +245,7 @@ EOT
         let(:expected_types) { ['keyword','resource_type','function','resource_class'] }
 
         it "should return a list of keyword, resource_type, function, resource_class" do
-          result = subject.complete(content_simple, line_num, char_num)
+          result = subject.complete(session_state, content_simple, line_num, char_num)
 
           result.items.each do |item|
             expect(item).to be_completion_item_with_type(expected_types)
@@ -280,7 +272,7 @@ EOT
         let(:char_num) { 16 }
 
         it 'should return a list of facts' do
-          result = subject.complete(content, line_num, char_num)
+          result = subject.complete(session_state, content, line_num, char_num)
 
           result.items.each do |item|
             expect(item).to be_completion_item_with_type('variable_expr_fact')
@@ -299,7 +291,7 @@ EOT
         let(:char_num) { 16 }
 
         it 'should return a list of facts' do
-          result = subject.complete(content, line_num, char_num)
+          result = subject.complete(session_state, content, line_num, char_num)
 
           result.items.each do |item|
             expect(item).to be_completion_item_with_type('variable_expr_fact')
@@ -318,7 +310,7 @@ EOT
         let(:char_num) { 16 }
 
         it 'should return a list of facts' do
-          result = subject.complete(content, line_num, char_num)
+          result = subject.complete(session_state, content, line_num, char_num)
 
           result.items.each do |item|
             expect(item).to be_completion_item_with_type('variable_expr_fact')
@@ -337,7 +329,7 @@ EOT
         'data'   => { 'type' => 'unknown_type' }
       )
 
-      result = subject.resolve(resolve_request)
+      result = subject.resolve(session_state, resolve_request)
       expect(result).to be_json_like(resolve_request)
     end
 
@@ -351,7 +343,7 @@ EOT
 
       before(:each) do
         # Generate the resolution request based on a completion response
-        @completion_response = subject.complete(content, line_num, char_num)
+        @completion_response = subject.complete(session_state, content, line_num, char_num)
       end
 
       context 'for a well known fact (operatingsystem)' do
@@ -360,8 +352,8 @@ EOT
         end
 
         it 'should return the fact value' do
-          result = subject.resolve(@resolve_request)
-          expect(result.documentation).to eq(Facter.fact('operatingsystem').value)
+          result = subject.resolve(session_state, @resolve_request)
+          expect(result.documentation).to eq('windows')
         end
       end
 
@@ -374,7 +366,7 @@ EOT
             'data'   => { 'type' => 'variable_expr_fact', 'expr' => 'I_dont_exist'}
           )
 
-          result = subject.resolve(resolve_request)
+          result = subject.resolve(session_state, resolve_request)
 
           expect(result.documentation).to eq('')
         end
@@ -392,7 +384,7 @@ EOT
 
       before(:each) do
         # Generate the resolution request based on a completion response
-        @completion_response = subject.complete(content, line_num, char_num)
+        @completion_response = subject.complete(session_state, content, line_num, char_num)
       end
 
       context 'for an unknown keyword' do
@@ -402,7 +394,7 @@ EOT
 
         it 'should return the original request' do
           @resolve_request.data['name'] = 'keyword_not_found'
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result).to be_json_like(@resolve_request)
         end
       end
@@ -414,12 +406,12 @@ EOT
           end
 
           it 'should return the documentation' do
-            result = subject.resolve(@resolve_request)
+            result = subject.resolve(session_state, @resolve_request)
             expect(result.documentation).to match(/.+/)
           end
 
           it 'should return a text snippet' do
-            result = subject.resolve(@resolve_request)
+            result = subject.resolve(session_state, @resolve_request)
             expect(result.insertText).to match(/.+/)
             expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::SNIPPET)
           end
@@ -433,17 +425,17 @@ EOT
           end
 
           it 'should return the documentation' do
-            result = subject.resolve(@resolve_request)
+            result = subject.resolve(session_state, @resolve_request)
             expect(result.documentation).to match(/.+/)
           end
 
           it 'should return Orchestrator detail' do
-            result = subject.resolve(@resolve_request)
+            result = subject.resolve(session_state, @resolve_request)
             expect(result.detail).to eq('Orchestrator')
           end
 
           it 'should return a text snippet' do
-            result = subject.resolve(@resolve_request)
+            result = subject.resolve(session_state, @resolve_request)
             expect(result.insertText).to match(/.+/)
             expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::SNIPPET)
           end
@@ -462,26 +454,26 @@ EOT
 
       before(:each) do
         # Generate the resolution request based on a completion response
-        @completion_response = subject.complete(content, line_num, char_num)
+        @completion_response = subject.complete(session_state, content, line_num, char_num)
         @resolve_request = retrieve_completion_response('alert', LSP::CompletionItemKind::FUNCTION)
       end
 
       context 'for an unknown function' do
         it 'should return the original request' do
           @resolve_request.data['name'] = 'function_not_found'
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result).to be_json_like(@resolve_request)
         end
       end
 
       context 'for a well known function (alert)' do
         it 'should return the documentation' do
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.documentation).to match(/.+/)
         end
 
         it 'should return plain text' do
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.insertText).to match(/.+/)
           expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::PLAINTEXT)
         end
@@ -490,13 +482,13 @@ EOT
       context 'for a Bolt function (run_task)' do
         it 'should return the documentation' do
           @resolve_request.data['name'] = 'run_task'
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.documentation).to match(/.+/)
         end
 
         it 'should return plain text' do
           @resolve_request.data['name'] = 'run_task'
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.insertText).to match(/.+/)
           expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::PLAINTEXT)
         end
@@ -515,26 +507,26 @@ EOT
 
       before(:each) do
         # Generate the resolution request based on a completion response
-        @completion_response = subject.complete(content, line_num, char_num)
+        @completion_response = subject.complete(session_state, content, line_num, char_num)
         @resolve_request = retrieve_completion_response('user', LSP::CompletionItemKind::MODULE)
       end
 
       context 'for an unknown puppet type' do
         it 'should return the original request' do
           expect(PuppetLanguageServer::PuppetHelper).to receive(:get_type).and_return(nil)
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result).to be_json_like(@resolve_request)
         end
       end
 
       context 'for a well known puppet type (user)' do
         it 'should return the documentation' do
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.documentation).to match(/.+/)
         end
 
         it 'should return a text snippet' do
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.insertText).to match(/.+/)
           expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::SNIPPET)
         end
@@ -543,7 +535,7 @@ EOT
       context 'for a non-ensurable puppet type with no required attributes' do
         it 'should not return any parameters or properties in the snippet' do
           expect(PuppetLanguageServer::PuppetHelper).to receive(:get_type).and_return(mock_resource)
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.insertText).to_not match(/param1/)
           expect(result.insertText).to_not match(/param2/)
           expect(result.insertText).to_not match(/prop1/)
@@ -558,7 +550,7 @@ EOT
           mock_resource.attributes[:ensure] = create_ensurable_property
           expect(PuppetLanguageServer::PuppetHelper).to receive(:get_type).and_return(mock_resource)
 
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.insertText).to_not match(/param1/)
           expect(result.insertText).to_not match(/param2/)
           expect(result.insertText).to_not match(/prop1/)
@@ -579,7 +571,7 @@ EOT
           mock_resource.attributes[:prop2][:isnamevar?] = true
           expect(PuppetLanguageServer::PuppetHelper).to receive(:get_type).and_return(mock_resource)
 
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.insertText).to_not match(/param1/)
           expect(result.insertText).to match(/param2/)
           expect(result.insertText).to match(/prop1/)
@@ -602,14 +594,14 @@ EOT
 
       before(:each) do
         # Generate the resolution request based on a completion response
-        @completion_response = subject.complete(content, line_num, char_num)
+        @completion_response = subject.complete(session_state, content, line_num, char_num)
         @resolve_request = retrieve_completion_response('name', LSP::CompletionItemKind::PROPERTY)
       end
 
       context 'for an unknown type' do
         it 'should return the original request' do
           @resolve_request.data['resource_type'] = 'resource_not_found'
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result).to be_json_like(@resolve_request)
         end
       end
@@ -617,19 +609,19 @@ EOT
       context 'for an unknown parameter' do
         it 'should return the original request' do
           @resolve_request.data['param'] = 'param_not_found'
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result).to be_json_like(@resolve_request)
         end
       end
 
       context 'for the name parameter of a well known puppet type (user)' do
         it 'should return the documentation' do
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.documentation).to match(/.+/)
         end
 
         it 'should return a text literal with the parameter defintion' do
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.insertText).to match(/.+ => /)
           expect(result.insertTextFormat).to be_nil
         end
@@ -648,14 +640,14 @@ EOT
 
       before(:each) do
         # Generate the resolution request based on a completion response
-        @completion_response = subject.complete(content, line_num, char_num)
+        @completion_response = subject.complete(session_state, content, line_num, char_num)
         @resolve_request = retrieve_completion_response('ensure', LSP::CompletionItemKind::PROPERTY)
       end
 
       context 'for an unknown type' do
         it 'should return the original request' do
           @resolve_request.data['resource_type'] = 'resource_not_found'
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result).to be_json_like(@resolve_request)
         end
       end
@@ -663,19 +655,19 @@ EOT
       context 'for an unknown property' do
         it 'should return the original request' do
           @resolve_request.data['prop'] = 'prop_not_found'
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result).to be_json_like(@resolve_request)
         end
       end
 
       context 'for the ensure property of a well known puppet type (user)' do
         it 'should return the documentation' do
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.documentation).to match(/.+/)
         end
 
         it 'should return a text literal with the property defintion' do
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.insertText).to match(/.+ => /)
           expect(result.insertTextFormat).to be_nil
         end
@@ -694,7 +686,7 @@ EOT
 
       before(:each) do
         # Generate the resolution request based on a completion response
-        @completion_response = subject.complete(content, line_num, char_num)
+        @completion_response = subject.complete(session_state, content, line_num, char_num)
         @resolve_request = @completion_response.items.find do |item|
           item.label == 'mock_workspace_class' && item.kind == LSP::CompletionItemKind::MODULE
         end
@@ -704,14 +696,14 @@ EOT
       context 'for an unknown class' do
         it 'should return the original request' do
           @resolve_request.data['name'] = 'class_not_found'
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result).to be_json_like(@resolve_request)
         end
       end
 
       context 'for a known class' do
         it 'should return a text snippet' do
-          result = subject.resolve(@resolve_request)
+          result = subject.resolve(session_state, @resolve_request)
           expect(result.insertText).to match(/.+/)
           expect(result.insertTextFormat).to eq(LSP::InsertTextFormat::SNIPPET)
         end

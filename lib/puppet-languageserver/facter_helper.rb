@@ -2,54 +2,23 @@
 
 module PuppetLanguageServer
   module FacterHelper
-    @facts_loaded = nil
-
-    def self.cache
-      PuppetLanguageServer::PuppetHelper.cache
-    end
-
-    def self.sidecar_queue
-      PuppetLanguageServer::PuppetHelper.sidecar_queue
-    end
-
     # Facts
-    def self.facts_loaded?
-      @facts_loaded.nil? ? false : @facts_loaded
+    def self.fact(session_state, name)
+      session_state.object_cache.object_by_name(:fact, name)
     end
 
-    def self.assert_facts_loaded
-      @facts_loaded = true
-    end
-
-    def self.load_facts
-      @facts_loaded = false
-      sidecar_queue.execute_sync('facts', [])
-    end
-
-    def self.load_facts_async
-      @facts_loaded = false
-      sidecar_queue.enqueue('facts', [])
-    end
-
-    def self.fact(name)
-      return nil if @facts_loaded == false
-      cache.object_by_name(:fact, name)
-    end
-
-    def self.fact_value(name)
-      return nil if @facts_loaded == false
-      object = cache.object_by_name(:fact, name)
+    def self.fact_value(session_state, name)
+      object = session_state.object_cache.object_by_name(:fact, name)
       object.nil? ? nil : object.value
     end
 
-    def self.fact_names
-      return [] if @facts_loaded == false
-      cache.object_names_by_section(:fact).map(&:to_s)
+    def self.fact_names(session_state)
+      session_state.object_cache.object_names_by_section(:fact).map(&:to_s)
     end
 
-    def self.facts_to_hash
+    def self.facts_to_hash(session_state)
       fact_hash = {}
-      cache.objects_by_section(:fact) { |factname, fact| fact_hash[factname.to_s] = fact.value }
+      session_state.object_cache.objects_by_section(:fact) { |factname, fact| fact_hash[factname.to_s] = fact.value }
       fact_hash
     end
   end

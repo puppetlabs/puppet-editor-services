@@ -182,7 +182,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
         context 'and resource face returns array with at least 2 elements' do
           before(:each) do
-            expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).with(type_name, nil, Object).and_return(resource_response)
+            expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).with(subject.session_state, type_name, nil, Object).and_return(resource_response)
           end
 
           it 'should call get_puppet_resource' do
@@ -214,7 +214,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
         context 'and resource face returns a resource' do
           before(:each) do
-            expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).with(type_name, title, Object).and_return(resource_response)
+            expect(PuppetLanguageServer::PuppetHelper).to receive(:get_puppet_resource).with(subject.session_state, type_name, title, Object).and_return(resource_response)
           end
 
           it 'should call resource_face_get_by_typename' do
@@ -236,7 +236,6 @@ describe 'PuppetLanguageServer::MessageHandler' do
       let(:request_rpc_method) { 'puppet/compileNodeGraph' }
       let(:file_uri) { MANIFEST_FILENAME }
       let(:file_content) { 'some file content' }
-      let(:dot_content) { 'some graph content' }
       let(:request_params) {{
         'external' => file_uri
       }}
@@ -269,7 +268,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
         }
 
         before(:each) do
-          expect(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).with(file_content, Object).and_return(mock_return)
+          expect(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).with(subject.session_state, file_content, Object).and_return(mock_return)
         end
 
         it 'should reply with the error text' do
@@ -291,7 +290,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
         }
 
         before(:each) do
-          expect(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).with(file_content, Object).and_return(mock_return)
+          expect(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).with(subject.session_state, file_content, Object).and_return(mock_return)
         end
 
         it 'should reply with node graph content' do
@@ -359,7 +358,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
         context 'and an error during fixing the validation' do
           before(:each) do
-            expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:fix_validate_errors).with(file_content).and_raise('MockError')
+            expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:fix_validate_errors).with(subject.session_state, file_content).and_raise('MockError')
           end
 
           it 'should log an error message' do
@@ -396,7 +395,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
           let(:applied_fixes) { 1 }
 
           before(:each) do
-            expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:fix_validate_errors).with(file_content).and_return([applied_fixes, file_new_content])
+            expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:fix_validate_errors).with(subject.session_state, file_content).and_return([applied_fixes, file_new_content])
           end
 
           it 'should reply with the document uri' do
@@ -428,7 +427,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
           let(:applied_fixes) { 0 }
 
           before(:each) do
-            expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:fix_validate_errors).with(file_content).and_return([applied_fixes, file_content])
+            expect(PuppetLanguageServer::Manifest::ValidationProvider).to receive(:fix_validate_errors).with(subject.session_state, file_content).and_return([applied_fixes, file_content])
           end
 
           it 'should reply with the document uri' do
@@ -490,13 +489,13 @@ describe 'PuppetLanguageServer::MessageHandler' do
         let(:file_uri) { MANIFEST_FILENAME }
 
         it 'should call complete method on the Completion Provider' do
-          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object, line_num, char_num, { :tasks_mode => false, :context => nil }).and_return('something')
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(subject.session_state, Object, line_num, char_num, { :tasks_mode => false, :context => nil }).and_return('something')
           subject.request_textdocument_completion(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
-          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object, line_num, char_num, { :tasks_mode => true, :context => nil }).and_return('something')
-          allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
+          expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(subject.session_state, Object, line_num, char_num, { :tasks_mode => true, :context => nil }).and_return('something')
+          allow(subject.documents).to receive(:plan_file?).and_return true
           subject.request_textdocument_completion(connection_id, request_message)
         end
 
@@ -515,7 +514,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
           }}
 
           it 'should pass the context' do
-            expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(Object, line_num, char_num, { :tasks_mode => false, :context => LSP::CompletionContext}).and_return('something')
+            expect(PuppetLanguageServer::Manifest::CompletionProvider).to receive(:complete).with(subject.session_state, Object, line_num, char_num, { :tasks_mode => false, :context => LSP::CompletionContext}).and_return('something')
             subject.request_textdocument_completion(connection_id, request_message)
           end
         end
@@ -599,13 +598,13 @@ describe 'PuppetLanguageServer::MessageHandler' do
         let(:file_uri) { MANIFEST_FILENAME }
 
         it 'should call resolve method on the Hover Provider' do
-          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
+          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(subject.session_state, Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
           subject.request_textdocument_hover(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
-          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
-          allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
+          expect(PuppetLanguageServer::Manifest::HoverProvider).to receive(:resolve).with(subject.session_state, Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
+          allow(subject.documents).to receive(:plan_file?).and_return true
           subject.request_textdocument_hover(connection_id, request_message)
         end
 
@@ -659,14 +658,14 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
         it 'should call find_definition method on the Definition Provider' do
           expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition)
-            .with(Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
+            .with(subject.session_state, Object,line_num,char_num,{:tasks_mode=>false}).and_return('something')
           subject.request_textdocument_definition(connection_id, request_message)
         end
 
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::DefinitionProvider).to receive(:find_definition)
-            .with(Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
-          allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
+            .with(subject.session_state, Object,line_num,char_num,{:tasks_mode=>true}).and_return('something')
+          allow(subject.documents).to receive(:plan_file?).and_return true
           subject.request_textdocument_definition(connection_id, request_message)
         end
 
@@ -721,7 +720,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
         it 'should set tasks_mode option if the file is Puppet plan file' do
           expect(PuppetLanguageServer::Manifest::DocumentSymbolProvider).to receive(:extract_document_symbols)
             .with(Object,{:tasks_mode=>true}).and_return('something')
-          allow(PuppetLanguageServer::DocumentStore).to receive(:plan_file?).and_return true
+          allow(subject.documents).to receive(:plan_file?).and_return true
           subject.request_textdocument_documentsymbol(connection_id, request_message)
         end
 
@@ -908,11 +907,11 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
         it 'should add the document to the document store' do
           subject.notification_textdocument_didopen(connection_id, notification_message)
-          expect(subject.documents.document(file_uri)).to eq(file_content)
+          expect(subject.documents.document_content(file_uri)).to eq(file_content)
         end
 
         it 'should enqueue the file for validation' do
-          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 1, Object, Hash)
+          expect(PuppetLanguageServer::GlobalQueues::validate_queue).to receive(:enqueue).with(file_uri, 1, Object, Hash)
           subject.notification_textdocument_didopen(connection_id, notification_message)
         end
       end
@@ -955,7 +954,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
       it 'should remove the document from the document store' do
         subject.notification_textdocument_didclose(connection_id, notification_message)
-        expect(subject.documents.document(file_uri)).to be_nil
+        expect(subject.documents.document_content(file_uri)).to be_nil
       end
     end
 
@@ -980,11 +979,11 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
         it 'should update the document in the document store' do
           subject.notification_textdocument_didchange(connection_id, notification_message)
-          expect(subject.documents.document(file_uri)).to eq(new_file_content)
+          expect(subject.documents.document_content(file_uri)).to eq(new_file_content)
         end
 
         it 'should enqueue the file for validation' do
-          expect(PuppetLanguageServer::ValidationQueue).to receive(:enqueue).with(file_uri, 2, Object, Hash)
+          expect(PuppetLanguageServer::GlobalQueues::validate_queue).to receive(:enqueue).with(file_uri, 2, Object, Hash)
           subject.notification_textdocument_didchange(connection_id, notification_message)
         end
       end

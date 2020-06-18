@@ -59,17 +59,6 @@ module PuppetLanguageServerSidecar
       flags = options[:flags]
       log_message(:debug, "Detected feature flags [#{options[:flags].join(', ')}]")
 
-      strings_gem = Gem::Specification.select { |item| item.name.casecmp('puppet-strings').zero? }
-      if flags.include?('puppetstrings') && strings_gem.count.zero?
-        # The puppetstrings flag is only valid when the puppet-strings gem is available
-        PuppetEditorServices.log_message(:error, "The feature flag 'puppetstrings' has been specified but it is not capable due to Puppet Strings being unavailable. Turning off the flag.")
-        flags -= ['puppetstrings']
-      end
-      if flags.include?('puppetstrings') && Gem::Version.new(Puppet.version) < Gem::Version.new('6.0.0')
-        # The puppetstrings flag is only valid on Puppet 6.0.0+
-        PuppetEditorServices.log_message(:error, "The feature flag 'puppetstrings' has been specified but it is not capable due to low Puppet version (< 6). Turning off the flag.")
-        flags -= ['puppetstrings']
-      end
       configure_featureflags(flags)
     end
 
@@ -81,17 +70,10 @@ module PuppetLanguageServerSidecar
       sidecar_protocol_extensions
       workspace
       facter_helper
+      puppet_helper
+      puppet_monkey_patches
+      puppet_strings_helper
     ]
-
-    # Load files based on feature flags
-    if featureflag?('puppetstrings')
-      require_list << 'puppet_helper_puppetstrings'
-      require_list << 'puppet_monkey_patches_puppetstrings'
-      require_list << 'puppet_strings_helper'
-    else
-      require_list << 'puppet_helper'
-      require_list << 'puppet_monkey_patches'
-    end
 
     require_list.each do |lib|
       begin
@@ -211,6 +193,8 @@ module PuppetLanguageServerSidecar
     require_gems(options)
     log_message(:info, "Using Puppet v#{Puppet.version}")
 
+    raise("Detected Puppet #{Puppet.version} however the Language Server Sidecar requires Puppet 5.0 and above") if Gem::Version.new(Puppet.version) < Gem::Version.new('5.0.0')
+
     log_message(:debug, "Detected additional puppet settings #{options[:puppet_settings]}")
     options[:puppet_settings].nil? ? Puppet.initialize_settings : Puppet.initialize_settings(options[:puppet_settings])
 
@@ -258,7 +242,10 @@ module PuppetLanguageServerSidecar
   end
 
   def self.execute(options)
-    use_puppet_strings = featureflag?('puppetstrings')
+    unless Gem::Version.new(Puppet.version) >= Gem::Version.new('5.0.0')
+      log_message(:error, 'Only Puppet Version 5.0 and above is supported.')
+      return []
+    end
 
     log_message(:debug, "Executing #{options[:action]} action")
     case options[:action].downcase
@@ -267,43 +254,23 @@ module PuppetLanguageServerSidecar
 
     when 'default_aggregate'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      if use_puppet_strings
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types)
-      else
-        create_aggregate(cache)
-      end
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types)
 
     when 'default_classes'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      if use_puppet_strings
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:class]).classes
-      else
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(cache)
-      end
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:class]).classes
 
     when 'default_datatypes'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      if use_puppet_strings
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:datatype]).datatypes
-      else
-        PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
-      end
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:datatype]).datatypes
 
     when 'default_functions'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      if use_puppet_strings
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:function]).functions
-      else
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache)
-      end
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:function]).functions
 
     when 'default_types'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      if use_puppet_strings
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:type]).types
-      else
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(cache)
-      end
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:type]).types
 
     when 'node_graph'
       inject_workspace_as_module || inject_workspace_as_environment
@@ -333,63 +300,37 @@ module PuppetLanguageServerSidecar
     when 'workspace_aggregate'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      if use_puppet_strings
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                              :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types,
-                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)
-      else
-        create_aggregate(PuppetLanguageServerSidecar::Cache::Null.new, PuppetLanguageServerSidecar::Workspace.root_path)
-      end
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                            :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types,
+                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)
 
     when 'workspace_classes'
-      null_cache = PuppetLanguageServerSidecar::Cache::Null.new
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
-      if use_puppet_strings
-        cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                              :object_types => [:class],
-                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).classes
-      else
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(null_cache,
-                                                                   :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
-      end
+      cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                            :object_types => [:class],
+                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).classes
 
     when 'workspace_datatypes'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
-      if use_puppet_strings
-        cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                              :object_types => [:datatype],
-                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).datatypes
-      else
-        PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
-      end
+      cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                            :object_types => [:datatype],
+                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).datatypes
 
     when 'workspace_functions'
-      null_cache = PuppetLanguageServerSidecar::Cache::Null.new
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
-
-      if use_puppet_strings
-        cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                              :object_types => [:function],
-                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).functions
-      else
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(null_cache,
-                                                                     :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
-      end
+      cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                            :object_types => [:function],
+                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).functions
 
     when 'workspace_types'
-      null_cache = PuppetLanguageServerSidecar::Cache::Null.new
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
-      if use_puppet_strings
-        cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                              :object_types => [:type],
-                                                                              :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).types
-      else
-        PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(null_cache)
-      end
+      cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
+                                                                            :object_types => [:type],
+                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).types
 
     when 'facts'
       # Can't cache for facts
@@ -403,15 +344,6 @@ module PuppetLanguageServerSidecar
       log_message(:error, "Unknown action #{options[:action]}. Expected one of #{ACTION_LIST}")
     end
   end
-
-  def self.create_aggregate(cache, root_path = nil)
-    result = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
-    result.concat!(PuppetLanguageServerSidecar::PuppetHelper.retrieve_types(cache, :root_path => root_path))
-    result.concat!(PuppetLanguageServerSidecar::PuppetHelper.retrieve_functions(cache, :root_path => root_path))
-    result.concat!(PuppetLanguageServerSidecar::PuppetHelper.retrieve_classes(cache, :root_path => root_path))
-    result
-  end
-  private_class_method :create_aggregate
 
   def self.output(result, options)
     if options[:output].nil? || options[:output].empty?

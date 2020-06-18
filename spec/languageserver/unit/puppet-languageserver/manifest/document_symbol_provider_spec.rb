@@ -42,7 +42,7 @@ describe 'PuppetLanguageServer::Manifest::DocumentSymbolProvider' do
   let(:subject) { PuppetLanguageServer::Manifest::DocumentSymbolProvider }
 
   describe '#workspace_symbols' do
-    let(:cache) { PuppetLanguageServer::PuppetHelper::Cache.new }
+    let(:cache) { PuppetLanguageServer::SessionState::ObjectCache.new }
 
     before(:each) do
       # Add test objects

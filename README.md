@@ -10,9 +10,9 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
 
 ## Setting up editor services for development
 
-* Ensure a modern ruby is installed (2.1+)
+* Ensure a modern ruby is installed (2.4+)
 
-  The editor services support Puppet 4.10.12 and above
+  The editor services support Puppet 5.0.0 and above
 
 * Clone this repository
 
@@ -26,6 +26,14 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
 
 ```
 > bundle install
+
+  ... < lots of text >
+```
+
+* Installed vendored gems
+
+```
+> bundle exec rake gem_revendor
 
   ... < lots of text >
 ```

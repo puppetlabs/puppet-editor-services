@@ -3,7 +3,7 @@
 module PuppetLanguageServer
   module Manifest
     module HoverProvider
-      def self.resolve(content, line_num, char_num, options = {})
+      def self.resolve(session_state, content, line_num, char_num, options = {})
         options = {
           :tasks_mode => false
         }.merge(options)
@@ -22,22 +22,22 @@ module PuppetLanguageServer
         content = nil
         case item.class.to_s
         when 'Puppet::Pops::Model::ResourceExpression'
-          content = get_resource_expression_content(item)
+          content = get_resource_expression_content(session_state, item)
         when 'Puppet::Pops::Model::LiteralString'
           if path[-1].class == Puppet::Pops::Model::AccessExpression
             expr = path[-1].left_expr.expr.value
 
-            content = get_hover_content_for_access_expression(path, expr)
+            content = get_hover_content_for_access_expression(session_state, path, expr)
           elsif path[-1].class == Puppet::Pops::Model::ResourceBody
             # We are hovering over the resource name
-            content = get_resource_expression_content(path[-2])
+            content = get_resource_expression_content(session_state, path[-2])
           end
         when 'Puppet::Pops::Model::VariableExpression'
           expr = item.expr.value
 
-          content = get_hover_content_for_access_expression(path, expr)
+          content = get_hover_content_for_access_expression(session_state, path, expr)
         when 'Puppet::Pops::Model::CallNamedFunctionExpression'
-          content = get_call_named_function_expression_content(item, options[:tasks_mode])
+          content = get_call_named_function_expression_content(session_state, item, options[:tasks_mode])
         when 'Puppet::Pops::Model::AttributeOperation'
           # Get the parent resource class
           distance_up_ast = -1
@@ -50,7 +50,7 @@ module PuppetLanguageServer
 
           resource_type_name = path[distance_up_ast - 1].type_name.value
           # Check if it's a Puppet Type
-          resource_object = PuppetLanguageServer::PuppetHelper.get_type(resource_type_name)
+          resource_object = PuppetLanguageServer::PuppetHelper.get_type(session_state, resource_type_name)
           unless resource_object.nil?
             # Check if it's a property
             attribute = resource_object.attributes[item.attribute_name.intern]
@@ -62,7 +62,7 @@ module PuppetLanguageServer
           end
           # Check if it's a Puppet Class / Defined Type
           if resource_object.nil?
-            resource_object = PuppetLanguageServer::PuppetHelper.get_class(resource_type_name)
+            resource_object = PuppetLanguageServer::PuppetHelper.get_class(session_state, resource_type_name)
             content = get_attribute_class_parameter_content(resource_object, item.attribute_name) unless resource_object.nil?
           end
           raise "#{resource_type_name} is not a valid puppet type, class or defined type" if resource_object.nil?
@@ -70,7 +70,7 @@ module PuppetLanguageServer
           # https://github.com/puppetlabs/puppet-specifications/blob/master/language/names.md#names
           # Datatypes have to start with uppercase and can be fully qualified
           if item.cased_value =~ /^[A-Z][a-zA-Z:0-9]*$/ # rubocop:disable Style/GuardClause
-            content = get_puppet_datatype_content(item, options[:tasks_mode])
+            content = get_puppet_datatype_content(session_state, item, options[:tasks_mode])
           else
             raise "#{item.cased_value} is an unknown QualifiedReference"
           end
@@ -81,7 +81,7 @@ module PuppetLanguageServer
         LSP::Hover.new('contents' => content)
       end
 
-      def self.get_hover_content_for_access_expression(path, expr)
+      def self.get_hover_content_for_access_expression(session_state, path, expr)
         if expr == 'facts'
           # We are dealing with the facts variable
           # Just get the first part of the array and display that
@@ -95,23 +95,23 @@ module PuppetLanguageServer
 
           if fact_array_content.length > 1
             factname = fact_array_content[1].value
-            content = get_fact_content(factname)
+            content = get_fact_content(session_state, factname)
           end
         elsif expr.start_with?('::') && expr.rindex(':') == 1
           # We are dealing with a top local scope variable - Possible fact name
           factname = expr.slice(2, expr.length - 2)
-          content = get_fact_content(factname)
+          content = get_fact_content(session_state, factname)
         else
           # Could be a flatout fact name.  May not *shrugs*.  That method of access is deprecated
-          content = get_fact_content(expr)
+          content = get_fact_content(session_state, expr)
         end
 
         content
       end
 
       # Content generation functions
-      def self.get_fact_content(factname)
-        fact = PuppetLanguageServer::FacterHelper.fact(factname)
+      def self.get_fact_content(session_state, factname)
+        fact = PuppetLanguageServer::FacterHelper.fact(session_state, factname)
         return nil if fact.nil?
         value = fact.value
         content = "**#{factname}** Fact\n\n"
@@ -148,10 +148,10 @@ module PuppetLanguageServer
         content
       end
 
-      def self.get_call_named_function_expression_content(item, tasks_mode)
+      def self.get_call_named_function_expression_content(session_state, item, tasks_mode)
         func_name = item.functor_expr.value
 
-        func_info = PuppetLanguageServer::PuppetHelper.function(func_name, tasks_mode)
+        func_info = PuppetLanguageServer::PuppetHelper.function(session_state, func_name, tasks_mode)
         raise "Function #{func_name} does not exist" if func_info.nil?
 
         content = "**#{func_name}** Function"
@@ -160,14 +160,14 @@ module PuppetLanguageServer
         content
       end
 
-      def self.get_resource_expression_content(item)
+      def self.get_resource_expression_content(session_state, item)
         name = item.type_name.value
         # Strip top scope colons if found
         name = name[2..-1] if name.start_with?('::')
         # Get an instance of the type
-        item_object = PuppetLanguageServer::PuppetHelper.get_type(name)
+        item_object = PuppetLanguageServer::PuppetHelper.get_type(session_state, name)
         return get_puppet_type_content(item_object) unless item_object.nil?
-        item_object = PuppetLanguageServer::PuppetHelper.get_class(name)
+        item_object = PuppetLanguageServer::PuppetHelper.get_class(session_state, name)
         return get_puppet_class_content(item_object) unless item_object.nil?
         raise "#{name} is not a valid puppet type"
       end
@@ -197,8 +197,8 @@ module PuppetLanguageServer
       end
       private_class_method :get_puppet_class_content
 
-      def self.get_puppet_datatype_content(item, tasks_mode)
-        dt_info = PuppetLanguageServer::PuppetHelper.datatype(item.cased_value, tasks_mode)
+      def self.get_puppet_datatype_content(session_state, item, tasks_mode)
+        dt_info = PuppetLanguageServer::PuppetHelper.datatype(session_state, item.cased_value, tasks_mode)
         raise "DataType #{item.cased_value} does not exist" if dt_info.nil?
 
         content = "**#{item.cased_value}** Data Type"

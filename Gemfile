@@ -21,10 +21,6 @@ group :development do
   else
     gem 'puppet',                            :require => false
   end
-  # TODO: This should be vendored into Editor Services after it is no longer a feature flag
-  # The puppet-strings gem is not available in the Puppet Agent, but is in the PDK. We add it to the
-  # Gemfile here for testing and development.
-  gem "puppet-strings", "~> 2.0", :require => false
 
   case RUBY_PLATFORM
   when /darwin/

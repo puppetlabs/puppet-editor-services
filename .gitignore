@@ -9,3 +9,11 @@ log/
 .DS_Store
 tmp/
 output/
+
+# Ignore the vendored gems
+vendor/hiera-eyaml
+vendor/molinillo
+vendor/puppet-lint
+vendor/puppetfile-resolver
+vendor/puppet-strings
+vendor/yard
