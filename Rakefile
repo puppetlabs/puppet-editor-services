@@ -100,7 +100,7 @@ task :gem_revendor do
     sh "git clone #{vendor[:github_repo]} #{gem_dir}"
     Dir.chdir(gem_dir) do
       sh 'git fetch origin'
-      sh "git checkout #{vendor[:github_ref]}"
+      sh "git reset --hard #{vendor[:github_ref]}"
     end
 
     # Cleanup the gem directory...

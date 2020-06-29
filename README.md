@@ -6,7 +6,13 @@
 
 A ruby based implementation of a [Language Server](https://github.com/Microsoft/language-server-protocol) and [Debug Server](TODO) for the Puppet Language.
 
-**Note** - This project is experimental until 1.0 is released
+## Requirments
+
+* Puppet 5 or above
+
+* Ruby 2.4 or above
+
+**Note** that Puppet 4 (Ruby 2.1) is not supported
 
 ## Setting up editor services for development
 

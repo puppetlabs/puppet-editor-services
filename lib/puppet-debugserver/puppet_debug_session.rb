@@ -132,12 +132,6 @@ module PuppetDebugServer
       cmd_args << '--noop' if @session_options['noop'] == true
       cmd_args.push(*@session_options['args']) unless @session_options['args'].nil?
 
-      # Send experimental warning
-      send_output_event(
-        'category' => 'console',
-        'output'   => "**************************************************\n* The Puppet debugger is an experimental feature *\n* Debug Server v#{PuppetEditorServices.version}                           *\n**************************************************\n\n"
-      )
-
       send_output_event(
         'category' => 'console',
         'output'   => 'puppet ' + cmd_args.join(' ') + "\n"
