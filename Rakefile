@@ -65,7 +65,7 @@ task :gem_revendor do
     {
       :directory => 'puppetfile-resolver',
       :github_repo => 'https://github.com/glennsarti/puppetfile-resolver.git',
-      :github_ref => '0.2.0',
+      :github_ref => '0.3.0',
     },
     {
       :directory => 'molinillo',
