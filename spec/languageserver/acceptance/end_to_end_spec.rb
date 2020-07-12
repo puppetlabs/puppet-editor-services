@@ -25,7 +25,7 @@ require 'open3'
 # Format range               |      X      |    -   |       -      |
 # OnType Formatting          |      X      |    -   |       -      |
 # Document Symbols           |      X      |    -   |       -      |
-# Workspace Symbols          |      -      |        |              |
+# Workspace Symbols          |      -      |        |       X      |
 
 describe 'End to End Testing' do
   before(:each) do
@@ -321,10 +321,23 @@ describe 'End to End Testing' do
       @client.send_data(@client.puppetfile_getdependencies_request(@client.next_seq_id, puppetfile_uri))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 10])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-       #   Expect something to be returned
-       expect(result['result']).not_to be_nil
-       expect(result['result']['dependencies']).not_to be_nil
-       expect(result['result']['dependencies']).not_to be_empty
+      #   Expect something to be returned
+      expect(result['result']).not_to be_nil
+      expect(result['result']['dependencies']).not_to be_nil
+      expect(result['result']['dependencies']).not_to be_empty
+
+      # Workspace Symbols
+      @client.send_data(@client.workspace_symbols_request(@client.next_seq_id, ''))
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 15])
+      result = @client.data_from_request_seq_id(@client.current_seq_id)
+      #   Expect something to be returned
+      expect(result['result']).not_to be_nil
+      # Should contain the default puppet user class
+      index = result['result'].find { |item| item['name'] == 'user' && item['kind'] == 6 }
+      expect(index).not_to be_nil
+      # Should contain a profile from the control-repo
+      index = result['result'].find { |item| item['name'] == 'profile::editorservices' && item['kind'] == 5 }
+      expect(index).not_to be_nil
 
       # Start shutdown process
       @client.clear_messages!
