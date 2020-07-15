@@ -16,6 +16,10 @@ describe 'uri_helper' do
       test = subject.build_file_uri('/opt/foo/foo.pp')
       expect(test).to eq('file:///opt/foo/foo.pp')
     end
+    it 'should return nil for nil uris' do
+      test = subject.build_file_uri(nil)
+      expect(test).to be_nil
+    end
   end
 
   describe '#relative_uri_path' do
