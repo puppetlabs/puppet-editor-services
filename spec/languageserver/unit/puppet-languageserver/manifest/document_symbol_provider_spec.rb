@@ -50,6 +50,8 @@ describe 'PuppetLanguageServer::Manifest::DocumentSymbolProvider' do
       cache.import_sidecar_list!([random_sidecar_puppet_class(:class1)], :class, origin)
       cache.import_sidecar_list!([random_sidecar_puppet_function(:func1)], :function, origin)
       cache.import_sidecar_list!([random_sidecar_puppet_type(:type1)], :type, origin)
+      cache.import_sidecar_list!([random_sidecar_puppet_datatype(:datatype1)], :datatype, origin)
+      cache.import_sidecar_list!([random_sidecar_fact(:fact1)], :fact, origin)
     end
 
     it 'should emit all known objects for an empty query' do
@@ -58,10 +60,12 @@ describe 'PuppetLanguageServer::Manifest::DocumentSymbolProvider' do
       expect(result[0]).to be_symbol_information('class1', LSP::SymbolKind::CLASS)
       expect(result[1]).to be_symbol_information('func1', LSP::SymbolKind::FUNCTION)
       expect(result[2]).to be_symbol_information('type1', LSP::SymbolKind::METHOD)
+      expect(result[3]).to be_symbol_information('datatype1', LSP::SymbolKind::NAMESPACE)
 
       all_cache_names = []
       cache.all_objects { |key, _| all_cache_names << key.to_s }
-      expect(result.count).to eq(all_cache_names.count)
+      # Facts are not output
+      expect(result.count).to eq(all_cache_names.count - 1)
     end
 
     it 'should only emit objects that match a simple text query' do

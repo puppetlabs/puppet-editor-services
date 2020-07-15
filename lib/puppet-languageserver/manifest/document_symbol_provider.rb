@@ -16,7 +16,7 @@ module PuppetLanguageServer
               'kind'     => LSP::SymbolKind::METHOD,
               'location' => {
                 'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
-                # Don't have char pos for functions so just pick extreme values
+                # Don't have char pos for types so just pick extreme values
                 'range' => LSP.create_range(item.line, 0, item.line, 1024)
               }
             )
@@ -38,10 +38,24 @@ module PuppetLanguageServer
               'kind'     => LSP::SymbolKind::CLASS,
               'location' => {
                 'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
-                # Don't have char pos for functions so just pick extreme values
+                # Don't have char pos for classes so just pick extreme values
                 'range' => LSP.create_range(item.line, 0, item.line, 1024)
               }
             )
+
+          when PuppetLanguageServer::Sidecar::Protocol::PuppetDataType
+            result << LSP::SymbolInformation.new(
+              'name'     => key_string,
+              'kind'     => LSP::SymbolKind::NAMESPACE,
+              'location' => {
+                'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+                # Don't have char pos for data types so just pick extreme values
+                'range' => LSP.create_range(item.line, 0, item.line, 1024)
+              }
+            )
+
+          when PuppetLanguageServer::Sidecar::Protocol::Fact
+            # Do nothing
 
           else
             PuppetLanguageServer.log_message(:warn, "[Manifest::DocumentSymbolProvider] Unknown object type #{item.class}")
