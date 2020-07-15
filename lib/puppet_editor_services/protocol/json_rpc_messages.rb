@@ -169,10 +169,14 @@ module PuppetEditorServices
       end
 
       def self.reply_error(request, code, message)
+        reply_error_by_id(request.id, code, message)
+      end
+
+      def self.reply_error_by_id(id, code, message)
         # Note - Strictly speaking the error should be typed object, however as this hidden behind
         # this method it's easier to just pass in a known hash construct
         ResponseMessage.new.from_h!(
-          'id'    => request.id,
+          'id'    => id,
           'error' => {
             'code'    => code,
             'message' => message
