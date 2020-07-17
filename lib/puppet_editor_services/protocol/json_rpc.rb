@@ -138,6 +138,7 @@ module PuppetEditorServices
       def receive_json_message_as_hash(json_obj)
         # There's no need to convert it to an object quite yet
         # Need to validate that this is indeed a valid message
+        id = json_obj[KEY_ID]
         unless json_obj[KEY_JSONRPC] == JSONRPC_VERSION
           PuppetEditorServices.log_message(:error, 'Invalid JSON RPC version')
           reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_JSONRPC
@@ -159,7 +160,6 @@ module PuppetEditorServices
           end
         end
 
-        id = json_obj[KEY_ID]
         # Requests and Responses must have an ID that is either a string or integer
         if is_request || is_response
           unless id.is_a?(String) || id.is_a?(Integer)
@@ -195,6 +195,10 @@ module PuppetEditorServices
           return true
         end
         false
+      end
+
+      def reply_error(id, code, message)
+        send_json_string ::PuppetEditorServices::Protocol::JsonRPCMessages.reply_error_by_id(id, code, message).to_json
       end
 
       # region Server-to-Client request/response methods

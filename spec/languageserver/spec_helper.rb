@@ -90,8 +90,9 @@ def random_sidecar_puppet_class(key = nil)
   result
 end
 
-def random_sidecar_puppet_datatype
+def random_sidecar_puppet_datatype(key = nil)
   result = add_random_basepuppetobject_values!(PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new())
+  result.key = key unless key.nil?
   result.doc = 'doc' + rand(1000).to_s
   result.alias_of = "String[1, #{rand(255)}]"
   result.attributes << random_sidecar_puppet_datatype_attribute

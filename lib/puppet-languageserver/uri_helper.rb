@@ -6,12 +6,15 @@ require 'puppet'
 module PuppetLanguageServer
   module UriHelper
     def self.build_file_uri(path)
-      'file://' + Puppet::Util.uri_encode(path.start_with?('/') ? path : '/' + path)
+      if path.nil?
+        nil
+      else
+        'file://' + Puppet::Util.uri_encode(path.start_with?('/') ? path : '/' + path)
+      end
     end
 
     def self.uri_path(uri_string)
-      return nil if uri_string.nil?
-      Puppet::Util.uri_to_path(URI(uri_string))
+      uri_string.nil? ? nil : Puppet::Util.uri_to_path(URI(uri_string))
     end
 
     # Compares two URIs and returns the relative path

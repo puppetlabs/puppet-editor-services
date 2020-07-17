@@ -383,7 +383,7 @@ module PuppetLanguageServer
         # We don't support multiple workspace folders yet, so just select the first one
         return UriHelper.uri_path(params['workspaceFolders'][0]['uri'])
       end
-      return UriHelper.uri_path(params['rootUri']) if params.key?('rootUri')
+      return UriHelper.uri_path(params['rootUri']) if params.key?('rootUri') && !params['rootUri'].nil?
       params['rootPath']
     end
   end
