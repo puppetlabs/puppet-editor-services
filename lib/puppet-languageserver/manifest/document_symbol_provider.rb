@@ -176,7 +176,7 @@ module PuppetLanguageServer
               'selectionRange' => create_range(param.offset, param.length, param.locator),
               'children'       => []
             )
-            this_symbol['children'].push(param_symbol)
+            this_symbol.children.push(param_symbol)
           end
 
         when 'Puppet::Pops::Model::AssignmentExpression'
@@ -209,7 +209,7 @@ module PuppetLanguageServer
               'selectionRange' => create_range(param.offset, param.length, param.locator),
               'children'       => []
             )
-            this_symbol['children'].push(param_symbol)
+            this_symbol.children.push(param_symbol)
           end
         end
 
