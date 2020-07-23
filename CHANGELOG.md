@@ -6,7 +6,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
-## 1.0.0 - ????-??-??
+## 1.0.0 - 2020-07-24
 
 Major release 🎉🎉 which drops support for Puppet 4
 
@@ -16,6 +16,10 @@ terminate early with an error if run under Puppet 4.
 
 ### Changed
 
+- ([GH-272](https://github.com/puppetlabs/puppet-editor-services/issues/272)) Fix Puppet Lint and document symbol sometimes not working
+- ([GH-269](https://github.com/puppetlabs/puppet-editor-services/issues/269)) Fix Workspace Symbol Provider
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/7c4a9c4d2d868bdbea1ef590300d5a37fce9b1e4)) Update Puppetfile Resolver to 0.3.0
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/450b9acaabe58eeee52da4000910673647d25d13)) Document removal of Puppet 4
 - ([GH-209](https://github.com/puppetlabs/puppet-editor-services/issues/209)) Refactor the session state to be a class and pass that instead of global modules
 - ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/f7caae3f7b0db4e1debecafe8bd4c3485a334732)) Removed vendored gems and update development and building workflows
 - ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/2f6e0fc143ddd50be5256bf9abb62d91d2e49466)) Fix Facter Helper for 1.0
