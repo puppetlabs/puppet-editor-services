@@ -22,5 +22,5 @@ This should regenerate all of the bolt files in `/lib/puppet-languageserver/stat
 
 | Component       | Version |
 | --------------- | ------- |
-| Bolt            | 2.3.1   |
-| Editor Services | 0.25.0  |
+| Bolt            | 2.30.0   |
+| Editor Services | 1.0.0  |
