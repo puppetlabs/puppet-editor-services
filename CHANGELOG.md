@@ -6,6 +6,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 1.0.1 - 2020-10-14
+
+### Changed
+
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/9fd498472acedb30152069c613e4b8e6f82bb67a)) Update Bolt static metadate to version 2.30.0
+
 ## 1.0.0 - 2020-07-24
 
 Major release 🎉🎉 which drops support for Puppet 4
