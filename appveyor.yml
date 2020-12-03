@@ -37,7 +37,7 @@ install:
 - ps: |
      if ($ENV:APPVEYOR_PULL_REQUEST_NUMBER -ne $null) {
        Write-Host "Setting build version..."
-       $ENV:APPVEYOR_BUILD_VERSION | Out-File -FilePath 'lib\puppet-editor-services\VERSION' -Encoding ASCII -Confirm:$false -Force
+       $ENV:APPVEYOR_BUILD_VERSION | Out-File -FilePath 'lib\puppet_editor_services\VERSION' -Encoding ASCII -Confirm:$false -Force
      }
 
      if ($ENV:RUBY_VER -ne $null) {
