@@ -230,16 +230,19 @@ module PuppetLanguageServerSidecar
 
           sig.key = signature[:signature]
           sig.doc = signature[:docstring][:text]
-          signature[:docstring][:tags].each do |tag|
-            case tag[:tag_name]
-            when 'param'
-              sig.parameters << PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureParameter.new.from_h!(
-                'name'  => tag[:name],
-                'types' => tag[:types],
-                'doc'   => tag[:text]
-              )
-            when 'return'
-              sig.return_types = tag[:types]
+
+          unless signature[:docstring][:tags].nil?
+            signature[:docstring][:tags].each do |tag|
+              case tag[:tag_name]
+              when 'param'
+                sig.parameters << PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureParameter.new.from_h!(
+                  'name'  => tag[:name],
+                  'types' => tag[:types],
+                  'doc'   => tag[:text]
+                )
+              when 'return'
+                sig.return_types = tag[:types]
+              end
             end
           end
           calculate_signature_parameter_locations!(sig)
