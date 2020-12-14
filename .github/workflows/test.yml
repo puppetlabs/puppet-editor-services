@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  test:
+    name: ruby ${{ matrix.ruby }} puppet ${{ matrix.puppet_gem_version }} ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['windows-latest', 'ubuntu-latest']
+        ruby: ['2.4.1', '2.5.1', '2.7.2']
+        include:
+          - ruby: '2.7.2'
+            puppet_gem_version: "~> 7.0"
+          - ruby: '2.5.1'
+            puppet_gem_version: "~> 6.0"
+          - ruby: '2.4.1'
+            puppet_gem_version: "~> 5.0"
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Ruby ${{ matrix.ruby }}
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+    - name: Install dependencies
+      run: bundle install
+      env:
+        RUBY_VER: ${{ matrix.ruby }}
+        PUPPET_GEM_VERSION: ${{ matrix.puppet_gem_version }}
+
+    - name: Rubocop
+      env:
+        RUBY_VER: "2.5.1"
+        PUPPET_GEM_VERSION: "> 0.0"
+      run: bundle exec rake rubocop
+      if: ${{ matrix.ruby == '2.5.1' }}
+
+    - name: Run tests
+      env:
+        RUBY_VER: ${{ matrix.ruby }}
+        PUPPET_GEM_VERSION: ${{ matrix.puppet_gem_version }}
+      run: bundle exec rake gem_revendor test_languageserver test_languageserver_sidecar test_debugserver
+
+    - name: Run acceptance
+      env:
+        RUBY_VER: ${{ matrix.ruby }}
+        PUPPET_GEM_VERSION: ${{ matrix.puppet_gem_version }}
+      run: bundle exec rake gem_revendor acceptance_languageserver
+      if: ${{ matrix.puppet_gem_version == '~> 7.0' }}
