@@ -27,6 +27,10 @@ env:
     - PUPPET_GEM_VERSION="~> 6.0"
       RUBY_VER=2.5.1
       RAKE_TASK="gem_revendor test_languageserver test_languageserver_sidecar test_debugserver"
+    # Latest 7.x Puppet
+    - PUPPET_GEM_VERSION="~> 7.0"
+      RUBY_VER=2.7.2
+      RAKE_TASK="gem_revendor test_languageserver test_languageserver_sidecar test_debugserver"
 
     # Specific Puppet version testing
     - PUPPET_GEM_VERSION="5.1.0"
@@ -34,8 +38,8 @@ env:
       RAKE_TASK="gem_revendor test_languageserver"
 
     # Acceptance tests.
-    - PUPPET_GEM_VERSION="~> 6.0"
-      RUBY_VER=2.5.1
+    - PUPPET_GEM_VERSION="~> 7.0"
+      RUBY_VER=2.7.2
       RAKE_TASK="gem_revendor acceptance_languageserver"
 
     # Ruby tasks (style).  Puppet version is irrelevant

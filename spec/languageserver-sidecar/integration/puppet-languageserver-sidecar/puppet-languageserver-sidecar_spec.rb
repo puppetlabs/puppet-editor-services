@@ -13,9 +13,9 @@ describe 'PuppetLanguageServerSidecar', :if => Gem::Version.new(Puppet.version) 
 
     cmd.unshift('puppet-languageserver-sidecar')
     cmd.unshift('ruby')
-    stdout, _stderr, status = Open3.capture3(*cmd)
+    stdout, stderr, status = Open3.capture3(*cmd)
 
-    raise "Expected exit code of 0, but got #{status.exitstatus} #{_stderr}" unless status.exitstatus.zero?
+    raise "Expected exit code of 0, but got #{status.exitstatus} #{stderr}" unless status.exitstatus.zero?
     return stdout.bytes.pack('U*')
   end
 
