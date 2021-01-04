@@ -1,0 +1,69 @@
+name: Language Server CI
+
+on:
+  pull_request:
+    branches: main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.5.1
+      - name: bundle install
+        env:
+          PUPPET_GEM_VERSION: ">= 0.0"
+        run: bundle install
+      - name: Lint
+        run: bundle exec rake rubocop
+
+  unit:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        ruby: [2.7.2, 2.5.1, 2.4.1]
+        include:
+          - ruby: 2.7.2
+            puppet_gem_version: "~> 7.0"
+          - ruby: 2.5.1
+            puppet_gem_version: "~> 6.0"
+          - ruby: 2.4.1
+            puppet_gem_version: "~> 5.0"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+      - run: bundle install
+        env:
+          PUPPET_GEM_VERSION: ${{ matrix.puppet_gem_version }}
+      - name: Unit Test ${{ matrix.puppet_gem_version }} ${{ matrix.ruby }}
+        env:
+          PUPPET_GEM_VERSION: ${{ matrix.puppet_gem_version }}
+        run: bundle exec rake gem_revendor test_languageserver test_languageserver_sidecar test_debugserver
+
+  acceptance:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        ruby: [2.7.2]
+        include:
+          - ruby: 2.7.2
+            puppet_gem_version: "~> 7.0"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+      - run: bundle install
+        env:
+          PUPPET_GEM_VERSION: ${{ matrix.puppet_gem_version }}
+      - name: Acceptance Test ${{ matrix.puppet_gem_version }} ${{ matrix.ruby }}
+        env:
+          PUPPET_GEM_VERSION: ${{ matrix.puppet_gem_version }}
+        run: bundle exec rake gem_revendor acceptance_languageserver
