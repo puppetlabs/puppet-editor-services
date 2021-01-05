@@ -1,0 +1,91 @@
+name: Editor Services CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  matrix:
+    name: Generate test matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: set-matrix
+        shell: pwsh
+        # Use a small PowerShell script to generate the test matrix
+        run: "& .github/workflows/create-test-matrix.ps1"
+
+  run-tests:
+    needs: [matrix]
+    strategy:
+      fail-fast: false
+      matrix:
+        cfg: ${{ fromJson(needs.matrix.outputs.matrix) }}
+    name: "${{ matrix.cfg.job_name }} : Ruby ${{ matrix.cfg.ruby }} on ${{ matrix.cfg.os }}"
+    runs-on: ${{ matrix.cfg.os }}
+    env:
+      PUPPET_GEM_VERSION: ${{ matrix.cfg.puppet_gem_version }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.cfg.ruby }}
+          bundler-cache: true
+      - name: Update Ruby Gems
+        shell: pwsh
+        # Update rubygems to latest if it's using an old version ( < 3.x)
+        run: |
+          if ((& gem -v) -match '^(1|2)\.') {
+            Write-Host '::group::Upgrade Ruby Gems'
+            gem update --system
+            Write-Host '::endgroup'
+          } else {
+            Write-Host "No need to update rubygems"
+          }
+      - name: Test environment information
+        shell: pwsh
+        run: |
+          Write-Host '--- Ruby version'
+          & ruby -v
+          Write-Host '--- Gem version'
+          & gem -v
+          Write-Host '--- Bundler version'
+          & bundle -v
+          Write-Host '--- Gem lock file contents'
+          Get-Content Gemfile.lock -Raw
+          Write-Host '--- Puppet version'
+          & bundle exec puppet --version
+      - name: Run rake ${{ matrix.cfg.rake_tasks }}
+        # To enable debug messages for the Acceptance Tests
+        # env:
+        #   SPEC_DEBUG: 'true'
+        run: bundle exec rake ${{ matrix.cfg.rake_tasks }}
+
+  build:
+    needs: [run-tests]
+    name: "Build Editor Service"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.7'
+          bundler-cache: true
+      - name: Set build version
+        shell: pwsh
+        run: |
+          '99.99.0-gh.${{ github.run_number }}' | Out-File -FilePath 'lib\puppet_editor_services\VERSION' -Encoding ASCII -Confirm:$false -Force
+      - name: Run rake gem_revendor build
+        run: bundle exec rake gem_revendor build
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v2
+        with:
+          name: puppet-editor-services
+          path: output/*.zip
+          retention-days: 2
