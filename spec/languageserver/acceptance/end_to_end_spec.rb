@@ -327,6 +327,10 @@ describe 'End to End Testing' do
       expect(result['result']['dependencies']).not_to be_empty
 
       # Workspace Symbols
+      # TODO: I really don't like this. But unfortunately the workspace symbol loading is asynchronous so you don't _really_ know what it's available
+      # We could add another Request or extend puppet/getVersion to emit whether the workspace has been loaded yet.  In the meantime just sleep a long
+      # time and hope it's loaded by then.
+      sleep(15)
       @client.send_data(@client.workspace_symbols_request(@client.next_seq_id, ''))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 15])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
