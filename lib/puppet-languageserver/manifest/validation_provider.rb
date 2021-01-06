@@ -12,14 +12,7 @@ module PuppetLanguageServer
       #    <String> New Content
       #  ]
       def self.fix_validate_errors(session_state, content)
-        module_root = session_state.documents.store_root_path
-        linter_options = nil
-        if module_root.nil?
-          linter_options = PuppetLint::OptParser.build
-        else
-          Dir.chdir(module_root.to_s) { linter_options = PuppetLint::OptParser.build }
-        end
-        linter_options.parse!(['--fix'])
+        init_puppet_lint(session_state.documents.store_root_path, ['--fix'])
 
         linter = PuppetLint::Checks.new
         linter.load_data(nil, content)
@@ -40,19 +33,7 @@ module PuppetLanguageServer
         # TODO: Need to implement max_problems
         problems = 0
 
-        module_root = session_state.documents.store_root_path
-        linter_options = nil
-        if module_root.nil?
-          linter_options = PuppetLint::OptParser.build
-        else
-          begin
-            Dir.chdir(module_root.to_s) { linter_options = PuppetLint::OptParser.build }
-          rescue OptionParser::InvalidOption => e
-            PuppetLanguageServer.log_message(:error, "(#{name}) Error reading Puppet Lint configuration.  Using default: #{e}")
-            linter_options = PuppetLint::OptParser.build
-          end
-        end
-        linter_options.parse!([])
+        init_puppet_lint(session_state.documents.store_root_path, [])
 
         begin
           linter = PuppetLint::Checks.new
@@ -128,6 +109,24 @@ module PuppetLanguageServer
 
         result
       end
+
+      def self.init_puppet_lint(root_dir, lint_options = [])
+        linter_options = nil
+        if root_dir.nil?
+          linter_options = PuppetLint::OptParser.build
+        else
+          begin
+            Dir.chdir(module_root.to_s) { linter_options = PuppetLint::OptParser.build }
+          rescue OptionParser::InvalidOption => e
+            PuppetLanguageServer.log_message(:error, "(#{name}) Error reading Puppet Lint configuration.  Using default: #{e}")
+            linter_options = PuppetLint::OptParser.build
+          end
+        end
+        # Reset the fix flag
+        PuppetLint.configuration.fix = false
+        linter_options.parse!(lint_options)
+      end
+      private_class_method :init_puppet_lint
     end
   end
 end

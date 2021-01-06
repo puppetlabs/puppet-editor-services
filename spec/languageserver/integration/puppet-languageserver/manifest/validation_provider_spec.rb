@@ -194,5 +194,20 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
         end
       end
     end
+
+    describe "Given a complete manifest with validation errors" do
+      let(:manifest) { "class bad_formatting {\n  user { 'username':\n    ensure => absent,\n    auth_membership => 'false',\n  }\n} " }
+
+      it "should return errors and warnings even after fix_validate_errors" do
+        fixes = subject.fix_validate_errors(session_state, manifest)
+        validation = subject.validate(session_state, manifest)
+
+        expect(validation.count).to_not be_zero
+
+        validation.each do |problem|
+          expect([LSP::DiagnosticSeverity::ERROR, LSP::DiagnosticSeverity::WARNING]).to include(problem.severity)
+        end
+      end
+    end
   end
 end
