@@ -232,7 +232,8 @@ module PuppetLanguageServer
           line_num,
           char_num,
           json_rpc_message.params['ch'],
-          json_rpc_message.params['options']
+          json_rpc_message.params['options'],
+          language_client.format_on_type_filesize_limit
         )
       else
         raise "Unable to format on type on #{file_uri}"

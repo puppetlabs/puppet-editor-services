@@ -11,14 +11,16 @@ module PuppetLanguageServer
         end
       end
 
-      def format(content, line, char, trigger_character, formatting_options)
+      def format(content, line, char, trigger_character, formatting_options, max_filesize = 4096)
         result = []
         # Abort if the user has pressed something other than `>`
         return result unless trigger_character == '>'
         # Abort if the formatting is tab based. Can't do that yet
         return result unless formatting_options['insertSpaces'] == true
         # Abort if content is too big
-        return result if content.length > 4096
+        unless max_filesize.zero?
+          return result if content.length > max_filesize
+        end
 
         lexer = PuppetLint::Lexer.new
         tokens = lexer.tokenise(content)
