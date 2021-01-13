@@ -805,7 +805,7 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
           it 'should call format method on the Format On Type provider' do
             expect(provider).to receive(:format)
-              .with(file_content, line_num, char_num, trigger_char, formatting_options).and_return('something')
+              .with(file_content, line_num, char_num, trigger_char, formatting_options, Integer).and_return('something')
             subject.request_textdocument_ontypeformatting(connection_id, request_message)
           end
 

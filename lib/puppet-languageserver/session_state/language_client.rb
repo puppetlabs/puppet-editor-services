@@ -7,6 +7,7 @@ module PuppetLanguageServer
 
       # Client settings
       attr_reader :format_on_type
+      attr_reader :format_on_type_filesize_limit
       attr_reader :use_puppetfile_resolver
 
       def initialize(message_handler)
@@ -25,6 +26,7 @@ module PuppetLanguageServer
 
         # Default settings
         @format_on_type = false
+        @format_on_type_filesize_limit = 4096
         @use_puppetfile_resolver = true
       end
 
@@ -58,6 +60,9 @@ module PuppetLanguageServer
           end
           @format_on_type = value
         end
+        # format on type file size
+        value = safe_hash_traverse(settings, 'puppet', 'editorService', 'formatOnType', 'maxFileSize')
+        @format_on_type_filesize_limit = to_integer(value, 4096, 0)
         # use puppetfile resolver
         value = safe_hash_traverse(settings, 'puppet', 'validate', 'resolvePuppetfiles')
         @use_puppetfile_resolver = to_boolean(value)
@@ -172,6 +177,18 @@ module PuppetLanguageServer
         return false if value.nil? || value == false
         return true if value == true
         value.to_s =~ %r{^(true|t|yes|y|1)$/i}
+      end
+
+      def to_integer(value, default = nil, min = nil, max = nil)
+        return default if value.nil?
+        begin
+          intv = Integer(value)
+          return default if !min.nil? && intv < min
+          return default if !max.nil? && intv > max
+          intv
+        rescue ArgumentError
+          default
+        end
       end
 
       def new_request_id
