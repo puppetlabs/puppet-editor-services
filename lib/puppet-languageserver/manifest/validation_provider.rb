@@ -116,7 +116,7 @@ module PuppetLanguageServer
           linter_options = PuppetLint::OptParser.build
         else
           begin
-            Dir.chdir(module_root.to_s) { linter_options = PuppetLint::OptParser.build }
+            Dir.chdir(root_dir.to_s) { linter_options = PuppetLint::OptParser.build }
           rescue OptionParser::InvalidOption => e
             PuppetLanguageServer.log_message(:error, "(#{name}) Error reading Puppet Lint configuration.  Using default: #{e}")
             linter_options = PuppetLint::OptParser.build
