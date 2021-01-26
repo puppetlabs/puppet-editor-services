@@ -6,6 +6,17 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 1.1.0 - 2021-01-27
+
+### Added
+
+- ([GH-282](https://github.com/puppetlabs/puppet-editor-services/issues/282)) Add support for Puppet 7 and Ruby 2.7
+- ([GH-289](https://github.com/puppetlabs/puppet-editor-services/issues/289)) Make Format On Type file size configurable
+
+### Fixed
+
+- ([GH-189](https://github.com/puppetlabs/puppet-editor-services/issues/189)) Reset PuppetLint configuration for each call
+
 ## 1.0.1 - 2020-10-14
 
 ### Changed
