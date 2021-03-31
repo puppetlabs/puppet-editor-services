@@ -9,12 +9,12 @@ end
 # Requires
 #   :settings      : A hashtable of the inbound settings
 #   :setting_value : The value that will be set to
-RSpec.shared_examples "a client setting" do |method_name|
+RSpec.shared_examples "a client setting" do |method_name, default_value|
   [
-    { :from => false, :setting => nil,   :expected_setting => false },
+    { :from => false, :setting => nil,   :expected_setting => default_value },
     { :from => false, :setting => false, :expected_setting => false },
     { :from => false, :setting => true,  :expected_setting => true },
-    { :from => true,  :setting => nil,   :expected_setting => true },
+    { :from => true,  :setting => nil,   :expected_setting => default_value },
     { :from => true,  :setting => false, :expected_setting => false },
     { :from => true,  :setting => true,  :expected_setting => true },
   ].each do |testcase|
@@ -30,6 +30,32 @@ RSpec.shared_examples "a client setting" do |method_name|
 
         subject.parse_lsp_configuration_settings!(settings)
         expect(subject.send(method_name)).to eq(testcase[:expected_setting])
+      end
+    end
+  end
+end
+
+RSpec.shared_examples 'an unsupported client setting' do |method_name|
+  [
+    { :from => false, :setting => nil },
+    { :from => false, :setting => false },
+    { :from => false, :setting => true },
+    { :from => true,  :setting => nil },
+    { :from => true,  :setting => false },
+    { :from => true,  :setting => true },
+  ].each do |testcase|
+    context "When it transitions from #{pretty_value(testcase[:from])} with a setting value of #{pretty_value(testcase[:setting])}" do
+      let(:setting_value) { testcase[:setting] }
+
+      before(:each) do
+        subject.instance_variable_set("@#{method_name}".intern, testcase[:from])
+      end
+
+      it 'should have a cached value of false' do
+        expect(subject.send(method_name)).to eq(testcase[:from])
+
+        subject.parse_lsp_configuration_settings!(settings)
+        expect(subject.send(method_name)).to eq(false)
       end
     end
   end
@@ -55,21 +81,22 @@ RSpec.shared_examples "a setting with dynamic registrations" do |method_name, dy
       end
 
       it 'should not call any capabilities', :if => testcase[:noop] do
-        expect(subject).to receive(:client_capability).exactly(0).times
-        expect(subject).to receive(:register_capability).exactly(0).times
-        expect(subject).to receive(:unregister_capability).exactly(0).times
+        expect(subject).to receive(:client_capability).with(dynamic_reg).exactly(0).times
+        expect(subject).to receive(:register_capability).with(registration_method).exactly(0).times
+        expect(subject).to receive(:unregister_capability).with(registration_method).exactly(0).times
 
         subject.parse_lsp_configuration_settings!(settings)
       end
 
       context "when dynamic registration is not supported", :unless => testcase[:noop] do
         before(:each) do
+          allow(subject).to receive(:client_capability).and_return(false)
           expect(subject).to receive(:client_capability).with(*dynamic_reg).and_return(false)
         end
 
         it 'should not call any registration or unregistrations' do
-          expect(subject).to receive(:register_capability).exactly(0).times
-          expect(subject).to receive(:unregister_capability).exactly(0).times
+          expect(subject).to receive(:register_capability).with(registration_method).exactly(0).times
+          expect(subject).to receive(:unregister_capability).with(registration_method).exactly(0).times
 
           subject.parse_lsp_configuration_settings!(settings)
         end
@@ -77,22 +104,50 @@ RSpec.shared_examples "a setting with dynamic registrations" do |method_name, dy
 
       context "when dynamic registration is supported", :unless => testcase[:noop] do
         before(:each) do
+          allow(subject).to receive(:client_capability).and_return(false)
           expect(subject).to receive(:client_capability).with(*dynamic_reg).and_return(true)
         end
 
         it "should register #{registration_method}", :if => testcase[:register] do
           expect(subject).to receive(:register_capability).with(registration_method, Object)
-          expect(subject).to receive(:unregister_capability).exactly(0).times
+          expect(subject).to receive(:unregister_capability).with(registration_method).exactly(0).times
 
           subject.parse_lsp_configuration_settings!(settings)
         end
 
         it "should unregister #{registration_method}", :if => testcase[:unregister] do
           expect(subject).to receive(:unregister_capability).with(registration_method)
-          expect(subject).to receive(:register_capability).exactly(0).times
+          expect(subject).to receive(:register_capability).with(registration_method).exactly(0).times
 
           subject.parse_lsp_configuration_settings!(settings)
         end
+      end
+    end
+  end
+end
+
+RSpec.shared_examples 'an unsupported dynamic registration' do |method_name, dynamic_reg, registration_method|
+  [
+    { :from => false, :setting => nil },
+    { :from => false, :setting => false },
+    { :from => false, :setting => true },
+    { :from => true,  :setting => nil },
+    { :from => true,  :setting => false },
+    { :from => true,  :setting => true },
+  ].each do |testcase|
+    context "When it transitions from #{pretty_value(testcase[:from])} with a setting value of #{pretty_value(testcase[:setting])}" do
+      let(:setting_value) { testcase[:setting] }
+
+      before(:each) do
+        subject.instance_variable_set("@#{method_name}".intern, testcase[:from])
+      end
+
+      it 'should not call any capabilities' do
+        expect(subject).to receive(:client_capability).with(dynamic_reg).exactly(0).times
+        expect(subject).to receive(:register_capability).with(registration_method).exactly(0).times
+        expect(subject).to receive(:unregister_capability).with(registration_method).exactly(0).times
+
+        subject.parse_lsp_configuration_settings!(settings)
       end
     end
   end
@@ -300,12 +355,51 @@ describe 'PuppetLanguageServer::SessionState::LanguageClient' do
         }
       end
 
-      it_behaves_like 'a client setting', :format_on_type
+      it_behaves_like 'a client setting', :format_on_type, PuppetLanguageServer::SessionState::LanguageClient::DEFAULT_FORMAT_ON_TYPE_ENABLE
 
       it_behaves_like 'a setting with dynamic registrations',
         :format_on_type,
         ['textDocument', 'onTypeFormatting', 'dynamicRegistration'],
         'textDocument/onTypeFormatting'
+    end
+
+    describe 'puppet.editorService.foldingRange.enable' do
+      let(:settings) do
+        { 'puppet' => {
+            'editorService' => {
+              'foldingRange' => {
+                'enable' => setting_value
+              }
+            }
+          }
+        }
+      end
+
+      context 'When folding is supported' do
+        before(:each) do
+          allow(PuppetLanguageServer::ServerCapabilites).to receive(:folding_provider_supported?).and_return(true)
+        end
+
+        it_behaves_like 'a client setting', :folding_range, PuppetLanguageServer::SessionState::LanguageClient::DEFAULT_FOLDING_RANGE_ENABLE
+
+        it_behaves_like 'a setting with dynamic registrations',
+          :folding_range,
+          ['textDocument', 'foldingRange', 'dynamicRegistration'],
+          'textDocument/foldingRange'
+      end
+
+      context 'When folding is not supported' do
+        before(:each) do
+          allow(PuppetLanguageServer::ServerCapabilites).to receive(:folding_provider_supported?).and_return(false)
+        end
+
+        it_behaves_like 'an unsupported client setting', :folding_range
+
+        it_behaves_like 'an unsupported dynamic registration',
+          :folding_range,
+          ['textDocument', 'foldingRange', 'dynamicRegistration'],
+          'textDocument/foldingRange'
+      end
     end
   end
 

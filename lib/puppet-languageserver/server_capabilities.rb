@@ -4,6 +4,10 @@ require 'lsp/lsp'
 
 module PuppetLanguageServer
   module ServerCapabilites
+    def self.folding_provider_supported?
+      @folding_provider ||= PuppetLanguageServer::Manifest::FoldingProvider.supported?
+    end
+
     def self.capabilities(options = {})
       # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize-request
 
@@ -22,6 +26,7 @@ module PuppetLanguageServer
         }
       }
       value['documentOnTypeFormattingProvider'] = document_on_type_formatting_options if options[:documentOnTypeFormattingProvider]
+      value['foldingRangeProvider'] = folding_range_provider_options if options[:foldingRangeProvider]
       value
     end
 
@@ -29,6 +34,10 @@ module PuppetLanguageServer
       {
         'firstTriggerCharacter' => '>'
       }
+    end
+
+    def self.folding_range_provider_options
+      true
     end
 
     def self.no_capabilities

@@ -54,9 +54,76 @@ describe 'PuppetLanguageServer::MessageHandler' do
 
     # initialize - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize
     describe '.request_initialize' do
-      #context 'given an initialize request' do
       let(:request_rpc_method) { 'initialize' }
       let(:request_params) { { 'capabilities' => { 'cap1' => 'value1' } } }
+
+      RSpec.shared_examples 'dynamically registered provider' do |short_client_cap, client_cap, server_cap_name|
+        def client_cap_hash(client_cap_string, dynamic_reg)
+          client_cap_string.split('/').reverse.reduce(dynamic_reg) { |memo, obj| { obj => memo } }
+        end
+
+        context "when #{short_client_cap} does support dynamic registration" do
+          let(:request_params) do
+            { 'capabilities' => client_cap_hash(client_cap, true) }
+          end
+
+          it "should not statically register a #{server_cap_name}" do
+            expect(subject.request_initialize(connection_id, request_message)).to_not server_capability(server_cap_name)
+          end
+        end
+
+        context "when #{short_client_cap} does not support dynamic registration" do
+          let(:request_params) do
+            { 'capabilities' => client_cap_hash(client_cap, false) }
+          end
+
+          it "should statically register a #{server_cap_name}" do
+            expect(subject.request_initialize(connection_id, request_message)).to server_capability(server_cap_name)
+          end
+        end
+
+        context "when #{short_client_cap} does not specify dynamic registration" do
+          let(:request_params) { {} }
+
+          it "should statically register a #{server_cap_name}" do
+            expect(subject.request_initialize(connection_id, request_message)).to server_capability(server_cap_name)
+          end
+        end
+      end
+
+      RSpec.shared_examples 'never registered provider' do |short_client_cap, client_cap, server_cap_name|
+        def client_cap_hash(client_cap_string, dynamic_reg)
+          client_cap_string.split('/').reverse.reduce(dynamic_reg) { |memo, obj| { obj => memo } }
+        end
+
+        context "when #{short_client_cap} does support dynamic registration" do
+          let(:request_params) do
+            { 'capabilities' => client_cap_hash(client_cap, true) }
+          end
+
+          it "should not statically register a #{server_cap_name}" do
+            expect(subject.request_initialize(connection_id, request_message)).to_not server_capability(server_cap_name)
+          end
+        end
+
+        context "when #{short_client_cap} does not support dynamic registration" do
+          let(:request_params) do
+            { 'capabilities' => client_cap_hash(client_cap, false) }
+          end
+
+          it "should not statically register a #{server_cap_name}" do
+            expect(subject.request_initialize(connection_id, request_message)).to_not server_capability(server_cap_name)
+          end
+        end
+
+        context "when #{short_client_cap} does not specify dynamic registration" do
+          let(:request_params) { {} }
+
+          it "should not statically register a #{server_cap_name}" do
+            expect(subject.request_initialize(connection_id, request_message)).to_not server_capability(server_cap_name)
+          end
+        end
+      end
 
       it 'should reply with capabilites' do
         expect(subject.request_initialize(connection_id, request_message)['capabilities']).to_not be_nil
@@ -67,46 +134,22 @@ describe 'PuppetLanguageServer::MessageHandler' do
         subject.request_initialize(connection_id, request_message)
       end
 
-      context 'when onTypeFormatting does support dynamic registration' do
-        let(:request_params) do
-          { 'capabilities' => {
-              'textDocument' => {
-                'onTypeFormatting' => {
-                  'dynamicRegistration' => true
-                }
-              }
-            }
-          }
+      include_examples 'dynamically registered provider', 'onTypeFormatting', 'textDocument/onTypeFormatting/dynamicRegistration', 'documentOnTypeFormattingProvider'
+
+      context 'When folding is supported' do
+        before(:each) do
+          allow(PuppetLanguageServer::ServerCapabilites).to receive(:folding_provider_supported?).and_return(true)
         end
 
-        it 'should not statically register a documentOnTypeFormattingProvider' do
-          expect(subject.request_initialize(connection_id, request_message)).to_not server_capability('documentOnTypeFormattingProvider')
-        end
+        include_examples 'dynamically registered provider', 'foldingRange', 'textDocument/foldingRange/dynamicRegistration', 'foldingRangeProvider'
       end
 
-      context 'when onTypeFormatting does not support dynamic registration' do
-        let(:request_params) do
-          { 'capabilities' => {
-              'textDocument' => {
-                'onTypeFormatting' => {
-                  'dynamicRegistration' => false
-                }
-              }
-            }
-          }
+      context 'When folding is not supported' do
+        before(:each) do
+          allow(PuppetLanguageServer::ServerCapabilites).to receive(:folding_provider_supported?).and_return(false)
         end
 
-        it 'should statically register a documentOnTypeFormattingProvider' do
-          expect(subject.request_initialize(connection_id, request_message)).to server_capability('documentOnTypeFormattingProvider')
-        end
-      end
-
-      context 'when onTypeFormatting does not specify dynamic registration' do
-        let(:request_params) { {} }
-
-        it 'should statically register a documentOnTypeFormattingProvider' do
-          expect(subject.request_initialize(connection_id, request_message)).to server_capability('documentOnTypeFormattingProvider')
-        end
+        include_examples 'never registered provider', 'foldingRange', 'textDocument/foldingRange/dynamicRegistration', 'foldingRangeProvider'
       end
     end
 
