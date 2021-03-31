@@ -1,5 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/ak9eht4vqavnmjf9?svg=true)](https://ci.appveyor.com/project/puppetlabs/puppet-editor-services)
-[![Build Status](https://travis-ci.com/puppetlabs/puppet-editor-services.svg?branch=master)](https://travis-ci.com/puppetlabs/puppet-editor-services)
+[![Editor Services CI](https://github.com/puppetlabs/puppet-editor-services/actions/workflows/editor-services-ci.yml/badge.svg)](https://github.com/puppetlabs/puppet-editor-services/actions/workflows/editor-services-ci.yml)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/puppetlabs/puppet-editor-services)
 
 # Puppet Editor Services

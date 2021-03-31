@@ -30,7 +30,7 @@ describe 'PuppetLanguageServerSidecar::FacterHelper', :if => Gem::Version.new(Pu
     end
   end
 
-  let(:default_fact_names) { %i[hostname fixture_agent_custom_fact] }
+  let(:default_fact_names) { %i[facterversion fixture_agent_custom_fact] }
   let(:module_fact_names) { %i[fixture_module_custom_fact fixture_module_external_fact] }
   let(:environment_fact_names) { %i[fixture_environment_custom_fact fixture_environment_external_fact] }
 
