@@ -110,7 +110,7 @@ EOT
       it 'should return nil' do
         result = subject.resolve(session_state, content, line_num, char_num)
 
-        expect(result.contents).to eq(nil)
+        expect(result).to be_nil
       end
     end
 

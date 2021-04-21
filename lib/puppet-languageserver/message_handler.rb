@@ -183,7 +183,7 @@ module PuppetLanguageServer
       end
     rescue StandardError => e
       PuppetLanguageServer.log_message(:error, "(textDocument/hover) #{e}")
-      LSP::Hover.new
+      nil
     end
 
     def request_textdocument_definition(_, json_rpc_message)
