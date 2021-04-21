@@ -5,9 +5,13 @@ $Jobs = @()
 # All default OSes we test on
 $OSList =@('ubuntu-latest', 'windows-latest')
 # All default Ruby and Puppet combinations
+# Pin to Ruby 2.5.8 due to
+#  - https://github.com/chef/win32-dir/commit/cf3e31ec90e47d988840759e5d755a9460e192ff
+#  - https://github.com/puppetlabs/puppet/pull/8577#issuecomment-823820255
+#  - https://www.msys2.org/news/#2021-01-31-aslr-enabled-by-default
 $RubyPuppet = @(
   @{ ruby = '2.7'; puppet_gem_version = '~> 7.0' }
-  @{ ruby = '2.5'; puppet_gem_version = '~> 6.0' }
+  @{ ruby = '2.5.8'; puppet_gem_version = '~> 6.0' }
   @{ ruby = '2.4'; puppet_gem_version = '~> 5.0' }
 )
 
