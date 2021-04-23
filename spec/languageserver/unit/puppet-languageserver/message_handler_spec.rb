@@ -589,8 +589,8 @@ describe 'PuppetLanguageServer::MessageHandler' do
           subject.request_textdocument_hover(connection_id, request_message)
         end
 
-        it 'should reply with nil for the contents' do
-          expect(subject.request_textdocument_hover(connection_id, request_message)).to have_attributes(:contents => nil)
+        it 'should reply with nil' do
+          expect(subject.request_textdocument_hover(connection_id, request_message)).to be_nil
         end
       end
 
@@ -618,8 +618,8 @@ describe 'PuppetLanguageServer::MessageHandler' do
             subject.request_textdocument_hover(connection_id, request_message)
           end
 
-          it 'should reply with nil for the contents' do
-            expect(subject.request_textdocument_hover(connection_id, request_message)).to have_attributes(:contents => nil)
+          it 'should reply with nil' do
+            expect(subject.request_textdocument_hover(connection_id, request_message)).to be_nil
           end
         end
       end
