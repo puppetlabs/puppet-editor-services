@@ -5,7 +5,7 @@
 
 A ruby based implementation of a [Language Server](https://github.com/Microsoft/language-server-protocol) and [Debug Server](TODO) for the Puppet Language.
 
-## Requirments
+## Requirements
 
 * Puppet 5 or above
 
