@@ -81,6 +81,7 @@ module PuppetLanguageServer
     %w[
       sidecar_protocol
       global_queues
+      puppet_lexer_helper
       puppet_parser_helper
       puppet_helper
       facter_helper

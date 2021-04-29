@@ -8,6 +8,7 @@ module PuppetLanguageServer
       attr_reader :uri
       attr_reader :content
       attr_reader :version
+      attr_reader :tokens
 
       # @param uri String The content of the document
       # @param content String The content of the document
@@ -16,6 +17,7 @@ module PuppetLanguageServer
         @uri = uri
         @content = content
         @version = version
+        @tokens = nil
       end
 
       # Update a document with new content and version
@@ -24,12 +26,24 @@ module PuppetLanguageServer
       def update(content, version)
         @content = content
         @version = version
+        @tokens = nil
+      end
+
+      # Subclass this!
+      def calculate_tokens!
+        []
       end
     end
 
     class EppDocument < Document; end
 
-    class ManifestDocument < Document; end
+    class ManifestDocument < Document
+      def calculate_tokens!
+        lexer = Puppet::Pops::Parser::Lexer2WithComments.new
+        lexer.lex_string(content)
+        @tokens = lexer.fullscan
+      end
+    end
 
     class PuppetfileDocument < Document; end
 
@@ -72,6 +86,15 @@ module PuppetLanguageServer
       def document_content(uri, doc_version = nil)
         doc = document(uri, doc_version)
         doc.nil? ? nil : doc.content.clone
+      end
+
+      def document_tokens(uri, doc_version = nil)
+        @doc_mutex.synchronize do
+          return nil if @documents[uri].nil?
+          return nil unless doc_version.nil? || @documents[uri].version == doc_version
+          return @documents[uri].tokens unless @documents[uri].tokens.nil?
+          return @documents[uri].calculate_tokens!
+        end
       end
 
       def document_version(uri)

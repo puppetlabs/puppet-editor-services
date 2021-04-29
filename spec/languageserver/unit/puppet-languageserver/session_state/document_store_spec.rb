@@ -94,4 +94,39 @@ describe 'PuppetLanguageServer::SessionState::DocumentStore' do
       end
     end
   end
+
+  describe '#document_tokens' do
+    let(:uri) { 'file://something.pp' }
+    let(:content) { 'content' }
+    let(:version) { 1 }
+
+    before(:each) do
+      subject.set_document(uri, content, version)
+    end
+
+    it 'returns nil for documents that do not exist' do
+      expect(subject.document_tokens('file://bad_uri', version)).to be_nil
+    end
+
+    it 'returns nil for document versions that do not exist' do
+      expect(subject.document_tokens(uri, -1)).to be_nil
+    end
+
+    it 'returns tokens for latest document version' do
+      expect(subject.document_tokens(uri)).to_not be_nil
+    end
+
+    it 'caches the document tokens for the same version of the file' do
+      first = subject.document_tokens(uri)
+      second = subject.document_tokens(uri)
+      expect(first.object_id).to eq(second.object_id)
+    end
+
+    it 'recalculates document tokens when the file changes' do
+      first = subject.document_tokens(uri)
+      subject.set_document(uri, content, version + 1)
+      second = subject.document_tokens(uri)
+      expect(first.object_id).to_not eq(second.object_id)
+    end
+  end
 end
