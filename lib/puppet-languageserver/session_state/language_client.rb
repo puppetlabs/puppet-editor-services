@@ -8,7 +8,15 @@ module PuppetLanguageServer
       # Client settings
       attr_reader :format_on_type
       attr_reader :format_on_type_filesize_limit
+      attr_reader :folding_range
+      attr_reader :folding_range_show_last_line
       attr_reader :use_puppetfile_resolver
+
+      DEFAULT_FORMAT_ON_TYPE_ENABLE = false
+      DEFAULT_FORMAT_ON_TYPE_FILESIZE_LIMIT = 4096
+      DEFAULT_FOLDING_RANGE_ENABLE = true         # Default is true as per VS Code
+      DEFAULT_FOLDING_RANGE_SHOW_LAST_LINE = true # Default is true as per VS Code
+      DEFAULT_VALIDATE_RESOLVE_PUPPETFILES = true
 
       def initialize(message_handler)
         @message_handler = message_handler
@@ -24,10 +32,12 @@ module PuppetLanguageServer
         # ]
         @registrations = {}
 
-        # Default settings
+        # Initial state. Not always the same as defaults
+        @folding_range = false
+        @folding_range_show_last_line = DEFAULT_FOLDING_RANGE_SHOW_LAST_LINE
         @format_on_type = false
-        @format_on_type_filesize_limit = 4096
-        @use_puppetfile_resolver = true
+        @format_on_type_filesize_limit = DEFAULT_FORMAT_ON_TYPE_FILESIZE_LIMIT
+        @use_puppetfile_resolver = DEFAULT_VALIDATE_RESOLVE_PUPPETFILES
       end
 
       def client_capability(*names)
@@ -47,9 +57,9 @@ module PuppetLanguageServer
       end
 
       def parse_lsp_configuration_settings!(settings = {})
-        # format on type
-        value = safe_hash_traverse(settings, 'puppet', 'editorService', 'formatOnType', 'enable')
-        unless value.nil? || to_boolean(value) == @format_on_type # rubocop:disable Style/GuardClause  Ummm no.
+        # format on type enabled
+        value = to_boolean(safe_hash_traverse(settings, 'puppet', 'editorService', 'formatOnType', 'enable'), DEFAULT_FORMAT_ON_TYPE_ENABLE)
+        unless value == @format_on_type # rubocop:disable Style/GuardClause  Ummm no.
           # Is dynamic registration available?
           if client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration') == true
             if value
@@ -61,11 +71,26 @@ module PuppetLanguageServer
           @format_on_type = value
         end
         # format on type file size
-        value = safe_hash_traverse(settings, 'puppet', 'editorService', 'formatOnType', 'maxFileSize')
-        @format_on_type_filesize_limit = to_integer(value, 4096, 0)
+        @format_on_type_filesize_limit = to_integer(safe_hash_traverse(settings, 'puppet', 'editorService', 'formatOnType', 'maxFileSize'), DEFAULT_FORMAT_ON_TYPE_FILESIZE_LIMIT, 0)
+
         # use puppetfile resolver
-        value = safe_hash_traverse(settings, 'puppet', 'validate', 'resolvePuppetfiles')
-        @use_puppetfile_resolver = to_boolean(value)
+        @use_puppetfile_resolver = to_boolean(safe_hash_traverse(settings, 'puppet', 'validate', 'resolvePuppetfiles'), DEFAULT_VALIDATE_RESOLVE_PUPPETFILES)
+
+        # folding range enabled
+        value = to_boolean(safe_hash_traverse(settings, 'puppet', 'editorService', 'foldingRange', 'enable'), DEFAULT_FOLDING_RANGE_ENABLE) && PuppetLanguageServer::ServerCapabilites.folding_provider_supported?
+        unless value == @folding_range # rubocop:disable Style/GuardClause  Ummm no.
+          # Is dynamic registration available?
+          if client_capability('textDocument', 'foldingRange', 'dynamicRegistration') == true
+            if value
+              register_capability('textDocument/foldingRange', PuppetLanguageServer::ServerCapabilites.document_on_type_formatting_options)
+            else
+              unregister_capability('textDocument/foldingRange')
+            end
+          end
+          @folding_range = value
+        end
+        # folding range last line display
+        @folding_range_show_last_line = to_boolean(safe_hash_traverse(settings, 'puppet', 'editorService', 'foldingRange', 'showLastLine'), DEFAULT_FOLDING_RANGE_SHOW_LAST_LINE)
       end
 
       def capability_registrations(method)
@@ -173,9 +198,9 @@ module PuppetLanguageServer
 
       private
 
-      def to_boolean(value)
-        return false if value.nil? || value == false
-        return true if value == true
+      def to_boolean(value, default = false)
+        return default if value.nil?
+        return value if value == true || value == false # rubocop:disable Style/MultipleComparison
         value.to_s =~ %r{^(true|t|yes|y|1)$/i}
       end
 

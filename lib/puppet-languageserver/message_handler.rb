@@ -29,9 +29,12 @@ module PuppetLanguageServer
       PuppetLanguageServer.log_message(:debug, 'Received initialize method')
 
       language_client.parse_lsp_initialize!(json_rpc_message.params)
+      static_folding_provider = !language_client.client_capability('textDocument', 'foldingRange', 'dynamicRegistration') &&
+                                PuppetLanguageServer::ServerCapabilites.folding_provider_supported?
       # Setup static registrations if dynamic registration is not available
       info = {
-        :documentOnTypeFormattingProvider => !language_client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration')
+        :documentOnTypeFormattingProvider => !language_client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration'),
+        :foldingRangeProvider             => static_folding_provider
       }
 
       # Configure the document store
@@ -162,6 +165,20 @@ module PuppetLanguageServer
       LSP::CompletionList.new('isIncomplete' => false, 'items' => [])
     end
 
+    def request_textdocument_foldingrange(_, json_rpc_message)
+      return nil unless language_client.folding_range
+      file_uri = json_rpc_message.params['textDocument']['uri']
+      case documents.document_type(file_uri)
+      when :manifest
+        PuppetLanguageServer::Manifest::FoldingProvider.instance.folding_ranges(documents.document_tokens(file_uri))
+      else
+        raise "Unable to provide folding ranages on #{file_uri}"
+      end
+    rescue StandardError => e
+      PuppetLanguageServer.log_message(:error, "(textDocument/foldingRange) #{e}")
+      nil
+    end
+
     def request_completionitem_resolve(_, json_rpc_message)
       PuppetLanguageServer::Manifest::CompletionProvider.resolve(session_state, LSP::CompletionItem.new(json_rpc_message.params))
     rescue StandardError => e
@@ -285,6 +302,7 @@ module PuppetLanguageServer
           "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
         )
       end
+
       # Register for workspace setting changes if it's supported
       if language_client.client_capability('workspace', 'didChangeConfiguration', 'dynamicRegistration') == true
         language_client.register_capability('workspace/didChangeConfiguration')
