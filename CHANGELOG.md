@@ -6,6 +6,18 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 1.2.0 - 2021-05-26
+
+### Added
+
+- ([GH-306](https://github.com/puppetlabs/puppet-editor-services/issues/306)) Add a code folding range provider for Manifests
+
+### Fixed
+
+- ([GH-300](https://github.com/puppetlabs/puppet-editor-services/issues/300)) Return nil for bad hover requests
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/b9a0d98f377e8a7b083a285e88cb538b6a9c45b1)) FixedP typo ([Juan vStone](https://github.com/vStone))
+
+
 ## 1.1.0 - 2021-01-27
 
 ### Added
