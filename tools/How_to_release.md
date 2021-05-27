@@ -6,6 +6,8 @@
 
     * Modify `lib/puppet_editor_services/version.rb` with the new version number
 
+    * Run the Bolt Introspection script with the latest Bolt version ([link](https://rubygems.org/gems/bolt))
+
 2. Once merged get the commit id of the preparation
 
 3. Tag the commit
