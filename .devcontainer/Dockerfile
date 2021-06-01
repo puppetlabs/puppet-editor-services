@@ -17,7 +17,9 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 # Configure apt and install packages
-RUN apt-get update \
+RUN wget https://packages.microsoft.com/config/debian/10/packages-microsoft-prod.deb \
+    && dpkg -i packages-microsoft-prod.deb \
+    && apt-get update \
     && apt-get -y install --no-install-recommends apt-utils dialog 2>&1 \
     # Verify git, process tools installed
     && apt-get -y install git openssh-client less iproute2 procps lsb-release \
@@ -25,6 +27,9 @@ RUN apt-get update \
     # Install ruby-debug-ide and debase
     && gem install ruby-debug-ide \
     && gem install debase \
+    #
+    # Install PowerShell
+    && apt-get install -y powershell \
     #
     # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
     && groupadd --gid $USER_GID $USERNAME \
