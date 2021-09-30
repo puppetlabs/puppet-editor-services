@@ -6,7 +6,7 @@ module Puppet::Environments # rubocop:disable Style/ClassAndModuleChildren
     # environment, create a new Puppet::Node::Environment object for the workspace
     alias_method :original_get, :get
     def get(name)
-      if name == PuppetLanguageServerSidecar::PuppetHelper::SIDECAR_PUPPET_ENVIRONMENT
+      if name.intern == PuppetLanguageServerSidecar::PuppetHelper::SIDECAR_PUPPET_ENVIRONMENT.intern
         env_symbol = name.intern
         setting_values = Puppet.settings.values(env_symbol, Puppet.settings.preferred_run_mode)
         env = Puppet::Node::Environment.create(
@@ -26,7 +26,7 @@ module Puppet::Environments # rubocop:disable Style/ClassAndModuleChildren
     # from the workspace.
     alias_method :original_get_conf, :get_conf
     def get_conf(name)
-      if name == PuppetLanguageServerSidecar::PuppetHelper::SIDECAR_PUPPET_ENVIRONMENT.intern
+      if name.intern == PuppetLanguageServerSidecar::PuppetHelper::SIDECAR_PUPPET_ENVIRONMENT.intern
         conf = Puppet::Settings::EnvironmentConf.load_from(PuppetLanguageServerSidecar::Workspace.root_path, @global_module_path)
         # Unfortunately the environment.conf expects OS style delimiters which means
         # it fails if written for windows and read on Unix and vice versa. So we just
