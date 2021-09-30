@@ -6,6 +6,17 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 1.3.0 - 2021-09-30
+
+### Changed
+
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/pull/314/commits/239de128a166c694b7ef88f916d46aaf4ec9ecd5)) Update puppet-lint to 2.5.2
+- ([Commit](https://github.com/puppetlabs/puppet-editor-services/pull/314/commits/84be8fb50d259c9f26a7d721560a3700b6577101)) Update bolt static metadata to 3.18.0)) Update puppet-lint to 2.5.2
+
+### Fixed
+
+- ([GH-311](https://github.com/puppetlabs/puppet-editor-services/issues/311)) Languageserver doesn't start with Puppet 7.11.0
+
 ## 1.2.0 - 2021-05-26
 
 ### Added
