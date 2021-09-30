@@ -72,6 +72,7 @@ module PuppetLanguageServer
     begin
       require 'lsp/lsp'
       require 'puppet'
+      require 'facter'
     rescue LoadError => e
       log_message(:error, "Error while loading a critical gem: #{e} #{e.backtrace}")
       return
