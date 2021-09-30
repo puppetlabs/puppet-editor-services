@@ -6,6 +6,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## Unreleased
 
+## 1.3.0 - 2021-09-30
+
+### Fixed
+
+- ([GH-311](https://github.com/puppetlabs/puppet-editor-services/issues/311)) Languageserver doesn't start with Puppet 7.11.0
+
 ## 1.2.0 - 2021-05-26
 
 ### Added
