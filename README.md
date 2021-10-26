@@ -115,13 +115,9 @@ D, [2018-12-05T15:20:56.374333 #29752] DEBUG -- : TCPSRV: Started listening on l
 ## How to run the Language Server in Production
 
 * Ensure that Puppet Agent is installed
-
-[Linux](https://docs.puppet.com/puppet/4.10/install_linux.html)
-
-[Windows](https://docs.puppet.com/puppet/4.10/install_windows.html)
-
-[MacOSX](https://docs.puppet.com/puppet/4.10/install_osx.html)
-
+  * [Linux](https://puppet.com/docs/puppet/7/install_agents.html#install_nix_agents)
+  * [Windows](https://puppet.com/docs/puppet/7/install_agents.html#install_windows_agents)
+  * [macOS](https://puppet.com/docs/puppet/7/install_agents.html#install_mac_agents)
 
 * Run the `puppet-languageserver` with ruby
 
@@ -270,7 +266,7 @@ D, [2018-04-17T14:21:10.546834 #12424] DEBUG -- : TCPSRV: Started listening on 1
 * Ensure that Puppet Agent is installed
   * [Linux](https://puppet.com/docs/puppet/7/install_agents.html#install_nix_agents)
   * [Windows](https://puppet.com/docs/puppet/7/install_agents.html#install_windows_agents)
-  * [MacOSX](https://puppet.com/docs/puppet/7/install_agents.html#install_mac_agents)
+  * [macOS](https://puppet.com/docs/puppet/7/install_agents.html#install_mac_agents)
 
 
 * Run the `puppet-debugserver` with ruby
