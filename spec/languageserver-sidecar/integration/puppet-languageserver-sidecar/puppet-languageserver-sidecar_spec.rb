@@ -147,11 +147,13 @@ describe 'PuppetLanguageServerSidecar', :if => Gem::Version.new(Puppet.version) 
       obj = child_with_key(deserial, :defaultmodule)
       expect(obj.doc).to match(/This is an example of how to document a Puppet class/)
       expect(obj.source).to match(/defaultmodule/)
-      expect(obj.parameters.count).to eq 2
+      expect(obj.parameters.count).to eq 3
       expect(obj.parameters['first'][:type]).to eq 'String'
       expect(obj.parameters['first'][:doc]).to match(/The first parameter for this class/)
       expect(obj.parameters['second'][:type]).to eq 'Integer'
       expect(obj.parameters['second'][:doc]).to match(/The second parameter for this class/)
+      expect(obj.parameters['notype'][:type]).to eq 'Any'
+      expect(obj.parameters['notype'][:doc]).to match(/This parameter does not specify a type/)
 
       # Now run using cached information
       expect_populated_cache
