@@ -3,6 +3,7 @@
 #
 # @param ensure Ensure parameter documentation.
 # @param param2 param2 documentation.
+# @param missingparam This param does not exist.
 define defaultdefinedtype(
   $ensure        = 'UNSET',
   String $param2 = 'param2default'

@@ -90,20 +90,23 @@ describe 'PuppetLanguageServerSidecar' do
 
         # Check base methods
         expect(item.key).to eq('defaultmodule')
-        expect(item.line).to eq(8)
+        expect(item.line).to eq(10)
         expect(item.char).to be_nil
         expect(item.length).to be_nil
         expect(item.source).to eq(fixture_filepath)
         # Check class specific methods
         expect(item.doc).to match(/This is an example of how to document a Puppet class/)
         # Check the class parameters
-        expect(item.parameters.count).to eq(2)
+        expect(item.parameters.count).to eq(3)
         param = item.parameters['first']
         expect(param[:doc]).to eq('The first parameter for this class.')
         expect(param[:type]).to eq('String')
         param = item.parameters['second']
         expect(param[:doc]).to eq('The second parameter for this class.')
         expect(param[:type]).to eq('Integer')
+        param = item.parameters['notype']
+        expect(param[:doc]).to eq('This parameter does not specify a type.')
+        expect(param[:type]).to eq('Any')
       end
     end
 
@@ -119,7 +122,7 @@ describe 'PuppetLanguageServerSidecar' do
 
         # Check base methods
         expect(item.key).to eq('defaultdefinedtype')
-        expect(item.line).to eq(6)
+        expect(item.line).to eq(7)
         expect(item.char).to be_nil
         expect(item.length).to be_nil
         expect(item.source).to eq(fixture_filepath)

@@ -140,7 +140,7 @@ module PuppetLanguageServerSidecar
           obj.parameters     = {}
           # Extract the class parameters
           unless item[:docstring][:tags].nil?
-            item[:docstring][:tags].select { |tag| tag[:tag_name] == 'param' }.each do |tag|
+            item[:docstring][:tags].select { |tag| tag[:tag_name] == 'param' && tag.key?(:types) }.each do |tag|
               param_name = tag[:name]
               obj.parameters[param_name] = {
                 :doc  => tag[:text],
