@@ -144,7 +144,7 @@ module PuppetLanguageServerSidecar
               param_name = tag[:name]
               obj.parameters[param_name] = {
                 :doc  => tag[:text],
-                :type => tag[:types].join(', ')
+                :type => tag[:types]&.join(', ')
               }
             end
           end
