@@ -1,15 +1,13 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-realpath = File.dirname(File.realpath(__FILE__))
-
 # Add the language server into the load path
-$LOAD_PATH.unshift(File.join(realpath, 'lib'))
+$LOAD_PATH.unshift(File.join(__dir__, 'lib'))
 
 # Add the vendored gems into the load path
-$LOAD_PATH.unshift(File.join(realpath, 'vendor', 'puppet-lint', 'lib'))
-$LOAD_PATH.unshift(File.join(realpath, 'vendor', 'molinillo', 'lib'))
-$LOAD_PATH.unshift(File.join(realpath, 'vendor', 'puppetfile-resolver', 'lib'))
+$LOAD_PATH.unshift(File.join(__dir__, 'vendor', 'puppet-lint', 'lib'))
+$LOAD_PATH.unshift(File.join(__dir__, 'vendor', 'molinillo', 'lib'))
+$LOAD_PATH.unshift(File.join(__dir__, 'vendor', 'puppetfile-resolver', 'lib'))
 
 require 'puppet_languageserver'
 
