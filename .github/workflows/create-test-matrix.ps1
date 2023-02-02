@@ -11,8 +11,6 @@ $OSList =@('ubuntu-latest', 'windows-latest')
 #  - https://www.msys2.org/news/#2021-01-31-aslr-enabled-by-default
 $RubyPuppet = @(
   @{ ruby = '2.7'; puppet_gem_version = '~> 7.0' }
-  @{ ruby = '2.5.8'; puppet_gem_version = '~> 6.0' }
-  @{ ruby = '2.4'; puppet_gem_version = '~> 5.0' }
 )
 
 $OSList | ForEach-Object {
@@ -38,14 +36,6 @@ $OSList | ForEach-Object {
     }
   }
 
-  # Add Version specific Tests
-  $Jobs += @{
-    job_name = 'Puppet 5.1.0 Unit Test'
-    os = $OS
-    ruby = "2.4"
-    puppet_gem_version = "5.1.0"
-    rake_tasks = 'gem_revendor test_languageserver'
-  }
 
   # Add Acceptance tests
   $Jobs += @{
