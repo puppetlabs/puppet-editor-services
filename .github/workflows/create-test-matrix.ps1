@@ -3,7 +3,7 @@ param([Switch]$Raw)
 $Jobs = @()
 
 # All default OSes we test on
-$OSList =@('ubuntu-latest', 'windows-latest')
+$OSList =@('ubuntu-20.04', 'windows-2019')
 # All default Ruby and Puppet combinations
 # Pin to Ruby 2.5.8 due to
 #  - https://github.com/chef/win32-dir/commit/cf3e31ec90e47d988840759e5d755a9460e192ff
