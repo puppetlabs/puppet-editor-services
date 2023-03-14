@@ -314,7 +314,7 @@ module PuppetLanguageServer
           unless param_type.nil?
             doc = ''
             doc += param_type[:type] unless param_type[:type].nil?
-            doc += "---\n" + param_type[:doc] unless param_type[:doc].nil?
+            doc += "---\n#{param_type[:doc]}" unless param_type[:doc].nil?
             result.documentation = doc
             result.insertText = "#{data['param']} => "
           end

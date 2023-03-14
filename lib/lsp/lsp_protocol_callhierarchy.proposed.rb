@@ -41,13 +41,7 @@ module LSP
   #     selectionRange: Range;
   # }
   class CallHierarchyItem < LSPBase
-    attr_accessor :name # type: string
-    attr_accessor :kind # type: SymbolKind
-    attr_accessor :tags # type: SymbolTag[]
-    attr_accessor :detail # type: string
-    attr_accessor :uri # type: DocumentUri
-    attr_accessor :range # type: Range
-    attr_accessor :selectionRange # type: Range
+    attr_accessor :name, :kind, :tags, :detail, :uri, :range, :selectionRange # type: string # type: SymbolKind # type: SymbolTag[] # type: string # type: DocumentUri # type: Range # type: Range
 
     def initialize(initial_hash = nil)
       super
@@ -79,8 +73,7 @@ module LSP
   #     fromRanges: Range[];
   # }
   class CallHierarchyIncomingCall < LSPBase
-    attr_accessor :from # type: CallHierarchyItem
-    attr_accessor :fromRanges # type: Range[]
+    attr_accessor :from, :fromRanges # type: CallHierarchyItem # type: Range[]
 
     def from_h!(value)
       value = {} if value.nil?
@@ -103,8 +96,7 @@ module LSP
   #     fromRanges: Range[];
   # }
   class CallHierarchyOutgoingCall < LSPBase
-    attr_accessor :to # type: CallHierarchyItem
-    attr_accessor :fromRanges # type: Range[]
+    attr_accessor :to, :fromRanges # type: CallHierarchyItem # type: Range[]
 
     def from_h!(value)
       value = {} if value.nil?
@@ -136,6 +128,7 @@ module LSP
   # }
   class CallHierarchyClientCapabilities < LSPBase
     attr_accessor :textDocument # type: {
+
     #        /**
     #         * Capabilities specific to the `textDocument/callHierarchy`.
     #         *

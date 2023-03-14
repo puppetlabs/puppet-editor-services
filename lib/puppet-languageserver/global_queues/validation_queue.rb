@@ -6,10 +6,7 @@ require 'puppet_editor_services/server'
 module PuppetLanguageServer
   module GlobalQueues
     class ValidationQueueJob < SingleInstanceQueueJob
-      attr_accessor :file_uri
-      attr_accessor :doc_version
-      attr_accessor :connection_id
-      attr_accessor :options
+      attr_accessor :file_uri, :doc_version, :connection_id, :options
 
       def initialize(file_uri, doc_version, connection_id, options = {})
         super(file_uri)
@@ -51,7 +48,7 @@ module PuppetLanguageServer
         results = case document_store.document_type(job_object.file_uri)
                   when :manifest
                     options[:tasks_mode] = document_store.plan_file?(job_object.file_uri)
-                    PuppetLanguageServer:: Manifest::ValidationProvider.validate(session_state, content, options)
+                    PuppetLanguageServer::Manifest::ValidationProvider.validate(session_state, content, options)
                   when :epp
                     PuppetLanguageServer::Epp::ValidationProvider.validate(content)
                   when :puppetfile

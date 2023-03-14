@@ -17,13 +17,7 @@ module PuppetEditorServices
   module Server
     class Tcp < ::PuppetEditorServices::Server::Base
       class << self
-        attr_reader :io_locker
-        attr_reader :events
-        attr_reader :e_locker
-        attr_reader :services
-        attr_reader :s_locker
-        attr_reader :io_connection_dic
-        attr_reader :c_locker
+        attr_reader :io_locker, :events, :e_locker, :services, :s_locker, :io_connection_dic, :c_locker
       end
 
       @io_locker = Mutex.new

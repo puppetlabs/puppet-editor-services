@@ -19,8 +19,7 @@ module DSP
   #         type: string;
   #     }
   class ProtocolMessage < DSPBase
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :seq, :type # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -37,10 +36,7 @@ module DSP
   #         arguments?: any;
   #     }
   class Request < DSPBase
-    attr_accessor :command # type: string
-    attr_accessor :arguments # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :command, :arguments, :seq, :type # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -64,10 +60,7 @@ module DSP
   #         body?: any;
   #     }
   class Event < DSPBase
-    attr_accessor :event # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event, :body, :seq, :type # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -106,13 +99,7 @@ module DSP
   #         body?: any;
   #     }
   class Response < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -139,16 +126,11 @@ module DSP
   #         };
   #     }
   class ErrorResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** An optional, structured error message. */
     #            error?: Message;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -172,10 +154,7 @@ module DSP
   #         arguments?: CancelArguments;
   #     }
   class CancelRequest < DSPBase
-    attr_accessor :arguments # type: CancelArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: CancelArguments # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -203,8 +182,7 @@ module DSP
   #         progressId?: string;
   #     }
   class CancelArguments < DSPBase
-    attr_accessor :requestId # type: number
-    attr_accessor :progressId # type: string
+    attr_accessor :requestId, :progressId # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -222,13 +200,7 @@ module DSP
   # interface CancelResponse extends Response {
   #     }
   class CancelResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -251,10 +223,7 @@ module DSP
   # interface InitializedEvent extends Event {
   #     }
   class InitializedEvent < DSPBase
-    attr_accessor :event # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event, :body, :seq, :type # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -294,7 +263,7 @@ module DSP
   #         };
   #     }
   class StoppedEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The reason for the event.
     #                For backward compatibility this string is shown in the UI if the 'description' attribute is missing (but it must not be translated).
     #                Values: 'step', 'breakpoint', 'exception', 'pause', 'entry', 'goto', 'function breakpoint', 'data breakpoint', etc.
@@ -314,9 +283,7 @@ module DSP
     #            */
     #            allThreadsStopped?: boolean;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -337,15 +304,13 @@ module DSP
   #         };
   #     }
   class ContinuedEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The thread which was continued. */
     #            threadId: number;
     #            /** If 'allThreadsContinued' is true, a debug adapter can announce that all threads have continued. */
     #            allThreadsContinued?: boolean;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -364,13 +329,11 @@ module DSP
   #         };
   #     }
   class ExitedEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The exit code returned from the debuggee. */
     #            exitCode: number;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -391,15 +354,13 @@ module DSP
   #         };
   #     }
   class TerminatedEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** A debug adapter may set 'restart' to true (or to an arbitrary object) to request that the front end restarts the session.
     #                The value is not interpreted by the client and passed unmodified as an attribute '__restart' to the 'launch' and 'attach' requests.
     #            */
     #            restart?: any;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -427,7 +388,7 @@ module DSP
   #         };
   #     }
   class ThreadEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The reason for the event.
     #                Values: 'started', 'exited', etc.
     #            */
@@ -435,9 +396,7 @@ module DSP
     #            /** The identifier of the thread. */
     #            threadId: number;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -479,7 +438,7 @@ module DSP
   #         };
   #     }
   class OutputEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The output category. If not specified, 'console' is assumed.
     #                Values: 'console', 'stdout', 'stderr', 'telemetry', etc.
     #            */
@@ -506,9 +465,7 @@ module DSP
     #            /** Optional data to report. For the 'telemetry' category the data will be sent to telemetry, for the other categories the data is shown in JSON format. */
     #            data?: any;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -531,7 +488,7 @@ module DSP
   #         };
   #     }
   class BreakpointEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The reason for the event.
     #                Values: 'changed', 'new', 'removed', etc.
     #            */
@@ -539,9 +496,7 @@ module DSP
     #            /** The 'id' attribute is used to find the target breakpoint and the other attributes are used as the new values. */
     #            breakpoint: Breakpoint;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -562,15 +517,13 @@ module DSP
   #         };
   #     }
   class ModuleEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The reason for the event. */
     #            reason: 'new' | 'changed' | 'removed';
     #            /** The new, changed, or removed module. In case of 'removed' only the module id is used. */
     #            module: Module;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -591,15 +544,13 @@ module DSP
   #         };
   #     }
   class LoadedSourceEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The reason for the event. */
     #            reason: 'new' | 'changed' | 'removed';
     #            /** The new, changed, or removed source. */
     #            source: Source;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -630,7 +581,7 @@ module DSP
   #         };
   #     }
   class ProcessEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The logical name of the process. This is usually the full path to process's executable file. Example: /home/example/myproj/program.js. */
     #            name: string;
     #            /** The system process id of the debugged process. This property will be missing for non-system processes. */
@@ -646,9 +597,7 @@ module DSP
     #            /** The size of a pointer or address for this process, in bits. This value may be used by clients when formatting addresses for display. */
     #            pointerSize?: number;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -667,13 +616,11 @@ module DSP
   #         };
   #     }
   class CapabilitiesEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The set of updated capabilities. */
     #            capabilities: Capabilities;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -710,7 +657,7 @@ module DSP
   #         };
   #     }
   class ProgressStartEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** An ID that must be used in subsequent 'progressUpdate' and 'progressEnd' events to make them refer to the same progress reporting.
     #                IDs must be unique within a debug session.
     #            */
@@ -732,9 +679,7 @@ module DSP
     #            /** Optional progress percentage to display (value range: 0 to 100). If omitted no percentage will be shown. */
     #            percentage?: number;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -757,7 +702,7 @@ module DSP
   #         };
   #     }
   class ProgressUpdateEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The ID that was introduced in the initial 'progressStart' event. */
     #            progressId: string;
     #            /** Optional, more detailed progress message. If omitted, the previous message (if any) is used. */
@@ -765,9 +710,7 @@ module DSP
     #            /** Optional progress percentage to display (value range: 0 to 100). If omitted no percentage will be shown. */
     #            percentage?: number;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -788,15 +731,13 @@ module DSP
   #         };
   #     }
   class ProgressEndEvent < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :seq, :type # type: {
     #            /** The ID that was introduced in the initial 'ProgressStartEvent'. */
     #            progressId: string;
     #            /** Optional, more detailed progress message. If omitted, the previous message (if any) is used. */
     #            message?: string;
     #        }
-    attr_accessor :event # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :event # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -812,10 +753,7 @@ module DSP
   #         arguments: RunInTerminalRequestArguments;
   #     }
   class RunInTerminalRequest < DSPBase
-    attr_accessor :arguments # type: RunInTerminalRequestArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: RunInTerminalRequestArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -842,11 +780,8 @@ module DSP
   #         };
   #     }
   class RunInTerminalRequestArguments < DSPBase
-    attr_accessor :kind # type: string with value 'integrated' | 'external'
-    attr_accessor :title # type: string
-    attr_accessor :cwd # type: string
-    attr_accessor :args # type: string[]
-    attr_accessor :env # type: {
+    attr_accessor :kind, :title, :cwd, :args, :env # type: string with value 'integrated' | 'external' # type: string # type: string # type: string[] # type: {
+
     #            [key: string]: string | null;
     #        }
 
@@ -875,18 +810,13 @@ module DSP
   #         };
   #     }
   class RunInTerminalResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The process ID. The value should be less than or equal to 2147483647 (2^31 - 1). */
     #            processId?: number;
     #            /** The process ID of the terminal shell. The value should be less than or equal to 2147483647 (2^31 - 1). */
     #            shellProcessId?: number;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -910,10 +840,7 @@ module DSP
   #         arguments: InitializeRequestArguments;
   #     }
   class InitializeRequest < DSPBase
-    attr_accessor :arguments # type: InitializeRequestArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: InitializeRequestArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -954,18 +881,7 @@ module DSP
   #         supportsProgressReporting?: boolean;
   #     }
   class InitializeRequestArguments < DSPBase
-    attr_accessor :clientID # type: string
-    attr_accessor :clientName # type: string
-    attr_accessor :adapterID # type: string
-    attr_accessor :locale # type: string
-    attr_accessor :linesStartAt1 # type: boolean
-    attr_accessor :columnsStartAt1 # type: boolean
-    attr_accessor :pathFormat # type: string
-    attr_accessor :supportsVariableType # type: boolean
-    attr_accessor :supportsVariablePaging # type: boolean
-    attr_accessor :supportsRunInTerminalRequest # type: boolean
-    attr_accessor :supportsMemoryReferences # type: boolean
-    attr_accessor :supportsProgressReporting # type: boolean
+    attr_accessor :clientID, :clientName, :adapterID, :locale, :linesStartAt1, :columnsStartAt1, :pathFormat, :supportsVariableType, :supportsVariablePaging, :supportsRunInTerminalRequest, :supportsMemoryReferences, :supportsProgressReporting # type: string # type: string # type: string # type: string # type: boolean # type: boolean # type: string # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -995,13 +911,7 @@ module DSP
   #         body?: Capabilities;
   #     }
   class InitializeResponse < DSPBase
-    attr_accessor :body # type: Capabilities
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :body, :request_seq, :success, :command, :message, :seq, :type # type: Capabilities # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1025,10 +935,7 @@ module DSP
   #         arguments?: ConfigurationDoneArguments;
   #     }
   class ConfigurationDoneRequest < DSPBase
-    attr_accessor :arguments # type: ConfigurationDoneArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: ConfigurationDoneArguments # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1058,13 +965,7 @@ module DSP
   # interface ConfigurationDoneResponse extends Response {
   #     }
   class ConfigurationDoneResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1088,10 +989,7 @@ module DSP
   #         arguments: LaunchRequestArguments;
   #     }
   class LaunchRequest < DSPBase
-    attr_accessor :arguments # type: LaunchRequestArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: LaunchRequestArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1113,8 +1011,7 @@ module DSP
   #         __restart?: any;
   #     }
   class LaunchRequestArguments < DSPBase
-    attr_accessor :noDebug # type: boolean
-    attr_accessor :__restart # type: any
+    attr_accessor :noDebug, :__restart # type: boolean # type: any
 
     def initialize(initial_hash = nil)
       super
@@ -1132,13 +1029,7 @@ module DSP
   # interface LaunchResponse extends Response {
   #     }
   class LaunchResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1162,10 +1053,7 @@ module DSP
   #         arguments: AttachRequestArguments;
   #     }
   class AttachRequest < DSPBase
-    attr_accessor :arguments # type: AttachRequestArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: AttachRequestArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1202,13 +1090,7 @@ module DSP
   # interface AttachResponse extends Response {
   #     }
   class AttachResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1232,10 +1114,7 @@ module DSP
   #         arguments?: RestartArguments;
   #     }
   class RestartRequest < DSPBase
-    attr_accessor :arguments # type: RestartArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: RestartArguments # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1265,13 +1144,7 @@ module DSP
   # interface RestartResponse extends Response {
   #     }
   class RestartResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1295,10 +1168,7 @@ module DSP
   #         arguments?: DisconnectArguments;
   #     }
   class DisconnectRequest < DSPBase
-    attr_accessor :arguments # type: DisconnectArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: DisconnectArguments # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1325,8 +1195,7 @@ module DSP
   #         terminateDebuggee?: boolean;
   #     }
   class DisconnectArguments < DSPBase
-    attr_accessor :restart # type: boolean
-    attr_accessor :terminateDebuggee # type: boolean
+    attr_accessor :restart, :terminateDebuggee # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1344,13 +1213,7 @@ module DSP
   # interface DisconnectResponse extends Response {
   #     }
   class DisconnectResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1374,10 +1237,7 @@ module DSP
   #         arguments?: TerminateArguments;
   #     }
   class TerminateRequest < DSPBase
-    attr_accessor :arguments # type: TerminateArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: TerminateArguments # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1416,13 +1276,7 @@ module DSP
   # interface TerminateResponse extends Response {
   #     }
   class TerminateResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1446,10 +1300,7 @@ module DSP
   #         arguments?: BreakpointLocationsArguments;
   #     }
   class BreakpointLocationsRequest < DSPBase
-    attr_accessor :arguments # type: BreakpointLocationsArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: BreakpointLocationsArguments # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1479,11 +1330,7 @@ module DSP
   #         endColumn?: number;
   #     }
   class BreakpointLocationsArguments < DSPBase
-    attr_accessor :source # type: Source
-    attr_accessor :line # type: number
-    attr_accessor :column # type: number
-    attr_accessor :endLine # type: number
-    attr_accessor :endColumn # type: number
+    attr_accessor :source, :line, :column, :endLine, :endColumn # type: Source # type: number # type: number # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -1508,16 +1355,11 @@ module DSP
   #         };
   #     }
   class BreakpointLocationsResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** Sorted set of possible breakpoint locations. */
     #            breakpoints: BreakpointLocation[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1541,10 +1383,7 @@ module DSP
   #         arguments: SetBreakpointsArguments;
   #     }
   class SetBreakpointsRequest < DSPBase
-    attr_accessor :arguments # type: SetBreakpointsArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: SetBreakpointsArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1567,10 +1406,7 @@ module DSP
   #         sourceModified?: boolean;
   #     }
   class SetBreakpointsArguments < DSPBase
-    attr_accessor :source # type: Source
-    attr_accessor :breakpoints # type: SourceBreakpoint[]
-    attr_accessor :lines # type: number[]
-    attr_accessor :sourceModified # type: boolean
+    attr_accessor :source, :breakpoints, :lines, :sourceModified # type: Source # type: SourceBreakpoint[] # type: number[] # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1596,18 +1432,13 @@ module DSP
   #         };
   #     }
   class SetBreakpointsResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** Information about the breakpoints.
     #                The array elements are in the same order as the elements of the 'breakpoints' (or the deprecated 'lines') array in the arguments.
     #            */
     #            breakpoints: Breakpoint[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1631,10 +1462,7 @@ module DSP
   #         arguments: SetFunctionBreakpointsArguments;
   #     }
   class SetFunctionBreakpointsRequest < DSPBase
-    attr_accessor :arguments # type: SetFunctionBreakpointsArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: SetFunctionBreakpointsArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1667,16 +1495,11 @@ module DSP
   #         };
   #     }
   class SetFunctionBreakpointsResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** Information about the breakpoints. The array elements correspond to the elements of the 'breakpoints' array. */
     #            breakpoints: Breakpoint[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1700,10 +1523,7 @@ module DSP
   #         arguments: SetExceptionBreakpointsArguments;
   #     }
   class SetExceptionBreakpointsRequest < DSPBase
-    attr_accessor :arguments # type: SetExceptionBreakpointsArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: SetExceptionBreakpointsArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1724,8 +1544,7 @@ module DSP
   #         exceptionOptions?: ExceptionOptions[];
   #     }
   class SetExceptionBreakpointsArguments < DSPBase
-    attr_accessor :filters # type: string[]
-    attr_accessor :exceptionOptions # type: ExceptionOptions[]
+    attr_accessor :filters, :exceptionOptions # type: string[] # type: ExceptionOptions[]
 
     def initialize(initial_hash = nil)
       super
@@ -1743,13 +1562,7 @@ module DSP
   # interface SetExceptionBreakpointsResponse extends Response {
   #     }
   class SetExceptionBreakpointsResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1773,10 +1586,7 @@ module DSP
   #         arguments: DataBreakpointInfoArguments;
   #     }
   class DataBreakpointInfoRequest < DSPBase
-    attr_accessor :arguments # type: DataBreakpointInfoArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: DataBreakpointInfoArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1797,8 +1607,7 @@ module DSP
   #         name: string;
   #     }
   class DataBreakpointInfoArguments < DSPBase
-    attr_accessor :variablesReference # type: number
-    attr_accessor :name # type: string
+    attr_accessor :variablesReference, :name # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1826,7 +1635,7 @@ module DSP
   #         };
   #     }
   class DataBreakpointInfoResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** An identifier for the data on which a data breakpoint can be registered with the setDataBreakpoints request or null if no data breakpoint is available. */
     #            dataId: string | null;
     #            /** UI string that describes on what data the breakpoint is set on or why a data breakpoint is not available. */
@@ -1836,12 +1645,7 @@ module DSP
     #            /** Optional attribute indicating that a potential data breakpoint could be persisted across sessions. */
     #            canPersist?: boolean;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1865,10 +1669,7 @@ module DSP
   #         arguments: SetDataBreakpointsArguments;
   #     }
   class SetDataBreakpointsRequest < DSPBase
-    attr_accessor :arguments # type: SetDataBreakpointsArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: SetDataBreakpointsArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1901,16 +1702,11 @@ module DSP
   #         };
   #     }
   class SetDataBreakpointsResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** Information about the data breakpoints. The array elements correspond to the elements of the input argument 'breakpoints' array. */
     #            breakpoints: Breakpoint[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1934,10 +1730,7 @@ module DSP
   #         arguments: ContinueArguments;
   #     }
   class ContinueRequest < DSPBase
-    attr_accessor :arguments # type: ContinueArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: ContinueArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1974,18 +1767,13 @@ module DSP
   #         };
   #     }
   class ContinueResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** If true, the 'continue' request has ignored the specified thread and continued all threads instead.
     #                If this attribute is missing a value of 'true' is assumed for backward compatibility.
     #            */
     #            allThreadsContinued?: boolean;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2009,10 +1797,7 @@ module DSP
   #         arguments: NextArguments;
   #     }
   class NextRequest < DSPBase
-    attr_accessor :arguments # type: NextArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: NextArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2041,13 +1826,7 @@ module DSP
   # interface NextResponse extends Response {
   #     }
   class NextResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2071,10 +1850,7 @@ module DSP
   #         arguments: StepInArguments;
   #     }
   class StepInRequest < DSPBase
-    attr_accessor :arguments # type: StepInArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: StepInArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2093,8 +1869,7 @@ module DSP
   #         targetId?: number;
   #     }
   class StepInArguments < DSPBase
-    attr_accessor :threadId # type: number
-    attr_accessor :targetId # type: number
+    attr_accessor :threadId, :targetId # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -2112,13 +1887,7 @@ module DSP
   # interface StepInResponse extends Response {
   #     }
   class StepInResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2142,10 +1911,7 @@ module DSP
   #         arguments: StepOutArguments;
   #     }
   class StepOutRequest < DSPBase
-    attr_accessor :arguments # type: StepOutArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: StepOutArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2174,13 +1940,7 @@ module DSP
   # interface StepOutResponse extends Response {
   #     }
   class StepOutResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2204,10 +1964,7 @@ module DSP
   #         arguments: StepBackArguments;
   #     }
   class StepBackRequest < DSPBase
-    attr_accessor :arguments # type: StepBackArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: StepBackArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2236,13 +1993,7 @@ module DSP
   # interface StepBackResponse extends Response {
   #     }
   class StepBackResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2266,10 +2017,7 @@ module DSP
   #         arguments: ReverseContinueArguments;
   #     }
   class ReverseContinueRequest < DSPBase
-    attr_accessor :arguments # type: ReverseContinueArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: ReverseContinueArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2298,13 +2046,7 @@ module DSP
   # interface ReverseContinueResponse extends Response {
   #     }
   class ReverseContinueResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2328,10 +2070,7 @@ module DSP
   #         arguments: RestartFrameArguments;
   #     }
   class RestartFrameRequest < DSPBase
-    attr_accessor :arguments # type: RestartFrameArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: RestartFrameArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2360,13 +2099,7 @@ module DSP
   # interface RestartFrameResponse extends Response {
   #     }
   class RestartFrameResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2390,10 +2123,7 @@ module DSP
   #         arguments: GotoArguments;
   #     }
   class GotoRequest < DSPBase
-    attr_accessor :arguments # type: GotoArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: GotoArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2412,8 +2142,7 @@ module DSP
   #         targetId: number;
   #     }
   class GotoArguments < DSPBase
-    attr_accessor :threadId # type: number
-    attr_accessor :targetId # type: number
+    attr_accessor :threadId, :targetId # type: number # type: number
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2426,13 +2155,7 @@ module DSP
   # interface GotoResponse extends Response {
   #     }
   class GotoResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2456,10 +2179,7 @@ module DSP
   #         arguments: PauseArguments;
   #     }
   class PauseRequest < DSPBase
-    attr_accessor :arguments # type: PauseArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: PauseArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2488,13 +2208,7 @@ module DSP
   # interface PauseResponse extends Response {
   #     }
   class PauseResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2518,10 +2232,7 @@ module DSP
   #         arguments: StackTraceArguments;
   #     }
   class StackTraceRequest < DSPBase
-    attr_accessor :arguments # type: StackTraceArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: StackTraceArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2546,10 +2257,7 @@ module DSP
   #         format?: StackFrameFormat;
   #     }
   class StackTraceArguments < DSPBase
-    attr_accessor :threadId # type: number
-    attr_accessor :startFrame # type: number
-    attr_accessor :levels # type: number
-    attr_accessor :format # type: StackFrameFormat
+    attr_accessor :threadId, :startFrame, :levels, :format # type: number # type: number # type: number # type: StackFrameFormat
 
     def initialize(initial_hash = nil)
       super
@@ -2577,7 +2285,7 @@ module DSP
   #         };
   #     }
   class StackTraceResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The frames of the stackframe. If the array has length zero, there are no stackframes available.
     #                This means that there is no location information available.
     #            */
@@ -2585,12 +2293,7 @@ module DSP
     #            /** The total number of frames available. */
     #            totalFrames?: number;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2614,10 +2317,7 @@ module DSP
   #         arguments: ScopesArguments;
   #     }
   class ScopesRequest < DSPBase
-    attr_accessor :arguments # type: ScopesArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: ScopesArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2650,16 +2350,11 @@ module DSP
   #         };
   #     }
   class ScopesResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The scopes of the stackframe. If the array has length zero, there are no scopes available. */
     #            scopes: Scope[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2683,10 +2378,7 @@ module DSP
   #         arguments: VariablesArguments;
   #     }
   class VariablesRequest < DSPBase
-    attr_accessor :arguments # type: VariablesArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: VariablesArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2713,11 +2405,7 @@ module DSP
   #         format?: ValueFormat;
   #     }
   class VariablesArguments < DSPBase
-    attr_accessor :variablesReference # type: number
-    attr_accessor :filter # type: string with value 'indexed' | 'named'
-    attr_accessor :start # type: number
-    attr_accessor :count # type: number
-    attr_accessor :format # type: ValueFormat
+    attr_accessor :variablesReference, :filter, :start, :count, :format # type: number # type: string with value 'indexed' | 'named' # type: number # type: number # type: ValueFormat
 
     def initialize(initial_hash = nil)
       super
@@ -2742,16 +2430,11 @@ module DSP
   #         };
   #     }
   class VariablesResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** All (or a range) of variables for the given variable reference. */
     #            variables: Variable[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2775,10 +2458,7 @@ module DSP
   #         arguments: SetVariableArguments;
   #     }
   class SetVariableRequest < DSPBase
-    attr_accessor :arguments # type: SetVariableArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: SetVariableArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2801,10 +2481,7 @@ module DSP
   #         format?: ValueFormat;
   #     }
   class SetVariableArguments < DSPBase
-    attr_accessor :variablesReference # type: number
-    attr_accessor :name # type: string
-    attr_accessor :value # type: string
-    attr_accessor :format # type: ValueFormat
+    attr_accessor :variablesReference, :name, :value, :format # type: number # type: string # type: string # type: ValueFormat
 
     def initialize(initial_hash = nil)
       super
@@ -2844,7 +2521,7 @@ module DSP
   #         };
   #     }
   class SetVariableResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The new value of the variable. */
     #            value: string;
     #            /** The type of the new value. Typically shown in the UI when hovering over the value. */
@@ -2864,12 +2541,7 @@ module DSP
     #            */
     #            indexedVariables?: number;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2893,10 +2565,7 @@ module DSP
   #         arguments: SourceArguments;
   #     }
   class SourceRequest < DSPBase
-    attr_accessor :arguments # type: SourceArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: SourceArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2917,8 +2586,7 @@ module DSP
   #         sourceReference: number;
   #     }
   class SourceArguments < DSPBase
-    attr_accessor :source # type: Source
-    attr_accessor :sourceReference # type: number
+    attr_accessor :source, :sourceReference # type: Source # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -2942,18 +2610,13 @@ module DSP
   #         };
   #     }
   class SourceResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** Content of the source reference. */
     #            content: string;
     #            /** Optional content type (mime type) of the source. */
     #            mimeType?: string;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -2976,10 +2639,7 @@ module DSP
   # interface ThreadsRequest extends Request {
   #     }
   class ThreadsRequest < DSPBase
-    attr_accessor :command # type: string
-    attr_accessor :arguments # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :command, :arguments, :seq, :type # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3003,16 +2663,11 @@ module DSP
   #         };
   #     }
   class ThreadsResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** All threads. */
     #            threads: Thread[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3036,10 +2691,7 @@ module DSP
   #         arguments: TerminateThreadsArguments;
   #     }
   class TerminateThreadsRequest < DSPBase
-    attr_accessor :arguments # type: TerminateThreadsArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: TerminateThreadsArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3073,13 +2725,7 @@ module DSP
   # interface TerminateThreadsResponse extends Response {
   #     }
   class TerminateThreadsResponse < DSPBase
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :body # type: any
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq, :success, :command, :message, :body, :seq, :type # type: number # type: boolean # type: string # type: string # type: any # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3103,10 +2749,7 @@ module DSP
   #         arguments: ModulesArguments;
   #     }
   class ModulesRequest < DSPBase
-    attr_accessor :arguments # type: ModulesArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: ModulesArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3125,8 +2768,7 @@ module DSP
   #         moduleCount?: number;
   #     }
   class ModulesArguments < DSPBase
-    attr_accessor :startModule # type: number
-    attr_accessor :moduleCount # type: number
+    attr_accessor :startModule, :moduleCount # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -3150,18 +2792,13 @@ module DSP
   #         };
   #     }
   class ModulesResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** All modules or range of modules. */
     #            modules: Module[];
     #            /** The total number of modules available. */
     #            totalModules?: number;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3185,10 +2822,7 @@ module DSP
   #         arguments?: LoadedSourcesArguments;
   #     }
   class LoadedSourcesRequest < DSPBase
-    attr_accessor :arguments # type: LoadedSourcesArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: LoadedSourcesArguments # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3222,16 +2856,11 @@ module DSP
   #         };
   #     }
   class LoadedSourcesResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** Set of loaded sources. */
     #            sources: Source[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3255,10 +2884,7 @@ module DSP
   #         arguments: EvaluateArguments;
   #     }
   class EvaluateRequest < DSPBase
-    attr_accessor :arguments # type: EvaluateArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: EvaluateArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3291,10 +2917,7 @@ module DSP
   #         format?: ValueFormat;
   #     }
   class EvaluateArguments < DSPBase
-    attr_accessor :expression # type: string
-    attr_accessor :frameId # type: number
-    attr_accessor :context # type: string
-    attr_accessor :format # type: ValueFormat
+    attr_accessor :expression, :frameId, :context, :format # type: string # type: number # type: string # type: ValueFormat
 
     def initialize(initial_hash = nil)
       super
@@ -3343,7 +2966,7 @@ module DSP
   #         };
   #     }
   class EvaluateResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The result of the evaluate request. */
     #            result: string;
     #            /** The optional type of the evaluate result.
@@ -3372,12 +2995,7 @@ module DSP
     #            */
     #            memoryReference?: string;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3401,10 +3019,7 @@ module DSP
   #         arguments: SetExpressionArguments;
   #     }
   class SetExpressionRequest < DSPBase
-    attr_accessor :arguments # type: SetExpressionArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: SetExpressionArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3427,10 +3042,7 @@ module DSP
   #         format?: ValueFormat;
   #     }
   class SetExpressionArguments < DSPBase
-    attr_accessor :expression # type: string
-    attr_accessor :value # type: string
-    attr_accessor :frameId # type: number
-    attr_accessor :format # type: ValueFormat
+    attr_accessor :expression, :value, :frameId, :format # type: string # type: string # type: number # type: ValueFormat
 
     def initialize(initial_hash = nil)
       super
@@ -3474,7 +3086,7 @@ module DSP
   #         };
   #     }
   class SetExpressionResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The new value of the expression. */
     #            value: string;
     #            /** The optional type of the value.
@@ -3498,12 +3110,7 @@ module DSP
     #            */
     #            indexedVariables?: number;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3527,10 +3134,7 @@ module DSP
   #         arguments: StepInTargetsArguments;
   #     }
   class StepInTargetsRequest < DSPBase
-    attr_accessor :arguments # type: StepInTargetsArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: StepInTargetsArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3563,16 +3167,11 @@ module DSP
   #         };
   #     }
   class StepInTargetsResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The possible stepIn targets of the specified source location. */
     #            targets: StepInTarget[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3596,10 +3195,7 @@ module DSP
   #         arguments: GotoTargetsArguments;
   #     }
   class GotoTargetsRequest < DSPBase
-    attr_accessor :arguments # type: GotoTargetsArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: GotoTargetsArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3620,9 +3216,7 @@ module DSP
   #         column?: number;
   #     }
   class GotoTargetsArguments < DSPBase
-    attr_accessor :source # type: Source
-    attr_accessor :line # type: number
-    attr_accessor :column # type: number
+    attr_accessor :source, :line, :column # type: Source # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -3645,16 +3239,11 @@ module DSP
   #         };
   #     }
   class GotoTargetsResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The possible goto targets of the specified location. */
     #            targets: GotoTarget[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3678,10 +3267,7 @@ module DSP
   #         arguments: CompletionsArguments;
   #     }
   class CompletionsRequest < DSPBase
-    attr_accessor :arguments # type: CompletionsArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: CompletionsArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3704,10 +3290,7 @@ module DSP
   #         line?: number;
   #     }
   class CompletionsArguments < DSPBase
-    attr_accessor :frameId # type: number
-    attr_accessor :text # type: string
-    attr_accessor :column # type: number
-    attr_accessor :line # type: number
+    attr_accessor :frameId, :text, :column, :line # type: number # type: string # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -3731,16 +3314,11 @@ module DSP
   #         };
   #     }
   class CompletionsResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The possible completions for . */
     #            targets: CompletionItem[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3764,10 +3342,7 @@ module DSP
   #         arguments: ExceptionInfoArguments;
   #     }
   class ExceptionInfoRequest < DSPBase
-    attr_accessor :arguments # type: ExceptionInfoArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: ExceptionInfoArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3806,7 +3381,7 @@ module DSP
   #         };
   #     }
   class ExceptionInfoResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** ID of the exception that was thrown. */
     #            exceptionId: string;
     #            /** Descriptive text for the exception provided by the debug adapter. */
@@ -3816,12 +3391,7 @@ module DSP
     #            /** Detailed information about the exception. */
     #            details?: ExceptionDetails;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3845,10 +3415,7 @@ module DSP
   #         arguments: ReadMemoryArguments;
   #     }
   class ReadMemoryRequest < DSPBase
-    attr_accessor :arguments # type: ReadMemoryArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: ReadMemoryArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3869,9 +3436,7 @@ module DSP
   #         count: number;
   #     }
   class ReadMemoryArguments < DSPBase
-    attr_accessor :memoryReference # type: string
-    attr_accessor :offset # type: number
-    attr_accessor :count # type: number
+    attr_accessor :memoryReference, :offset, :count # type: string # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -3902,7 +3467,7 @@ module DSP
   #         };
   #     }
   class ReadMemoryResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The address of the first byte of data returned.
     #                Treated as a hex value if prefixed with '0x', or as a decimal value otherwise.
     #            */
@@ -3914,12 +3479,7 @@ module DSP
     #            /** The bytes read from memory, encoded using base64. */
     #            data?: string;
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -3943,10 +3503,7 @@ module DSP
   #         arguments: DisassembleArguments;
   #     }
   class DisassembleRequest < DSPBase
-    attr_accessor :arguments # type: DisassembleArguments
-    attr_accessor :command # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :arguments, :command, :seq, :type # type: DisassembleArguments # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -3973,11 +3530,7 @@ module DSP
   #         resolveSymbols?: boolean;
   #     }
   class DisassembleArguments < DSPBase
-    attr_accessor :memoryReference # type: string
-    attr_accessor :offset # type: number
-    attr_accessor :instructionOffset # type: number
-    attr_accessor :instructionCount # type: number
-    attr_accessor :resolveSymbols # type: boolean
+    attr_accessor :memoryReference, :offset, :instructionOffset, :instructionCount, :resolveSymbols # type: string # type: number # type: number # type: number # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -4002,16 +3555,11 @@ module DSP
   #         };
   #     }
   class DisassembleResponse < DSPBase
-    attr_accessor :body # type: {
+    attr_accessor :body, :success, :command, :message, :seq, :type # type: {
     #            /** The list of disassembled instructions. */
     #            instructions: DisassembledInstruction[];
     #        }
-    attr_accessor :request_seq # type: number
-    attr_accessor :success # type: boolean
-    attr_accessor :command # type: string
-    attr_accessor :message # type: string
-    attr_accessor :seq # type: number
-    attr_accessor :type # type: string
+    attr_accessor :request_seq # type: number # type: boolean # type: string # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -4100,39 +3648,7 @@ module DSP
   #         supportsClipboardContext?: boolean;
   #     }
   class Capabilities < DSPBase
-    attr_accessor :supportsConfigurationDoneRequest # type: boolean
-    attr_accessor :supportsFunctionBreakpoints # type: boolean
-    attr_accessor :supportsConditionalBreakpoints # type: boolean
-    attr_accessor :supportsHitConditionalBreakpoints # type: boolean
-    attr_accessor :supportsEvaluateForHovers # type: boolean
-    attr_accessor :exceptionBreakpointFilters # type: ExceptionBreakpointsFilter[]
-    attr_accessor :supportsStepBack # type: boolean
-    attr_accessor :supportsSetVariable # type: boolean
-    attr_accessor :supportsRestartFrame # type: boolean
-    attr_accessor :supportsGotoTargetsRequest # type: boolean
-    attr_accessor :supportsStepInTargetsRequest # type: boolean
-    attr_accessor :supportsCompletionsRequest # type: boolean
-    attr_accessor :completionTriggerCharacters # type: string[]
-    attr_accessor :supportsModulesRequest # type: boolean
-    attr_accessor :additionalModuleColumns # type: ColumnDescriptor[]
-    attr_accessor :supportedChecksumAlgorithms # type: ChecksumAlgorithm[]
-    attr_accessor :supportsRestartRequest # type: boolean
-    attr_accessor :supportsExceptionOptions # type: boolean
-    attr_accessor :supportsValueFormattingOptions # type: boolean
-    attr_accessor :supportsExceptionInfoRequest # type: boolean
-    attr_accessor :supportTerminateDebuggee # type: boolean
-    attr_accessor :supportsDelayedStackTraceLoading # type: boolean
-    attr_accessor :supportsLoadedSourcesRequest # type: boolean
-    attr_accessor :supportsLogPoints # type: boolean
-    attr_accessor :supportsTerminateThreadsRequest # type: boolean
-    attr_accessor :supportsSetExpression # type: boolean
-    attr_accessor :supportsTerminateRequest # type: boolean
-    attr_accessor :supportsDataBreakpoints # type: boolean
-    attr_accessor :supportsReadMemoryRequest # type: boolean
-    attr_accessor :supportsDisassembleRequest # type: boolean
-    attr_accessor :supportsCancelRequest # type: boolean
-    attr_accessor :supportsBreakpointLocationsRequest # type: boolean
-    attr_accessor :supportsClipboardContext # type: boolean
+    attr_accessor :supportsConfigurationDoneRequest, :supportsFunctionBreakpoints, :supportsConditionalBreakpoints, :supportsHitConditionalBreakpoints, :supportsEvaluateForHovers, :exceptionBreakpointFilters, :supportsStepBack, :supportsSetVariable, :supportsRestartFrame, :supportsGotoTargetsRequest, :supportsStepInTargetsRequest, :supportsCompletionsRequest, :completionTriggerCharacters, :supportsModulesRequest, :additionalModuleColumns, :supportedChecksumAlgorithms, :supportsRestartRequest, :supportsExceptionOptions, :supportsValueFormattingOptions, :supportsExceptionInfoRequest, :supportTerminateDebuggee, :supportsDelayedStackTraceLoading, :supportsLoadedSourcesRequest, :supportsLogPoints, :supportsTerminateThreadsRequest, :supportsSetExpression, :supportsTerminateRequest, :supportsDataBreakpoints, :supportsReadMemoryRequest, :supportsDisassembleRequest, :supportsCancelRequest, :supportsBreakpointLocationsRequest, :supportsClipboardContext # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: ExceptionBreakpointsFilter[] # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: string[] # type: boolean # type: ColumnDescriptor[] # type: ChecksumAlgorithm[] # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -4187,9 +3703,7 @@ module DSP
   #         default?: boolean;
   #     }
   class ExceptionBreakpointsFilter < DSPBase
-    attr_accessor :filter # type: string
-    attr_accessor :label # type: string
-    attr_accessor :default # type: boolean
+    attr_accessor :filter, :label, :default # type: string # type: string # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -4226,15 +3740,10 @@ module DSP
   #         urlLabel?: string;
   #     }
   class Message < DSPBase
-    attr_accessor :id # type: number
-    attr_accessor :format # type: string
-    attr_accessor :variables # type: {
+    attr_accessor :id, :format, :variables, :showUser, :url, :urlLabel # type: number # type: string # type: {
     #            [key: string]: string;
     #        }
-    attr_accessor :sendTelemetry # type: boolean
-    attr_accessor :showUser # type: boolean
-    attr_accessor :url # type: string
-    attr_accessor :urlLabel # type: string
+    attr_accessor :sendTelemetry # type: boolean # type: boolean # type: string # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -4281,16 +3790,7 @@ module DSP
   #         addressRange?: string;
   #     }
   class Module < DSPBase
-    attr_accessor :id # type: number | string
-    attr_accessor :name # type: string
-    attr_accessor :path # type: string
-    attr_accessor :isOptimized # type: boolean
-    attr_accessor :isUserCode # type: boolean
-    attr_accessor :version # type: string
-    attr_accessor :symbolStatus # type: string
-    attr_accessor :symbolFilePath # type: string
-    attr_accessor :dateTimeStamp # type: string
-    attr_accessor :addressRange # type: string
+    attr_accessor :id, :name, :path, :isOptimized, :isUserCode, :version, :symbolStatus, :symbolFilePath, :dateTimeStamp, :addressRange # type: number | string # type: string # type: string # type: boolean # type: boolean # type: string # type: string # type: string # type: string # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -4326,11 +3826,7 @@ module DSP
   #         width?: number;
   #     }
   class ColumnDescriptor < DSPBase
-    attr_accessor :attributeName # type: string
-    attr_accessor :label # type: string
-    attr_accessor :format # type: string
-    attr_accessor :type # type: string with value 'string' | 'number' | 'boolean' | 'unixTimestampUTC'
-    attr_accessor :width # type: number
+    attr_accessor :attributeName, :label, :format, :type, :width # type: string # type: string # type: string # type: string with value 'string' | 'number' | 'boolean' | 'unixTimestampUTC' # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -4368,8 +3864,7 @@ module DSP
   #         name: string;
   #     }
   class Thread < DSPBase
-    attr_accessor :id # type: number
-    attr_accessor :name # type: string
+    attr_accessor :id, :name # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -4409,14 +3904,7 @@ module DSP
   #         checksums?: Checksum[];
   #     }
   class Source < DSPBase
-    attr_accessor :name # type: string
-    attr_accessor :path # type: string
-    attr_accessor :sourceReference # type: number
-    attr_accessor :presentationHint # type: string with value 'normal' | 'emphasize' | 'deemphasize'
-    attr_accessor :origin # type: string
-    attr_accessor :sources # type: Source[]
-    attr_accessor :adapterData # type: any
-    attr_accessor :checksums # type: Checksum[]
+    attr_accessor :name, :path, :sourceReference, :presentationHint, :origin, :sources, :adapterData, :checksums # type: string # type: string # type: number # type: string with value 'normal' | 'emphasize' | 'deemphasize' # type: string # type: Source[] # type: any # type: Checksum[]
 
     def initialize(initial_hash = nil)
       super
@@ -4464,16 +3952,7 @@ module DSP
   #         presentationHint?: 'normal' | 'label' | 'subtle';
   #     }
   class StackFrame < DSPBase
-    attr_accessor :id # type: number
-    attr_accessor :name # type: string
-    attr_accessor :source # type: Source
-    attr_accessor :line # type: number
-    attr_accessor :column # type: number
-    attr_accessor :endLine # type: number
-    attr_accessor :endColumn # type: number
-    attr_accessor :instructionPointerReference # type: string
-    attr_accessor :moduleId # type: number | string
-    attr_accessor :presentationHint # type: string with value 'normal' | 'label' | 'subtle'
+    attr_accessor :id, :name, :source, :line, :column, :endLine, :endColumn, :instructionPointerReference, :moduleId, :presentationHint # type: number # type: string # type: Source # type: number # type: number # type: number # type: number # type: string # type: number | string # type: string with value 'normal' | 'label' | 'subtle'
 
     def initialize(initial_hash = nil)
       super
@@ -4531,17 +4010,7 @@ module DSP
   #         endColumn?: number;
   #     }
   class Scope < DSPBase
-    attr_accessor :name # type: string
-    attr_accessor :presentationHint # type: string
-    attr_accessor :variablesReference # type: number
-    attr_accessor :namedVariables # type: number
-    attr_accessor :indexedVariables # type: number
-    attr_accessor :expensive # type: boolean
-    attr_accessor :source # type: Source
-    attr_accessor :line # type: number
-    attr_accessor :column # type: number
-    attr_accessor :endLine # type: number
-    attr_accessor :endColumn # type: number
+    attr_accessor :name, :presentationHint, :variablesReference, :namedVariables, :indexedVariables, :expensive, :source, :line, :column, :endLine, :endColumn # type: string # type: string # type: number # type: number # type: number # type: boolean # type: Source # type: number # type: number # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -4594,15 +4063,7 @@ module DSP
   #         memoryReference?: string;
   #     }
   class Variable < DSPBase
-    attr_accessor :name # type: string
-    attr_accessor :value # type: string
-    attr_accessor :type # type: string
-    attr_accessor :presentationHint # type: VariablePresentationHint
-    attr_accessor :evaluateName # type: string
-    attr_accessor :variablesReference # type: number
-    attr_accessor :namedVariables # type: number
-    attr_accessor :indexedVariables # type: number
-    attr_accessor :memoryReference # type: string
+    attr_accessor :name, :value, :type, :presentationHint, :evaluateName, :variablesReference, :namedVariables, :indexedVariables, :memoryReference # type: string # type: string # type: string # type: VariablePresentationHint # type: string # type: number # type: number # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -4660,9 +4121,7 @@ module DSP
   #         visibility?: string;
   #     }
   class VariablePresentationHint < DSPBase
-    attr_accessor :kind # type: string
-    attr_accessor :attributes # type: string[]
-    attr_accessor :visibility # type: string
+    attr_accessor :kind, :attributes, :visibility # type: string # type: string[] # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -4689,10 +4148,7 @@ module DSP
   #         endColumn?: number;
   #     }
   class BreakpointLocation < DSPBase
-    attr_accessor :line # type: number
-    attr_accessor :column # type: number
-    attr_accessor :endLine # type: number
-    attr_accessor :endColumn # type: number
+    attr_accessor :line, :column, :endLine, :endColumn # type: number # type: number # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -4730,11 +4186,7 @@ module DSP
   #         logMessage?: string;
   #     }
   class SourceBreakpoint < DSPBase
-    attr_accessor :line # type: number
-    attr_accessor :column # type: number
-    attr_accessor :condition # type: string
-    attr_accessor :hitCondition # type: string
-    attr_accessor :logMessage # type: string
+    attr_accessor :line, :column, :condition, :hitCondition, :logMessage # type: number # type: number # type: string # type: string # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -4766,9 +4218,7 @@ module DSP
   #         hitCondition?: string;
   #     }
   class FunctionBreakpoint < DSPBase
-    attr_accessor :name # type: string
-    attr_accessor :condition # type: string
-    attr_accessor :hitCondition # type: string
+    attr_accessor :name, :condition, :hitCondition # type: string # type: string # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -4797,10 +4247,7 @@ module DSP
   #         hitCondition?: string;
   #     }
   class DataBreakpoint < DSPBase
-    attr_accessor :dataId # type: string
-    attr_accessor :accessType # type: DataBreakpointAccessType
-    attr_accessor :condition # type: string
-    attr_accessor :hitCondition # type: string
+    attr_accessor :dataId, :accessType, :condition, :hitCondition # type: string # type: DataBreakpointAccessType # type: string # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -4840,14 +4287,7 @@ module DSP
   #         endColumn?: number;
   #     }
   class Breakpoint < DSPBase
-    attr_accessor :id # type: number
-    attr_accessor :verified # type: boolean
-    attr_accessor :message # type: string
-    attr_accessor :source # type: Source
-    attr_accessor :line # type: number
-    attr_accessor :column # type: number
-    attr_accessor :endLine # type: number
-    attr_accessor :endColumn # type: number
+    attr_accessor :id, :verified, :message, :source, :line, :column, :endLine, :endColumn # type: number # type: boolean # type: string # type: Source # type: number # type: number # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -4875,8 +4315,7 @@ module DSP
   #         label: string;
   #     }
   class StepInTarget < DSPBase
-    attr_accessor :id # type: number
-    attr_accessor :label # type: string
+    attr_accessor :id, :label # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -4903,13 +4342,7 @@ module DSP
   #         instructionPointerReference?: string;
   #     }
   class GotoTarget < DSPBase
-    attr_accessor :id # type: number
-    attr_accessor :label # type: string
-    attr_accessor :line # type: number
-    attr_accessor :column # type: number
-    attr_accessor :endLine # type: number
-    attr_accessor :endColumn # type: number
-    attr_accessor :instructionPointerReference # type: string
+    attr_accessor :id, :label, :line, :column, :endLine, :endColumn, :instructionPointerReference # type: number # type: string # type: number # type: number # type: number # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -4958,14 +4391,7 @@ module DSP
   #         selectionLength?: number;
   #     }
   class CompletionItem < DSPBase
-    attr_accessor :label # type: string
-    attr_accessor :text # type: string
-    attr_accessor :sortText # type: string
-    attr_accessor :type # type: CompletionItemType
-    attr_accessor :start # type: number
-    attr_accessor :length # type: number
-    attr_accessor :selectionStart # type: number
-    attr_accessor :selectionLength # type: number
+    attr_accessor :label, :text, :sortText, :type, :start, :length, :selectionStart, :selectionLength # type: string # type: string # type: string # type: CompletionItemType # type: number # type: number # type: number # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -4993,8 +4419,7 @@ module DSP
   #         checksum: string;
   #     }
   class Checksum < DSPBase
-    attr_accessor :algorithm # type: ChecksumAlgorithm
-    attr_accessor :checksum # type: string
+    attr_accessor :algorithm, :checksum # type: ChecksumAlgorithm # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -5040,14 +4465,7 @@ module DSP
   #         includeAll?: boolean;
   #     }
   class StackFrameFormat < DSPBase
-    attr_accessor :parameters # type: boolean
-    attr_accessor :parameterTypes # type: boolean
-    attr_accessor :parameterNames # type: boolean
-    attr_accessor :parameterValues # type: boolean
-    attr_accessor :line # type: boolean
-    attr_accessor :module # type: boolean
-    attr_accessor :includeAll # type: boolean
-    attr_accessor :hex # type: boolean
+    attr_accessor :parameters, :parameterTypes, :parameterNames, :parameterValues, :line, :module, :includeAll, :hex # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -5077,8 +4495,7 @@ module DSP
   #         breakMode: ExceptionBreakMode;
   #     }
   class ExceptionOptions < DSPBase
-    attr_accessor :path # type: ExceptionPathSegment[]
-    attr_accessor :breakMode # type: ExceptionBreakMode
+    attr_accessor :path, :breakMode # type: ExceptionPathSegment[] # type: ExceptionBreakMode
 
     def initialize(initial_hash = nil)
       super
@@ -5100,8 +4517,7 @@ module DSP
   #         names: string[];
   #     }
   class ExceptionPathSegment < DSPBase
-    attr_accessor :negate # type: boolean
-    attr_accessor :names # type: string[]
+    attr_accessor :negate, :names # type: boolean # type: string[]
 
     def initialize(initial_hash = nil)
       super
@@ -5131,12 +4547,7 @@ module DSP
   #         innerException?: ExceptionDetails[];
   #     }
   class ExceptionDetails < DSPBase
-    attr_accessor :message # type: string
-    attr_accessor :typeName # type: string
-    attr_accessor :fullTypeName # type: string
-    attr_accessor :evaluateName # type: string
-    attr_accessor :stackTrace # type: string
-    attr_accessor :innerException # type: ExceptionDetails[]
+    attr_accessor :message, :typeName, :fullTypeName, :evaluateName, :stackTrace, :innerException # type: string # type: string # type: string # type: string # type: string # type: ExceptionDetails[]
 
     def initialize(initial_hash = nil)
       super
@@ -5179,15 +4590,7 @@ module DSP
   #         endColumn?: number;
   #     }
   class DisassembledInstruction < DSPBase
-    attr_accessor :address # type: string
-    attr_accessor :instructionBytes # type: string
-    attr_accessor :instruction # type: string
-    attr_accessor :symbol # type: string
-    attr_accessor :location # type: Source
-    attr_accessor :line # type: number
-    attr_accessor :column # type: number
-    attr_accessor :endLine # type: number
-    attr_accessor :endColumn # type: number
+    attr_accessor :address, :instructionBytes, :instruction, :symbol, :location, :line, :column, :endLine, :endColumn # type: string # type: string # type: string # type: string # type: Source # type: number # type: number # type: number # type: number
 
     def initialize(initial_hash = nil)
       super

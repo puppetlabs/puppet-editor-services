@@ -7,9 +7,7 @@ module PuppetLanguageServer
       raise if line_offset.nil?
 
       # Remove the offending character
-      new_content = content.slice(0, line_offset + char_num - num_chars_to_remove) + content.slice(line_offset + char_num, content.length - num_chars_to_remove)
-
-      new_content
+      content.slice(0, line_offset + char_num - num_chars_to_remove) + content.slice(line_offset + char_num, content.length - num_chars_to_remove)
     end
 
     def self.remove_char_at(content, line_offsets, line_num, char_num)
@@ -31,9 +29,7 @@ module PuppetLanguageServer
       line_offset = line_offsets[line_num]
       raise if line_offset.nil?
       # Insert the text
-      new_content = content.slice(0, line_offset + char_num) + text + content.slice(line_offset + char_num, content.length - 1)
-
-      new_content
+      content.slice(0, line_offset + char_num) + text + content.slice(line_offset + char_num, content.length - 1)
     end
 
     def self.line_offsets(content)

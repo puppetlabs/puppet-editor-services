@@ -24,8 +24,7 @@ module LSP
   #     linkSupport?: boolean;
   # }
   class ImplementationClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :linkSupport # type: boolean
+    attr_accessor :dynamicRegistration, :linkSupport # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super

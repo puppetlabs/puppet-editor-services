@@ -20,8 +20,7 @@ module LSP
   #     tokenModifiers: string[];
   # }
   class SemanticTokensLegend < LSPBase
-    attr_accessor :tokenTypes # type: string[]
-    attr_accessor :tokenModifiers # type: string[]
+    attr_accessor :tokenTypes, :tokenModifiers # type: string[] # type: string[]
 
     def from_h!(value)
       value = {} if value.nil?
@@ -47,8 +46,7 @@ module LSP
   #     data: number[];
   # }
   class SemanticTokens < LSPBase
-    attr_accessor :resultId # type: string
-    attr_accessor :data # type: number[]
+    attr_accessor :resultId, :data # type: string # type: number[]
 
     def initialize(initial_hash = nil)
       super
@@ -82,9 +80,7 @@ module LSP
   #     data?: number[];
   # }
   class SemanticTokensEdit < LSPBase
-    attr_accessor :start # type: number
-    attr_accessor :deleteCount # type: number
-    attr_accessor :data # type: number[]
+    attr_accessor :start, :deleteCount, :data # type: number # type: number # type: number[]
 
     def initialize(initial_hash = nil)
       super
@@ -109,8 +105,7 @@ module LSP
   #     edits: SemanticTokensEdit[];
   # }
   class SemanticTokensEdits < LSPBase
-    attr_accessor :resultId # type: string
-    attr_accessor :edits # type: SemanticTokensEdit[]
+    attr_accessor :resultId, :edits # type: string # type: SemanticTokensEdit[]
 
     def initialize(initial_hash = nil)
       super
@@ -168,6 +163,7 @@ module LSP
   # }
   class SemanticTokensClientCapabilities < LSPBase
     attr_accessor :textDocument # type: {
+
     #        /**
     #         * Capabilities specific to the `textDocument/semanticTokens`
     #         *
@@ -224,9 +220,8 @@ module LSP
   #     };
   # }
   class SemanticTokensOptions < LSPBase
-    attr_accessor :legend # type: SemanticTokensLegend
-    attr_accessor :rangeProvider # type: boolean
-    attr_accessor :documentProvider # type: boolean | {
+    attr_accessor :legend, :rangeProvider, :documentProvider # type: SemanticTokensLegend # type: boolean # type: boolean | {
+
     #        /**
     #         * The server supports deltas for full documents.
     #         */
@@ -250,9 +245,8 @@ module LSP
   # export interface SemanticTokensRegistrationOptions extends TextDocumentRegistrationOptions, SemanticTokensOptions, StaticRegistrationOptions {
   # }
   class SemanticTokensRegistrationOptions < LSPBase
-    attr_accessor :legend # type: SemanticTokensLegend
-    attr_accessor :rangeProvider # type: boolean
-    attr_accessor :documentProvider # type: boolean | {
+    attr_accessor :legend, :rangeProvider, :documentProvider # type: SemanticTokensLegend # type: boolean # type: boolean | {
+
     #        /**
     #         * The server supports deltas for full documents.
     #         */
@@ -313,8 +307,7 @@ module LSP
   #     previousResultId: string;
   # }
   class SemanticTokensEditsParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :previousResultId # type: string
+    attr_accessor :textDocument, :previousResultId # type: TextDocumentIdentifier # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -335,8 +328,7 @@ module LSP
   #     range: Range;
   # }
   class SemanticTokensRangeParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :range # type: Range
+    attr_accessor :textDocument, :range # type: TextDocumentIdentifier # type: Range
 
     def from_h!(value)
       value = {} if value.nil?

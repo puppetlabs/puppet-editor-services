@@ -7,10 +7,7 @@ require 'open3'
 module PuppetLanguageServer
   module GlobalQueues
     class SidecarQueueJob < SingleInstanceQueueJob
-      attr_accessor :action
-      attr_accessor :additional_args
-      attr_accessor :handle_errors
-      attr_accessor :connection_id
+      attr_accessor :action, :additional_args, :handle_errors, :connection_id
 
       def initialize(action, additional_args, handle_errors, connection_id)
         super("#{action}-#{connection_id}")

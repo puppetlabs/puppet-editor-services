@@ -9,7 +9,7 @@ module PuppetLanguageServer
       if path.nil?
         nil
       else
-        'file://' + Puppet::Util.uri_encode(path.start_with?('/') ? path : '/' + path)
+        "file://#{Puppet::Util.uri_encode(path.start_with?('/') ? path : "/#{path}")}"
       end
     end
 

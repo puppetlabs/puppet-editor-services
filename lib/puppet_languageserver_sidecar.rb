@@ -347,8 +347,8 @@ module PuppetLanguageServerSidecar
 
   def self.output(result, options)
     if options[:output].nil? || options[:output].empty?
-      STDOUT.binmode
-      STDOUT.write(result.to_json)
+      $stdout.binmode
+      $stdout.write(result.to_json)
     else
       File.open(options[:output], 'wb:UTF-8') do |f|
         f.write result.to_json

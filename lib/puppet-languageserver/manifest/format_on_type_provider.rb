@@ -18,9 +18,7 @@ module PuppetLanguageServer
         # Abort if the formatting is tab based. Can't do that yet
         return result unless formatting_options['insertSpaces'] == true
         # Abort if content is too big
-        unless max_filesize.zero?
-          return result if content.length > max_filesize
-        end
+        return result if !max_filesize.zero? && (content.length > max_filesize)
 
         lexer = PuppetLint::Lexer.new
         tokens = lexer.tokenise(content)

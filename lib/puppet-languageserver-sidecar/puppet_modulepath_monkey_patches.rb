@@ -62,7 +62,7 @@ class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
         module_name = metadata['name']
       elsif Puppet::Module.is_module_namespaced_name?(metadata['name'])
         # Based on regex at https://github.com/puppetlabs/puppet/blob/f5ca8c05174c944f783cfd0b18582e2160b77d0e/lib/puppet/module.rb#L54
-        result = /^[a-zA-Z0-9]+[-]([a-z][a-z0-9_]*)$/.match(metadata['name'])
+        result = /^[a-zA-Z0-9]+-([a-z][a-z0-9_]*)$/.match(metadata['name'])
         module_name = result[1]
       else
         # TODO: This is an invalid puppet module name in the metadata.json.  Should we log an error/warning?

@@ -22,6 +22,7 @@ module LSP
   # }
   class ConfigurationClientCapabilities < LSPBase
     attr_accessor :workspace # type: {
+
     #        /**
     #        * The client supports `workspace/configuration` requests.
     #        */
@@ -51,8 +52,7 @@ module LSP
   #     section?: string;
   # }
   class ConfigurationItem < LSPBase
-    attr_accessor :scopeUri # type: string
-    attr_accessor :section # type: string
+    attr_accessor :scopeUri, :section # type: string # type: string
 
     def initialize(initial_hash = nil)
       super

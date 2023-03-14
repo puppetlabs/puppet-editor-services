@@ -24,11 +24,11 @@ module PuppetLanguageServer
         when 'Puppet::Pops::Model::ResourceExpression'
           content = get_resource_expression_content(session_state, item)
         when 'Puppet::Pops::Model::LiteralString'
-          if path[-1].class == Puppet::Pops::Model::AccessExpression
+          if path[-1].instance_of?(Puppet::Pops::Model::AccessExpression)
             expr = path[-1].left_expr.expr.value
 
             content = get_hover_content_for_access_expression(session_state, path, expr)
-          elsif path[-1].class == Puppet::Pops::Model::ResourceBody
+          elsif path[-1].instance_of?(Puppet::Pops::Model::ResourceBody)
             # We are hovering over the resource name
             content = get_resource_expression_content(session_state, path[-2])
           end
@@ -54,9 +54,10 @@ module PuppetLanguageServer
           unless resource_object.nil?
             # Check if it's a property
             attribute = resource_object.attributes[item.attribute_name.intern]
-            if attribute[:type] == :property
+            case attribute[:type]
+            when :property
               content = get_attribute_type_property_content(resource_object, item.attribute_name.intern)
-            elsif attribute[:type] == :param
+            when :param
               content = get_attribute_type_parameter_content(resource_object, item.attribute_name.intern)
             end
           end
@@ -118,7 +119,7 @@ module PuppetLanguageServer
         content = "**#{factname}** Fact\n\n"
 
         if value.is_a?(Hash)
-          content = content + "```\n" + JSON.pretty_generate(value) + "\n```"
+          content = "#{content}```\n#{JSON.pretty_generate(value)}\n```"
         else
           content += value.to_s
         end
@@ -156,7 +157,7 @@ module PuppetLanguageServer
         raise "Function #{func_name} does not exist" if func_info.nil?
 
         content = "**#{func_name}** Function"
-        content += "\n\n" + func_info.doc unless func_info.doc.nil?
+        content += "\n\n#{func_info.doc}" unless func_info.doc.nil?
 
         content
       end
@@ -204,7 +205,7 @@ module PuppetLanguageServer
 
         content = "**#{item.cased_value}** Data Type"
         content += ' Alias' if dt_info.is_type_alias
-        content += "\n\n" + dt_info.doc unless dt_info.doc.nil?
+        content += "\n\n#{dt_info.doc}" unless dt_info.doc.nil?
 
         content += "\n\nAlias of `#{dt_info.alias_of}`" if dt_info.is_type_alias
         content

@@ -6,13 +6,7 @@ require 'puppet-languageserver/session_state/object_cache'
 
 module PuppetLanguageServer
   class ClientSessionState
-    attr_reader :documents
-
-    attr_reader :language_client
-
-    attr_reader :object_cache
-
-    attr_reader :connection_id
+    attr_reader :documents, :language_client, :object_cache, :connection_id
 
     def initialize(message_handler, options = {})
       @documents       = options[:documents].nil? ? PuppetLanguageServer::SessionState::DocumentStore.new : options[:documents]

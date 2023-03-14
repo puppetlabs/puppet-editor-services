@@ -88,7 +88,7 @@ module PuppetLanguageServer
         item = PuppetLanguageServer::PuppetHelper.function(session_state, func_name)
         return nil if item.nil? || item.source.nil? || item.line.nil?
         LSP::Location.new(
-          'uri'   => 'file:///' + item.source,
+          'uri'   => "file:///#{item.source}",
           'range' => LSP.create_range(item.line, 0, item.line, 1024)
         )
       end
