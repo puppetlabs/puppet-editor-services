@@ -25,9 +25,7 @@ module LSP
   #     registerOptions?: any;
   # }
   class Registration < LSPBase
-    attr_accessor :id # type: string
-    attr_accessor :method__lsp # type: string
-    attr_accessor :registerOptions # type: any
+    attr_accessor :id, :method__lsp, :registerOptions # type: string # type: string # type: any
 
     def initialize(initial_hash = nil)
       super
@@ -68,8 +66,7 @@ module LSP
   #     method: string;
   # }
   class Unregistration < LSPBase
-    attr_accessor :id # type: string
-    attr_accessor :method__lsp # type: string
+    attr_accessor :id, :method__lsp # type: string # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -146,8 +143,7 @@ module LSP
   #     position: Position;
   # }
   class TextDocumentPositionParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
+    attr_accessor :textDocument, :position # type: TextDocumentIdentifier # type: Position
 
     def from_h!(value)
       value = {} if value.nil?
@@ -261,8 +257,8 @@ module LSP
   #     [custom: string]: any;
   # }
   class InitializeResult < LSPBase
-    attr_accessor :capabilities # type: ServerCapabilities<T>
-    attr_accessor :serverInfo # type: {
+    attr_accessor :capabilities, :serverInfo # type: ServerCapabilities<T> # type: {
+
     #        /**
     #         * The name of the server as defined by the server.
     #         */
@@ -381,8 +377,7 @@ module LSP
   #     message: string;
   # }
   class ShowMessageParams < LSPBase
-    attr_accessor :type # type: MessageType
-    attr_accessor :message # type: string
+    attr_accessor :type, :message # type: MessageType # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -423,9 +418,7 @@ module LSP
   #     actions?: MessageActionItem[];
   # }
   class ShowMessageRequestParams < LSPBase
-    attr_accessor :type # type: MessageType
-    attr_accessor :message # type: string
-    attr_accessor :actions # type: MessageActionItem[]
+    attr_accessor :type, :message, :actions # type: MessageType # type: string # type: MessageActionItem[]
 
     def initialize(initial_hash = nil)
       super
@@ -452,8 +445,7 @@ module LSP
   #     message: string;
   # }
   class LogMessageParams < LSPBase
-    attr_accessor :type # type: MessageType
-    attr_accessor :message # type: string
+    attr_accessor :type, :message # type: MessageType # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -484,10 +476,7 @@ module LSP
   #     didSave?: boolean;
   # }
   class TextDocumentSyncClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :willSave # type: boolean
-    attr_accessor :willSaveWaitUntil # type: boolean
-    attr_accessor :didSave # type: boolean
+    attr_accessor :dynamicRegistration, :willSave, :willSaveWaitUntil, :didSave # type: boolean # type: boolean # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -532,11 +521,7 @@ module LSP
   #     save?: SaveOptions;
   # }
   class TextDocumentSyncOptions < LSPBase
-    attr_accessor :openClose # type: boolean
-    attr_accessor :change # type: TextDocumentSyncKind
-    attr_accessor :willSave # type: boolean
-    attr_accessor :willSaveWaitUntil # type: boolean
-    attr_accessor :save # type: SaveOptions
+    attr_accessor :openClose, :change, :willSave, :willSaveWaitUntil, :save # type: boolean # type: TextDocumentSyncKind # type: boolean # type: boolean # type: SaveOptions
 
     def initialize(initial_hash = nil)
       super
@@ -593,8 +578,7 @@ module LSP
   #     contentChanges: TextDocumentContentChangeEvent[];
   # }
   class DidChangeTextDocumentParams < LSPBase
-    attr_accessor :textDocument # type: VersionedTextDocumentIdentifier
-    attr_accessor :contentChanges # type: TextDocumentContentChangeEvent[]
+    attr_accessor :textDocument, :contentChanges # type: VersionedTextDocumentIdentifier # type: TextDocumentContentChangeEvent[]
 
     def from_h!(value)
       value = {} if value.nil?
@@ -611,8 +595,7 @@ module LSP
   #     syncKind: TextDocumentSyncKind;
   # }
   class TextDocumentChangeRegistrationOptions < LSPBase
-    attr_accessor :syncKind # type: TextDocumentSyncKind
-    attr_accessor :documentSelector # type: DocumentSelector | null
+    attr_accessor :syncKind, :documentSelector # type: TextDocumentSyncKind # type: DocumentSelector | null
 
     def from_h!(value)
       value = {} if value.nil?
@@ -650,8 +633,7 @@ module LSP
   #     text?: string;
   # }
   class DidSaveTextDocumentParams < LSPBase
-    attr_accessor :textDocument # type: VersionedTextDocumentIdentifier
-    attr_accessor :text # type: string
+    attr_accessor :textDocument, :text # type: VersionedTextDocumentIdentifier # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -669,8 +651,7 @@ module LSP
   # export interface TextDocumentSaveRegistrationOptions extends TextDocumentRegistrationOptions, SaveOptions {
   # }
   class TextDocumentSaveRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :includeText # type: boolean
+    attr_accessor :documentSelector, :includeText # type: DocumentSelector | null # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -696,8 +677,7 @@ module LSP
   #     reason: TextDocumentSaveReason;
   # }
   class WillSaveTextDocumentParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :reason # type: TextDocumentSaveReason
+    attr_accessor :textDocument, :reason # type: TextDocumentIdentifier # type: TextDocumentSaveReason
 
     def from_h!(value)
       value = {} if value.nil?
@@ -757,8 +737,7 @@ module LSP
   #     type: FileChangeType;
   # }
   class FileEvent < LSPBase
-    attr_accessor :uri # type: DocumentUri
-    attr_accessor :type # type: FileChangeType
+    attr_accessor :uri, :type # type: DocumentUri # type: FileChangeType
 
     def from_h!(value)
       value = {} if value.nil?
@@ -803,8 +782,7 @@ module LSP
   #     kind?: number;
   # }
   class FileSystemWatcher < LSPBase
-    attr_accessor :globPattern # type: string
-    attr_accessor :kind # type: number
+    attr_accessor :globPattern, :kind # type: string # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -845,8 +823,7 @@ module LSP
   #     versionSupport?: boolean;
   # }
   class PublishDiagnosticsClientCapabilities < LSPBase
-    attr_accessor :relatedInformation # type: boolean
-    attr_accessor :tagSupport # type: {
+    attr_accessor :relatedInformation, :tagSupport # type: boolean # type: {
     #        /**
     #         * The tags supported by the client.
     #         */
@@ -885,9 +862,7 @@ module LSP
   #     diagnostics: Diagnostic[];
   # }
   class PublishDiagnosticsParams < LSPBase
-    attr_accessor :uri # type: DocumentUri
-    attr_accessor :version # type: number
-    attr_accessor :diagnostics # type: Diagnostic[]
+    attr_accessor :uri, :version, :diagnostics # type: DocumentUri # type: number # type: Diagnostic[]
 
     def initialize(initial_hash = nil)
       super
@@ -974,8 +949,7 @@ module LSP
   #     contextSupport?: boolean;
   # }
   class CompletionClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :completionItem # type: {
+    attr_accessor :dynamicRegistration, :completionItem # type: boolean # type: {
     #        /**
     #         * Client supports snippets as insert text.
     #         *
@@ -1059,8 +1033,7 @@ module LSP
   #     triggerCharacter?: string;
   # }
   class CompletionContext < LSPBase
-    attr_accessor :triggerKind # type: CompletionTriggerKind
-    attr_accessor :triggerCharacter # type: string
+    attr_accessor :triggerKind, :triggerCharacter # type: CompletionTriggerKind # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1083,11 +1056,7 @@ module LSP
   #     context?: CompletionContext;
   # }
   class CompletionParams < LSPBase
-    attr_accessor :context # type: CompletionContext
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
-    attr_accessor :workDoneToken # type: ProgressToken
-    attr_accessor :partialResultToken # type: ProgressToken
+    attr_accessor :context, :textDocument, :position, :workDoneToken, :partialResultToken # type: CompletionContext # type: TextDocumentIdentifier # type: Position # type: ProgressToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -1135,10 +1104,7 @@ module LSP
   #     resolveProvider?: boolean;
   # }
   class CompletionOptions < LSPBase
-    attr_accessor :triggerCharacters # type: string[]
-    attr_accessor :allCommitCharacters # type: string[]
-    attr_accessor :resolveProvider # type: boolean
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :triggerCharacters, :allCommitCharacters, :resolveProvider, :workDoneProgress # type: string[] # type: string[] # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1158,11 +1124,7 @@ module LSP
   # export interface CompletionRegistrationOptions extends TextDocumentRegistrationOptions, CompletionOptions {
   # }
   class CompletionRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :triggerCharacters # type: string[]
-    attr_accessor :allCommitCharacters # type: string[]
-    attr_accessor :resolveProvider # type: boolean
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :triggerCharacters, :allCommitCharacters, :resolveProvider, :workDoneProgress # type: DocumentSelector | null # type: string[] # type: string[] # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1192,8 +1154,7 @@ module LSP
   #     contentFormat?: MarkupKind[];
   # }
   class HoverClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :contentFormat # type: MarkupKind[]
+    attr_accessor :dynamicRegistration, :contentFormat # type: boolean # type: MarkupKind[]
 
     def initialize(initial_hash = nil)
       super
@@ -1228,9 +1189,7 @@ module LSP
   # export interface HoverParams extends TextDocumentPositionParams, WorkDoneProgressParams {
   # }
   class HoverParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
-    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :textDocument, :position, :workDoneToken # type: TextDocumentIdentifier # type: Position # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -1249,8 +1208,7 @@ module LSP
   # export interface HoverRegistrationOptions extends TextDocumentRegistrationOptions, HoverOptions {
   # }
   class HoverRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :workDoneProgress # type: DocumentSelector | null # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1304,8 +1262,7 @@ module LSP
   #     contextSupport?: boolean;
   # }
   class SignatureHelpClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :signatureInformation # type: {
+    attr_accessor :dynamicRegistration, :signatureInformation # type: boolean # type: {
     #        /**
     #         * Client supports the follow content formats for the documentation
     #         * property. The order describes the preferred format of the client.
@@ -1356,9 +1313,7 @@ module LSP
   #     retriggerCharacters?: string[];
   # }
   class SignatureHelpOptions < LSPBase
-    attr_accessor :triggerCharacters # type: string[]
-    attr_accessor :retriggerCharacters # type: string[]
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :triggerCharacters, :retriggerCharacters, :workDoneProgress # type: string[] # type: string[] # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1401,10 +1356,7 @@ module LSP
   #     activeSignatureHelp?: SignatureHelp;
   # }
   class SignatureHelpContext < LSPBase
-    attr_accessor :triggerKind # type: SignatureHelpTriggerKind
-    attr_accessor :triggerCharacter # type: string
-    attr_accessor :isRetrigger # type: boolean
-    attr_accessor :activeSignatureHelp # type: SignatureHelp
+    attr_accessor :triggerKind, :triggerCharacter, :isRetrigger, :activeSignatureHelp # type: SignatureHelpTriggerKind # type: string # type: boolean # type: SignatureHelp
 
     def initialize(initial_hash = nil)
       super
@@ -1431,10 +1383,7 @@ module LSP
   #     context?: SignatureHelpContext;
   # }
   class SignatureHelpParams < LSPBase
-    attr_accessor :context # type: SignatureHelpContext
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
-    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :context, :textDocument, :position, :workDoneToken # type: SignatureHelpContext # type: TextDocumentIdentifier # type: Position # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -1454,10 +1403,7 @@ module LSP
   # export interface SignatureHelpRegistrationOptions extends TextDocumentRegistrationOptions, SignatureHelpOptions {
   # }
   class SignatureHelpRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :triggerCharacters # type: string[]
-    attr_accessor :retriggerCharacters # type: string[]
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :triggerCharacters, :retriggerCharacters, :workDoneProgress # type: DocumentSelector | null # type: string[] # type: string[] # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1487,8 +1433,7 @@ module LSP
   #     linkSupport?: boolean;
   # }
   class DefinitionClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :linkSupport # type: boolean
+    attr_accessor :dynamicRegistration, :linkSupport # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1523,10 +1468,7 @@ module LSP
   # export interface DefinitionParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
   # }
   class DefinitionParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
-    attr_accessor :workDoneToken # type: ProgressToken
-    attr_accessor :partialResultToken # type: ProgressToken
+    attr_accessor :textDocument, :position, :workDoneToken, :partialResultToken # type: TextDocumentIdentifier # type: Position # type: ProgressToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -1546,8 +1488,7 @@ module LSP
   # export interface DefinitionRegistrationOptions extends TextDocumentRegistrationOptions, DefinitionOptions {
   # }
   class DefinitionRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :workDoneProgress # type: DocumentSelector | null # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1587,11 +1528,7 @@ module LSP
   #     context: ReferenceContext;
   # }
   class ReferenceParams < LSPBase
-    attr_accessor :context # type: ReferenceContext
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
-    attr_accessor :workDoneToken # type: ProgressToken
-    attr_accessor :partialResultToken # type: ProgressToken
+    attr_accessor :context, :textDocument, :position, :workDoneToken, :partialResultToken # type: ReferenceContext # type: TextDocumentIdentifier # type: Position # type: ProgressToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -1629,8 +1566,7 @@ module LSP
   # export interface ReferenceRegistrationOptions extends TextDocumentRegistrationOptions, ReferenceOptions {
   # }
   class ReferenceRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :workDoneProgress # type: DocumentSelector | null # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1669,10 +1605,7 @@ module LSP
   # export interface DocumentHighlightParams extends TextDocumentPositionParams, WorkDoneProgressParams, PartialResultParams {
   # }
   class DocumentHighlightParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
-    attr_accessor :workDoneToken # type: ProgressToken
-    attr_accessor :partialResultToken # type: ProgressToken
+    attr_accessor :textDocument, :position, :workDoneToken, :partialResultToken # type: TextDocumentIdentifier # type: Position # type: ProgressToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -1709,8 +1642,7 @@ module LSP
   # export interface DocumentHighlightRegistrationOptions extends TextDocumentRegistrationOptions, DocumentHighlightOptions {
   # }
   class DocumentHighlightRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :workDoneProgress # type: DocumentSelector | null # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1752,8 +1684,7 @@ module LSP
   #     hierarchicalDocumentSymbolSupport?: boolean;
   # }
   class DocumentSymbolClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :symbolKind # type: {
+    attr_accessor :dynamicRegistration, :symbolKind # type: boolean # type: {
     #        /**
     #         * The symbol kind values the client supports. When this
     #         * property exists the client also guarantees that it will
@@ -1789,9 +1720,7 @@ module LSP
   #     textDocument: TextDocumentIdentifier;
   # }
   class DocumentSymbolParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :workDoneToken # type: ProgressToken
-    attr_accessor :partialResultToken # type: ProgressToken
+    attr_accessor :textDocument, :workDoneToken, :partialResultToken # type: TextDocumentIdentifier # type: ProgressToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -1827,8 +1756,7 @@ module LSP
   # export interface DocumentSymbolRegistrationOptions extends TextDocumentRegistrationOptions, DocumentSymbolOptions {
   # }
   class DocumentSymbolRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :workDoneProgress # type: DocumentSelector | null # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1876,8 +1804,7 @@ module LSP
   #     isPreferredSupport?: boolean;
   # }
   class CodeActionClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :codeActionLiteralSupport # type: {
+    attr_accessor :dynamicRegistration, :codeActionLiteralSupport # type: boolean # type: {
     #        /**
     #         * The code action kind is support with the following value
     #         * set.
@@ -1923,11 +1850,7 @@ module LSP
   #     context: CodeActionContext;
   # }
   class CodeActionParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :range # type: Range
-    attr_accessor :context # type: CodeActionContext
-    attr_accessor :workDoneToken # type: ProgressToken
-    attr_accessor :partialResultToken # type: ProgressToken
+    attr_accessor :textDocument, :range, :context, :workDoneToken, :partialResultToken # type: TextDocumentIdentifier # type: Range # type: CodeActionContext # type: ProgressToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -1955,8 +1878,7 @@ module LSP
   #     codeActionKinds?: CodeActionKind[];
   # }
   class CodeActionOptions < LSPBase
-    attr_accessor :codeActionKinds # type: CodeActionKind[]
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :codeActionKinds, :workDoneProgress # type: CodeActionKind[] # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1974,9 +1896,7 @@ module LSP
   # export interface CodeActionRegistrationOptions extends TextDocumentRegistrationOptions, CodeActionOptions {
   # }
   class CodeActionRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :codeActionKinds # type: CodeActionKind[]
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :codeActionKinds, :workDoneProgress # type: DocumentSelector | null # type: CodeActionKind[] # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2015,8 +1935,8 @@ module LSP
   #     };
   # }
   class WorkspaceSymbolClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :symbolKind # type: {
+    attr_accessor :dynamicRegistration, :symbolKind # type: boolean # type: {
+
     #        /**
     #         * The symbol kind values the client supports. When this
     #         * property exists the client also guarantees that it will
@@ -2051,9 +1971,7 @@ module LSP
   #     query: string;
   # }
   class WorkspaceSymbolParams < LSPBase
-    attr_accessor :query # type: string
-    attr_accessor :workDoneToken # type: ProgressToken
-    attr_accessor :partialResultToken # type: ProgressToken
+    attr_accessor :query, :workDoneToken, :partialResultToken # type: string # type: ProgressToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -2131,9 +2049,7 @@ module LSP
   #     textDocument: TextDocumentIdentifier;
   # }
   class CodeLensParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :workDoneToken # type: ProgressToken
-    attr_accessor :partialResultToken # type: ProgressToken
+    attr_accessor :textDocument, :workDoneToken, :partialResultToken # type: TextDocumentIdentifier # type: ProgressToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -2156,8 +2072,7 @@ module LSP
   #     resolveProvider?: boolean;
   # }
   class CodeLensOptions < LSPBase
-    attr_accessor :resolveProvider # type: boolean
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :resolveProvider, :workDoneProgress # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2175,9 +2090,7 @@ module LSP
   # export interface CodeLensRegistrationOptions extends TextDocumentRegistrationOptions, CodeLensOptions {
   # }
   class CodeLensRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :resolveProvider # type: boolean
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :resolveProvider, :workDoneProgress # type: DocumentSelector | null # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2206,8 +2119,7 @@ module LSP
   #     tooltipSupport?: boolean;
   # }
   class DocumentLinkClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :tooltipSupport # type: boolean
+    attr_accessor :dynamicRegistration, :tooltipSupport # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2229,9 +2141,7 @@ module LSP
   #     textDocument: TextDocumentIdentifier;
   # }
   class DocumentLinkParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :workDoneToken # type: ProgressToken
-    attr_accessor :partialResultToken # type: ProgressToken
+    attr_accessor :textDocument, :workDoneToken, :partialResultToken # type: TextDocumentIdentifier # type: ProgressToken # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -2254,8 +2164,7 @@ module LSP
   #     resolveProvider?: boolean;
   # }
   class DocumentLinkOptions < LSPBase
-    attr_accessor :resolveProvider # type: boolean
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :resolveProvider, :workDoneProgress # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2273,9 +2182,7 @@ module LSP
   # export interface DocumentLinkRegistrationOptions extends TextDocumentRegistrationOptions, DocumentLinkOptions {
   # }
   class DocumentLinkRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :resolveProvider # type: boolean
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :resolveProvider, :workDoneProgress # type: DocumentSelector | null # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2323,9 +2230,7 @@ module LSP
   #     options: FormattingOptions;
   # }
   class DocumentFormattingParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :options # type: FormattingOptions
-    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :textDocument, :options, :workDoneToken # type: TextDocumentIdentifier # type: FormattingOptions # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -2361,8 +2266,7 @@ module LSP
   # export interface DocumentFormattingRegistrationOptions extends TextDocumentRegistrationOptions, DocumentFormattingOptions {
   # }
   class DocumentFormattingRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :workDoneProgress # type: DocumentSelector | null # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2413,10 +2317,7 @@ module LSP
   #     options: FormattingOptions;
   # }
   class DocumentRangeFormattingParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :range # type: Range
-    attr_accessor :options # type: FormattingOptions
-    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :textDocument, :range, :options, :workDoneToken # type: TextDocumentIdentifier # type: Range # type: FormattingOptions # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -2453,8 +2354,7 @@ module LSP
   # export interface DocumentRangeFormattingRegistrationOptions extends TextDocumentRegistrationOptions, DocumentRangeFormattingOptions {
   # }
   class DocumentRangeFormattingRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :workDoneProgress # type: DocumentSelector | null # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2509,10 +2409,7 @@ module LSP
   #     options: FormattingOptions;
   # }
   class DocumentOnTypeFormattingParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
-    attr_accessor :ch # type: string
-    attr_accessor :options # type: FormattingOptions
+    attr_accessor :textDocument, :position, :ch, :options # type: TextDocumentIdentifier # type: Position # type: string # type: FormattingOptions
 
     def from_h!(value)
       value = {} if value.nil?
@@ -2535,8 +2432,7 @@ module LSP
   #     moreTriggerCharacter?: string[];
   # }
   class DocumentOnTypeFormattingOptions < LSPBase
-    attr_accessor :firstTriggerCharacter # type: string
-    attr_accessor :moreTriggerCharacter # type: string[]
+    attr_accessor :firstTriggerCharacter, :moreTriggerCharacter # type: string # type: string[]
 
     def initialize(initial_hash = nil)
       super
@@ -2554,9 +2450,7 @@ module LSP
   # export interface DocumentOnTypeFormattingRegistrationOptions extends TextDocumentRegistrationOptions, DocumentOnTypeFormattingOptions {
   # }
   class DocumentOnTypeFormattingRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :firstTriggerCharacter # type: string
-    attr_accessor :moreTriggerCharacter # type: string[]
+    attr_accessor :documentSelector, :firstTriggerCharacter, :moreTriggerCharacter # type: DocumentSelector | null # type: string # type: string[]
 
     def initialize(initial_hash = nil)
       super
@@ -2586,8 +2480,7 @@ module LSP
   #     prepareSupport?: boolean;
   # }
   class RenameClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :prepareSupport # type: boolean
+    attr_accessor :dynamicRegistration, :prepareSupport # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2619,10 +2512,7 @@ module LSP
   #     newName: string;
   # }
   class RenameParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
-    attr_accessor :newName # type: string
-    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :textDocument, :position, :newName, :workDoneToken # type: TextDocumentIdentifier # type: Position # type: string # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -2648,8 +2538,7 @@ module LSP
   #     prepareProvider?: boolean;
   # }
   class RenameOptions < LSPBase
-    attr_accessor :prepareProvider # type: boolean
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :prepareProvider, :workDoneProgress # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2667,9 +2556,7 @@ module LSP
   # export interface RenameRegistrationOptions extends TextDocumentRegistrationOptions, RenameOptions {
   # }
   class RenameRegistrationOptions < LSPBase
-    attr_accessor :documentSelector # type: DocumentSelector | null
-    attr_accessor :prepareProvider # type: boolean
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :documentSelector, :prepareProvider, :workDoneProgress # type: DocumentSelector | null # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2688,9 +2575,7 @@ module LSP
   # export interface PrepareRenameParams extends TextDocumentPositionParams, WorkDoneProgressParams {
   # }
   class PrepareRenameParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :position # type: Position
-    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :textDocument, :position, :workDoneToken # type: TextDocumentIdentifier # type: Position # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -2738,9 +2623,7 @@ module LSP
   #     arguments?: any[];
   # }
   class ExecuteCommandParams < LSPBase
-    attr_accessor :command # type: string
-    attr_accessor :arguments # type: any[]
-    attr_accessor :workDoneToken # type: ProgressToken
+    attr_accessor :command, :arguments, :workDoneToken # type: string # type: any[] # type: ProgressToken
 
     def initialize(initial_hash = nil)
       super
@@ -2763,8 +2646,7 @@ module LSP
   #     commands: string[];
   # }
   class ExecuteCommandOptions < LSPBase
-    attr_accessor :commands # type: string[]
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :commands, :workDoneProgress # type: string[] # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2782,8 +2664,7 @@ module LSP
   # export interface ExecuteCommandRegistrationOptions extends ExecuteCommandOptions {
   # }
   class ExecuteCommandRegistrationOptions < LSPBase
-    attr_accessor :commands # type: string[]
-    attr_accessor :workDoneProgress # type: boolean
+    attr_accessor :commands, :workDoneProgress # type: string[] # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -2819,9 +2700,7 @@ module LSP
   #     failureHandling?: FailureHandlingKind;
   # }
   class WorkspaceEditClientCapabilities < LSPBase
-    attr_accessor :documentChanges # type: boolean
-    attr_accessor :resourceOperations # type: ResourceOperationKind[]
-    attr_accessor :failureHandling # type: FailureHandlingKind
+    attr_accessor :documentChanges, :resourceOperations, :failureHandling # type: boolean # type: ResourceOperationKind[] # type: FailureHandlingKind
 
     def initialize(initial_hash = nil)
       super
@@ -2850,8 +2729,7 @@ module LSP
   #     edit: WorkspaceEdit;
   # }
   class ApplyWorkspaceEditParams < LSPBase
-    attr_accessor :label # type: string
-    attr_accessor :edit # type: WorkspaceEdit
+    attr_accessor :label, :edit # type: string # type: WorkspaceEdit
 
     def initialize(initial_hash = nil)
       super
@@ -2885,9 +2763,7 @@ module LSP
   #     failedChange?: number;
   # }
   class ApplyWorkspaceEditResponse < LSPBase
-    attr_accessor :applied # type: boolean
-    attr_accessor :failureReason # type: string
-    attr_accessor :failedChange # type: number
+    attr_accessor :applied, :failureReason, :failedChange # type: boolean # type: string # type: number
 
     def initialize(initial_hash = nil)
       super

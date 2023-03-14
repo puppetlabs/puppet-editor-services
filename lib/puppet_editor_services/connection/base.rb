@@ -3,8 +3,7 @@
 module PuppetEditorServices
   module Connection
     class Base
-      attr_reader :server
-      attr_reader :protocol
+      attr_reader :server, :protocol
 
       def initialize(server)
         @server = server

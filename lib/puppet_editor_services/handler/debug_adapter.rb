@@ -6,10 +6,6 @@ require 'puppet_editor_services/protocol/debug_adapter_messages'
 module PuppetEditorServices
   module Handler
     class DebugAdapter < ::PuppetEditorServices::Handler::Base
-      def initialize(protocol)
-        super(protocol)
-      end
-
       # options
       #    source        :request, :notification etc.
       #    message       JSON Message that caused the error
@@ -60,8 +56,7 @@ module PuppetEditorServices
       end
 
       def rpc_name_to_ruby_method_name(prefix, rpc_name)
-        name = prefix + '_' + rpc_name.tr('/', '_').tr('$', 'dollar').downcase
-        name
+        "#{prefix}_#{rpc_name.tr('/', '_').tr('$', 'dollar').downcase}"
       end
     end
   end

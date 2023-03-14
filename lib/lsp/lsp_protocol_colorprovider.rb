@@ -83,9 +83,7 @@ module LSP
   #     range: Range;
   # }
   class ColorPresentationParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :color # type: Color
-    attr_accessor :range # type: Range
+    attr_accessor :textDocument, :color, :range # type: TextDocumentIdentifier # type: Color # type: Range
 
     def from_h!(value)
       value = {} if value.nil?

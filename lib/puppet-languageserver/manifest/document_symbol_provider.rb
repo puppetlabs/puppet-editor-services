@@ -118,7 +118,7 @@ module PuppetLanguageServer
         when 'Puppet::Pops::Model::ResourceBody'
           # We modify the parent symbol with the resource information,
           # mainly we care about the resource title.
-          parentsymbol.name = parentsymbol.name + ': ' + locator_text(object.title.offset, object.title.length, object.title.locator)
+          parentsymbol.name = "#{parentsymbol.name}: #{locator_text(object.title.offset, object.title.length, object.title.locator)}"
           parentsymbol.detail = parentsymbol.name
           parentsymbol.selectionRange = create_range(object.title.offset, object.title.length, object.locator)
 
@@ -146,9 +146,9 @@ module PuppetLanguageServer
           # Load in the class parameters
           object.parameters.each do |param|
             param_symbol = LSP::DocumentSymbol.new(
-              'name'           => '$' + param.name,
+              'name'           => "$#{param.name}",
               'kind'           => LSP::SymbolKind::PROPERTY,
-              'detail'         => '$' + param.name,
+              'detail'         => "$#{param.name}",
               'range'          => create_range(param.offset, param.length, param.locator),
               'selectionRange' => create_range(param.offset, param.length, param.locator),
               'children'       => []
@@ -169,9 +169,9 @@ module PuppetLanguageServer
           # Load in the class parameters
           object.parameters.each do |param|
             param_symbol = LSP::DocumentSymbol.new(
-              'name'           => '$' + param.name,
+              'name'           => "$#{param.name}",
               'kind'           => LSP::SymbolKind::FIELD,
-              'detail'         => '$' + param.name,
+              'detail'         => "$#{param.name}",
               'range'          => create_range(param.offset, param.length, param.locator),
               'selectionRange' => create_range(param.offset, param.length, param.locator),
               'children'       => []
@@ -181,9 +181,9 @@ module PuppetLanguageServer
 
         when 'Puppet::Pops::Model::AssignmentExpression'
           this_symbol = LSP::DocumentSymbol.new(
-            'name'           => '$' + object.left_expr.expr.value,
+            'name'           => "$#{object.left_expr.expr.value}",
             'kind'           => LSP::SymbolKind::VARIABLE,
-            'detail'         => '$' + object.left_expr.expr.value,
+            'detail'         => "$#{object.left_expr.expr.value}",
             'range'          => create_range(object.left_expr.offset, object.left_expr.length, object.left_expr.locator),
             'selectionRange' => create_range(object.left_expr.offset, object.left_expr.length, object.left_expr.locator),
             'children'       => []
@@ -202,9 +202,9 @@ module PuppetLanguageServer
           # Load in the class parameters
           object.parameters.each do |param|
             param_symbol = LSP::DocumentSymbol.new(
-              'name'           => '$' + param.name,
+              'name'           => "$#{param.name}",
               'kind'           => LSP::SymbolKind::CLASS,
-              'detail'         => '$' + param.name,
+              'detail'         => "$#{param.name}",
               'range'          => create_range(param.offset, param.length, param.locator),
               'selectionRange' => create_range(param.offset, param.length, param.locator),
               'children'       => []

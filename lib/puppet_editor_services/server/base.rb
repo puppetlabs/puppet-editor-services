@@ -7,10 +7,7 @@ require 'puppet_editor_services/protocol/base'
 module PuppetEditorServices
   module Server
     class Base
-      attr_reader :server_options
-      attr_reader :connection_options
-      attr_reader :protocol_options
-      attr_reader :handler_options
+      attr_reader :server_options, :connection_options, :protocol_options, :handler_options
 
       def name
         'SRV'

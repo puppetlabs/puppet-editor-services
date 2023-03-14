@@ -38,6 +38,7 @@ module LSP
   # }
   class WorkspaceFoldersClientCapabilities < LSPBase
     attr_accessor :workspace # type: {
+
     #        /**
     #         * The client has support for workspace folders
     #         */
@@ -81,6 +82,7 @@ module LSP
   # }
   class WorkspaceFoldersServerCapabilities < LSPBase
     attr_accessor :workspace # type: {
+
     #        workspaceFolders?: {
     #            /**
     #             * The Server has support for workspace folders
@@ -123,8 +125,7 @@ module LSP
   #     name: string;
   # }
   class WorkspaceFolder < LSPBase
-    attr_accessor :uri # type: string
-    attr_accessor :name # type: string
+    attr_accessor :uri, :name # type: string # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -161,8 +162,7 @@ module LSP
   #     removed: WorkspaceFolder[];
   # }
   class WorkspaceFoldersChangeEvent < LSPBase
-    attr_accessor :added # type: WorkspaceFolder[]
-    attr_accessor :removed # type: WorkspaceFolder[]
+    attr_accessor :added, :removed # type: WorkspaceFolder[] # type: WorkspaceFolder[]
 
     def from_h!(value)
       value = {} if value.nil?

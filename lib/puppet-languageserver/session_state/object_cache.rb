@@ -90,9 +90,9 @@ module PuppetLanguageServer
         return true if value == test_string
 
         # Test for a shortname
-        unless test_string.start_with?('::')
+        if !test_string.start_with?('::') && value.end_with?("::#{test_string}")
           # e.g 'TargetSpec' in 'Boltlib::TargetSpec'
-          return true if value.end_with?('::' + test_string)
+          return true
         end
 
         false

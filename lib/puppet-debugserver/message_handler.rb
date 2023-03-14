@@ -4,10 +4,6 @@ require 'puppet_editor_services/handler/debug_adapter'
 
 module PuppetDebugServer
   class MessageHandler < PuppetEditorServices::Handler::DebugAdapter
-    def initialize(*_options)
-      super
-    end
-
     # region Message Helpers
     def send_exited_event(exitcode)
       protocol.encode_and_send(

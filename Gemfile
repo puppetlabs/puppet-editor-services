@@ -9,12 +9,12 @@ source ENV['GEM_SOURCE'] || "https://rubygems.org"
 # -=-=-=-=-=- WARNING -=-=-=-=-=-
 
 group :development do
-  gem 'rake', '>= 10.4',            :require => false
-  gem 'rspec', '>= 3.2',            :require => false
+  gem 'rake', '>= 10.4',                  :require => false
+  gem 'rspec', '>= 3.2',                  :require => false
 
-  if Gem::Version.create(RUBY_VERSION) >= Gem::Version.create('2.3.0')
-    gem "rubocop", "~> 0.83.0", :require => false, :platforms => [:ruby, :x64_mingw]
-  end
+  gem "rubocop", '= 1.6.1',                            require: false
+  gem "rubocop-performance", '= 1.9.1',                require: false
+  gem "rubocop-rspec", '= 2.0.1',                      require: false
 
   if ENV['PUPPET_GEM_VERSION']
     gem 'puppet', ENV['PUPPET_GEM_VERSION'], :require => false

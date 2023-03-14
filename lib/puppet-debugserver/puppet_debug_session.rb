@@ -134,7 +134,7 @@ module PuppetDebugServer
 
       send_output_event(
         'category' => 'console',
-        'output'   => 'puppet ' + cmd_args.join(' ') + "\n"
+        'output'   => "puppet #{cmd_args.join(' ')}\n"
       )
       send_thread_event('started', @puppet_thread_id)
 

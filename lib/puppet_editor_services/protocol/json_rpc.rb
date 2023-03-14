@@ -153,27 +153,21 @@ module PuppetEditorServices
         is_response = json_obj.key?(KEY_ID) && !json_obj.key?(KEY_METHOD) && (json_obj.key?(KEY_RESULT) || json_obj.key?(KEY_ERROR))
 
         # The 'params' attribute must be a hash or an array
-        if (params = json_obj[KEY_PARAMS])
-          unless params.is_a?(Array) || params.is_a?(Hash)
-            reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_PARAMS
-            return false
-          end
+        if (params = json_obj[KEY_PARAMS]) && !(params.is_a?(Array) || params.is_a?(Hash))
+          reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_PARAMS
+          return false
         end
 
         # Requests and Responses must have an ID that is either a string or integer
-        if is_request || is_response
-          unless id.is_a?(String) || id.is_a?(Integer)
-            reply_error nil, CODE_INVALID_REQUEST, MSG_INVALID_REQ_ID
-            return false
-          end
+        if (is_request || is_response) && !(id.is_a?(String) || id.is_a?(Integer))
+          reply_error nil, CODE_INVALID_REQUEST, MSG_INVALID_REQ_ID
+          return false
         end
 
         # Requests and Notifications must have a method
-        if is_request || is_notification
-          unless (json_obj[KEY_METHOD]).is_a? String
-            reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_METHOD
-            return false
-          end
+        if (is_request || is_notification) && !((json_obj[KEY_METHOD]).is_a? String)
+          reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_METHOD
+          return false
         end
 
         # Responses must have a matching request originating from this instance

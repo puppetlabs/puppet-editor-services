@@ -112,3 +112,6 @@ Lint/RaiseException:
 
 Lint/StructNewOverride:
   Enabled: true
+
+Style/OptionalBooleanParameter:
+  Enabled: false

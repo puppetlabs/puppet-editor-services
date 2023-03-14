@@ -255,7 +255,7 @@ module PuppetLanguageServerSidecar
         pre_docs += "This uses the legacy Ruby function API\n" if item[:type] == 'ruby3x'
         since_tag = item[:docstring][:tags].find { |tag| tag[:tag_name] == 'since' }
         pre_docs += "Since #{since_tag[:text]}\n" unless since_tag.nil?
-        obj.doc = pre_docs + "\n" + obj.doc unless pre_docs.empty?
+        obj.doc = "#{pre_docs}\n#{obj.doc}" unless pre_docs.empty?
 
         @cache[source_path].functions << obj
       end
@@ -309,13 +309,13 @@ module PuppetLanguageServerSidecar
         if name.start_with?('*') || name.start_with?('&')
           name.insert(1, '$')
         else
-          name = '$' + name
+          name = "$#{name}"
         end
 
         # We need to use terminating characters here due to substring matching e.g. $abc will incorrectly match in
         # function([String] $abc123, [String] $abc)
-        idx = sig.key.index(name + ',')
-        idx = sig.key.index(name + ')') if idx.nil?
+        idx = sig.key.index("#{name},")
+        idx = sig.key.index("#{name})") if idx.nil?
 
         unless idx.nil?
           param.signature_key_offset = idx

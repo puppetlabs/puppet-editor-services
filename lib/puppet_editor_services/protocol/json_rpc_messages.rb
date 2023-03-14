@@ -49,9 +49,7 @@ module PuppetEditorServices
       #   params?: Array<any> | object;
       # }
       class RequestMessage < Message
-        attr_accessor :id
-        attr_accessor :rpc_method
-        attr_accessor :params
+        attr_accessor :id, :rpc_method, :params
 
         def initialize(initial_hash = nil)
           super
@@ -87,8 +85,7 @@ module PuppetEditorServices
       #   params?: Array<any> | object;
       # }
       class NotificationMessage < Message
-        attr_accessor :rpc_method
-        attr_accessor :params
+        attr_accessor :rpc_method, :params
 
         def initialize(initial_hash = nil)
           super
@@ -127,9 +124,7 @@ module PuppetEditorServices
       #   error?: ResponseError<any>;
       # }
       class ResponseMessage < Message
-        attr_accessor :id
-        attr_accessor :result
-        attr_accessor :error
+        attr_accessor :id, :result, :error
         # is_successful is special. It changes based on deserialising from hash or
         # can be manually set. This affects serialisation
         attr_accessor :is_successful

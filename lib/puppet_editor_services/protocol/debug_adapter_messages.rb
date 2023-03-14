@@ -13,8 +13,7 @@ module PuppetEditorServices
       #         type: string;
       #     }
       class ProtocolMessage
-        attr_accessor :seq # type: number
-        attr_accessor :type # type: string
+        attr_accessor :seq, :type # type: number # type: string
 
         def initialize(initial_hash = nil)
           from_h!(initial_hash)
@@ -46,8 +45,7 @@ module PuppetEditorServices
       #         arguments?: any;
       #     }
       class Request < ProtocolMessage
-        attr_accessor :command # type: string
-        attr_accessor :arguments # type: any
+        attr_accessor :command, :arguments # type: string # type: any
 
         def initialize(initial_hash = nil)
           super
@@ -77,8 +75,7 @@ module PuppetEditorServices
       #         body?: any;
       #     }
       class Event < ProtocolMessage
-        attr_accessor :event # type: string
-        attr_accessor :body # type: any
+        attr_accessor :event, :body # type: string # type: any
 
         def initialize(initial_hash = nil)
           super
@@ -114,11 +111,7 @@ module PuppetEditorServices
       #         body?: any;
       #     }
       class Response < ProtocolMessage
-        attr_accessor :request_seq # type: number
-        attr_accessor :success # type: boolean
-        attr_accessor :command # type: string
-        attr_accessor :message # type: string
-        attr_accessor :body # type: any
+        attr_accessor :request_seq, :success, :command, :message, :body # type: number # type: boolean # type: string # type: string # type: any
 
         def initialize(initial_hash = nil)
           super

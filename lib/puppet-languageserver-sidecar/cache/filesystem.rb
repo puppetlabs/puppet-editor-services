@@ -97,7 +97,7 @@ module PuppetLanguageServerSidecar
       end
 
       def cache_filename(file_key)
-        Digest::SHA256.hexdigest(file_key) + '.txt'
+        "#{Digest::SHA256.hexdigest(file_key)}.txt"
       end
 
       def calculate_hash(filepath)

@@ -3,14 +3,10 @@
 module PuppetLanguageServer
   module SessionState
     class LanguageClient
-      attr_reader :message_handler
+      attr_reader :message_handler, :format_on_type_filesize_limit, :folding_range, :folding_range_show_last_line, :use_puppetfile_resolver
 
       # Client settings
       attr_reader :format_on_type
-      attr_reader :format_on_type_filesize_limit
-      attr_reader :folding_range
-      attr_reader :folding_range_show_last_line
-      attr_reader :use_puppetfile_resolver
 
       DEFAULT_FORMAT_ON_TYPE_ENABLE = false
       DEFAULT_FORMAT_ON_TYPE_FILESIZE_LIMIT = 4096

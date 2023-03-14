@@ -28,9 +28,7 @@ module LSP
   #     lineFoldingOnly?: boolean;
   # }
   class FoldingRangeClientCapabilities < LSPBase
-    attr_accessor :dynamicRegistration # type: boolean
-    attr_accessor :rangeLimit # type: number
-    attr_accessor :lineFoldingOnly # type: boolean
+    attr_accessor :dynamicRegistration, :rangeLimit, :lineFoldingOnly # type: boolean # type: number # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -91,11 +89,7 @@ module LSP
   #     kind?: string;
   # }
   class FoldingRange < LSPBase
-    attr_accessor :startLine # type: number
-    attr_accessor :startCharacter # type: number
-    attr_accessor :endLine # type: number
-    attr_accessor :endCharacter # type: number
-    attr_accessor :kind # type: string
+    attr_accessor :startLine, :startCharacter, :endLine, :endCharacter, :kind # type: number # type: number # type: number # type: number # type: string
 
     def initialize(initial_hash = nil)
       super

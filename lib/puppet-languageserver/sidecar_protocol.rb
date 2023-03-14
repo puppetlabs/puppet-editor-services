@@ -84,12 +84,7 @@ module PuppetLanguageServer
       # char           => The character number in the source file where the object was created
       # length         => The length of characters from `char` in the source file where the object was created
       class BasePuppetObject < BaseClass
-        attr_accessor :key
-        attr_accessor :calling_source
-        attr_accessor :source
-        attr_accessor :line
-        attr_accessor :char
-        attr_accessor :length
+        attr_accessor :key, :calling_source, :source, :line, :char, :length
 
         def to_h
           {
@@ -124,7 +119,7 @@ module PuppetLanguageServer
         include Base
 
         def to_json(*options)
-          '[' + map { |item| item.to_json(options) }.join(',') + ']'
+          "[#{map { |item| item.to_json(options) }.join(',')}]"
         end
 
         def from_json!(json_string)
@@ -142,9 +137,7 @@ module PuppetLanguageServer
       end
 
       class PuppetNodeGraph < BaseClass
-        attr_accessor :vertices
-        attr_accessor :edges
-        attr_accessor :error_content
+        attr_accessor :vertices, :edges, :error_content
 
         def to_json(*options)
           {
@@ -164,8 +157,7 @@ module PuppetLanguageServer
       end
 
       class PuppetClass < BasePuppetObject
-        attr_accessor :parameters
-        attr_accessor :doc
+        attr_accessor :parameters, :doc
 
         def to_h
           super.to_h.merge(
@@ -199,10 +191,7 @@ module PuppetLanguageServer
       end
 
       class PuppetDataType < BasePuppetObject
-        attr_accessor :doc
-        attr_accessor :alias_of
-        attr_accessor :attributes
-        attr_accessor :is_type_alias
+        attr_accessor :doc, :alias_of, :attributes, :is_type_alias
 
         def initialize
           super
@@ -236,10 +225,7 @@ module PuppetLanguageServer
       end
 
       class PuppetDataTypeAttribute < BaseClass
-        attr_accessor :key
-        attr_accessor :doc
-        attr_accessor :default_value
-        attr_accessor :types
+        attr_accessor :key, :doc, :default_value, :types
 
         def to_h
           {
@@ -266,10 +252,9 @@ module PuppetLanguageServer
       end
 
       class PuppetFunction < BasePuppetObject
-        attr_accessor :doc
+        attr_accessor :doc, :signatures
         # The version of this function, typically 3 or 4.
         attr_accessor :function_version
-        attr_accessor :signatures
 
         def initialize
           super
@@ -301,10 +286,7 @@ module PuppetLanguageServer
       end
 
       class PuppetFunctionSignature < BaseClass
-        attr_accessor :key
-        attr_accessor :doc
-        attr_accessor :return_types
-        attr_accessor :parameters
+        attr_accessor :key, :doc, :return_types, :parameters
 
         def initialize
           super
@@ -336,11 +318,7 @@ module PuppetLanguageServer
       end
 
       class PuppetFunctionSignatureParameter < BaseClass
-        attr_accessor :name
-        attr_accessor :types
-        attr_accessor :doc
-        attr_accessor :signature_key_offset # Zero based offset where this parameter exists in the signature key
-        attr_accessor :signature_key_length # The length of text where this parameter exists in the signature key
+        attr_accessor :name, :types, :doc, :signature_key_offset, :signature_key_length # Zero based offset where this parameter exists in the signature key # The length of text where this parameter exists in the signature key
 
         def to_h
           {
@@ -369,8 +347,7 @@ module PuppetLanguageServer
       end
 
       class PuppetType < BasePuppetObject
-        attr_accessor :doc
-        attr_accessor :attributes
+        attr_accessor :doc, :attributes
 
         def to_h
           super.to_h.merge(
@@ -483,9 +460,9 @@ module PuppetLanguageServer
           self
         end
 
-        def each_list
+        def each_list(&block)
           return unless block_given?
-          @aggregate.each { |k, v| yield k, v }
+          @aggregate.each(&block)
         end
 
         private
