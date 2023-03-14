@@ -26,7 +26,7 @@ module PuppetLanguageServer
         ap = PuppetLanguageServer::Sidecar::Protocol::ActionParams.new
         ap['source'] = filepath
 
-        args = ['--action-parameters=' + ap.to_json]
+        args = ["--action-parameters=#{ap.to_json}"]
         args << "--local-workspace=#{local_workspace}" unless local_workspace.nil?
 
         sidecar_queue.execute('node_graph', args, false, session_state.connection_id)
@@ -38,7 +38,7 @@ module PuppetLanguageServer
       ap['typename'] = typename
       ap['title'] = title unless title.nil?
 
-      args = ['--action-parameters=' + ap.to_json]
+      args = ["--action-parameters=#{ap.to_json}"]
       args << "--local-workspace=#{local_workspace}" unless local_workspace.nil?
 
       sidecar_queue.execute('resource_list', args, false, session_state.connection_id)

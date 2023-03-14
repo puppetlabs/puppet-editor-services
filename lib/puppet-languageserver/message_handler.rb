@@ -82,7 +82,7 @@ module PuppetLanguageServer
       resource_list = PuppetLanguageServer::PuppetHelper.get_puppet_resource(session_state, type_name, title, documents.store_root_path)
       return LSP::PuppetResourceResponse.new('data' => '') if resource_list.nil? || resource_list.length.zero?
 
-      content = resource_list.map(&:manifest).join("\n\n") + "\n"
+      content = "#{resource_list.map(&:manifest).join("\n\n")}\n"
       LSP::PuppetResourceResponse.new('data' => content)
     end
 

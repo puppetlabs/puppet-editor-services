@@ -1,0 +1,68 @@
+name: "nightly"
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+
+  spec:
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby_version:
+          - '2.5'
+          - '2.7'
+        runs_on:
+          - 'ubuntu-latest'
+          - 'windows-latest'
+
+    name: "Spec : ${{ matrix.runs_on }} Ruby ${{ matrix.ruby_version }}"
+    uses: "puppetlabs/cat-github-actions/.github/workflows/gem_ci.yml@main"
+    secrets: "inherit"
+    with:
+      ruby_version: ${{ matrix.ruby_version }}
+      runs_on: ${{ matrix.runs_on }}
+      rake_task: 'gem_revendor test_languageserver test_languageserver_sidecar test_debugserver'
+
+  acceptance:
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby_version:
+          - '2.5'
+          - '2.7'
+        runs_on:
+          - 'ubuntu-latest'
+          - 'windows-latest'
+
+    name: "Acceptance : ${{ matrix.runs_on }} Ruby ${{ matrix.ruby_ruby_version }}"
+    uses: "puppetlabs/cat-github-actions/.github/workflows/gem_acceptance.yml@main"
+    secrets: "inherit"
+    with:
+      ruby_version: ${{ matrix.ruby_version }}
+      runs_on: ${{ matrix.runs_on }}
+      rake_task: 'gem_revendor acceptance_languageserver'
+
+  build:
+    name: "Build Editor Service"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.7'
+          bundler-cache: true
+      - name: Set build version
+        shell: pwsh
+        run: |
+          '99.99.0-gh.${{ github.run_number }}' | Out-File -FilePath 'lib\puppet_editor_services\VERSION' -Encoding ASCII -Confirm:$false -Force
+      - name: Run rake gem_revendor build
+        run: bundle exec rake gem_revendor build
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v2
+        with:
+          name: puppet-editor-services
+          path: output/*.zip
+          retention-days: 2

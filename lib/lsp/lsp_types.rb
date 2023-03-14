@@ -28,8 +28,7 @@ module LSP
   #     character: number;
   # }
   class Position < LSPBase
-    attr_accessor :line # type: number
-    attr_accessor :character # type: number
+    attr_accessor :line, :character # type: number # type: number
 
     def from_h!(value)
       value = {} if value.nil?
@@ -50,8 +49,7 @@ module LSP
   #     end: Position;
   # }
   class Range < LSPBase
-    attr_accessor :start # type: Position
-    attr_accessor :end # type: Position
+    attr_accessor :start, :end # type: Position # type: Position
 
     def from_h!(value)
       value = {} if value.nil?
@@ -66,8 +64,7 @@ module LSP
   #     range: Range;
   # }
   class Location < LSPBase
-    attr_accessor :uri # type: DocumentUri
-    attr_accessor :range # type: Range
+    attr_accessor :uri, :range # type: DocumentUri # type: Range
 
     def from_h!(value)
       value = {} if value.nil?
@@ -102,10 +99,7 @@ module LSP
   #     targetSelectionRange: Range;
   # }
   class LocationLink < LSPBase
-    attr_accessor :originSelectionRange # type: Range
-    attr_accessor :targetUri # type: DocumentUri
-    attr_accessor :targetRange # type: Range
-    attr_accessor :targetSelectionRange # type: Range
+    attr_accessor :originSelectionRange, :targetUri, :targetRange, :targetSelectionRange # type: Range # type: DocumentUri # type: Range # type: Range
 
     def initialize(initial_hash = nil)
       super
@@ -141,10 +135,7 @@ module LSP
   #     readonly alpha: number;
   # }
   class Color < LSPBase
-    attr_accessor :red # type: number
-    attr_accessor :green # type: number
-    attr_accessor :blue # type: number
-    attr_accessor :alpha # type: number
+    attr_accessor :red, :green, :blue, :alpha # type: number # type: number # type: number # type: number
 
     def from_h!(value)
       value = {} if value.nil?
@@ -167,8 +158,7 @@ module LSP
   #     color: Color;
   # }
   class ColorInformation < LSPBase
-    attr_accessor :range # type: Range
-    attr_accessor :color # type: Color
+    attr_accessor :range, :color # type: Range # type: Color
 
     def from_h!(value)
       value = {} if value.nil?
@@ -198,9 +188,7 @@ module LSP
   #     additionalTextEdits?: TextEdit[];
   # }
   class ColorPresentation < LSPBase
-    attr_accessor :label # type: string
-    attr_accessor :textEdit # type: TextEdit
-    attr_accessor :additionalTextEdits # type: TextEdit[]
+    attr_accessor :label, :textEdit, :additionalTextEdits # type: string # type: TextEdit # type: TextEdit[]
 
     def initialize(initial_hash = nil)
       super
@@ -241,11 +229,7 @@ module LSP
   #     kind?: string;
   # }
   class FoldingRange < LSPBase
-    attr_accessor :startLine # type: number
-    attr_accessor :startCharacter # type: number
-    attr_accessor :endLine # type: number
-    attr_accessor :endCharacter # type: number
-    attr_accessor :kind # type: string
+    attr_accessor :startLine, :startCharacter, :endLine, :endCharacter, :kind # type: number # type: number # type: number # type: number # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -274,8 +258,7 @@ module LSP
   #     message: string;
   # }
   class DiagnosticRelatedInformation < LSPBase
-    attr_accessor :location # type: Location
-    attr_accessor :message # type: string
+    attr_accessor :location, :message # type: Location # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -320,13 +303,7 @@ module LSP
   #     relatedInformation?: DiagnosticRelatedInformation[];
   # }
   class Diagnostic < LSPBase
-    attr_accessor :range # type: Range
-    attr_accessor :severity # type: DiagnosticSeverity
-    attr_accessor :code # type: number | string
-    attr_accessor :source # type: string
-    attr_accessor :message # type: string
-    attr_accessor :tags # type: DiagnosticTag[]
-    attr_accessor :relatedInformation # type: DiagnosticRelatedInformation[]
+    attr_accessor :range, :severity, :code, :source, :message, :tags, :relatedInformation # type: Range # type: DiagnosticSeverity # type: number | string # type: string # type: string # type: DiagnosticTag[] # type: DiagnosticRelatedInformation[]
 
     def initialize(initial_hash = nil)
       super
@@ -362,9 +339,7 @@ module LSP
   #     arguments?: any[];
   # }
   class Command < LSPBase
-    attr_accessor :title # type: string
-    attr_accessor :command # type: string
-    attr_accessor :arguments # type: any[]
+    attr_accessor :title, :command, :arguments # type: string # type: string # type: any[]
 
     def initialize(initial_hash = nil)
       super
@@ -393,8 +368,7 @@ module LSP
   #     newText: string;
   # }
   class TextEdit < LSPBase
-    attr_accessor :range # type: Range
-    attr_accessor :newText # type: string
+    attr_accessor :range, :newText # type: Range # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -415,8 +389,7 @@ module LSP
   #     edits: TextEdit[];
   # }
   class TextDocumentEdit < LSPBase
-    attr_accessor :textDocument # type: VersionedTextDocumentIdentifier
-    attr_accessor :edits # type: TextEdit[]
+    attr_accessor :textDocument, :edits # type: VersionedTextDocumentIdentifier # type: TextEdit[]
 
     def from_h!(value)
       value = {} if value.nil?
@@ -450,8 +423,7 @@ module LSP
   #     ignoreIfExists?: boolean;
   # }
   class CreateFileOptions < LSPBase
-    attr_accessor :overwrite # type: boolean
-    attr_accessor :ignoreIfExists # type: boolean
+    attr_accessor :overwrite, :ignoreIfExists # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -481,9 +453,7 @@ module LSP
   #     options?: CreateFileOptions;
   # }
   class CreateFile < LSPBase
-    attr_accessor :kind # type: string with value 'create'
-    attr_accessor :uri # type: DocumentUri
-    attr_accessor :options # type: CreateFileOptions
+    attr_accessor :kind, :uri, :options # type: string with value 'create' # type: DocumentUri # type: CreateFileOptions
 
     def initialize(initial_hash = nil)
       super
@@ -510,8 +480,7 @@ module LSP
   #     ignoreIfExists?: boolean;
   # }
   class RenameFileOptions < LSPBase
-    attr_accessor :overwrite # type: boolean
-    attr_accessor :ignoreIfExists # type: boolean
+    attr_accessor :overwrite, :ignoreIfExists # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -545,10 +514,7 @@ module LSP
   #     options?: RenameFileOptions;
   # }
   class RenameFile < LSPBase
-    attr_accessor :kind # type: string with value 'rename'
-    attr_accessor :oldUri # type: DocumentUri
-    attr_accessor :newUri # type: DocumentUri
-    attr_accessor :options # type: RenameFileOptions
+    attr_accessor :kind, :oldUri, :newUri, :options # type: string with value 'rename' # type: DocumentUri # type: DocumentUri # type: RenameFileOptions
 
     def initialize(initial_hash = nil)
       super
@@ -576,8 +542,7 @@ module LSP
   #     ignoreIfNotExists?: boolean;
   # }
   class DeleteFileOptions < LSPBase
-    attr_accessor :recursive # type: boolean
-    attr_accessor :ignoreIfNotExists # type: boolean
+    attr_accessor :recursive, :ignoreIfNotExists # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -607,9 +572,7 @@ module LSP
   #     options?: DeleteFileOptions;
   # }
   class DeleteFile < LSPBase
-    attr_accessor :kind # type: string with value 'delete'
-    attr_accessor :uri # type: DocumentUri
-    attr_accessor :options # type: DeleteFileOptions
+    attr_accessor :kind, :uri, :options # type: string with value 'delete' # type: DocumentUri # type: DeleteFileOptions
 
     def initialize(initial_hash = nil)
       super
@@ -720,8 +683,7 @@ module LSP
   #     version: number | null;
   # }
   class VersionedTextDocumentIdentifier < LSPBase
-    attr_accessor :version # type: number | null
-    attr_accessor :uri # type: DocumentUri
+    attr_accessor :version, :uri # type: number | null # type: DocumentUri
 
     def from_h!(value)
       value = {} if value.nil?
@@ -751,10 +713,7 @@ module LSP
   #     text: string;
   # }
   class TextDocumentItem < LSPBase
-    attr_accessor :uri # type: DocumentUri
-    attr_accessor :languageId # type: string
-    attr_accessor :version # type: number
-    attr_accessor :text # type: string
+    attr_accessor :uri, :languageId, :version, :text # type: DocumentUri # type: string # type: number # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -777,8 +736,7 @@ module LSP
   #     value: string;
   # }
   class MarkupContent < LSPBase
-    attr_accessor :kind # type: MarkupKind
-    attr_accessor :value # type: string
+    attr_accessor :kind, :value # type: MarkupKind # type: string
 
     def from_h!(value)
       value = {} if value.nil?
@@ -898,22 +856,7 @@ module LSP
   #     data?: any;
   # }
   class CompletionItem < LSPBase
-    attr_accessor :label # type: string
-    attr_accessor :kind # type: CompletionItemKind
-    attr_accessor :tags # type: CompletionItemTag[]
-    attr_accessor :detail # type: string
-    attr_accessor :documentation # type: string | MarkupContent
-    attr_accessor :deprecated # type: boolean
-    attr_accessor :preselect # type: boolean
-    attr_accessor :sortText # type: string
-    attr_accessor :filterText # type: string
-    attr_accessor :insertText # type: string
-    attr_accessor :insertTextFormat # type: InsertTextFormat
-    attr_accessor :textEdit # type: TextEdit
-    attr_accessor :additionalTextEdits # type: TextEdit[]
-    attr_accessor :commitCharacters # type: string[]
-    attr_accessor :command # type: Command
-    attr_accessor :data # type: any
+    attr_accessor :label, :kind, :tags, :detail, :documentation, :deprecated, :preselect, :sortText, :filterText, :insertText, :insertTextFormat, :textEdit, :additionalTextEdits, :commitCharacters, :command, :data # type: string # type: CompletionItemKind # type: CompletionItemTag[] # type: string # type: string | MarkupContent # type: boolean # type: boolean # type: string # type: string # type: string # type: InsertTextFormat # type: TextEdit # type: TextEdit[] # type: string[] # type: Command # type: any
 
     def initialize(initial_hash = nil)
       super
@@ -953,8 +896,7 @@ module LSP
   #     items: CompletionItem[];
   # }
   class CompletionList < LSPBase
-    attr_accessor :isIncomplete # type: boolean
-    attr_accessor :items # type: CompletionItem[]
+    attr_accessor :isIncomplete, :items # type: boolean # type: CompletionItem[]
 
     def from_h!(value)
       value = {} if value.nil?
@@ -975,8 +917,7 @@ module LSP
   #     range?: Range;
   # }
   class Hover < LSPBase
-    attr_accessor :contents # type: MarkupContent | MarkedString | MarkedString[]
-    attr_accessor :range # type: Range
+    attr_accessor :contents, :range # type: MarkupContent | MarkedString | MarkedString[] # type: Range
 
     def initialize(initial_hash = nil)
       super
@@ -1010,8 +951,7 @@ module LSP
   #     documentation?: string | MarkupContent;
   # }
   class ParameterInformation < LSPBase
-    attr_accessor :label # type: string | [number, number]
-    attr_accessor :documentation # type: string | MarkupContent
+    attr_accessor :label, :documentation # type: string | [number, number] # type: string | MarkupContent
 
     def initialize(initial_hash = nil)
       super
@@ -1043,9 +983,7 @@ module LSP
   #     parameters?: ParameterInformation[];
   # }
   class SignatureInformation < LSPBase
-    attr_accessor :label # type: string
-    attr_accessor :documentation # type: string | MarkupContent
-    attr_accessor :parameters # type: ParameterInformation[]
+    attr_accessor :label, :documentation, :parameters # type: string # type: string | MarkupContent # type: ParameterInformation[]
 
     def initialize(initial_hash = nil)
       super
@@ -1078,9 +1016,7 @@ module LSP
   #     activeParameter: number | null;
   # }
   class SignatureHelp < LSPBase
-    attr_accessor :signatures # type: SignatureInformation[]
-    attr_accessor :activeSignature # type: number | null
-    attr_accessor :activeParameter # type: number | null
+    attr_accessor :signatures, :activeSignature, :activeParameter # type: SignatureInformation[] # type: number | null # type: number | null
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1118,8 +1054,7 @@ module LSP
   #     kind?: DocumentHighlightKind;
   # }
   class DocumentHighlight < LSPBase
-    attr_accessor :range # type: Range
-    attr_accessor :kind # type: DocumentHighlightKind
+    attr_accessor :range, :kind # type: Range # type: DocumentHighlightKind
 
     def initialize(initial_hash = nil)
       super
@@ -1168,11 +1103,7 @@ module LSP
   #     containerName?: string;
   # }
   class SymbolInformation < LSPBase
-    attr_accessor :name # type: string
-    attr_accessor :kind # type: SymbolKind
-    attr_accessor :deprecated # type: boolean
-    attr_accessor :location # type: Location
-    attr_accessor :containerName # type: string
+    attr_accessor :name, :kind, :deprecated, :location, :containerName # type: string # type: SymbolKind # type: boolean # type: Location # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -1225,13 +1156,7 @@ module LSP
   #     children?: DocumentSymbol[];
   # }
   class DocumentSymbol < LSPBase
-    attr_accessor :name # type: string
-    attr_accessor :detail # type: string
-    attr_accessor :kind # type: SymbolKind
-    attr_accessor :deprecated # type: boolean
-    attr_accessor :range # type: Range
-    attr_accessor :selectionRange # type: Range
-    attr_accessor :children # type: DocumentSymbol[]
+    attr_accessor :name, :detail, :kind, :deprecated, :range, :selectionRange, :children # type: string # type: string # type: SymbolKind # type: boolean # type: Range # type: Range # type: DocumentSymbol[]
 
     def initialize(initial_hash = nil)
       super
@@ -1269,8 +1194,7 @@ module LSP
   #     only?: CodeActionKind[];
   # }
   class CodeActionContext < LSPBase
-    attr_accessor :diagnostics # type: Diagnostic[]
-    attr_accessor :only # type: CodeActionKind[]
+    attr_accessor :diagnostics, :only # type: Diagnostic[] # type: CodeActionKind[]
 
     def initialize(initial_hash = nil)
       super
@@ -1322,12 +1246,7 @@ module LSP
   #     command?: Command;
   # }
   class CodeAction < LSPBase
-    attr_accessor :title # type: string
-    attr_accessor :kind # type: CodeActionKind
-    attr_accessor :diagnostics # type: Diagnostic[]
-    attr_accessor :isPreferred # type: boolean
-    attr_accessor :edit # type: WorkspaceEdit
-    attr_accessor :command # type: Command
+    attr_accessor :title, :kind, :diagnostics, :isPreferred, :edit, :command # type: string # type: CodeActionKind # type: Diagnostic[] # type: boolean # type: WorkspaceEdit # type: Command
 
     def initialize(initial_hash = nil)
       super
@@ -1363,9 +1282,7 @@ module LSP
   #     data?: any;
   # }
   class CodeLens < LSPBase
-    attr_accessor :range # type: Range
-    attr_accessor :command # type: Command
-    attr_accessor :data # type: any
+    attr_accessor :range, :command, :data # type: Range # type: Command # type: any
 
     def initialize(initial_hash = nil)
       super
@@ -1414,11 +1331,7 @@ module LSP
   #     [key: string]: boolean | number | string | undefined;
   # }
   class FormattingOptions < LSPBase
-    attr_accessor :tabSize # type: number
-    attr_accessor :insertSpaces # type: boolean
-    attr_accessor :trimTrailingWhitespace # type: boolean
-    attr_accessor :insertFinalNewline # type: boolean
-    attr_accessor :trimFinalNewlines # type: boolean
+    attr_accessor :tabSize, :insertSpaces, :trimTrailingWhitespace, :insertFinalNewline, :trimFinalNewlines # type: number # type: boolean # type: boolean # type: boolean # type: boolean
 
     def initialize(initial_hash = nil)
       super
@@ -1462,10 +1375,7 @@ module LSP
   #     data?: any;
   # }
   class DocumentLink < LSPBase
-    attr_accessor :range # type: Range
-    attr_accessor :target # type: string
-    attr_accessor :tooltip # type: string
-    attr_accessor :data # type: any
+    attr_accessor :range, :target, :tooltip, :data # type: Range # type: string # type: string # type: any
 
     def initialize(initial_hash = nil)
       super
@@ -1493,8 +1403,7 @@ module LSP
   #     parent?: SelectionRange;
   # }
   class SelectionRange < LSPBase
-    attr_accessor :range # type: Range
-    attr_accessor :parent # type: SelectionRange
+    attr_accessor :range, :parent # type: Range # type: SelectionRange
 
     def initialize(initial_hash = nil)
       super
@@ -1570,10 +1479,7 @@ module LSP
   #     readonly lineCount: number;
   # }
   class TextDocument < LSPBase
-    attr_accessor :uri # type: DocumentUri
-    attr_accessor :languageId # type: string
-    attr_accessor :version # type: number
-    attr_accessor :lineCount # type: number
+    attr_accessor :uri, :languageId, :version, :lineCount # type: DocumentUri # type: string # type: number # type: number
 
     def from_h!(value)
       value = {} if value.nil?
@@ -1612,8 +1518,7 @@ module LSP
   #     reason: 1 | 2 | 3;
   # }
   class TextDocumentWillSaveEvent < LSPBase
-    attr_accessor :document # type: TextDocument
-    attr_accessor :reason # type: 1 | 2 | 3
+    attr_accessor :document, :reason # type: TextDocument # type: 1 | 2 | 3
 
     def from_h!(value)
       value = {} if value.nil?

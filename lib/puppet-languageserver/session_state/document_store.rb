@@ -5,10 +5,7 @@ module PuppetLanguageServer
     # Represents a Document in the Document Store.
     # Can be subclassed to add additional methods and helpers
     class Document
-      attr_reader :uri
-      attr_reader :content
-      attr_reader :version
-      attr_reader :tokens
+      attr_reader :uri, :content, :version, :tokens
 
       # @param uri String The content of the document
       # @param content String The content of the document
@@ -129,7 +126,7 @@ module PuppetLanguageServer
         return false if uri_path.nil?
         # For the text searching below we need a leading slash. That way
         # we don't need to use regexes which is slower
-        uri_path = '/' + uri_path unless uri_path.start_with?('/')
+        uri_path = "/#{uri_path}" unless uri_path.start_with?('/')
         if windows?
           plans_index = uri_path.upcase.index('/PLANS/')
           manifests_index = uri_path.upcase.index('/MANIFESTS/')

@@ -56,7 +56,8 @@ module PuppetDebugServer
           @flags[flag_name] = true
           PuppetDebugServer.log_message(:debug, "Asserting flag #{flag_name} is true")
           # Any custom logic for when flags are asserted
-          if flag_name == :client_completed_configuration || flag_name == :session_setup # rubocop:disable Style/MultipleComparison  This is faster and doesn't require creation of an array
+          # rubocop:disable Style/MultipleComparison, Style/SoleNestedConditional This is faster and doesn't require creation of an array
+          if flag_name == :client_completed_configuration || flag_name == :session_setup
             # If the client_completed_configuration and session_setup flag are asserted but the session isn't active yet
             # assert the flag start_puppet so puppet can start in the main thread.
             if !@flags[:puppet_started] && @flags[:client_completed_configuration] && @flags[:session_setup]
@@ -67,6 +68,7 @@ module PuppetDebugServer
           @terminate_flag = true if flag_name == :terminate
         end
       end
+      # rubocop:enable Style/MultipleComparison, Style/SoleNestedConditional
 
       # Removes/unasserts a flag
       #

@@ -14,13 +14,7 @@ module LSP
   #   classesLoaded: boolean;
   # }
   class PuppetVersion < LSPBase
-    attr_accessor :puppetVersion # type: string
-    attr_accessor :facterVersion # type: string
-    attr_accessor :languageServerVersion # type: string
-    attr_accessor :factsLoaded # type: boolean
-    attr_accessor :functionsLoaded # type: boolean
-    attr_accessor :typesLoaded # type: boolean
-    attr_accessor :classesLoaded # type: boolean
+    attr_accessor :puppetVersion, :facterVersion, :languageServerVersion, :factsLoaded, :functionsLoaded, :typesLoaded, :classesLoaded # type: string # type: string # type: string # type: boolean # type: boolean # type: boolean # type: boolean
 
     def from_h!(value)
       value = {} if value.nil?
@@ -40,8 +34,7 @@ module LSP
   #   error: string;
   # }
   class PuppetFactResponse < LSPBase
-    attr_accessor :facts # type: string
-    attr_accessor :error # type: string
+    attr_accessor :facts, :error # type: string # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -61,8 +54,7 @@ module LSP
   #   error: string;
   # }
   class PuppetResourceResponse < LSPBase
-    attr_accessor :data # type: string
-    attr_accessor :error # type: string
+    attr_accessor :data, :error # type: string # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -82,9 +74,7 @@ module LSP
   #   data: string;
   # }
   class PuppetNodeGraphResponse < LSPBase
-    attr_accessor :vertices # type: string
-    attr_accessor :edges # type: string
-    attr_accessor :error # type: string
+    attr_accessor :vertices, :edges, :error # type: string # type: string # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -105,8 +95,7 @@ module LSP
   #   data: string;
   # }
   class PuppetfileDependencyResponse < LSPBase
-    attr_accessor :dependencies # type: string[]
-    attr_accessor :error # type: string
+    attr_accessor :dependencies, :error # type: string[] # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -126,8 +115,7 @@ module LSP
   #   data: string;
   # }
   class CompileNodeGraphResponse < LSPBase
-    attr_accessor :dotContent # type: string
-    attr_accessor :error # type: string
+    attr_accessor :dotContent, :error # type: string # type: string
 
     def initialize(initial_hash = nil)
       super
@@ -147,8 +135,7 @@ module LSP
   #   alwaysReturnContent: boolean;
   # }
   class PuppetFixDiagnosticErrorsRequest < LSPBase
-    attr_accessor :documentUri # type: string
-    attr_accessor :alwaysReturnContent # type: boolean
+    attr_accessor :documentUri, :alwaysReturnContent # type: string # type: boolean
 
     def from_h!(value)
       value = {} if value.nil?
@@ -164,9 +151,7 @@ module LSP
   #   newContent?: string;
   # }
   class PuppetFixDiagnosticErrorsResponse < LSPBase
-    attr_accessor :documentUri # type: string
-    attr_accessor :fixesApplied # type: number
-    attr_accessor :newContent # type: string
+    attr_accessor :documentUri, :fixesApplied, :newContent # type: string # type: number # type: string
 
     def initialize(initial_hash = nil)
       super

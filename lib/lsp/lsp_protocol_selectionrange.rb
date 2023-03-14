@@ -63,8 +63,7 @@ module LSP
   #     positions: Position[];
   # }
   class SelectionRangeParams < LSPBase
-    attr_accessor :textDocument # type: TextDocumentIdentifier
-    attr_accessor :positions # type: Position[]
+    attr_accessor :textDocument, :positions # type: TextDocumentIdentifier # type: Position[]
 
     def from_h!(value)
       value = {} if value.nil?

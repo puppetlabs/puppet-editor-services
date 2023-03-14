@@ -25,6 +25,7 @@ module LSP
   # }
   class WorkDoneProgressClientCapabilities < LSPBase
     attr_accessor :window # type: {
+
     #        /**
     #         * Whether client supports handling progress notifications. If set servers are allowed to
     #         * report in `workDoneProgress` property in the request specific server capabilities.
@@ -80,11 +81,7 @@ module LSP
   #     percentage?: number;
   # }
   class WorkDoneProgressBegin < LSPBase
-    attr_accessor :kind # type: string with value 'begin'
-    attr_accessor :title # type: string
-    attr_accessor :cancellable # type: boolean
-    attr_accessor :message # type: string
-    attr_accessor :percentage # type: number
+    attr_accessor :kind, :title, :cancellable, :message, :percentage # type: string with value 'begin' # type: string # type: boolean # type: string # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -131,10 +128,7 @@ module LSP
   #     percentage?: number;
   # }
   class WorkDoneProgressReport < LSPBase
-    attr_accessor :kind # type: string with value 'report'
-    attr_accessor :cancellable # type: boolean
-    attr_accessor :message # type: string
-    attr_accessor :percentage # type: number
+    attr_accessor :kind, :cancellable, :message, :percentage # type: string with value 'report' # type: boolean # type: string # type: number
 
     def initialize(initial_hash = nil)
       super
@@ -160,8 +154,7 @@ module LSP
   #     message?: string;
   # }
   class WorkDoneProgressEnd < LSPBase
-    attr_accessor :kind # type: string with value 'end'
-    attr_accessor :message # type: string
+    attr_accessor :kind, :message # type: string with value 'end' # type: string
 
     def initialize(initial_hash = nil)
       super
