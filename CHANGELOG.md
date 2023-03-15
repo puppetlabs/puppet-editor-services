@@ -1,413 +1,465 @@
-# Change Log
+<!-- markdownlint-disable MD024 -->
+# Changelog
 
-All notable changes to the "puppet-editor-services" repository will be documented in this file.
+All notable changes to this project will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
-## Unreleased
+## [v1.3.1](https://github.com/puppetlabs/puppet-editor-services/tree/v1.3.1) - 2023-03-15
 
-## 1.3.0 - 2021-09-30
-
-### Changed
-
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/pull/314/commits/239de128a166c694b7ef88f916d46aaf4ec9ecd5)) Update puppet-lint to 2.5.2
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/pull/314/commits/84be8fb50d259c9f26a7d721560a3700b6577101)) Update bolt static metadata to 3.18.0)) Update puppet-lint to 2.5.2
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/1.3.0...v1.3.1)
 
 ### Fixed
 
-- ([GH-311](https://github.com/puppetlabs/puppet-editor-services/issues/311)) Languageserver doesn't start with Puppet 7.11.0
+- GH-318 Used a realpath for load dependencies. [#326](https://github.com/puppetlabs/puppet-editor-services/pull/326) ([bit0rez](https://github.com/bit0rez))
+- Fix `NoMethodError` in puppet_strings_helper.rb [#322](https://github.com/puppetlabs/puppet-editor-services/pull/322) ([scoiatael](https://github.com/scoiatael))
+- (GH-320) Handle @param tags for non-existent params [#321](https://github.com/puppetlabs/puppet-editor-services/pull/321) ([h4l](https://github.com/h4l))
 
-## 1.2.0 - 2021-05-26
+## [1.3.0](https://github.com/puppetlabs/puppet-editor-services/tree/1.3.0) - 2021-09-30
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/1.2.0...1.3.0)
+
+### Fixed
+
+- (GH-311) Explicitly require Facter [#312](https://github.com/puppetlabs/puppet-editor-services/pull/312) ([da-ar](https://github.com/da-ar))
+
+### Other
+
+- (GH-313) Prepare 1.3.0 Release [#314](https://github.com/puppetlabs/puppet-editor-services/pull/314) ([da-ar](https://github.com/da-ar))
+
+## [1.2.0](https://github.com/puppetlabs/puppet-editor-services/tree/1.2.0) - 2021-05-28
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/1.1.0...1.2.0)
 
 ### Added
 
-- ([GH-306](https://github.com/puppetlabs/puppet-editor-services/issues/306)) Add a code folding range provider for Manifests
+- (maint) Add port 9000 for dev. container [#307](https://github.com/puppetlabs/puppet-editor-services/pull/307) ([glennsarti](https://github.com/glennsarti))
+- (GH-306) Add a syntax aware code folding provider [#302](https://github.com/puppetlabs/puppet-editor-services/pull/302) ([glennsarti](https://github.com/glennsarti))
 
 ### Fixed
 
-- ([GH-300](https://github.com/puppetlabs/puppet-editor-services/issues/300)) Return nil for bad hover requests
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/b9a0d98f377e8a7b083a285e88cb538b6a9c45b1)) FixedP typo ([Juan vStone](https://github.com/vStone))
+- (GH-300) Return nil for bad hover requests [#301](https://github.com/puppetlabs/puppet-editor-services/pull/301) ([glennsarti](https://github.com/glennsarti))
+- (GH-298) Fix tests for Facter 4.0.52 gem [#299](https://github.com/puppetlabs/puppet-editor-services/pull/299) ([glennsarti](https://github.com/glennsarti))
 
+### Other
 
-## 1.1.0 - 2021-01-27
+- (GH-309) Prepare 1.2.0 release [#308](https://github.com/puppetlabs/puppet-editor-services/pull/308) ([glennsarti](https://github.com/glennsarti))
+- Fix small typo in README.md [#305](https://github.com/puppetlabs/puppet-editor-services/pull/305) ([vStone](https://github.com/vStone))
+
+## [1.1.0](https://github.com/puppetlabs/puppet-editor-services/tree/1.1.0) - 2021-01-27
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/1.0.1...1.1.0)
+
+### Other
+
+- (GH-293) Prepare for 1.1.0 release [#294](https://github.com/puppetlabs/puppet-editor-services/pull/294) ([glennsarti](https://github.com/glennsarti))
+- (GH-189) Fix module root for validation [#291](https://github.com/puppetlabs/puppet-editor-services/pull/291) ([glennsarti](https://github.com/glennsarti))
+- (GH-289) Make Format On Type file size configurable [#290](https://github.com/puppetlabs/puppet-editor-services/pull/290) ([glennsarti](https://github.com/glennsarti))
+- (maint) Use GitHub actions instead of Travis and Appveyor CI [#288](https://github.com/puppetlabs/puppet-editor-services/pull/288) ([glennsarti](https://github.com/glennsarti))
+- (GH-189) Reset PuppetLint configuration for each call [#286](https://github.com/puppetlabs/puppet-editor-services/pull/286) ([glennsarti](https://github.com/glennsarti))
+- (maint) Add codeowners file [#283](https://github.com/puppetlabs/puppet-editor-services/pull/283) ([jpogran](https://github.com/jpogran))
+- (GH-282) Add Puppet 7 to CI testing  [#281](https://github.com/puppetlabs/puppet-editor-services/pull/281) ([glennsarti](https://github.com/glennsarti))
+
+## [1.0.1](https://github.com/puppetlabs/puppet-editor-services/tree/1.0.1) - 2020-11-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/1.0.0...1.0.1)
+
+### Other
+
+- (GH-279) Prepare for 1.0.1 release [#280](https://github.com/puppetlabs/puppet-editor-services/pull/280) ([glennsarti](https://github.com/glennsarti))
+
+## [1.0.0](https://github.com/puppetlabs/puppet-editor-services/tree/1.0.0) - 2020-07-25
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.26.1...1.0.0)
+
+### Other
+
+- (GH-274) Release 1.0.0 [#275](https://github.com/puppetlabs/puppet-editor-services/pull/275) ([glennsarti](https://github.com/glennsarti))
+- (GH-272) Puppet Lint and document symbol sometimes not working [#273](https://github.com/puppetlabs/puppet-editor-services/pull/273) ([glennsarti](https://github.com/glennsarti))
+- (GH-269) Fix Workspace Symbol Provider [#271](https://github.com/puppetlabs/puppet-editor-services/pull/271) ([glennsarti](https://github.com/glennsarti))
+- (maint) Update Puppetfile Resolver to 0.3.0 [#268](https://github.com/puppetlabs/puppet-editor-services/pull/268) ([glennsarti](https://github.com/glennsarti))
+- (maint) Document removal of Puppet 4 [#265](https://github.com/puppetlabs/puppet-editor-services/pull/265) ([glennsarti](https://github.com/glennsarti))
+- (GH-262) Merge 1.0 into master [#264](https://github.com/puppetlabs/puppet-editor-services/pull/264) ([glennsarti](https://github.com/glennsarti))
+- (GH-262) Prepare 1.0 to be merged into master [#263](https://github.com/puppetlabs/puppet-editor-services/pull/263) ([glennsarti](https://github.com/glennsarti))
+- (GH-256) Add acceptance tests for puppetfile resolver request [#260](https://github.com/puppetlabs/puppet-editor-services/pull/260) ([glennsarti](https://github.com/glennsarti))
+
+## [0.26.1](https://github.com/puppetlabs/puppet-editor-services/tree/0.26.1) - 2020-06-05
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.26.0...0.26.1)
 
 ### Added
 
-- ([GH-282](https://github.com/puppetlabs/puppet-editor-services/issues/282)) Add support for Puppet 7 and Ruby 2.7
-- ([GH-289](https://github.com/puppetlabs/puppet-editor-services/issues/289)) Make Format On Type file size configurable
+- (GH-256) Puppetfile dependency endpoint [#255](https://github.com/puppetlabs/puppet-editor-services/pull/255) ([jpogran](https://github.com/jpogran))
 
 ### Fixed
 
-- ([GH-189](https://github.com/puppetlabs/puppet-editor-services/issues/189)) Reset PuppetLint configuration for each call
+- (maint) Pin Rubocop to < 0.84.0 [#253](https://github.com/puppetlabs/puppet-editor-services/pull/253) ([glennsarti](https://github.com/glennsarti))
 
-## 1.0.1 - 2020-10-14
+### Other
 
-### Changed
+- (maint) Remove vendored gems [#251](https://github.com/puppetlabs/puppet-editor-services/pull/251) ([glennsarti](https://github.com/glennsarti))
+- (maint) Mergeup master into 1.0 [#250](https://github.com/puppetlabs/puppet-editor-services/pull/250) ([glennsarti](https://github.com/glennsarti))
+- (GH-252) Remove puppetstrings featureflag and remove support for Puppet 4 [#247](https://github.com/puppetlabs/puppet-editor-services/pull/247) ([glennsarti](https://github.com/glennsarti))
 
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/9fd498472acedb30152069c613e4b8e6f82bb67a)) Update Bolt static metadate to version 2.30.0
+## [0.26.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.26.0) - 2020-04-29
 
-## 1.0.0 - 2020-07-24
-
-Major release 🎉🎉 which drops support for Puppet 4
-
-> This (commit) removes Puppet 4 from the testing matrix and
-modifies the Debug Server, Language Server and Language Server Sidecar to
-terminate early with an error if run under Puppet 4.
-
-### Changed
-
-- ([GH-272](https://github.com/puppetlabs/puppet-editor-services/issues/272)) Fix Puppet Lint and document symbol sometimes not working
-- ([GH-269](https://github.com/puppetlabs/puppet-editor-services/issues/269)) Fix Workspace Symbol Provider
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/7c4a9c4d2d868bdbea1ef590300d5a37fce9b1e4)) Update Puppetfile Resolver to 0.3.0
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/450b9acaabe58eeee52da4000910673647d25d13)) Document removal of Puppet 4
-- ([GH-209](https://github.com/puppetlabs/puppet-editor-services/issues/209)) Refactor the session state to be a class and pass that instead of global modules
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/f7caae3f7b0db4e1debecafe8bd4c3485a334732)) Removed vendored gems and update development and building workflows
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/2f6e0fc143ddd50be5256bf9abb62d91d2e49466)) Fix Facter Helper for 1.0
-- ([GH-252](https://github.com/puppetlabs/puppet-editor-services/issues/252)) Use puppet-strings by default and remove feature flag
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/bc3db27182ad47253e29a86a6cace73292b86d30)) Vendor puppet-strings and Yard
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/5a4800434dbed1756148905464011f882b7e2191)) Remove support for Puppet 4
-
-## 0.26.1 - 2020-06-04
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.25.0...0.26.0)
 
 ### Added
 
-- ([GH-256](https://github.com/puppetlabs/puppet-editor-services/issues/256)) Add Puppetfile dependency endpoint
+- (GH-245) Use object cache for fact data [#246](https://github.com/puppetlabs/puppet-editor-services/pull/246) ([glennsarti](https://github.com/glennsarti))
+- GH 242 facts endpoint [#243](https://github.com/puppetlabs/puppet-editor-services/pull/243) ([jpogran](https://github.com/jpogran))
+- (GH-209) Refactor the session state to be a class and pass that instead of global modules [#210](https://github.com/puppetlabs/puppet-editor-services/pull/210) ([glennsarti](https://github.com/glennsarti))
 
-## 0.26.0 - 2020-05-01
+### Fixed
+
+- (GH-238) Monkey patch Facter for minimal resets [#239](https://github.com/puppetlabs/puppet-editor-services/pull/239) ([glennsarti](https://github.com/glennsarti))
+
+### Other
+
+- Revert "(GH-238) Monkey patch Facter for minimal resets" [#241](https://github.com/puppetlabs/puppet-editor-services/pull/241) ([jpogran](https://github.com/jpogran))
+- (maint) Update rubocop to 0.80.x [#234](https://github.com/puppetlabs/puppet-editor-services/pull/234) ([glennsarti](https://github.com/glennsarti))
+- (maint) Mergeback master into 1.0 [#233](https://github.com/puppetlabs/puppet-editor-services/pull/233) ([glennsarti](https://github.com/glennsarti))
+- (maint) Update Bolt static data and Protocol definitions [#232](https://github.com/puppetlabs/puppet-editor-services/pull/232) ([glennsarti](https://github.com/glennsarti))
+- (maint) Update README for new repo [#231](https://github.com/puppetlabs/puppet-editor-services/pull/231) ([glennsarti](https://github.com/glennsarti))
+- (maint) Mergeback master into 1.0 [#230](https://github.com/puppetlabs/puppet-editor-services/pull/230) ([glennsarti](https://github.com/glennsarti))
+- (GH-168) Add acceptance tests [#229](https://github.com/puppetlabs/puppet-editor-services/pull/229) ([glennsarti](https://github.com/glennsarti))
+- (maint) mergeback master into 1.0 [#228](https://github.com/puppetlabs/puppet-editor-services/pull/228) ([glennsarti](https://github.com/glennsarti))
+
+## [0.25.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.25.0) - 2020-03-26
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.24.0...0.25.0)
 
 ### Added
 
-- ([GH-242](https://github.com/puppetlabs/puppet-editor-services/issues/242)) Add Puppet Facts Endpoint
-- ([GH-245](https://github.com/puppetlabs/puppet-editor-services/issues/245)) Use object cache for Puppet Facts Endpoint
-- ([GH-168](https://github.com/puppetlabs/puppet-editor-services/issues/168)) Add acceptance tests
-
-### Changed
-
-- (maint) Update branding and links
-- (maint) Update Bolt static data and Protocol definitions
-
-## 0.25.0 - 2020-03-26
+- (GH-221) Puppet Node Graph Response [#226](https://github.com/puppetlabs/puppet-editor-services/pull/226) ([jpogran](https://github.com/jpogran))
 
 ### Fixed
 
-- ([GH-207](https://github.com/puppetlabs/puppet-editor-services/issues/207)) Allow Qualified Resource Names in hover provider
+- (GH-207) Allow Qualified Resource Names in hover provider [#225](https://github.com/puppetlabs/puppet-editor-services/pull/225) ([glennsarti](https://github.com/glennsarti))
 
-### Changed
+### Other
 
-- ([GH-221](https://github.com/puppetlabs/puppet-editor-services/issues/221)) Puppet Node Graph Response
-- (maint) [puppetfile-resolver-0.2.0](https://github.com/glennsarti/puppetfile-resolver/releases/tag/0.2.0) Puppetfile Resolver v0.2.0
+- (maint) Update puppetfile-resolver to 0.2.0 [#220](https://github.com/puppetlabs/puppet-editor-services/pull/220) ([glennsarti](https://github.com/glennsarti))
+- (maint) Allow travis to build 1.0 branch [#219](https://github.com/puppetlabs/puppet-editor-services/pull/219) ([glennsarti](https://github.com/glennsarti))
+- (maint) Mergeback master into 1.0 [#218](https://github.com/puppetlabs/puppet-editor-services/pull/218) ([glennsarti](https://github.com/glennsarti))
 
-## 0.24.0 - 2020-01-28
+## [0.24.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.24.0) - 2020-01-28
 
-### Fixed
-
-- ([GH-199](https://github.com/puppetlabs/puppet-editor-services/issues/199)) Fixes for Puppet 5.5.18
-
-### Changed
-
-- ([GH-213](https://github.com/puppetlabs/puppet-editor-services/issues/213)) Gather Facts from the Sidecar instead of the Server process
-
-## 0.23.0 - 2019-12-04
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.23.0...0.24.0)
 
 ### Added
 
-- ([GH-198](https://github.com/puppetlabs/puppet-editor-services/issues/198)) Added the Puppetfile Resolver for more in-depth Puppetfile validation
-- ([GH-94](https://github.com/puppetlabs/puppet-editor-services/issues/94)) Added better intellisense when inside Bolt plans
+- (GH-213) Gather facts using the Sidecar [#214](https://github.com/puppetlabs/puppet-editor-services/pull/214) ([glennsarti](https://github.com/glennsarti))
 
-### Fixed
+### Other
 
-- ([GH-199](https://github.com/puppetlabs/puppet-editor-services/issues/199)) Fixes for Puppet 6.11.0
-- ([GH-139](https://github.com/puppetlabs/puppet-editor-services/issues/139)) Provide completions for defined types
+- (maint) Prepare for 0.24.0 release [#217](https://github.com/puppetlabs/puppet-editor-services/pull/217) ([glennsarti](https://github.com/glennsarti))
+- (GH-199) Update stack trace tests for Puppet 5.5.18 [#216](https://github.com/puppetlabs/puppet-editor-services/pull/216) ([glennsarti](https://github.com/glennsarti))
+- (GH-213) Use Facts from the Sidecar [#215](https://github.com/puppetlabs/puppet-editor-services/pull/215) ([glennsarti](https://github.com/glennsarti))
 
-### Changed
+## [0.23.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.23.0) - 2019-12-04
 
-- ([GH-193](https://github.com/puppetlabs/puppet-editor-services/issues/193)) Refactor the TCP and STDIO servers, protocols and handlers
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/c3bd86f5b9a237b92f4c0e2d6c2ddc7aa5b0d9e5)) Update puppet-lint to version 2.4.2
-
-## 0.22.0 - 2019-09-20
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.22.0...0.23.0)
 
 ### Added
 
-- ([GH-181](https://github.com/puppetlabs/puppet-editor-services/issues/181)) Added completion for resource-like class ([Julio Sueiras](https://github.com/juliosueiras))
-- ([GH-177](https://github.com/puppetlabs/puppet-editor-services/issues/177)) Add auto-align hash rocket formatter
-- ([GH-174](https://github.com/puppetlabs/puppet-editor-services/issues/174)) Understand Puppet Data Types and hover provider support
+- (GH-94) Extract Bolt module metadata and use within Plans [#190](https://github.com/puppetlabs/puppet-editor-services/pull/190) ([glennsarti](https://github.com/glennsarti))
 
-### Fixed
+### Other
 
-- ([GH-169](https://github.com/puppetlabs/puppet-editor-services/issues/169)) Respond to protocol dependant messages correctly
+- (maint) Prepare for 0.23.0 release [#206](https://github.com/puppetlabs/puppet-editor-services/pull/206) ([glennsarti](https://github.com/glennsarti))
+- (maint) Update for Rubocop 0.77.0 [#205](https://github.com/puppetlabs/puppet-editor-services/pull/205) ([glennsarti](https://github.com/glennsarti))
+- (GH-139) Provide completions for defined types [#204](https://github.com/puppetlabs/puppet-editor-services/pull/204) ([glennsarti](https://github.com/glennsarti))
+- (GH-201) Fix hashrocket alignment in multi-resource declarations [#202](https://github.com/puppetlabs/puppet-editor-services/pull/202) ([glennsarti](https://github.com/glennsarti))
+- (GH-199) Monkey Patch the Null Loader [#200](https://github.com/puppetlabs/puppet-editor-services/pull/200) ([glennsarti](https://github.com/glennsarti))
+- (GH-198) Use the PuppetFile Resolver for validation [#197](https://github.com/puppetlabs/puppet-editor-services/pull/197) ([glennsarti](https://github.com/glennsarti))
 
-## 0.21.0 - 2019-08-26
+## [0.22.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.22.0) - 2019-09-24
 
-### Added
-
-- ([GH-144](https://github.com/puppetlabs/puppet-editor-services/issues/144)) Add a Signature Helper Provider
-- ([GH-163](https://github.com/puppetlabs/puppet-editor-services/issues/163)) Add aggregate sidecar tasks
-
-### Fixed
-
-- ([GH-55](https://github.com/puppetlabs/puppet-editor-services/issues/55)) Debug Server is now supported on Puppet 6
-
-### Changed
-
-- ([GH-106](https://github.com/puppetlabs/puppet-editor-services/issues/106)) Update puppet-lint to 2.3.6
-- ([GH-167](https://github.com/puppetlabs/puppet-editor-services/issues/167)) Refactor Language Server inmemory caching
-
-## 0.20.0 - 2019-07-16
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.21.0...0.22.0)
 
 ### Added
 
-- ([GH-141](https://github.com/puppetlabs/puppet-editor-services/issues/141)) [Puppet4 API Project Task 7] Modify the Puppet Function loading to use all of the new Puppet 4 API features
-- ([GH-137](https://github.com/puppetlabs/puppet-editor-services/issues/137)) [Puppet4 API Project Task 4-6] Load Puppet Custom Types, Defined Types and Classes via Puppet API v4
-- ([GH-121](https://github.com/puppetlabs/puppet-editor-services/issues/121)) [Puppet4 API Project Task 1-3] Load Puppet Functions via Puppet API v4 and present as Puppet API v3 functions
+- (GH-177) Add ability to fetch the client configuration [#179](https://github.com/puppetlabs/puppet-editor-services/pull/179) ([glennsarti](https://github.com/glennsarti))
 
 ### Fixed
 
-- ([GH-147](https://github.com/puppetlabs/puppet-editor-services/issues/147)) Error generating node graph
-- ([GH-129](https://github.com/puppetlabs/puppet-editor-services/issues/129)) Better Bolt/Puppet plan detection
+- (maint) Send Language Server version in version request [#178](https://github.com/puppetlabs/puppet-editor-services/pull/178) ([glennsarti](https://github.com/glennsarti))
 
-## 0.19.1 - 2019-05-31
+### Other
 
-### Fixed
+- (GH-187) Prepare for 0.22.0 release [#188](https://github.com/puppetlabs/puppet-editor-services/pull/188) ([glennsarti](https://github.com/glennsarti))
+- (GH-177) Add auto-align hash rocket feature [#186](https://github.com/puppetlabs/puppet-editor-services/pull/186) ([glennsarti](https://github.com/glennsarti))
+- (GH-177) Add registrations and settings for on type formatting [#185](https://github.com/puppetlabs/puppet-editor-services/pull/185) ([glennsarti](https://github.com/glennsarti))
+- (GH-177) Dynamically unregister capabilities [#184](https://github.com/puppetlabs/puppet-editor-services/pull/184) ([glennsarti](https://github.com/glennsarti))
+- Added completion for resource-like class [#180](https://github.com/puppetlabs/puppet-editor-services/pull/180) ([juliosueiras](https://github.com/juliosueiras))
+- (GH-174) Understand Puppet Data Types [#175](https://github.com/puppetlabs/puppet-editor-services/pull/175) ([glennsarti](https://github.com/glennsarti))
 
-- ([GH-132](https://github.com/puppetlabs/puppet-editor-services/issues/132)) Suppress $stdout usage for STDIO transport
-- ([GH-118](https://github.com/puppetlabs/puppet-editor-services/issues/118)) Fail gracefully when critical gems cannot load
+## [0.21.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.21.0) - 2019-08-26
 
-## 0.19.0 - 2019-03-24
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.20.0...0.21.0)
 
 ### Added
 
-- ([GH-111](https://github.com/puppetlabs/puppet-editor-services/issues/111)) Add puppet-version command line argument
+- (GH-106) Update puppet-lint to 2.3.6 [#154](https://github.com/puppetlabs/puppet-editor-services/pull/154) ([glennsarti](https://github.com/glennsarti))
+- (GH-144)  Add signature help provider feature [#145](https://github.com/puppetlabs/puppet-editor-services/pull/145) ([glennsarti](https://github.com/glennsarti))
 
-### Fixed
+### Other
 
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/7d14081eaa793a0382321391ba234db8126c5916)) Use UTF8 for JSON files in the Language Server Sidecar
-- ([GH-113](https://github.com/puppetlabs/puppet-editor-services/issues/113)) Rescue errors when running Facter 2.x
+- (GH-170) Prepare for 0.21.0 release [#171](https://github.com/puppetlabs/puppet-editor-services/pull/171) ([glennsarti](https://github.com/glennsarti))
+- (GH-167) Refactor Language Server inmemory caching [#166](https://github.com/puppetlabs/puppet-editor-services/pull/166) ([glennsarti](https://github.com/glennsarti))
+- (GH-163) Use aggregate metadata actions for puppetstrings feature flag [#165](https://github.com/puppetlabs/puppet-editor-services/pull/165) ([glennsarti](https://github.com/glennsarti))
+- (GH-163) Add aggregate metadata sidecar object and tasks [#162](https://github.com/puppetlabs/puppet-editor-services/pull/162) ([glennsarti](https://github.com/glennsarti))
+- (maint) Add tests for roundtripping hash serialisation [#161](https://github.com/puppetlabs/puppet-editor-services/pull/161) ([glennsarti](https://github.com/glennsarti))
+- (maint) Fix integration test [#160](https://github.com/puppetlabs/puppet-editor-services/pull/160) ([glennsarti](https://github.com/glennsarti))
+- Revert "(maint) Pin YARD to 0.9.19" [#159](https://github.com/puppetlabs/puppet-editor-services/pull/159) ([glennsarti](https://github.com/glennsarti))
+- (GH-55) Allow Debug Server to work with Puppet 6 [#158](https://github.com/puppetlabs/puppet-editor-services/pull/158) ([glennsarti](https://github.com/glennsarti))
+- (GH-55) Refactor Test Debug Client and add test for Next [#157](https://github.com/puppetlabs/puppet-editor-services/pull/157) ([glennsarti](https://github.com/glennsarti))
+- (maint) A bunch of maintenance fixes [#156](https://github.com/puppetlabs/puppet-editor-services/pull/156) ([glennsarti](https://github.com/glennsarti))
 
-### Changed
+## [0.20.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.20.0) - 2019-07-12
 
-- ([GH-110](https://github.com/puppetlabs/puppet-editor-services/issues/110)) Autogenerate Ruby Language Server Protocol files from Typescript
-
-## 0.18.0 - 2019-02-05
-
-### Added
-
-- ([GH-24](https://github.com/puppetlabs/puppet-editor-services/issues/24)) Allow parsing of manifests in tasks mode
-
-### Fixed
-
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/1a294920702dc95ff11e50c68e4fa12e5da09d98)) Fix validation of puppetfiles
-- ([Commit](https://github.com/puppetlabs/puppet-editor-services/commit/6758afaefcde90809a7b2457c23c72fa487a2dd7)) Fix parsing at beginning of a document
-
-## 0.17.0 - 2018-12-14
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.19.1...0.20.0)
 
 ### Added
 
-- ([GH-20](https://github.com/puppetlabs/puppet-editor-services/issues/20)) Add support for Control Repositories for intellisense e.g. hover, completion
-- ([GH-88](https://github.com/puppetlabs/puppet-editor-services/issues/20)) Add a workspace symbol provider
-
-### Changed
-
-- ([GH-35](https://github.com/puppetlabs/puppet-editor-services/issues/35)) Update Language Server command arguments to be like Sidecar
-
-## 0.16.0 - 2018-11-30
-
-### Added
-
-- ([GH-75](https://github.com/puppetlabs/puppet-editor-services/issues/75)) Add a node completion item snippet
-- ([GH-68](https://github.com/puppetlabs/puppet-editor-services/issues/68)) Language Server should evaluate the locally edited workspace
+- (GH-141) Modify the Puppet Function loading to use all of the new Puppet 4 API features [#142](https://github.com/puppetlabs/puppet-editor-services/pull/142) ([glennsarti](https://github.com/glennsarti))
+- (GH-137) Load Puppet Custom Types, Defined Types and Classes via Puppet API v4 [#138](https://github.com/puppetlabs/puppet-editor-services/pull/138) ([glennsarti](https://github.com/glennsarti))
+- (GH-121) Load Puppet Functions via Puppet API v4 and present as Puppet API v3 functions [#126](https://github.com/puppetlabs/puppet-editor-services/pull/126) ([glennsarti](https://github.com/glennsarti))
 
 ### Fixed
 
-- ([GH-67](https://github.com/puppetlabs/puppet-editor-services/issues/67)) Make resource completion smarter
-- ([GH-34](https://github.com/puppetlabs/puppet-editor-services/issues/34)) Autocomplete and hover should retrieve defined types and classes
+- (GH-147) Gracefully fail on LoadError when compiling manifests [#151](https://github.com/puppetlabs/puppet-editor-services/pull/151) ([glennsarti](https://github.com/glennsarti))
+- (maint) Pin YARD to 0.9.19 [#150](https://github.com/puppetlabs/puppet-editor-services/pull/150) ([glennsarti](https://github.com/glennsarti))
+-  (GH-128) Detect Puppet Plan files correctly [#149](https://github.com/puppetlabs/puppet-editor-services/pull/149) ([glennsarti](https://github.com/glennsarti))
+- (maint) Fix typo in test descriptions [#143](https://github.com/puppetlabs/puppet-editor-services/pull/143) ([glennsarti](https://github.com/glennsarti))
 
-## 0.15.1 - 2018-10-30
+### Other
 
-### Fixed
+- (GH-152) Release 0.20.0 [#153](https://github.com/puppetlabs/puppet-editor-services/pull/153) ([jpogran](https://github.com/jpogran))
+- (maint) Refactor in-memory cache objects [#140](https://github.com/puppetlabs/puppet-editor-services/pull/140) ([glennsarti](https://github.com/glennsarti))
 
-- ([GH-66](https://github.com/puppetlabs/puppet-editor-services/issues/66)) Go to defintion does not work with paths with leading slash
+## [0.19.1](https://github.com/puppetlabs/puppet-editor-services/tree/0.19.1) - 2019-05-30
 
-## 0.15.0 - 2018-08-18
-
-### Added
-
-- ([GH-56](https://github.com/puppetlabs/puppet-editor-services/issues/56)) Add DocumentSymbol Support
-- ([GH-40](https://github.com/puppetlabs/puppet-editor-services/issues/40)) Add Sidecar process for the Language Server
-
-### Fixed
-
-- ([GH-54](https://github.com/puppetlabs/puppet-editor-services/issues/54)) Support Puppet 6 in the Language Server
-- ([GH-51](https://github.com/puppetlabs/puppet-editor-services/issues/51)) Fixed handling of errors during class loading
-
-## 0.14.0 - 2018-08-17
-
-### Fixed
-
-- ([GH-49](https://github.com/puppetlabs/puppet-editor-services/issues/49)) Prevent an infinite loop when using stdio
-
-## 0.13.0 - 2018-07-21
-
-### Changed
-
-- ([GH-36](https://github.com/puppetlabs/puppet-editor-services/issues/36)) Use automatic port assignment as default
-
-### Fixed
-
-- ([GH-31](https://github.com/puppetlabs/puppet-editor-services/issues/31)) Use canonical names for line based breakpoints
-- ([GH-46](https://github.com/puppetlabs/puppet-editor-services/issues/46)) Detect Puppet Environment correctly
-- Minor fixes for rubocop
-
-## 0.12.0 - 2018-06-01
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.19.0...0.19.1)
 
 ### Added
 
-- ([GH-28](https://github.com/puppetlabs/puppet-editor-services/issues/28)) Added basic Puppetfile validation
-
-### Changed
-
-- ([GH-22](https://github.com/puppetlabs/puppet-editor-services/issues/22)) Refactored language server files to have consistent names
+- (GH-118) Fail gracefully when critical gems cannot load [#134](https://github.com/puppetlabs/puppet-editor-services/pull/134) ([glennsarti](https://github.com/glennsarti))
 
 ### Fixed
 
-- ([GH-26](https://github.com/puppetlabs/puppet-editor-services/issues/26)) `.puppet-lint.rc` was ignored in Control Repos
-- ([GH-14](https://github.com/puppetlabs/puppet-editor-services/issues/14)) Ignore environmentpath puppet setting if it does not exist
-- ([GH-10](https://github.com/puppetlabs/puppet-editor-services/issues/10)) Disabled the file cache if temp directory doesn't exist
+- (GH-132) Suppress $stdout usage for STDIO transport [#133](https://github.com/puppetlabs/puppet-editor-services/pull/133) ([glennsarti](https://github.com/glennsarti))
 
-## 0.11.0 - 2018-04-26
+### Other
 
-- ([GH-11](https://github.com/puppetlabs/puppet-editor-services/issues/11)) Refactor the transport layers to loosen object coupling
-- ([GH-11](https://github.com/puppetlabs/puppet-editor-services/issues/11)) Fix STDIO server
-- Stop bad logfile destinations from crashing the language and debug servers
-- Add a packaging process
-- Rename PuppetVSCode namespace to editor services
-- Move the Editor Services out of the VS Code extension into a separate project
+- (maint) Prepare for 0.19.1 release [#136](https://github.com/puppetlabs/puppet-editor-services/pull/136) ([glennsarti](https://github.com/glennsarti))
+- (maint) Update for rubocop errors [#125](https://github.com/puppetlabs/puppet-editor-services/pull/125) ([glennsarti](https://github.com/glennsarti))
+- (maint) Update for rubocop errors [#124](https://github.com/puppetlabs/puppet-editor-services/pull/124) ([glennsarti](https://github.com/glennsarti))
+- (maint) Update for rubocop errors [#119](https://github.com/puppetlabs/puppet-editor-services/pull/119) ([glennsarti](https://github.com/glennsarti))
 
-## 0.10.0 - 2018-03-29
+## [0.19.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.19.0) - 2019-03-24
 
-- ([GH-218](https://github.com/jpogran/puppet-vscode/issues/218)) Validate EPP files
-- ([GH-244](https://github.com/jpogran/puppet-vscode/issues/244)) Update puppet-lint to 2.3.5
-- ([GH-245](https://github.com/jpogran/puppet-vscode/issues/245)) Update puppet-lint to 2.3.5
-- ([GH-216](https://github.com/jpogran/puppet-vscode/issues/216)) Better syntax highlighting
-- ([GH-214](https://github.com/jpogran/puppet-vscode/issues/214)) Updated readme for pdk 1.3.X
-- ([GH-225](https://github.com/jpogran/puppet-vscode/issues/225)) Readd Local Workspace comand line option
-- ([GH-231](https://github.com/jpogran/puppet-vscode/issues/231)) Make Document Validation asynchronous
-- ([GH-236](https://github.com/jpogran/puppet-vscode/issues/236)) Remove the preload option
-- ([GH-236](https://github.com/jpogran/puppet-vscode/issues/236)) Add experimental file cache option
-
-## 0.9.0 - 2018-02-01
-
-- ([GH-50](https://github.com/jpogran/puppet-vscode/issues/50)) Add document formatter for puppet-lint
-- ([GH-204](https://github.com/jpogran/puppet-vscode/issues/204)) Fix debug server for Puppet 4.x
-
-## 0.8.0 - 2017-11-24
-
-- ([GH-180](https://github.com/jpogran/puppet-vscode/issues/180)) Backslashes in File Path do not display in Node Graph
-- ([GH-100](https://github.com/jpogran/puppet-vscode/issues/100)) Experimental Puppet-Debugger
-- ([PR-194](https://github.com/jpogran/puppet-vscode/pull/194)) Fix logger in PDK New Task
-- ([PR-195](https://github.com/jpogran/puppet-vscode/pull/195)) Do not error in validation exception handler
-- ([GH-187](https://github.com/jpogran/puppet-vscode/issues/187)) Add stdio mode to language server
-- (maint) Fix rubocop violations
-
-## 0.7.2 - 2017-11-01
-
-- ([GH-165](https://github.com/jpogran/puppet-vscode/issues/165)) Broken readme link
-- ([GH-88](https://github.com/jpogran/puppet-vscode/issues/88))  Rework Node Graph Preview to use local svg
-- ([GH-154](https://github.com/jpogran/puppet-vscode/issues/154)) Use hosted JSON schema files
-- ([GH-169](https://github.com/jpogran/puppet-vscode/issues/169)) Fix bug in sytanx highlighting
-- ([GH-167](https://github.com/jpogran/puppet-vscode/issues/167)) Add PDK New Task command
-- ([GH-156](https://github.com/jpogran/puppet-vscode/issues/156)) Document restarting Puppet extension command
-- ([GH-177](https://github.com/jpogran/puppet-vscode/issues/177)) Remove detection of Puppet VERSION file
-- ([GH-175](https://github.com/jpogran/puppet-vscode/issues/175)) Fix 'could not find valid version of Puppet'
-
-## 0.7.1 - 2017-09-29
-
-- ([GH-157](https://github.com/jpogran/puppet-vscode/issues/157)) Puppet Resource command hidden
-
-## 0.7.0 - 2017-09-22
-
-- ([GH-115](https://github.com/jpogran/puppet-vscode/issues/115)) Add Puppet Development Kit (PDK) integration
-- ([GH-136](https://github.com/jpogran/puppet-vscode/issues/136)) Create a better UI experience while Puppet loads
-- ([GH-61](https://github.com/jpogran/puppet-vscode/issues/61))  Create a better experience when language client fails
-- ([GH-135](https://github.com/jpogran/puppet-vscode/issues/135)) Fix incorrect logger when a client error occurs
-- ([GH-129](https://github.com/jpogran/puppet-vscode/issues/129)) Honor inline puppet lint directives
-- ([GH-133](https://github.com/jpogran/puppet-vscode/issues/133)) Fix issue with puppet 5.1.0
-- ([GH-122](https://github.com/jpogran/puppet-vscode/issues/122)) Show upgrade message with changelog
-- ([GH-120](https://github.com/jpogran/puppet-vscode/issues/120)) Allow custom Puppet agent installation directory
-- ([GH-126](https://github.com/jpogran/puppet-vscode/issues/126)) Fix completion provider with Puppet 5.2.0
-- ([GH-110](https://github.com/jpogran/puppet-vscode/issues/110)) Add extension analytics
-- ([GH-138](https://github.com/jpogran/puppet-vscode/issues/138)) Set extension analytics to prod
-- ([GH-109](https://github.com/jpogran/puppet-vscode/issues/109)) Randomize languageserver port
-- ([GH-111](https://github.com/jpogran/puppet-vscode/issues/111)) Parse puppet-lint.rc in module directory
-
-## 0.6.0 - 2017-08-08
-
-- Fix packaging error where language server was not included
-
-## 0.5.3 - 2017-08-08
-
-- ([GH-92](https://github.com/jpogran/puppet-vscode/issues/92)) Added context menus for Puppet Resource and Nodegraph preview
-- ([GH-98](https://github.com/jpogran/puppet-vscode/issues/98)) Improve language server function and type loading
-- ([GH-52](https://github.com/jpogran/puppet-vscode/issues/52)) JSON validation and schema for metadata.json
-- ([GH-47](https://github.com/jpogran/puppet-vscode/issues/47)) Fixes pending language server tests
-- ([GH-45](https://github.com/jpogran/puppet-vscode/issues/45)) Fix runocop violations for language tcp server
-- ([GH-89](https://github.com/jpogran/puppet-vscode/issues/89)) Document support for linux in readme
-- ([GH-64](https://github.com/jpogran/puppet-vscode/issues/64)) Additional language server tests
-- ([GH-103](https://github.com/jpogran/puppet-vscode/issues/103)) Extension now supports puppet-lint rc files
-- ([GH-99](https://github.com/jpogran/puppet-vscode/issues/99)) Improved client README and Gallery page
-
-## 0.4.6 - 2017-06-29
-
-### Changed
-
-- Updated links in README
-- Added more information to package manifest
-- Minor updates to README
-
-## 0.4.5 - 2017-06-27
-
-### Changed
-
-- Updated badge link location in README
-
-## 0.4.2 - 2017-06-27
-
-### Changed
-
-- Updated badge links to use proper extension id
-
-## 0.4.0 - 2017-06-27
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.18.0...0.19.0)
 
 ### Added
 
-- A functional Language Server for the Puppet language
-  - Real time puppet lint
-  - Auto-complete and Hover support for many puppet language facets
-  - Auto-complete and Hover support for facts
-  - 'puppet resource' support
-  - Preview node graph support
-- Tested on older Puppet versions (4.7 LTS series)
-- Added testing on Travis and Appveyor
+- (GH-111) Add --puppet-version command line argument [#112](https://github.com/puppetlabs/puppet-editor-services/pull/112) ([glennsarti](https://github.com/glennsarti))
+- (GH-110) Used generate ruby types from LSP Typescript node modules [#57](https://github.com/puppetlabs/puppet-editor-services/pull/57) ([glennsarti](https://github.com/glennsarti))
 
 ### Fixed
 
-- Completion and Hover provider didn't load puppet modules
-- Implemented textDocument/didClose notification
-- Fixed completion at file beginning on new lines and on keywords
+- (GH-113) Rescue errors when running Facter 2.x [#114](https://github.com/puppetlabs/puppet-editor-services/pull/114) ([glennsarti](https://github.com/glennsarti))
 
-## 0.0.3 - 2017-05-08
+### Other
 
-### Added
+- (GH-115) Prepare for 0.19.0 release [#116](https://github.com/puppetlabs/puppet-editor-services/pull/116) ([glennsarti](https://github.com/glennsarti))
+- (maint) Fix typo for UTF8 file output [#108](https://github.com/puppetlabs/puppet-editor-services/pull/108) ([glennsarti](https://github.com/glennsarti))
 
-- Puppet Parser validate linter added
+## [0.18.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.18.0) - 2019-02-05
 
-## 0.0.2 - 2017-05-04
-
-### Added
-
-- Puppet Resource and Puppet Module commands.
-
-## 0.0.1 - 2017-04-10
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.17.0...0.18.0)
 
 ### Added
 
-- Initial release of the puppet extension.
+- (GH-24) Allow parsing in tasks mode [#93](https://github.com/puppetlabs/puppet-editor-services/pull/93) ([glennsarti](https://github.com/glennsarti))
+
+### Other
+
+- (GH-99) Prepre for 0.18.0 release [#100](https://github.com/puppetlabs/puppet-editor-services/pull/100) ([glennsarti](https://github.com/glennsarti))
+- (maint) Fix validation of puppetfiles [#92](https://github.com/puppetlabs/puppet-editor-services/pull/92) ([glennsarti](https://github.com/glennsarti))
+
+## [0.17.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.17.0) - 2018-12-17
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.16.0...0.17.0)
+
+### Added
+
+- (GH-35) Update Language Server command arguments to be like Sidecar [#87](https://github.com/puppetlabs/puppet-editor-services/pull/87) ([glennsarti](https://github.com/glennsarti))
+- (GH-88) Add workspace symbols provider [#86](https://github.com/puppetlabs/puppet-editor-services/pull/86) ([glennsarti](https://github.com/glennsarti))
+- (GH-20) Add support for control repos in the Sidecar [#85](https://github.com/puppetlabs/puppet-editor-services/pull/85) ([glennsarti](https://github.com/glennsarti))
+
+### Other
+
+- (GH-90) Prepare for 0.17.0 release [#91](https://github.com/puppetlabs/puppet-editor-services/pull/91) ([glennsarti](https://github.com/glennsarti))
+
+## [0.16.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.16.0) - 2018-11-30
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.15.1...0.16.0)
+
+### Added
+
+- (GH-34) Parse class and defined type parameters  [#79](https://github.com/puppetlabs/puppet-editor-services/pull/79) ([glennsarti](https://github.com/glennsarti))
+- (GH-68) Load workspace information on initial start and on document saving [#77](https://github.com/puppetlabs/puppet-editor-services/pull/77) ([glennsarti](https://github.com/glennsarti))
+- (GH-75) Add Node completion snippet [#76](https://github.com/puppetlabs/puppet-editor-services/pull/76) ([glennsarti](https://github.com/glennsarti))
+- (GH-69) Fix rubocop violations from version 0.60.0 [#74](https://github.com/puppetlabs/puppet-editor-services/pull/74) ([glennsarti](https://github.com/glennsarti))
+- (GH-67) Make resource completion smarter [#73](https://github.com/puppetlabs/puppet-editor-services/pull/73) ([glennsarti](https://github.com/glennsarti))
+
+### Other
+
+- (GH-80) Update changelog for Keep a Changelog format [#84](https://github.com/puppetlabs/puppet-editor-services/pull/84) ([glennsarti](https://github.com/glennsarti))
+- (MAINT) Fix release version to 0.16.0 [#83](https://github.com/puppetlabs/puppet-editor-services/pull/83) ([michaeltlombardi](https://github.com/michaeltlombardi))
+- (GH-80) Release 0.16.0 [#81](https://github.com/puppetlabs/puppet-editor-services/pull/81) ([jpogran](https://github.com/jpogran))
+- (maint) Remove redundant code [#78](https://github.com/puppetlabs/puppet-editor-services/pull/78) ([glennsarti](https://github.com/glennsarti))
+
+## [0.15.1](https://github.com/puppetlabs/puppet-editor-services/tree/0.15.1) - 2018-10-31
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.15.0...0.15.1)
+
+### Added
+
+- (GH-55) Disable the Debug Server on Puppet 6 [#63](https://github.com/puppetlabs/puppet-editor-services/pull/63) ([glennsarti](https://github.com/glennsarti))
+
+### Fixed
+
+- (GH-66) Fix go to definition [#65](https://github.com/puppetlabs/puppet-editor-services/pull/65) ([jpogran](https://github.com/jpogran))
+- (maint) Update CI badges [#64](https://github.com/puppetlabs/puppet-editor-services/pull/64) ([glennsarti](https://github.com/glennsarti))
+
+### Other
+
+- (GH-71) Release 0.15.1 [#72](https://github.com/puppetlabs/puppet-editor-services/pull/72) ([jpogran](https://github.com/jpogran))
+- (GH-69) Pin rubocop to < 0.60.0 [#70](https://github.com/puppetlabs/puppet-editor-services/pull/70) ([glennsarti](https://github.com/glennsarti))
+
+## [0.15.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.15.0) - 2018-10-17
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.14.0...0.15.0)
+
+### Added
+
+- (GH-56) OutLineView [#59](https://github.com/puppetlabs/puppet-editor-services/pull/59) ([jpogran](https://github.com/jpogran))
+- (GH-40) Create sidecar process to enumerate puppet types, classes, functions, node graph and puppet resource [#42](https://github.com/puppetlabs/puppet-editor-services/pull/42) ([glennsarti](https://github.com/glennsarti))
+
+### Other
+
+- (maint) Prepare for 0.15.0 release [#62](https://github.com/puppetlabs/puppet-editor-services/pull/62) ([glennsarti](https://github.com/glennsarti))
+- (maint) Fix rubocop [#58](https://github.com/puppetlabs/puppet-editor-services/pull/58) ([glennsarti](https://github.com/glennsarti))
+- (GH-54) Support Puppet 6 in the Language Server [#53](https://github.com/puppetlabs/puppet-editor-services/pull/53) ([glennsarti](https://github.com/glennsarti))
+- (GH-40) Use sidecar process to enumerate puppet types, classes, functions, node graph and puppet resource [#45](https://github.com/puppetlabs/puppet-editor-services/pull/45) ([glennsarti](https://github.com/glennsarti))
+
+## [0.14.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.14.0) - 2018-08-17
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.13.0...0.14.0)
+
+### Fixed
+
+- (GH-49) Exit STDIO loop if STDIN reaches EOF [#50](https://github.com/puppetlabs/puppet-editor-services/pull/50) ([glennsarti](https://github.com/glennsarti))
+
+### Other
+
+- (MAINT) Release prep for 0.14.0 [#52](https://github.com/puppetlabs/puppet-editor-services/pull/52) ([michaeltlombardi](https://github.com/michaeltlombardi))
+
+## [0.13.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.13.0) - 2018-07-24
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.12.0...0.13.0)
+
+### Fixed
+
+- (GH-46) Detect Puppet Environment correctly [#47](https://github.com/puppetlabs/puppet-editor-services/pull/47) ([glennsarti](https://github.com/glennsarti))
+- (maint) Force rubocop to only use project config [#44](https://github.com/puppetlabs/puppet-editor-services/pull/44) ([glennsarti](https://github.com/glennsarti))
+- (GH-31) Use canonical names for line based breakpoints [#37](https://github.com/puppetlabs/puppet-editor-services/pull/37) ([glennsarti](https://github.com/glennsarti))
+
+### Other
+
+- (maint) Prepare for v0.13.0 release [#48](https://github.com/puppetlabs/puppet-editor-services/pull/48) ([glennsarti](https://github.com/glennsarti))
+- (maint) Update for minor rubocop fixes [#39](https://github.com/puppetlabs/puppet-editor-services/pull/39) ([glennsarti](https://github.com/glennsarti))
+- (GH-36) Use automatic port assignment as default [#38](https://github.com/puppetlabs/puppet-editor-services/pull/38) ([glennsarti](https://github.com/glennsarti))
+
+## [0.12.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.12.0) - 2018-06-01
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.11.0...0.12.0)
+
+### Added
+
+- (maint) Minor rubocop fixes [#30](https://github.com/puppetlabs/puppet-editor-services/pull/30) ([glennsarti](https://github.com/glennsarti))
+- (GH-28) Add basic puppetfile support [#25](https://github.com/puppetlabs/puppet-editor-services/pull/25) ([glennsarti](https://github.com/glennsarti))
+- (GH-22) Refactor lang server [#23](https://github.com/puppetlabs/puppet-editor-services/pull/23) ([glennsarti](https://github.com/glennsarti))
+
+### Fixed
+
+- (GH-10)(GH-14) Fix unix loading for language server [#15](https://github.com/puppetlabs/puppet-editor-services/pull/15) ([glennsarti](https://github.com/glennsarti))
+
+### Other
+
+- (maint) Prepare for 0.12.0 release [#32](https://github.com/puppetlabs/puppet-editor-services/pull/32) ([glennsarti](https://github.com/glennsarti))
+- (GH-26) Refactor workspace detection for control repos and modules [#29](https://github.com/puppetlabs/puppet-editor-services/pull/29) ([glennsarti](https://github.com/glennsarti))
+- (maint) Add doc on how to do a release [#13](https://github.com/puppetlabs/puppet-editor-services/pull/13) ([glennsarti](https://github.com/glennsarti))
+
+## [0.11.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.11.0) - 2018-04-26
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.10.0...0.11.0)
+
+### Other
+
+- (maint) Prepare for version 0.11.0 release [#12](https://github.com/puppetlabs/puppet-editor-services/pull/12) ([glennsarti](https://github.com/glennsarti))
+- (GH-11) Refactor transport layer and fix STDIO server [#9](https://github.com/puppetlabs/puppet-editor-services/pull/9) ([glennsarti](https://github.com/glennsarti))
+- (doc) Update README with Editor Services [#8](https://github.com/puppetlabs/puppet-editor-services/pull/8) ([glennsarti](https://github.com/glennsarti))
+- (maint) Add a packaging process [#7](https://github.com/puppetlabs/puppet-editor-services/pull/7) ([glennsarti](https://github.com/glennsarti))
+
+## [0.10.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.10.0) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.9.0...0.10.0)
+
+## [0.9.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.9.0) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.8.0...0.9.0)
+
+## [0.8.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.8.0) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.7.2...0.8.0)
+
+## [0.7.2](https://github.com/puppetlabs/puppet-editor-services/tree/0.7.2) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.7.1...0.7.2)
+
+## [0.7.1](https://github.com/puppetlabs/puppet-editor-services/tree/0.7.1) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.7.0...0.7.1)
+
+## [0.7.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.7.0) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.6.0...0.7.0)
+
+## [0.6.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.6.0) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.5.0...0.6.0)
+
+## [0.5.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.5.0) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.4.6...0.5.0)
+
+## [0.4.6](https://github.com/puppetlabs/puppet-editor-services/tree/0.4.6) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.4.5...0.4.6)
+
+## [0.4.5](https://github.com/puppetlabs/puppet-editor-services/tree/0.4.5) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.4.2...0.4.5)
+
+## [0.4.2](https://github.com/puppetlabs/puppet-editor-services/tree/0.4.2) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/0.4.0...0.4.2)
+
+## [0.4.0](https://github.com/puppetlabs/puppet-editor-services/tree/0.4.0) - 2018-04-04
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/804559931cdefe5364e463ee904f68c1a8d7ed39...0.4.0)
