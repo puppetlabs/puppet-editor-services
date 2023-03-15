@@ -2,19 +2,83 @@ name: "release prep"
 
 on:
   workflow_dispatch:
-   inputs:
-    target:
-      description: "The target for the release. This can be a commit sha or a branch."
-      required: false
-      default: "main"
-    version:
-      description: "Version of gem to be released."
-      required: true
+    inputs:
+      target:
+        description: "The target for the release. This can be a commit sha or a branch."
+        required: false
+        default: "main"
+        type: "string"
+      version:
+        description: "Version to be released."
+        required: true
+        type: "string"
 
 jobs:
   release_prep:
-    uses: "puppetlabs/cat-github-actions/.github/workflows/gem_release_prep.yml@main"
-    with:
-      target: "${{ github.event.inputs.target }}"
-      version: "${{ github.events.inputs.version }}"
-    secrets: "inherit"
+    name: "Release prep"
+    runs-on: "ubuntu-20.04"
+
+    steps:
+
+      - name: "Checkout"
+        uses: "actions/checkout@v3"
+        with:
+          ref: ${{ github.event.inputs.target }}
+          clean: true
+          fetch-depth: 0
+
+      - name: "setup ruby"
+        uses: "ruby/setup-ruby@v1"
+        with:
+          ruby-version: "2.7"
+          bundler-cache: "true"
+
+      - name: "bundle environment"
+        run: |
+          echo ::group::bundler environment
+          bundle env
+          echo ::endgroup::
+
+      - name: "Update Version"
+        run: |
+          current_version=$(ruby -e "require './lib/puppet_editor_services/version'; puts PuppetEditorServices::PUPPETEDITORSERVICESVERSION.to_s")
+          sed -i "s/$current_version/${{ github.event.inputs.version }}/g" $(find . -path './lib/**' -name 'version.rb' -not -path "vendor/*")
+
+      - name: "Generate changelog"
+        run: |
+          export GH_HOST=github.com
+          gh extension install chelnak/gh-changelog
+          gh changelog new --next-version v${{ github.event.inputs.version }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Check if a release is necessary"
+        id: "check"
+        run: |
+          git diff --quiet CHANGELOG.md && echo "::set-output name=release::false" || echo "::set-output name=release::true"
+
+      - name: "Commit changes"
+        if: ${{ steps.check.outputs.release == 'true' }}
+        run: |
+          git config --local user.email "${{ github.repository_owner }}@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "Release prep v${{ github.event.inputs.version }}"
+
+      - name: "Create pull Request"
+        uses: "peter-evans/create-pull-request@v4"
+        if: ${{ steps.check.outputs.release == 'true' }}
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Release prep v${{ github.event.inputs.version }}"
+          branch: "release-prep"
+          delete-branch: true
+          title: "Release prep v${{ github.event.inputs.version }}"
+          base: "main"
+          body: |
+            Automated release-prep through [pdk-templates](https://github.com/puppetlabs/pdk-templates/blob/main/moduleroot/.github/workflows/auto_release.yml.erb) from commit ${{ github.sha }}.
+            Please verify before merging:
+            - [ ] last [nightly](https://github.com/${{ github.repository }}/actions/workflows/nightly.yml) run is green
+            - [ ] [Changelog](https://github.com/${{ github.repository }}/blob/release-prep/CHANGELOG.md) is readable and has no unlabeled pull requests
+            - [ ] Ensure the [changelog](https://github.com/${{ github.repository }}/blob/release-prep/CHANGELOG.md) version and [metadata](https://github.com/${{ github.repository }}/blob/release-prep/metadata.json) version match
+          labels: "maintenance"
