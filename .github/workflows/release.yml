@@ -1,7 +1,7 @@
 name: "release"
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       target:
         description: "The target for the release. This can be a commit sha or a branch."
@@ -38,7 +38,7 @@ jobs:
       - name: "Get version"
         id: "get_version"
         run: |
-          echo "version=$(ruby -e "require 'rubygems'; puts Gem::Specification::load(Dir.glob('*.gemspec').first).version.to_s")" >> $GITHUB_OUTPUT
+          echo "version=$(ruby -e "require './lib/puppet_editor_services/version'; puts PuppetEditorServices::PUPPETEDITORSERVICESVERSION.to_s")" >> $GITHUB_OUTPUT
       - name: "Build"
         run: |
           bundle exec rake build
