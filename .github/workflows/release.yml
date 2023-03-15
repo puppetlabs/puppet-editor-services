@@ -1,0 +1,49 @@
+name: "release"
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        description: "The target for the release. This can be a commit sha or a branch."
+        required: false
+        default: "main"
+        type: "string"
+
+jobs:
+  release:
+    name: "Release"
+    runs-on: "ubuntu-latest"
+    if: github.repository_owner == 'puppetlabs'
+
+    steps:
+
+      - name: "Checkout"
+        uses: "actions/checkout@v3"
+        with:
+          ref: ${{ github.event.inputs.target }}
+          clean: true
+          fetch-depth: 0
+
+      - name: "Setup ruby"
+        uses: "ruby/setup-ruby@v1"
+        with:
+          ruby-version: "2.7"
+          bundler-cache: "true"
+
+      - name: "Bundle environment"
+        run: |
+          echo ::group::bundler environment
+          bundle env
+          echo ::endgroup::
+      - name: "Get version"
+        id: "get_version"
+        run: |
+          echo "version=$(ruby -e "require 'rubygems'; puts Gem::Specification::load(Dir.glob('*.gemspec').first).version.to_s")" >> $GITHUB_OUTPUT
+      - name: "Build"
+        run: |
+          bundle exec rake build
+      - name: "Create release"
+        run: |
+          gh release create v${{ steps.get_version.outputs.version }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
