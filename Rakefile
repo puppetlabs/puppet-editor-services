@@ -155,12 +155,12 @@ task build: [:gem_revendor] do
   puts "Editor services is v#{version}"
 
   puts "Creating zip file..."
-  zip_archive_file = File.join(output_dir,"puppet_editor_services_#{version}.zip")
+  zip_archive_file = File.join(output_dir,"puppet_editor_services_v#{version}.zip")
   Archive::Zip.archive(zip_archive_file, file_list)
   puts "Created #{zip_archive_file}"
 
   puts "Creating tar file..."
-  tar_archive_file = File.join(output_dir,"puppet_editor_services_#{version}.tar.gz")
+  tar_archive_file = File.join(output_dir,"puppet_editor_services_v#{version}.tar.gz")
   Minitar.pack(file_list, Zlib::GzipWriter.new(File.open(tar_archive_file, 'wb')))
   puts "Created #{tar_archive_file}"
 
