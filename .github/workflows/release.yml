@@ -44,6 +44,6 @@ jobs:
           bundle exec rake build
       - name: "Create release"
         run: |
-          gh release create v${{ steps.get_version.outputs.version }}
+          gh release create v${{ steps.get_version.outputs.version }} ./output/* --title v${{ steps.get_version.outputs.version }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
