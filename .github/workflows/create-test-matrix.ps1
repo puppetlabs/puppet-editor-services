@@ -51,5 +51,5 @@ if ($Raw) {
   Write-Host ($Jobs | ConvertTo-JSON)
 } else {
   # Output the result for consumption by GH Actions
-  Write-Host "::set-output name=matrix::$($Jobs | ConvertTo-JSON -Compress))"
+  Write-Host "{matrix}={$($Jobs | ConvertTo-JSON -Compress)}" >> $GITHUB_OUTPUT
 }
