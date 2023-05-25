@@ -62,7 +62,7 @@ jobs:
       - name: Run rake gem_revendor build
         run: bundle exec rake gem_revendor build
       - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: puppet-editor-services
           path: output/*.zip
