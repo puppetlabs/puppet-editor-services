@@ -539,7 +539,7 @@ module LSP
   #     /**
   #      * Ignore the operation if the file doesn't exist.
   #      */
-  #     ignoreIfNotexists?: boolean;
+  #     ignoreIfNotExists?: boolean;
   # }
   class DeleteFileOptions < LSPBase
     attr_accessor :recursive, :ignoreIfNotExists # type: boolean # type: boolean
