@@ -13,8 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - '2.5'
           - '2.7'
+          - '3.2'
         runs_on:
           - 'ubuntu-latest'
           - 'windows-latest'
@@ -32,8 +32,8 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - '2.5'
           - '2.7'
+          - '3.2'
         runs_on:
           - 'ubuntu-latest'
           - 'windows-latest'
@@ -45,7 +45,7 @@ jobs:
       ruby_version: ${{ matrix.ruby_version }}
       runs_on: ${{ matrix.runs_on }}
       rake_task: 'gem_revendor acceptance_languageserver'
-      puppet_version: '~> 7.24'
+      puppet_version: '~> 8.0'
 
   build:
     name: "Build Editor Service"
