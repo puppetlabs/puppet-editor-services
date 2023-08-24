@@ -420,7 +420,7 @@ module LSP
   #     /**
   #      * Ignore if exists.
   #      */
-  #     ignoreIfExists?: boolean;
+  #     ignoreIfexists?: boolean;
   # }
   class CreateFileOptions < LSPBase
     attr_accessor :overwrite, :ignoreIfExists # type: boolean # type: boolean
@@ -477,7 +477,7 @@ module LSP
   #     /**
   #      * Ignores if target exists.
   #      */
-  #     ignoreIfExists?: boolean;
+  #     ignoreIfexists?: boolean;
   # }
   class RenameFileOptions < LSPBase
     attr_accessor :overwrite, :ignoreIfExists # type: boolean # type: boolean
@@ -539,7 +539,7 @@ module LSP
   #     /**
   #      * Ignore the operation if the file doesn't exist.
   #      */
-  #     ignoreIfNotExists?: boolean;
+  #     ignoreIfNotexists?: boolean;
   # }
   class DeleteFileOptions < LSPBase
     attr_accessor :recursive, :ignoreIfNotExists # type: boolean # type: boolean

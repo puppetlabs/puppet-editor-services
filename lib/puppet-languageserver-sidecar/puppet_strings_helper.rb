@@ -42,11 +42,11 @@ module PuppetLanguageServerSidecar
       def file_documentation(path, cache = nil)
         return nil unless PuppetLanguageServerSidecar::PuppetStringsHelper.require_puppet_strings
         @helper_cache = FileDocumentationCache.new if @helper_cache.nil?
-        return @helper_cache.document(path) if @helper_cache.path_exists?(path)
+        return @helper_cache.document(path) if @helper_cache.path_exist?(path)
 
         # Load from the permanent cache
         @helper_cache.populate_from_sidecar_cache!(path, cache) unless cache.nil? || !cache.active?
-        return @helper_cache.document(path) if @helper_cache.path_exists?(path)
+        return @helper_cache.document(path) if @helper_cache.path_exist?(path)
 
         PuppetLanguageServerSidecar.log_message(:debug, "[PuppetStringsHelper::file_documentation] Fetching documentation for #{path}")
 
@@ -88,7 +88,7 @@ module PuppetLanguageServerSidecar
       @cache = {}
     end
 
-    def path_exists?(path)
+    def path_exist?(path)
       @cache.key?(path)
     end
 

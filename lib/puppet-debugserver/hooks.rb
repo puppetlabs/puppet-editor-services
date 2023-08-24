@@ -37,7 +37,7 @@ module PuppetDebugServer
 
       # do not allow duplicates, but allow multiple `nil` hooks
       # (anonymous hooks)
-      raise ArgumentError, "Hook with name '#{hook_name}' already defined!" if hook_exists?(event_name, hook_name) && !hook_name.nil?
+      raise ArgumentError, "Hook with name '#{hook_name}' already defined!" if hook_exist?(event_name, hook_name) && !hook_name.nil?
 
       raise ArgumentError, 'Must provide a block or callable.' if !block && !callable
 
@@ -123,7 +123,7 @@ module PuppetDebugServer
     # @param [Symbol] event_name Name of the event.
     # @param [Symbol] hook_name Name of the hook.
     # @return [Boolean] Whether the hook by the name `hook_name`.
-    def hook_exists?(event_name, hook_name)
+    def hook_exist?(event_name, hook_name)
       @hooks[event_name.to_s].map(&:first).include?(hook_name)
     end
 
