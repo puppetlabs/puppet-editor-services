@@ -1,7 +1,9 @@
-[![Editor Services CI](https://github.com/puppetlabs/puppet-editor-services/actions/workflows/editor-services-ci.yml/badge.svg)](https://github.com/puppetlabs/puppet-editor-services/actions/workflows/editor-services-ci.yml)
+# Puppet Editor Services
+
+[![Code Owners](https://img.shields.io/badge/owners-DevX--team-blue)](https://github.com/puppetlabs/pdk/blob/main/CODEOWNERS)
+![ci](https://github.com/puppetlabs/puppet-editor-services/actions/workflows/ci.yml/badge.svg)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/puppetlabs/puppet-editor-services)
 
-# Puppet Editor Services
 
 A ruby based implementation of a [Language Server](https://github.com/Microsoft/language-server-protocol) and [Debug Server](TODO) for the Puppet Language.
 
