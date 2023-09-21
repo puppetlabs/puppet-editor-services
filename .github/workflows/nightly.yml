@@ -12,7 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - '2.5'
           - '2.7'
         runs_on:
           - 'ubuntu-latest'
@@ -31,7 +30,6 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - '2.5'
           - '2.7'
         runs_on:
           - 'ubuntu-latest'
