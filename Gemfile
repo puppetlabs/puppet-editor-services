@@ -11,7 +11,7 @@ source ENV['GEM_SOURCE'] || "https://rubygems.org"
 group :development do
   gem 'rake', '>= 10.4',                  :require => false
   gem 'rspec', '>= 3.2',                  :require => false
-  gem 'puppet-lint', '~> 3.3',            :require => false
+  gem 'puppet-lint', '~> 4.0',            :require => false
   gem 'puppetfile-resolver', '~> 0.6.2',  :require => false
   gem 'yard', '~> 0.9.28',                :require => false
 
