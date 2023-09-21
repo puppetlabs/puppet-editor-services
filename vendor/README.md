@@ -11,10 +11,10 @@ Note - To improve the packaging size, test files etc. were stripped from the Gem
 Gem List
 --------
 
-* puppet-lint (https://github.com/puppetlabs/puppet-lint.git ref 2.5.2)
+* puppet-lint (https://github.com/puppetlabs/puppet-lint.git ref v4.2.0)
 * hiera-eyaml (https://github.com/voxpupuli/hiera-eyaml ref v2.1.0)
 * puppetfile-resolver (https://github.com/glennsarti/puppetfile-resolver.git ref 0.3.0)
 * molinillo (https://github.com/CocoaPods/Molinillo.git ref 0.6.6)
-* puppet-strings (https://github.com/puppetlabs/puppet-strings.git ref v2.4.0)
+* puppet-strings (https://github.com/puppetlabs/puppet-strings.git ref v4.1.0)
 * yard (https://github.com/lsegal/yard.git ref v0.9.24)
 
