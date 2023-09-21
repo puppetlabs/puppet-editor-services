@@ -89,9 +89,9 @@ task :gem_revendor do
   vendor_dir = File.join(File.dirname(__FILE__),'vendor')
   gem_list.each do |vendor|
     gem_dir = File.join(vendor_dir,vendor[:directory])
-    FileUtils.rm_rf(gem_dir) if Dir.exists?(gem_dir)
+    FileUtils.rm_rf(gem_dir) if Dir.exist?(gem_dir)
   end
-  Dir.mkdir(vendor_dir) unless Dir.exists?(vendor_dir)
+  Dir.mkdir(vendor_dir) unless Dir.exist?(vendor_dir)
 
   gem_list.each do |vendor|
     puts "Vendoring #{vendor[:directory]}..."
@@ -143,11 +143,11 @@ task build: [:gem_revendor] do
 
   file_list = ['lib', 'vendor', 'puppet-languageserver', 'puppet-debugserver', 'puppet-languageserver-sidecar', 'LICENSE']
   # Remove files in the list that do not exist.
-  file_list.reject! { |filepath| !File.exists?(filepath) }
+  file_list.reject! { |filepath| !File.exist?(filepath) }
 
   puts "Cleaning output directory..."
-  FileUtils.rm_rf Dir.glob("#{output_dir}/*") if Dir.exists?(output_dir)
-  Dir.mkdir(output_dir) unless Dir.exists?(output_dir)
+  FileUtils.rm_rf Dir.glob("#{output_dir}/*") if Dir.exist?(output_dir)
+  Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
 
   puts "Fetch editor services version..."
   require_relative 'lib/puppet_editor_services/version'

@@ -73,7 +73,7 @@ describe 'PuppetLanguageServerSidecar', :if => Gem::Version.new(Puppet.version) 
 
   def expect_empty_cache
     cache = PuppetLanguageServerSidecar::Cache::FileSystem.new
-    expect(Dir.exists?(cache.cache_dir)).to eq(true), "Expected the cache directory #{cache.cache_dir} to exist"
+    expect(Dir.exist?(cache.cache_dir)).to eq(true), "Expected the cache directory #{cache.cache_dir} to exist"
     expect(Dir.glob(File.join(cache.cache_dir,'*')).count).to eq(0), "Expected the cache directory #{cache.cache_dir} to be empty"
   end
 
