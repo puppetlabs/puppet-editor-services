@@ -33,6 +33,7 @@ module PuppetLanguageServerSidecar
 
   def self.featureflag?(flagname)
     return false if @flags.nil? || @flags.empty?
+
     @flags.include?(flagname)
   end
 
@@ -299,38 +300,43 @@ module PuppetLanguageServerSidecar
 
     when 'workspace_aggregate'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
+
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
                                                                             :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types,
-                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path)
+                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
 
     when 'workspace_classes'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
+
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
                                                                             :object_types => [:class],
-                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).classes
+                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path).classes
 
     when 'workspace_datatypes'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
+
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
                                                                             :object_types => [:datatype],
-                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).datatypes
+                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path).datatypes
 
     when 'workspace_functions'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
+
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
                                                                             :object_types => [:function],
-                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).functions
+                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path).functions
 
     when 'workspace_types'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
+
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
                                                                             :object_types => [:type],
-                                                                            :root_path    => PuppetLanguageServerSidecar::Workspace.root_path).types
+                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path).types
 
     when 'facts'
       # Can't cache for facts

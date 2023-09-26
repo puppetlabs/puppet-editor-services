@@ -28,6 +28,7 @@ module PuppetLanguageServer
       # This helps due to syntax errors like `$facts[]` or `ensure =>`
       line_offset = line_offsets[line_num]
       raise if line_offset.nil?
+
       # Insert the text
       content.slice(0, line_offset + char_num) + text + content.slice(line_offset + char_num, content.length - 1)
     end
@@ -39,6 +40,7 @@ module PuppetLanguageServer
       loop do
         line_offset = content.index("\n", line_offset + 1)
         break if line_offset.nil?
+
         line_offsets << line_offset + 1
       end
       line_offsets
@@ -56,9 +58,9 @@ module PuppetLanguageServer
 
     def self.object_under_cursor(content, line_num, char_num, options)
       options = {
-        :multiple_attempts   => false,
-        :disallowed_classes  => [],
-        :tasks_mode          => false,
+        :multiple_attempts => false,
+        :disallowed_classes => [],
+        :tasks_mode => false,
         :remove_trigger_char => true
       }.merge(options)
 
@@ -78,10 +80,12 @@ module PuppetLanguageServer
           new_content = content
         when :remove_char
           next if line_num.zero? && char_num.zero?
+
           new_content = remove_char_at(content, line_offsets, line_num, char_num)
           move_offset = -1
         when :remove_word
           next if line_num.zero? && char_num.zero?
+
           next_char = get_char_at(content, line_offsets, line_num, char_num)
 
           while /[[:word:]]/ =~ next_char
@@ -117,6 +121,7 @@ module PuppetLanguageServer
           break
         rescue Puppet::ParseErrorWithIssue
           next if options[:multiple_attempts]
+
           raise
         end
       end
@@ -163,6 +168,7 @@ module PuppetLanguageServer
       end
       # nil means the root of the document
       return nil if valid_models.empty?
+
       response = valid_models[0]
 
       if response.respond_to? :eAllContents # rubocop:disable Style/IfUnlessModifier  Nicer to read like this

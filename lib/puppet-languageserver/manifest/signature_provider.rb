@@ -9,8 +9,8 @@ module PuppetLanguageServer
         }.merge(options)
 
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
-                                                                              :multiple_attempts   => false,
-                                                                              :tasks_mode          => options[:tasks_mode],
+                                                                              :multiple_attempts => false,
+                                                                              :tasks_mode => options[:tasks_mode],
                                                                               :remove_trigger_char => false)
         response = LSP::SignatureHelp.new.from_h!('signatures' => [], 'activeSignature' => nil, 'activeParameter' => nil)
         # We are in the root of the document so no signatures here.
@@ -58,14 +58,14 @@ module PuppetLanguageServer
 
         func_info.signatures.each do |sig|
           lsp_sig = LSP::SignatureInformation.new.from_h!(
-            'label'         => sig.key,
+            'label' => sig.key,
             'documentation' => sig.doc,
-            'parameters'    => []
+            'parameters' => []
           )
 
           sig.parameters.each do |param|
             lsp_sig.parameters << LSP::ParameterInformation.new.from_h!(
-              'label'         => param.signature_key_offset.nil? || param.signature_key_length.nil? ? param.name : [param.signature_key_offset, param.signature_key_offset + param.signature_key_length],
+              'label' => param.signature_key_offset.nil? || param.signature_key_length.nil? ? param.name : [param.signature_key_offset, param.signature_key_offset + param.signature_key_length],
               'documentation' => param.doc
             )
           end
@@ -111,6 +111,7 @@ module PuppetLanguageServer
         return nil if char_offset >= function_offset + function_length
         # Does the function even have arguments? then the cursor HAS to be in the first parameter
         return 0 if function_ast_object.arguments.count.zero?
+
         # Is the cursor within any of the function argument locations? if so, return the parameter number we're in
         param_number = function_ast_object.arguments.find_index { |arg| char_offset >= arg.offset && char_offset <= arg.offset + arg.length }
         return param_number unless param_number.nil?
@@ -137,6 +138,7 @@ module PuppetLanguageServer
           # Now we now the char_offset exists between two existing locators.  Determine the location by finding which argument is AFTER the cursor
           after_index = function_ast_object.arguments.find_index { |arg| char_offset < arg.offset }
           return nil if after_index.nil? || after_index.zero? # This should never happen but, you never know.
+
           before_index = after_index - 1
 
           # Now we know between which arguments (before_index and after_index) the char_offset lies

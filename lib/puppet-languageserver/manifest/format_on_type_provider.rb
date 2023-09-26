@@ -49,6 +49,7 @@ module PuppetLanguageServer
           break if farrow_token.line == end_brace.line && farrow_token.character > end_brace.character
           # Check for multiple hashrockets on the same line. If we find some, then we can't do any automated indentation
           return result if lines.include?(farrow_token.line)
+
           lines << farrow_token.line
           farrows << { token: farrow_token }
         end
@@ -70,6 +71,7 @@ module PuppetLanguageServer
         farrows.each do |info|
           # Ignore invalid hashrockets
           next if info[:indent] == -1
+
           end_name_token = info[:name_token].column + info[:name_token].to_manifest.length
           begin_farrow_token = info[:token].column
           new_whitespace = max_indent - end_name_token
@@ -79,7 +81,7 @@ module PuppetLanguageServer
           # Create the TextEdit
           result << LSP::TextEdit.new.from_h!(
             'newText' => ' ' * new_whitespace,
-            'range'   => LSP.create_range(info[:token].line - 1, end_name_token - 1, info[:token].line - 1, begin_farrow_token - 1)
+            'range' => LSP.create_range(info[:token].line - 1, end_name_token - 1, info[:token].line - 1, begin_farrow_token - 1)
           )
         end
         result
@@ -91,6 +93,7 @@ module PuppetLanguageServer
 
       def find_token_by_location(tokens, line, character)
         return nil if tokens.empty?
+
         # Puppet Lint uses base 1, but LSP is base 0, so adjust accordingly
         cursor_line = line + 1
         cursor_column = character + 1
@@ -105,6 +108,7 @@ module PuppetLanguageServer
           return nil if tokens[idx].column > cursor_column
           # return the token if it starts on the cursor column we are interested in
           return tokens[idx] if tokens[idx].column == cursor_column
+
           end_column = tokens[idx].column + tokens[idx].to_manifest.length
           # return the token it the cursor column is within the token string
           return tokens[idx] if cursor_column <= end_column
@@ -117,6 +121,7 @@ module PuppetLanguageServer
         result = { indent: -1 }
         # This is not a valid hashrocket if there's no previous tokens
         return result if farrow_token.prev_token.nil?
+
         if VALID_TOKEN_TYPES.include?(farrow_token.prev_token.type)
           # Someone forgot the whitespace! e.g. ensure=>
           result[:indent] = farrow_token.column + 1
@@ -127,6 +132,7 @@ module PuppetLanguageServer
           # If the whitespace has no previous token (which shouldn't happen) or the thing before the whitespace is not a property name this it not a valid hashrocket
           return result if farrow_token.prev_token.prev_token.nil?
           return result unless VALID_TOKEN_TYPES.include?(farrow_token.prev_token.prev_token.type)
+
           result[:name_token] = farrow_token.prev_token.prev_token
           result[:indent] = farrow_token.prev_token.column + 1 # The indent is the whitespace column + 1
         end

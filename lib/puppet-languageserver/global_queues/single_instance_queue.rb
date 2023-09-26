@@ -108,6 +108,7 @@ module PuppetLanguageServer
         loop do
           @queue_mutex.synchronize do
             return if @queue.empty?
+
             work_item = @queue.shift
           end
           return if work_item.nil?

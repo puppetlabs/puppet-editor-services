@@ -10,6 +10,7 @@ module Puppet
         def module_directories(env)
           result = original_module_directories(env)
           return result unless PuppetLanguageServerSidecar::Workspace.has_module_metadata?
+
           workspace_lib = File.join(PuppetLanguageServerSidecar::Workspace.root_path, 'lib')
           return result unless FileTest.directory?(workspace_lib)
 
@@ -57,6 +58,7 @@ class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
     begin
       metadata = workspace_load_json(File.read(md_file, :encoding => 'utf-8'))
       return nil if metadata['name'].nil?
+
       # Extract the actual module name
       if Puppet::Module.is_module_directory_name?(metadata['name'])
         module_name = metadata['name']
@@ -73,6 +75,7 @@ class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
       # https://github.com/puppetlabs/puppet/commit/935c0311dbaf1df03937822525c36b26de5390ef
       # We need to switch the creation based on whether the modules_strict_semver? method is available
       return Puppet::Module.new(module_name, path, self, modules_strict_semver?) if respond_to?('modules_strict_semver?')
+
       Puppet::Module.new(module_name, path, self)
     rescue StandardError
       nil
@@ -136,6 +139,7 @@ class Puppet::Node::Facts::Facter # rubocop:disable Style/ClassAndModuleChildren
                                        .select { |path| FileTest.directory?(path) }
 
       return result if additional_dirs.empty?
+
       Facter.search(*additional_dirs)
     end
   end

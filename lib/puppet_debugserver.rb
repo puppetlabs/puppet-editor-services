@@ -155,9 +155,11 @@ module PuppetDebugServer
     # TODO: Can I use a real mutex here? might be hard with the rpc_thread.alive? call
     sleep(0.5) while !debug_session.flow_control.flag?(:start_puppet) && rpc_thread.alive? && !debug_session.flow_control.terminate?
     return unless rpc_thread.alive? || debug_session.flow_control.terminate?
+
     debug_session.run_puppet
 
     return unless rpc_thread.alive?
+
     debug_session.close
     rpc_thread.join
   end

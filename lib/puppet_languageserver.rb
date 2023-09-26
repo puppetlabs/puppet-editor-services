@@ -34,6 +34,7 @@ module PuppetLanguageServer
 
   def self.featureflag?(flagname)
     return false if @flags.nil? || @flags.empty?
+
     @flags.include?(flagname)
   end
 

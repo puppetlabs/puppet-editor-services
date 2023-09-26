@@ -44,7 +44,7 @@ module PuppetDebugServer
         break_points = arguments.breakpoints.map do
           DSP::Breakpoint.new.from_h!(
             'verified' => false,
-            'source'   => arguments.source.to_h
+            'source' => arguments.source.to_h
           )
         end
 
@@ -103,6 +103,7 @@ module PuppetDebugServer
       # @return [Array<Integer>] All of the line breakpoints. Returns empty array if there no breakpoints.
       def line_breakpoints(file_path)
         return [] if @source_breakpoints[canonical_file_path(file_path)].nil?
+
         @source_breakpoints[canonical_file_path(file_path)].map(&:line)
       end
 

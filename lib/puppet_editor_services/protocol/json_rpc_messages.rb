@@ -16,6 +16,7 @@ module PuppetEditorServices
 
         def from_h!(value)
           return self if value.nil? || value.empty?
+
           # jsonrpc is a little special.  Don't override it with nil. This
           # allows `.new.from_h!(..)` to use the default without knowing exactly
           # what version is used.
@@ -66,7 +67,7 @@ module PuppetEditorServices
 
         def to_h
           super.merge(
-            'id'     => id,
+            'id' => id,
             'method' => rpc_method,
             'params' => params
           )
@@ -171,9 +172,9 @@ module PuppetEditorServices
         # Note - Strictly speaking the error should be typed object, however as this hidden behind
         # this method it's easier to just pass in a known hash construct
         ResponseMessage.new.from_h!(
-          'id'    => id,
+          'id' => id,
           'error' => {
-            'code'    => code,
+            'code' => code,
             'message' => message
           }
         )

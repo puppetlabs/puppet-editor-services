@@ -17,6 +17,7 @@ module PuppetDebugServer
       # @param options See options
       def initialize(mode = :run, options = {})
         raise "Invalid mode #{mode}" unless %i[run stepin next stepout].include?(mode)
+
         @mode = mode
         @options = options
 

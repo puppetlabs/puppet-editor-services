@@ -26,7 +26,7 @@ module PuppetLanguageServer
       def self.validate(session_state, content, options = {})
         options = {
           :max_problems => 100,
-          :tasks_mode   => false
+          :tasks_mode => false
         }.merge(options)
 
         result = []
@@ -60,10 +60,10 @@ module PuppetLanguageServer
               endpos = problem[:column] - 1 + problem[:token].to_manifest.length unless problem[:token].nil? || problem[:token].value.nil?
 
               result << LSP::Diagnostic.new('severity' => severity,
-                                            'code'     => problem[:check].to_s,
-                                            'range'    => LSP.create_range(problem[:line] - 1, problem[:column] - 1, problem[:line] - 1, endpos),
-                                            'source'   => 'Puppet',
-                                            'message'  => problem[:message])
+                                            'code' => problem[:check].to_s,
+                                            'range' => LSP.create_range(problem[:line] - 1, problem[:column] - 1, problem[:line] - 1, endpos),
+                                            'source' => 'Puppet',
+                                            'message' => problem[:message])
             end
           end
         # rubocop:disable Lint/SuppressedException
@@ -100,9 +100,9 @@ module PuppetLanguageServer
 
             unless ex_line.nil? || ex_pos.nil? || message.nil?
               result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
-                                            'range'    => LSP.create_range(ex_line, ex_pos, ex_line, ex_pos + 1),
-                                            'source'   => 'Puppet',
-                                            'message'  => message)
+                                            'range' => LSP.create_range(ex_line, ex_pos, ex_line, ex_pos + 1),
+                                            'source' => 'Puppet',
+                                            'message' => message)
             end
           end
         end

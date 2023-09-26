@@ -91,6 +91,7 @@ module PuppetLanguageServer
 
       def capability_registrations(method)
         return [{ :registered => false, :state => :complete }] if @registrations[method].nil? || @registrations[method].empty?
+
         @registrations[method].dup
       end
 
@@ -125,9 +126,11 @@ module PuppetLanguageServer
         params = LSP::UnregistrationParams.new.from_h!('unregisterations' => [])
         @registrations[method].each do |reg|
           next if reg[:id].nil?
+
           PuppetLanguageServer.log_message(:warn, "A dynamic registration/deregistration for the #{method} method, with id #{reg[:id]} is already in progress") if reg[:state] == :pending
           # Ignore registrations that don't need to be unregistered
           next if reg[:state] == :complete && !reg[:registered]
+
           params.unregisterations << LSP::Unregistration.new.from_h!('id' => reg[:id], 'method' => method)
           reg[:state] = :pending
         end
@@ -197,15 +200,18 @@ module PuppetLanguageServer
       def to_boolean(value, default = false)
         return default if value.nil?
         return value if value == true || value == false # rubocop:disable Style/MultipleComparison
+
         value.to_s =~ %r{^(true|t|yes|y|1)$/i}
       end
 
       def to_integer(value, default = nil, min = nil, max = nil)
         return default if value.nil?
+
         begin
           intv = Integer(value)
           return default if !min.nil? && intv < min
           return default if !max.nil? && intv > max
+
           intv
         rescue ArgumentError
           default
@@ -218,6 +224,7 @@ module PuppetLanguageServer
 
       def safe_hash_traverse(hash, *names)
         return nil if names.empty? || hash.nil? || hash.empty?
+
         item = nil
         loop do
           name = names.shift

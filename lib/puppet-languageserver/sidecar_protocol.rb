@@ -42,6 +42,7 @@ module PuppetLanguageServer
 
         def ==(other)
           return false unless other.class == self.class
+
           self.class
               .instance_methods(false)
               .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
@@ -54,6 +55,7 @@ module PuppetLanguageServer
 
         def eql?(other)
           return false unless other.class == self.class
+
           self.class
               .instance_methods(false)
               .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
@@ -88,12 +90,12 @@ module PuppetLanguageServer
 
         def to_h
           {
-            'key'            => key,
+            'key' => key,
             'calling_source' => calling_source,
-            'source'         => source,
-            'line'           => line,
-            'char'           => char,
-            'length'         => length
+            'source' => source,
+            'line' => line,
+            'char' => char,
+            'length' => length
           }
         end
 
@@ -141,8 +143,8 @@ module PuppetLanguageServer
 
         def to_json(*options)
           {
-            'vertices'      => vertices,
-            'edges'         => edges,
+            'vertices' => vertices,
+            'edges' => edges,
             'error_content' => error_content
           }.to_json(options)
         end
@@ -161,7 +163,7 @@ module PuppetLanguageServer
 
         def to_h
           super.to_h.merge(
-            'doc'        => doc,
+            'doc' => doc,
             'parameters' => parameters
           )
         end
@@ -176,7 +178,7 @@ module PuppetLanguageServer
               # TODO: This should be a class, not a hash
               parameters[attr_name] = {
                 :type => value_from_hash(obj_attr, :type),
-                :doc  => value_from_hash(obj_attr, :doc)
+                :doc => value_from_hash(obj_attr, :doc)
               }
             end
           end
@@ -200,9 +202,9 @@ module PuppetLanguageServer
 
         def to_h
           super.to_h.merge(
-            'doc'           => doc,
-            'alias_of'      => alias_of,
-            'attributes'    => attributes.map(&:to_h),
+            'doc' => doc,
+            'alias_of' => alias_of,
+            'attributes' => attributes.map(&:to_h),
             'is_type_alias' => is_type_alias
           )
         end
@@ -229,10 +231,10 @@ module PuppetLanguageServer
 
         def to_h
           {
-            'key'           => key,
+            'key' => key,
             'default_value' => default_value,
-            'doc'           => doc,
-            'types'         => types
+            'doc' => doc,
+            'types' => types
           }
         end
 
@@ -263,9 +265,9 @@ module PuppetLanguageServer
 
         def to_h
           super.to_h.merge(
-            'doc'              => doc,
+            'doc' => doc,
             'function_version' => function_version,
-            'signatures'       => signatures.map(&:to_h)
+            'signatures' => signatures.map(&:to_h)
           )
         end
 
@@ -295,10 +297,10 @@ module PuppetLanguageServer
 
         def to_h
           {
-            'key'          => key,
-            'doc'          => doc,
+            'key' => key,
+            'doc' => doc,
             'return_types' => return_types,
-            'parameters'   => parameters.map(&:to_h)
+            'parameters' => parameters.map(&:to_h)
           }
         end
 
@@ -322,9 +324,9 @@ module PuppetLanguageServer
 
         def to_h
           {
-            'name'                 => name,
-            'doc'                  => doc,
-            'types'                => types,
+            'name' => name,
+            'doc' => doc,
+            'types' => types,
             'signature_key_offset' => signature_key_offset,
             'signature_key_length' => signature_key_length
           }
@@ -351,7 +353,7 @@ module PuppetLanguageServer
 
         def to_h
           super.to_h.merge(
-            'doc'        => doc,
+            'doc' => doc,
             'attributes' => attributes
           )
         end
@@ -365,9 +367,9 @@ module PuppetLanguageServer
             value['attributes'].each do |attr_name, obj_attr|
               attributes[attr_name.intern] = {
                 # TODO: This should be a class, not a hash
-                :type       => value_from_hash(obj_attr, :type).intern,
-                :doc        => value_from_hash(obj_attr, :doc),
-                :required?  => value_from_hash(obj_attr, :required?),
+                :type => value_from_hash(obj_attr, :type).intern,
+                :doc => value_from_hash(obj_attr, :doc),
+                :required? => value_from_hash(obj_attr, :required?),
                 :isnamevar? => value_from_hash(obj_attr, :isnamevar?)
               }
             end
@@ -438,6 +440,7 @@ module PuppetLanguageServer
 
         def concat!(array)
           return if array.nil? || array.empty?
+
           array.each { |item| append!(item) }
         end
 
@@ -454,6 +457,7 @@ module PuppetLanguageServer
           obj.each do |key, value|
             info = METADATA_LIST[key.intern]
             next if info.nil?
+
             list = list_for_object_class(info[:item_class])
             value.each { |i| list << info[:item_class].new.from_h!(i) }
           end
@@ -462,6 +466,7 @@ module PuppetLanguageServer
 
         def each_list(&block)
           return unless block_given?
+
           @aggregate.each(&block)
         end
 
@@ -471,7 +476,7 @@ module PuppetLanguageServer
         # - Add to the information to this hash
         # - Add a method to access the aggregate
         METADATA_LIST = {
-          :classes   => {
+          :classes => {
             :item_class => PuppetClass,
             :list_class => PuppetClassList
           },
@@ -483,7 +488,7 @@ module PuppetLanguageServer
             :item_class => PuppetFunction,
             :list_class => PuppetFunctionList
           },
-          :types     => {
+          :types => {
             :item_class => PuppetType,
             :list_class => PuppetTypeList
           }

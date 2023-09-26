@@ -466,7 +466,8 @@ describe 'PuppetLanguageServer::Puppetfile::ValidationProvider' do
           :owner=>"puppetlabs",
           :start_line=>3,
           :title=>"puppetlabs-somemodule",
-          :version=>"1.0.0"}])
+          :version=>"=1.0.0"}]) 
+          # version requirements returned explicity by puppetfile-resolver since https://github.com/glennsarti/puppetfile-resolver/pull/16
       end
     end
 

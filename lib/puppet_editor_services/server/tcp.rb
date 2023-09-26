@@ -44,6 +44,7 @@ module PuppetEditorServices
       def get_data(io, connection_data)
         data = io.recv_nonblock(1048576) # with maximum number of bytes to read at a time...
         raise 'Received a 0byte payload' if data.length.zero?
+
         # We're already in a callback so no need to invoke as a callback
         connection_data[:handler].receive_data(data)
       rescue StandardError => e
@@ -164,6 +165,7 @@ module PuppetEditorServices
       def fire_event
         event = self.class.e_locker.synchronize { self.class.events.shift }
         return false unless event
+
         begin
           event[0].call(*event[1])
         rescue OpenSSL::SSL::SSLError
@@ -186,8 +188,10 @@ module PuppetEditorServices
       def io_review
         self.class.io_locker.synchronize do
           return false unless self.class.events.empty?
+
           united = self.class.services.keys + self.class.io_connection_dic.keys
           return false if united.empty?
+
           io_r = IO.select(united, nil, united, 0.1)
           if io_r
             io_r[0].each do |io|
@@ -331,6 +335,7 @@ module PuppetEditorServices
         end
 
         return unless connection_count.zero? && !@server_options[:stop_on_client_exit].nil? && @server_options[:stop_on_client_exit]
+
         callback(self, :log, 'All clients have disconnected.  Shutting down server.')
         callback(self, :stop_services)
       end

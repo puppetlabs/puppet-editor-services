@@ -106,6 +106,7 @@ module PuppetEditorServices
       def handle_response(response_message, context)
         original_request = context[:request]
         return false if original_request.nil?
+
         unless response_message.is_successful # rubocop:disable Style/IfUnlessModifier Line is too long otherwise
           PuppetEditorServices.log_message(:error, "Response for method '#{original_request.rpc_method}' with id '#{original_request.id}' failed with #{response_message.error}")
         end

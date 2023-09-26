@@ -9,6 +9,7 @@ module PuppetLanguageServer
   module PuppetHelper
     def self.module_path
       return @module_path unless @module_path.nil?
+
       # TODO: It would be nice if this wasn't using the whole puppet environment to calculate the modulepath directoties
       # In the meantime memoize it. Currently you can't change the modulepath mid-process.
       begin
@@ -17,6 +18,7 @@ module PuppetLanguageServer
         env = Puppet.lookup(:current_environment)
       end
       return [] if env.nil?
+
       @module_path = env.modulepath
     end
 
@@ -57,7 +59,7 @@ module PuppetLanguageServer
       session_state.object_cache.object_by_name(
         :function,
         name,
-        :fuzzy_match     => true,
+        :fuzzy_match => true,
         :exclude_origins => exclude_origins
       )
     end
@@ -80,7 +82,7 @@ module PuppetLanguageServer
       session_state.object_cache.object_by_name(
         :datatype,
         name,
-        :fuzzy_match     => true,
+        :fuzzy_match => true,
         :exclude_origins => exclude_origins
       )
     end

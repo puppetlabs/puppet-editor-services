@@ -51,11 +51,11 @@ module DSP
   def self.create_range(from_line, from_char, to_line, to_char)
     {
       'start' => {
-        'line'      => from_line,
+        'line' => from_line,
         'character' => from_char
       },
-      'end'   => {
-        'line'      => to_line,
+      'end' => {
+        'line' => to_line,
         'character' => to_char
       }
     }

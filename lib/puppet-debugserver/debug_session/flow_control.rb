@@ -15,13 +15,13 @@ module PuppetDebugServer
 
         @flag_mutex = Mutex.new
         @flags = {
-          :start_puppet                   => false,
-          :puppet_started                 => false,
-          :session_paused                 => false,
+          :start_puppet => false,
+          :puppet_started => false,
+          :session_paused => false,
           :client_completed_configuration => false,
-          :session_setup                  => false,
-          :terminate                      => false,
-          :suppress_log_messages          => false
+          :session_setup => false,
+          :terminate => false,
+          :suppress_log_messages => false
         }
 
         @run_mode = PuppetDebugServer::DebugSession::PuppetSessionRunMode.new
@@ -75,6 +75,7 @@ module PuppetDebugServer
       # @param flag_name [Symbol] The name of the flag
       def unassert_flag(flag_name)
         return if flag_name == :terminate # Can never unset the terminate flag
+
         @flag_mutex.synchronize do
           @flags[flag_name] = false
           PuppetDebugServer.log_message(:debug, "Unasserting flag #{flag_name} is true")
@@ -119,8 +120,8 @@ module PuppetDebugServer
         @debug_session.send_stopped_event(
           reason,
           'description' => description,
-          'text'        => text,
-          'threadId'    => @debug_session.puppet_thread_id
+          'text' => text,
+          'threadId' => @debug_session.puppet_thread_id
         )
 
         # Spin-wait for the session to be unpaused...

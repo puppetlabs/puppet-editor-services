@@ -25,7 +25,7 @@ module PuppetEditorServices
 
         def to_h
           {
-            'seq'  => seq,
+            'seq' => seq,
             'type' => type
           }
         end
@@ -145,8 +145,8 @@ module PuppetEditorServices
       def self.reply_error(request, message = nil, message_object = nil)
         Response.new(
           'request_seq' => request.seq,
-          'command'     => request.command,
-          'success'     => false
+          'command' => request.command,
+          'success' => false
         ).tap do |resp|
           resp.message = message unless message.nil?
           resp.body = { 'error' => message_object } unless message_object.nil?
@@ -156,8 +156,8 @@ module PuppetEditorServices
       def self.reply_success(request, body_content = nil)
         Response.new(
           'request_seq' => request.seq,
-          'command'     => request.command,
-          'success'     => true
+          'command' => request.command,
+          'success' => true
         ).tap { |resp| resp.body = body_content unless body_content.nil? }
       end
 

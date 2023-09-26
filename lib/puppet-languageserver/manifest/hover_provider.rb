@@ -9,7 +9,7 @@ module PuppetLanguageServer
         }.merge(options)
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
                                                                               :disallowed_classes => [Puppet::Pops::Model::BlockExpression],
-                                                                              :tasks_mode         => options[:tasks_mode])
+                                                                              :tasks_mode => options[:tasks_mode])
         return nil if result.nil?
 
         path = result[:path]
@@ -80,6 +80,7 @@ module PuppetLanguageServer
         end
 
         return nil if content.nil?
+
         LSP::Hover.new('contents' => content)
       end
 
@@ -115,6 +116,7 @@ module PuppetLanguageServer
       def self.get_fact_content(session_state, factname)
         fact = PuppetLanguageServer::FacterHelper.fact(session_state, factname)
         return nil if fact.nil?
+
         value = fact.value
         content = "**#{factname}** Fact\n\n"
 
@@ -145,6 +147,7 @@ module PuppetLanguageServer
       def self.get_attribute_class_parameter_content(item_class, param)
         param_type = item_class.parameters[param]
         return nil if param_type.nil?
+
         content = "**#{param}** Parameter"
         content += "\n\n#{param_type[:doc]}" unless param_type[:doc].nil?
         content
@@ -169,8 +172,10 @@ module PuppetLanguageServer
         # Get an instance of the type
         item_object = PuppetLanguageServer::PuppetHelper.get_type(session_state, name)
         return get_puppet_type_content(item_object) unless item_object.nil?
+
         item_object = PuppetLanguageServer::PuppetHelper.get_class(session_state, name)
         return get_puppet_class_content(item_object) unless item_object.nil?
+
         raise "#{name} is not a valid puppet type"
       end
 

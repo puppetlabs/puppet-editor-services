@@ -22,6 +22,7 @@ module PuppetLanguageServerSidecar
         resources = Puppet::Face[:resource, '0.0.1'].find("#{typename}/#{title}")
       end
       return result if resources.nil?
+
       resources = [resources] unless resources.is_a?(Array)
       prune_resource_parameters(resources).each do |item|
         obj = PuppetLanguageServer::Sidecar::Protocol::Resource.new
@@ -53,6 +54,7 @@ module PuppetLanguageServerSidecar
         next if IGNORE_DATATYPE_NAMES.include?(thing.simple_name)
         # Don't need duplicates
         next if name_list.include?(thing.simple_name)
+
         name_list << thing.simple_name
 
         obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetDataType.new
@@ -189,13 +191,16 @@ module PuppetLanguageServerSidecar
         search_paths.each do |search_root|
           PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Potential search root '#{search_root}'")
           next if search_root.nil?
+
           # We need absolute paths from here on in.
           search_root = File.expand_path(search_root)
           next unless path_in_root?(from_root_path, search_root) && Dir.exist?(search_root)
+
           PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Using '#{search_root}' as a directory to search")
 
           all_object_info.each do |object_type, paths_to_search|
             next unless object_types.include?(object_type)
+
             # TODO: next unless object_type is included
             paths_to_search.each do |path_info|
               path = File.join(search_root, path_info[:relative_dir])
@@ -240,7 +245,7 @@ module PuppetLanguageServerSidecar
       # @return [Hash[Symbol => Hash[Symbol => String]]]
       def all_object_info
         {
-          :class    => [
+          :class => [
             { relative_dir: 'manifests',                   glob: '/**/*.pp' } # Pretty much everything in most modules
           ],
           :datatype => [
@@ -252,7 +257,7 @@ module PuppetLanguageServerSidecar
             { relative_dir: 'lib/puppet/functions',        glob: '/**/*.rb' }, # Contains functions written in Ruby for the modern Puppet::Functions API
             { relative_dir: 'lib/puppet/parser/functions', glob: '/**/*.rb' }  # Contains functions written in Ruby for the legacy Puppet::Parser::Functions API
           ],
-          :type     => [
+          :type => [
             { relative_dir: 'lib/puppet/type',             glob: '/*.rb' } # Contains Puppet resource types. We don't care about providers. Types cannot exist in subdirs
           ]
         }

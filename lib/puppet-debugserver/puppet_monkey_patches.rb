@@ -36,6 +36,7 @@ module Puppet
         # TODO: Potential issue here with 4.10.x not implementing .file on the Positioned class
         # Just re-raise if there is no Puppet manifest file associated with the error
         raise if e.file.nil? || e.line.nil? || e.pos.nil?
+
         PuppetDebugServer::PuppetDebugSession.instance.execute_hook(:hook_exception, [e])
         raise
       end

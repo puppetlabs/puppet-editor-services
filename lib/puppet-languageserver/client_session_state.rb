@@ -70,6 +70,7 @@ module PuppetLanguageServer
 
     def load_workspace_data!(async = true)
       return true if documents.store_root_path.nil?
+
       action_args = ['--local-workspace', documents.store_root_path]
       PuppetLanguageServer.log_message(:info, "Loading Workspace Data via aggregate #{'(Async)' if async}...")
       if async

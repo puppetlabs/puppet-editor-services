@@ -69,7 +69,7 @@ module PuppetDebugServer
         @debug_session.send_exited_event(option)
         @debug_session.send_output_event(
           'category' => 'console',
-          'output'   => "puppet exited with #{option}"
+          'output' => "puppet exited with #{option}"
         )
 
         @debug_session.flow_control.unassert_flag(:puppet_started)
@@ -89,6 +89,7 @@ module PuppetDebugServer
 
         # Spin-wait for the configurationDone message from the client before we continue compilation
         return if @debug_session.flow_control.flag?(:client_completed_configuration)
+
         sleep(0.5) until @debug_session.flow_control.flag?(:client_completed_configuration)
       end
 
@@ -105,12 +106,14 @@ module PuppetDebugServer
         target = args[1]
         # Ignore this if there is no positioning information available
         return unless target.is_a?(Puppet::Pops::Model::Positioned)
+
         target_loc = @debug_session.get_location_from_pops_object(target)
 
         # Even if it's positioned, it can still contain invalid information.  Ignore it if
         # it's missing required information.  This can happen when evaluting strings (e.g. watches from VSCode)
         # i.e. not a file on disk
         return if target_loc.file.nil? || target_loc.file.empty?
+
         target_classname = @debug_session.get_puppet_class_name(target)
         ast_classname = get_ast_class_name(target)
 
@@ -215,7 +218,7 @@ module PuppetDebugServer
 
         @debug_session.send_output_event(
           'category' => category,
-          'output'   => "#{level}: #{str}\n"
+          'output' => "#{level}: #{str}\n"
         )
       end
 
@@ -239,6 +242,7 @@ module PuppetDebugServer
       def process_breakpoint_hook(reason, args)
         # If the debug session is paused no need to process
         return if @debug_session.flow_control.session_paused?
+
         break_display_text = args[0] # TODO: REALLY don't like all this magic array stuff. Real Object? Hash?
         break_description = args[1]
 
@@ -267,9 +271,9 @@ module PuppetDebugServer
           reason,
           break_display_text,
           break_description,
-          :pops_target       => pops_target_object,
-          :scope             => scope_object,
-          :pops_depth_level  => pops_depth_level,
+          :pops_target => pops_target_object,
+          :scope => scope_object,
+          :pops_depth_level => pops_depth_level,
           :puppet_stacktrace => stack_trace
         )
       end
@@ -282,6 +286,7 @@ module PuppetDebugServer
       def get_ast_class_name(obj)
         # Puppet 5 has PCore Types
         return obj._pcore_type.name if obj.respond_to?(:_pcore_type)
+
         # .. otherwise revert to Pops classname
         obj.class.to_s
       end

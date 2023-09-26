@@ -19,6 +19,7 @@ module PuppetEditorServices
 
       def connection_error?
         return false if connection.nil?
+
         connection.error?
       end
     end

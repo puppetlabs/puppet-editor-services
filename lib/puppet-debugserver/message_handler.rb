@@ -74,6 +74,7 @@ module PuppetDebugServer
       PuppetDebugServer.log_message(:debug, 'Received evaluate request.')
       debug_session = PuppetDebugServer::PuppetDebugSession.instance
       return PuppetEditorServices::Protocol::DebugAdapterMessages.reply_error(request_message) unless debug_session.flow_control.session_active?
+
       obj = DSP::EvaluateRequest.new(request_message.to_h)
       begin
         PuppetEditorServices::Protocol::DebugAdapterMessages.reply_success(
@@ -164,6 +165,7 @@ module PuppetDebugServer
       debug_session = PuppetDebugServer::PuppetDebugSession.instance
       obj = DSP::NextRequest.new(request_message.to_h)
       return PuppetEditorServices::Protocol::DebugAdapterMessages.reply_error(request_message) if debug_session.puppet_thread_id.nil? || debug_session.puppet_thread_id != obj.arguments.threadId
+
       # Stepout the debug session
       debug_session.flow_control.next!
       PuppetEditorServices::Protocol::DebugAdapterMessages.reply_success(request_message)
@@ -173,6 +175,7 @@ module PuppetDebugServer
       PuppetDebugServer.log_message(:debug, 'Received scopes request.')
       debug_session = PuppetDebugServer::PuppetDebugSession.instance
       return PuppetEditorServices::Protocol::DebugAdapterMessages.reply_error(request_message) unless debug_session.flow_control.session_active?
+
       obj = DSP::ScopesRequest.new(request_message.to_h)
 
       PuppetEditorServices::Protocol::DebugAdapterMessages.reply_success(
@@ -229,6 +232,7 @@ module PuppetDebugServer
       debug_session = PuppetDebugServer::PuppetDebugSession.instance
       obj = DSP::StepInRequest.new(request_message.to_h)
       return PuppetEditorServices::Protocol::DebugAdapterMessages.reply_error(request_message) if debug_session.puppet_thread_id.nil? || debug_session.puppet_thread_id != obj.arguments.threadId
+
       # Stepin the debug session
       debug_session.flow_control.step_in!
       PuppetEditorServices::Protocol::DebugAdapterMessages.reply_success(request_message)
@@ -239,6 +243,7 @@ module PuppetDebugServer
       debug_session = PuppetDebugServer::PuppetDebugSession.instance
       obj = DSP::StepOutRequest.new(request_message.to_h)
       return PuppetEditorServices::Protocol::DebugAdapterMessages.reply_error(request_message) if debug_session.puppet_thread_id.nil? || debug_session.puppet_thread_id != obj.arguments.threadId
+
       # Stepout the debug session
       debug_session.flow_control.step_out!
       PuppetEditorServices::Protocol::DebugAdapterMessages.reply_success(request_message)
@@ -260,6 +265,7 @@ module PuppetDebugServer
       PuppetDebugServer.log_message(:debug, 'Received variables request.')
       debug_session = PuppetDebugServer::PuppetDebugSession.instance
       return PuppetEditorServices::Protocol::DebugAdapterMessages.reply_error(request_message) unless debug_session.flow_control.session_active?
+
       obj = DSP::VariablesRequest.new(request_message.to_h)
 
       PuppetEditorServices::Protocol::DebugAdapterMessages.reply_success(

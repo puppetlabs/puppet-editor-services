@@ -38,6 +38,7 @@ module PuppetEditorServices
           inbound_data = nil
           read_from_pipe($stdin, 2) { |data| inbound_data = data }
           break if @exiting
+
           @client_connection.receive_data(inbound_data) unless inbound_data.nil?
           break if @exiting
         end

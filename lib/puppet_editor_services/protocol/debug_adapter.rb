@@ -51,6 +51,7 @@ module PuppetEditorServices
           offset = 0
           while offset < @buffer.length - 4
             break if @buffer[offset] == 13 && @buffer[offset + 1] == 10 && @buffer[offset + 2] == 13 && @buffer[offset + 3] == 10
+
             offset += 1
           end
           return unless offset < @buffer.length - 4
@@ -85,6 +86,7 @@ module PuppetEditorServices
       def encode_and_send(object)
         # Inject the sequence ID.
         raise "#{object.class} is not a PuppetEditorServices::Protocol::DebugAdapterMessages::ProtocolMessage" unless object.is_a?(PuppetEditorServices::Protocol::DebugAdapterMessages::ProtocolMessage)
+
         object.seq = next_sequence_id!
         send_json_string(::JSON.generate(object))
       end
@@ -94,6 +96,7 @@ module PuppetEditorServices
         json_obj = ::JSON.parse(content)
         return receive_json_message_as_hash(json_obj) if json_obj.is_a?(Hash)
         return unless json_obj.is_a?(Array)
+
         # Batch: multiple requests/notifications in an array.
         # NOTE: Not implemented as it doesn't make sense using JSON RPC over pure TCP / UnixSocket.
 

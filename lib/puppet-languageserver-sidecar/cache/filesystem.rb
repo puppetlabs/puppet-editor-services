@@ -26,6 +26,7 @@ module PuppetLanguageServerSidecar
 
       def load(absolute_path, section)
         return nil unless active?
+
         file_key = file_key(absolute_path, section)
         cache_file = File.join(cache_dir, cache_filename(file_key))
 
@@ -56,6 +57,7 @@ module PuppetLanguageServerSidecar
 
       def save(absolute_path, section, content_string)
         return false unless active?
+
         file_key = file_key(absolute_path, section)
         cache_file = File.join(cache_dir, cache_filename(file_key))
 
@@ -73,6 +75,7 @@ module PuppetLanguageServerSidecar
 
       def clear!
         return unless active?
+
         PuppetLanguageServerSidecar.log_message(:warn, '[PuppetLanguageServerSidecar::Cache::FileSystem.clear] Filesystem based cache is being cleared')
         FileUtils.rm(Dir.glob(File.join(cache_dir, '*')), :force => true)
       end
