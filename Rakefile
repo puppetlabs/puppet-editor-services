@@ -64,8 +64,8 @@ task :gem_revendor do
     },
     {
       :directory => 'puppetfile-resolver',
-      :github_repo => 'https://github.com/glennsarti/puppetfile-resolver.git',
-      :github_ref => '0.3.0',
+      :github_repo => 'https://github.com/jordanbreen28/puppetfile-resolver.git',
+      :github_ref => 'd058f6b8b285dba2af0aeb59722ea5de23c3c13f',
     },
     {
       :directory => 'molinillo',
@@ -89,7 +89,7 @@ task :gem_revendor do
   vendor_dir = File.join(File.dirname(__FILE__),'vendor')
   gem_list.each do |vendor|
     gem_dir = File.join(vendor_dir,vendor[:directory])
-    FileUtils.rm_rf(gem_dir) if Dir.exist?(gem_dir)
+    FileUtils.rm_rf(gem_dir) if Dir.exist?(gem_dir) 
   end
   Dir.mkdir(vendor_dir) unless Dir.exist?(vendor_dir)
 
