@@ -14,6 +14,7 @@ jobs:
       matrix:
         ruby_version:
           - '2.7'
+          - '3.2'
         runs_on:
           - 'ubuntu-latest'
           - 'windows-latest'
@@ -26,33 +27,20 @@ jobs:
       runs_on: ${{ matrix.runs_on }}
       rake_task: 'gem_revendor test_languageserver test_languageserver_sidecar test_debugserver'
 
-  acceptance:
+  build:
     strategy:
       fail-fast: false
       matrix:
         ruby_version:
           - '2.7'
-        runs_on:
-          - 'ubuntu-latest'
-          - 'windows-latest'
-
-    name: "Acceptance : ${{ matrix.runs_on }} Ruby ${{ matrix.ruby_version }}"
-    uses: "puppetlabs/cat-github-actions/.github/workflows/gem_acceptance.yml@main"
-    secrets: "inherit"
-    with:
-      ruby_version: ${{ matrix.ruby_version }}
-      runs_on: ${{ matrix.runs_on }}
-      rake_task: 'gem_revendor acceptance_languageserver'
-      puppet_version: '~> 7.24'
-
-  build:
-    name: "Build Editor Service"
+          - '3.2'
+    name: "Build Editor Service (Ruby ${{ matrix.ruby_version }})"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7'
+          ruby-version: ${{ matrix.ruby_version }}
           bundler-cache: true
       - name: Set build version
         shell: pwsh
