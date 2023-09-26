@@ -31,7 +31,7 @@ module PuppetLanguageServer
       # CGI.unescape doesn't handle space rules properly in uri paths
       # URI::parser.unescape does, but returns strings in their original encoding
       # Mostly safe here as we're only worried about file based URIs
-      parser = URI::Parser.new
+      parser = URI::DEFAULT_PARSER
       root_path = parser.unescape(actual_root.path)
       uri_path = parser.unescape(actual_uri.path)
       if case_sensitive

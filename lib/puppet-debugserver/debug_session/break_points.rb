@@ -29,7 +29,7 @@ module PuppetDebugServer
 
           begin
             # TODO: This could be slow on big files....
-            IO.foreach(file_path, :mode => 'rb', :encoding => 'UTF-8').each_with_index do |item, index|
+            IO.foreach(file_path, mode: 'rb', encoding: 'UTF-8').each_with_index do |item, index|
               # index here zero-based whereas we want one-based indexing
               file_contents[index + 1] = item if line_list.include?(index + 1)
             end

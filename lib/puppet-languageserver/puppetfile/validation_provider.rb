@@ -12,10 +12,10 @@ module PuppetLanguageServer
 
       def self.validate(content, options = {})
         options = {
-          :max_problems => 100,
-          :resolve_puppetfile => true,
-          :module_path => [],
-          :document_uri => '???'
+          max_problems: 100,
+          resolve_puppetfile: true,
+          module_path: [],
+          document_uri: '???'
         }.merge(options)
 
         result = []

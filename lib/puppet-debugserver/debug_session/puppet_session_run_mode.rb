@@ -38,7 +38,7 @@ module PuppetDebugServer
         @run_mode_mutex.synchronize do
           @mode = :next
           @options = {
-            :pops_depth_level => pops_depth_level
+            pops_depth_level: pops_depth_level
           }
         end
       end
@@ -57,7 +57,7 @@ module PuppetDebugServer
         @run_mode_mutex.synchronize do
           @mode = :stepout
           @options = {
-            :pops_depth_level => pops_depth_level
+            pops_depth_level: pops_depth_level
           }
         end
       end

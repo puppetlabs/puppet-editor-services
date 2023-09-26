@@ -5,11 +5,11 @@ module PuppetLanguageServer
     module HoverProvider
       def self.resolve(session_state, content, line_num, char_num, options = {})
         options = {
-          :tasks_mode => false
+          tasks_mode: false
         }.merge(options)
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
-                                                                              :disallowed_classes => [Puppet::Pops::Model::BlockExpression],
-                                                                              :tasks_mode => options[:tasks_mode])
+                                                                              disallowed_classes: [Puppet::Pops::Model::BlockExpression],
+                                                                              tasks_mode: options[:tasks_mode])
         return nil if result.nil?
 
         path = result[:path]
@@ -70,7 +70,7 @@ module PuppetLanguageServer
         when 'Puppet::Pops::Model::QualifiedReference'
           # https://github.com/puppetlabs/puppet-specifications/blob/master/language/names.md#names
           # Datatypes have to start with uppercase and can be fully qualified
-          if item.cased_value =~ /^[A-Z][a-zA-Z:0-9]*$/ # rubocop:disable Style/GuardClause
+          if /^[A-Z][a-zA-Z:0-9]*$/.match?(item.cased_value) # rubocop:disable Style/GuardClause
             content = get_puppet_datatype_content(session_state, item, options[:tasks_mode])
           else
             raise "#{item.cased_value} is an unknown QualifiedReference"

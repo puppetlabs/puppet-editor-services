@@ -23,11 +23,11 @@ module PuppetLanguageServer
       REGION_REGION = 'region'
 
       def start_region?(text)
-        !(text =~ %r{^#\s*region\b}).nil?
+        !(text =~ /^#\s*region\b/).nil?
       end
 
       def end_region?(text)
-        !(text =~ %r{^#\s*endregion\b}).nil?
+        !(text =~ /^#\s*endregion\b/).nil?
       end
 
       def folding_ranges(tokens, show_last_line = false)

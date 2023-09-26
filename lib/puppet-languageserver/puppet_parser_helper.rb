@@ -41,7 +41,7 @@ module PuppetLanguageServer
         line_offset = content.index("\n", line_offset + 1)
         break if line_offset.nil?
 
-        line_offsets << line_offset + 1
+        line_offsets << (line_offset + 1)
       end
       line_offsets
     end
@@ -58,10 +58,10 @@ module PuppetLanguageServer
 
     def self.object_under_cursor(content, line_num, char_num, options)
       options = {
-        :multiple_attempts => false,
-        :disallowed_classes => [],
-        :tasks_mode => false,
-        :remove_trigger_char => true
+        multiple_attempts: false,
+        disallowed_classes: [],
+        tasks_mode: false,
+        remove_trigger_char: true
       }.merge(options)
 
       # Use Puppet to generate the AST
@@ -132,11 +132,11 @@ module PuppetLanguageServer
       #     [0, 14, 34, 36]  means line number 2 starts at absolute offset 34
       #   Once we know the line offset, we can simply add on the char_num to get the absolute offset
       #   If during paring we modified the source we may need to change the cursor location
-      if result.respond_to?(:line_offsets)
-        line_offset = result.line_offsets[line_num]
-      else
-        line_offset = result['locator'].line_index[line_num]
-      end
+      line_offset = if result.respond_to?(:line_offsets)
+                      result.line_offsets[line_num]
+                    else
+                      result['locator'].line_index[line_num]
+                    end
       abs_offset = line_offset + char_num + move_offset
       # Typically we're completing after something was typed, so go back one char by default
       abs_offset -= 1 if options[:remove_trigger_char]

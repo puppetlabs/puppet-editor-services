@@ -43,7 +43,7 @@ module PuppetDebugServer
 
         # This mimics the break function from puppet-debugger
         # https://github.com/nwops/puppet-debug#usage
-        func_object.newfunction(:'debug::break', :type => :rvalue, :arity => -1, :doc => 'Breakpoint Function') do |arguments|
+        func_object.newfunction(:'debug::break', type: :rvalue, arity: -1, doc: 'Breakpoint Function') do |arguments|
           # This function is just a place holder. It gets interpretted at the
           # pops_evaluate hooks but the function itself still needs to exist though.
         end
@@ -186,8 +186,8 @@ module PuppetDebugServer
           'exception',
           'Compilation Exception',
           error_detail.basic_message,
-          :session_exception => error_detail,
-          :puppet_stacktrace => Puppet::Pops::PuppetStack.stacktrace_from_backtrace(error_detail)
+          session_exception: error_detail,
+          puppet_stacktrace: Puppet::Pops::PuppetStack.stacktrace_from_backtrace(error_detail)
         )
       end
 
@@ -271,10 +271,10 @@ module PuppetDebugServer
           reason,
           break_display_text,
           break_description,
-          :pops_target => pops_target_object,
-          :scope => scope_object,
-          :pops_depth_level => pops_depth_level,
-          :puppet_stacktrace => stack_trace
+          pops_target: pops_target_object,
+          scope: scope_object,
+          pops_depth_level: pops_depth_level,
+          puppet_stacktrace: stack_trace
         )
       end
 

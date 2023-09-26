@@ -42,7 +42,7 @@ module PuppetDebugServer
     # Creates a debug session
     def self.instance
       # This can be called from any thread
-      return @@session_instance unless @@session_instance.nil? # rubocop:disable Style/ClassVars  This class method (not instance) should be inherited
+      return @@session_instance unless @@session_instance.nil? # This class method (not instance) should be inherited
 
       @@session_instance = PuppetDebugSession.new # rubocop:disable Style/ClassVars  This class method (not instance) should be inherited
     end
@@ -228,8 +228,7 @@ module PuppetDebugServer
 
       result = []
 
-      this_scope = puppet_session_state.saved.scope
-      # rubocop:disable Lint/Void  Go home rubocop, you're drunk.
+      this_scope = puppet_session_state.saved.scope # Go home rubocop, you're drunk.
       until this_scope.nil? || this_scope.is_topscope?
         result << DSP::Scope.new.from_h!(
           'name' => this_scope.to_s,
@@ -239,8 +238,6 @@ module PuppetDebugServer
         )
         this_scope = this_scope.parent
       end
-      # rubocop:enable Lint/Void
-
       unless puppet_session_state.actual.compiler.nil?
         result << DSP::Scope.new.from_h!(
           'name' => puppet_session_state.actual.compiler.topscope.to_s,

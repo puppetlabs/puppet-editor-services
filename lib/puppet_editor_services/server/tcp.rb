@@ -42,7 +42,7 @@ module PuppetEditorServices
       # this code will be called when a socket recieves data.
       # @api private
       def get_data(io, connection_data)
-        data = io.recv_nonblock(1048576) # with maximum number of bytes to read at a time...
+        data = io.recv_nonblock(1_048_576) # with maximum number of bytes to read at a time...
         raise 'Received a 0byte payload' if data.length.zero?
 
         # We're already in a callback so no need to invoke as a callback
@@ -198,7 +198,7 @@ module PuppetEditorServices
               if self.class.services[io]
                 begin
                   callback(self, :add_connection, io.accept_nonblock, self.class.services[io])
-                rescue Errno::EWOULDBLOCK # rubocop:disable Lint/SuppressedException
+                rescue Errno::EWOULDBLOCK
                   # There's nothing to handle. Swallow the error
                 rescue StandardError => e
                   log(e.message)
@@ -212,12 +212,10 @@ module PuppetEditorServices
               end
             end
             io_r[2].each do |io|
-              begin
-                (remove_connection(io) || self.class.services.delete(io)).close
-              rescue # rubocop:disable Style/RescueStandardError
-                # Swallow all errors
-                true
-              end
+              (remove_connection(io) || self.class.services.delete(io)).close
+            rescue # rubocop:disable Style/RescueStandardError
+              # Swallow all errors
+              true
             end
           end
         end
@@ -278,12 +276,10 @@ module PuppetEditorServices
       def stop_connections
         self.class.c_locker.synchronize do
           self.class.io_connection_dic.each_key do |io|
-            begin
-              io.close
-            rescue # rubocop:disable Style/RescueStandardError
-              # Swallow all errors
-              true
-            end
+            io.close
+          rescue # rubocop:disable Style/RescueStandardError
+            # Swallow all errors
+            true
           end
           self.class.io_connection_dic.clear
         end

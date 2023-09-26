@@ -12,11 +12,9 @@ begin
   %w[
     sidecar_protocol
   ].each do |lib|
-    begin
-      require "puppet-languageserver/#{lib}"
-    rescue LoadError
-      require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
-    end
+    require "puppet-languageserver/#{lib}"
+  rescue LoadError
+    require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
   end
 ensure
   $VERBOSE = original_verbose
@@ -77,11 +75,9 @@ module PuppetLanguageServerSidecar
     ]
 
     require_list.each do |lib|
-      begin
-        require "puppet-languageserver-sidecar/#{lib}"
-      rescue LoadError
-        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
-      end
+      require "puppet-languageserver-sidecar/#{lib}"
+    rescue LoadError
+      require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
     end
   ensure
     $VERBOSE = original_verbose
@@ -214,11 +210,9 @@ module PuppetLanguageServerSidecar
     return false unless PuppetLanguageServerSidecar::Workspace.has_module_metadata?
 
     %w[puppet_modulepath_monkey_patches].each do |lib|
-      begin
-        require "puppet-languageserver-sidecar/#{lib}"
-      rescue LoadError
-        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
-      end
+      require "puppet-languageserver-sidecar/#{lib}"
+    rescue LoadError
+      require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
     end
 
     log_message(:debug, 'Injected the workspace into the module loader')
@@ -231,11 +225,9 @@ module PuppetLanguageServerSidecar
     Puppet.settings[:environment] = PuppetLanguageServerSidecar::PuppetHelper::SIDECAR_PUPPET_ENVIRONMENT
 
     %w[puppet_environment_monkey_patches].each do |lib|
-      begin
-        require "puppet-languageserver-sidecar/#{lib}"
-      rescue LoadError
-        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
-      end
+      require "puppet-languageserver-sidecar/#{lib}"
+    rescue LoadError
+      require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver-sidecar', lib))
     end
 
     log_message(:debug, 'Injected the workspace into the environment loader')
@@ -255,23 +247,23 @@ module PuppetLanguageServerSidecar
 
     when 'default_aggregate'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types)
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, object_types: PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types)
 
     when 'default_classes'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:class]).classes
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, object_types: [:class]).classes
 
     when 'default_datatypes'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:datatype]).datatypes
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, object_types: [:datatype]).datatypes
 
     when 'default_functions'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:function]).functions
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, object_types: [:function]).functions
 
     when 'default_types'
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
-      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, :object_types => [:type]).types
+      PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache, object_types: [:type]).types
 
     when 'node_graph'
       inject_workspace_as_module || inject_workspace_as_environment
@@ -303,40 +295,40 @@ module PuppetLanguageServerSidecar
 
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                            :object_types => PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types,
-                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path)
+                                                                            object_types: PuppetLanguageServerSidecar::PuppetHelper.available_documentation_types,
+                                                                            root_path: PuppetLanguageServerSidecar::Workspace.root_path)
 
     when 'workspace_classes'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
 
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                            :object_types => [:class],
-                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path).classes
+                                                                            object_types: [:class],
+                                                                            root_path: PuppetLanguageServerSidecar::Workspace.root_path).classes
 
     when 'workspace_datatypes'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
 
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                            :object_types => [:datatype],
-                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path).datatypes
+                                                                            object_types: [:datatype],
+                                                                            root_path: PuppetLanguageServerSidecar::Workspace.root_path).datatypes
 
     when 'workspace_functions'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
 
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                            :object_types => [:function],
-                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path).functions
+                                                                            object_types: [:function],
+                                                                            root_path: PuppetLanguageServerSidecar::Workspace.root_path).functions
 
     when 'workspace_types'
       return nil unless inject_workspace_as_module || inject_workspace_as_environment
 
       cache = options[:disable_cache] ? PuppetLanguageServerSidecar::Cache::Null.new : PuppetLanguageServerSidecar::Cache::FileSystem.new
       PuppetLanguageServerSidecar::PuppetHelper.retrieve_via_puppet_strings(cache,
-                                                                            :object_types => [:type],
-                                                                            :root_path => PuppetLanguageServerSidecar::Workspace.root_path).types
+                                                                            object_types: [:type],
+                                                                            root_path: PuppetLanguageServerSidecar::Workspace.root_path).types
 
     when 'facts'
       # Can't cache for facts

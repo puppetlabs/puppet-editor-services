@@ -5,18 +5,18 @@ module PuppetLanguageServer
     module CompletionProvider
       def self.complete(session_state, content, line_num, char_num, options = {})
         options = {
-          :tasks_mode => false,
-          :context => nil # LSP::CompletionContext object
+          tasks_mode: false,
+          context: nil # LSP::CompletionContext object
         }.merge(options)
         items = []
         incomplete = false
         is_trigger_char = !options[:context].nil? && options[:context].triggerKind == LSP::CompletionTriggerKind::TRIGGERCHARACTER
 
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
-                                                                              :multiple_attempts => true,
-                                                                              :disallowed_classes => [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression],
-                                                                              :tasks_mode => options[:tasks_mode],
-                                                                              :remove_trigger_char => is_trigger_char)
+                                                                              multiple_attempts: true,
+                                                                              disallowed_classes: [Puppet::Pops::Model::QualifiedName, Puppet::Pops::Model::BlockExpression],
+                                                                              tasks_mode: options[:tasks_mode],
+                                                                              remove_trigger_char: is_trigger_char)
         if result.nil?
           # We are in the root of the document.
 
@@ -139,7 +139,7 @@ module PuppetLanguageServer
               'name' => keyword
             }
           )
-          block.call(item) if block
+          yield(item) if block
         end
       end
 
@@ -155,7 +155,7 @@ module PuppetLanguageServer
               'expr' => name
             }
           )
-          block.call(item) if block
+          yield(item) if block
         end
       end
 
@@ -171,7 +171,7 @@ module PuppetLanguageServer
               'name' => pup_type
             }
           )
-          block.call(item) if block
+          yield(item) if block
         end
         # Find Puppet Classes/Defined Types
         PuppetLanguageServer::PuppetHelper.class_names(session_state).each do |pup_class|
@@ -180,7 +180,7 @@ module PuppetLanguageServer
                                          'detail' => 'Resource',
                                          'data' => { 'type' => 'resource_class',
                                                      'name' => pup_class })
-          block.call(item) if block
+          yield(item) if block
         end
       end
 
@@ -195,7 +195,7 @@ module PuppetLanguageServer
               'name' => name.to_s
             }
           )
-          block.call(item) if block
+          yield(item) if block
         end
       end
       # END Helpers
@@ -229,7 +229,7 @@ module PuppetLanguageServer
             result.detail = 'Orchestrator'
             result.documentation = 'Application definitions are a lot like a defined resource type except that instead of defining ' \
                                    'a chunk of reusable configuration that applies to a single node, the application definition ' \
-                                   'operates at a higher level. The components you declare inside an application can be individually '\
+                                   'operates at a higher level. The components you declare inside an application can be individually ' \
                                    'assigned to separate nodes you manage with Puppet.'
             result.insertText = "application ${1:name} () {\n\t${2:# resources}\n}$0"
             result.insertTextFormat = LSP::InsertTextFormat::SNIPPET

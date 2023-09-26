@@ -77,7 +77,7 @@ module PuppetLanguageServerSidecar
         return unless active?
 
         PuppetLanguageServerSidecar.log_message(:warn, '[PuppetLanguageServerSidecar::Cache::FileSystem.clear] Filesystem based cache is being cleared')
-        FileUtils.rm(Dir.glob(File.join(cache_dir, '*')), :force => true)
+        FileUtils.rm(Dir.glob(File.join(cache_dir, '*')), force: true)
       end
 
       private
@@ -91,11 +91,11 @@ module PuppetLanguageServerSidecar
       def read_file(filepath)
         return nil unless File.exist?(filepath)
 
-        File.open(filepath, 'rb') { |file| file.read }
+        File.binread(filepath)
       end
 
       def save_file(filepath, content)
-        File.open(filepath, 'wb') { |file| file.write(content) }
+        File.binwrite(filepath, content)
         true
       end
 

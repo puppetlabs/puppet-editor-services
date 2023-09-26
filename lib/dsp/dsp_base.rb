@@ -26,8 +26,7 @@ module DSP
       value
     end
 
-    def from_h!(value)
-    end
+    def from_h!(value); end
 
     def to_json(*options)
       to_h.to_json(options)

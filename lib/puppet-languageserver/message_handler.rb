@@ -33,13 +33,13 @@ module PuppetLanguageServer
                                 PuppetLanguageServer::ServerCapabilites.folding_provider_supported?
       # Setup static registrations if dynamic registration is not available
       info = {
-        :documentOnTypeFormattingProvider => !language_client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration'),
-        :foldingRangeProvider => static_folding_provider
+        documentOnTypeFormattingProvider: !language_client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration'),
+        foldingRangeProvider: static_folding_provider
       }
 
       # Configure the document store
       documents.initialize_store(
-        :workspace => workspace_root_from_initialize_params(json_rpc_message.params)
+        workspace: workspace_root_from_initialize_params(json_rpc_message.params)
       )
 
       # Initiate loading the object_cache
@@ -143,7 +143,7 @@ module PuppetLanguageServer
         LSP::PuppetFixDiagnosticErrorsResponse.new(
           'documentUri' => formatted_request.documentUri,
           'fixesApplied' => 0,
-          'newContent' => formatted_request.alwaysReturnContent ? content : nil # rubocop:disable Metrics/BlockNesting
+          'newContent' => formatted_request.alwaysReturnContent ? content : nil
         )
       end
     end
@@ -157,7 +157,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::CompletionProvider.complete(session_state, content, line_num, char_num, :context => context, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::CompletionProvider.complete(session_state, content, line_num, char_num, context: context, tasks_mode: documents.plan_file?(file_uri))
       else
         raise "Unable to provide completion on #{file_uri}"
       end
@@ -196,7 +196,7 @@ module PuppetLanguageServer
       content = documents.document_content(file_uri)
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::HoverProvider.resolve(session_state, content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::HoverProvider.resolve(session_state, content, line_num, char_num, tasks_mode: documents.plan_file?(file_uri))
       else
         raise "Unable to provide hover on #{file_uri}"
       end
@@ -213,7 +213,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(session_state, content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(session_state, content, line_num, char_num, tasks_mode: documents.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -228,7 +228,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, tasks_mode: documents.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -276,7 +276,7 @@ module PuppetLanguageServer
           content,
           line_num,
           char_num,
-          :tasks_mode => documents.plan_file?(file_uri)
+          tasks_mode: documents.plan_file?(file_uri)
         )
       else
         raise "Unable to provide signatures on #{file_uri}"

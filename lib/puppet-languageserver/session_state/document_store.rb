@@ -107,7 +107,7 @@ module PuppetLanguageServer
 
       def document_type(uri)
         case uri
-        when /\/Puppetfile$/i
+        when %r{/Puppetfile$}i
           :puppetfile
         when /\.pp$/i
           :manifest
@@ -148,7 +148,7 @@ module PuppetLanguageServer
       def initialize_store(options = {})
         @workspace_path = options[:workspace]
         @workspace_info_cache = {
-          :expires => Time.new - 120
+          expires: Time.new - 120
         }
       end
 
@@ -192,11 +192,11 @@ module PuppetLanguageServer
 
           parent = File.dirname(directory)
           # If the parent is the same as the original, then we've reached the end of the path chain
-          if parent == directory
-            directory = nil
-          else
-            directory = parent
-          end
+          directory = if parent == directory
+                        nil
+                      else
+                        parent
+                      end
         end
 
         directory
@@ -208,9 +208,9 @@ module PuppetLanguageServer
         # TTL has expired, time to calculate the document store details
 
         new_cache = {
-          :root_path => nil,
-          :has_environmentconf => false,
-          :has_metadatajson => false
+          root_path: nil,
+          has_environmentconf: false,
+          has_metadatajson: false
         }
         if @workspace_path.nil?
           # If we have never been given a local workspace path on the command line then there is really no
@@ -246,7 +246,7 @@ module PuppetLanguageServer
       def windows?
         # Ruby only sets File::ALT_SEPARATOR on Windows and the Ruby standard
         # library uses that to test what platform it's on.
-        !!File::ALT_SEPARATOR # rubocop:disable Style/DoubleNegation
+        !!File::ALT_SEPARATOR
       end
 
       # Creates a document object based on the Uri

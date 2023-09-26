@@ -16,11 +16,11 @@ module PuppetLanguageServerSidecar
     # Resource Face
     def self.get_puppet_resource(typename, title = nil)
       result = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
-      if title.nil?
-        resources = Puppet::Face[:resource, '0.0.1'].search(typename)
-      else
-        resources = Puppet::Face[:resource, '0.0.1'].find("#{typename}/#{title}")
-      end
+      resources = if title.nil?
+                    Puppet::Face[:resource, '0.0.1'].search(typename)
+                  else
+                    Puppet::Face[:resource, '0.0.1'].find("#{typename}/#{title}")
+                  end
       return result if resources.nil?
 
       resources = [resources] unless resources.is_a?(Array)
@@ -104,10 +104,10 @@ module PuppetLanguageServerSidecar
         if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better
           file_doc.functions.each { |item| result.append!(item) }
         end
-        if object_types.include?(:type)
-          file_doc.types.each do |item|
-            result.append!(item) unless name == 'whit' || name == 'component' # rubocop:disable Style/MultipleComparison
-          end
+        next unless object_types.include?(:type)
+
+        file_doc.types.each do |item|
+          result.append!(item) unless name == 'whit' || name == 'component'
         end
       end
 
@@ -245,19 +245,19 @@ module PuppetLanguageServerSidecar
       # @return [Hash[Symbol => Hash[Symbol => String]]]
       def all_object_info
         {
-          :class => [
+          class: [
             { relative_dir: 'manifests',                   glob: '/**/*.pp' } # Pretty much everything in most modules
           ],
-          :datatype => [
+          datatype: [
             { relative_dir: 'lib/puppet/datatypes',        glob: '/**/*.rb' }, # Custom Data Types
             { relative_dir: 'types',                       glob: '/**/*.pp' }  # Data Type aliases
           ],
-          :function => [
+          function: [
             { relative_dir: 'functions',                   glob: '/**/*.pp' }, # Contains custom functions written in the Puppet language.
             { relative_dir: 'lib/puppet/functions',        glob: '/**/*.rb' }, # Contains functions written in Ruby for the modern Puppet::Functions API
             { relative_dir: 'lib/puppet/parser/functions', glob: '/**/*.rb' }  # Contains functions written in Ruby for the legacy Puppet::Parser::Functions API
           ],
-          :type => [
+          type: [
             { relative_dir: 'lib/puppet/type',             glob: '/*.rb' } # Contains Puppet resource types. We don't care about providers. Types cannot exist in subdirs
           ]
         }

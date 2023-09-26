@@ -62,8 +62,8 @@ module PuppetLanguageServer
         # options[:exclude_origins]
         # options[:fuzzy_match]
         options = {
-          :exclude_origins => [],
-          :fuzzy_match => false
+          exclude_origins: [],
+          fuzzy_match: false
         }.merge(options)
 
         name = name.intern if name.is_a?(String)
@@ -106,7 +106,7 @@ module PuppetLanguageServer
       # options[:exclude_origins]
       def object_names_by_section(section, options = {})
         options = {
-          :exclude_origins => []
+          exclude_origins: []
         }.merge(options)
         result = []
         return result if section.nil?

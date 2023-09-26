@@ -5,13 +5,13 @@ module PuppetLanguageServer
     module SignatureProvider
       def self.signature_help(session_state, content, line_num, char_num, options = {})
         options = {
-          :tasks_mode => false
+          tasks_mode: false
         }.merge(options)
 
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
-                                                                              :multiple_attempts => false,
-                                                                              :tasks_mode => options[:tasks_mode],
-                                                                              :remove_trigger_char => false)
+                                                                              multiple_attempts: false,
+                                                                              tasks_mode: options[:tasks_mode],
+                                                                              remove_trigger_char: false)
         response = LSP::SignatureHelp.new.from_h!('signatures' => [], 'activeSignature' => nil, 'activeParameter' => nil)
         # We are in the root of the document so no signatures here.
         return response if result.nil?
@@ -42,11 +42,11 @@ module PuppetLanguageServer
         #   result.line_offsets contains an array of the offsets on a per line basis e.g.
         #     [0, 14, 34, 36]  means line number 2 starts at absolute offset 34
         #   Once we know the line offset, we can simply add on the char_num to get the absolute offset
-        if function_ast_object.respond_to?(:locator)
-          line_offset = function_ast_object.locator.line_index[line_num]
-        else
-          line_offset = locator.line_index[line_num]
-        end
+        line_offset = if function_ast_object.respond_to?(:locator)
+                        function_ast_object.locator.line_index[line_num]
+                      else
+                        locator.line_index[line_num]
+                      end
 
         abs_offset = line_offset + char_num
         # We need to use offsets here in case functions span lines

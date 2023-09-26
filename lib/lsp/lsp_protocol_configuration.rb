@@ -3,9 +3,6 @@
 # DO NOT MODIFY. This file is built automatically
 # LSP Protocol: vscode-languageserver-protocol/lib/protocol.configuration.d.ts
 
-# rubocop:disable Layout/EmptyLinesAroundClassBody
-# rubocop:disable Lint/UselessAssignment
-# rubocop:disable Style/AsciiComments
 # rubocop:disable Naming/MethodName
 
 module LSP
@@ -81,7 +78,5 @@ module LSP
   end
 end
 
-# rubocop:enable Layout/EmptyLinesAroundClassBody
-# rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
 # rubocop:enable Naming/MethodName

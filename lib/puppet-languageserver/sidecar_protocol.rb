@@ -45,7 +45,7 @@ module PuppetLanguageServer
 
           self.class
               .instance_methods(false)
-              .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+              .reject { |name| name.to_s.end_with?('=', '!') }
               .reject { |name| %i[to_h to_json].include?(name) }
               .each do |method_name|
             return false unless send(method_name) == other.send(method_name)
@@ -58,7 +58,7 @@ module PuppetLanguageServer
 
           self.class
               .instance_methods(false)
-              .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+              .reject { |name| name.to_s.end_with?('=', '!') }
               .reject { |name| %i[to_h to_json].include?(name) }
               .each do |method_name|
             return false unless send(method_name).eql?(other.send(method_name))
@@ -70,7 +70,7 @@ module PuppetLanguageServer
           props = []
           self.class
               .instance_methods(false)
-              .reject { |name| name.to_s.end_with?('=') || name.to_s.end_with?('!') }
+              .reject { |name| name.to_s.end_with?('=', '!') }
               .reject { |name| %i[to_h to_json].include?(name) }
               .each do |method_name|
             props << send(method_name).hash
@@ -177,8 +177,8 @@ module PuppetLanguageServer
             value['parameters'].each do |attr_name, obj_attr|
               # TODO: This should be a class, not a hash
               parameters[attr_name] = {
-                :type => value_from_hash(obj_attr, :type),
-                :doc => value_from_hash(obj_attr, :doc)
+                type: value_from_hash(obj_attr, :type),
+                doc: value_from_hash(obj_attr, :doc)
               }
             end
           end
@@ -367,10 +367,10 @@ module PuppetLanguageServer
             value['attributes'].each do |attr_name, obj_attr|
               attributes[attr_name.intern] = {
                 # TODO: This should be a class, not a hash
-                :type => value_from_hash(obj_attr, :type).intern,
-                :doc => value_from_hash(obj_attr, :doc),
-                :required? => value_from_hash(obj_attr, :required?),
-                :isnamevar? => value_from_hash(obj_attr, :isnamevar?)
+                type: value_from_hash(obj_attr, :type).intern,
+                doc: value_from_hash(obj_attr, :doc),
+                required?: value_from_hash(obj_attr, :required?),
+                isnamevar?: value_from_hash(obj_attr, :isnamevar?)
               }
             end
           end
@@ -465,7 +465,7 @@ module PuppetLanguageServer
         end
 
         def each_list(&block)
-          return unless block_given?
+          return unless block
 
           @aggregate.each(&block)
         end
@@ -476,21 +476,21 @@ module PuppetLanguageServer
         # - Add to the information to this hash
         # - Add a method to access the aggregate
         METADATA_LIST = {
-          :classes => {
-            :item_class => PuppetClass,
-            :list_class => PuppetClassList
+          classes: {
+            item_class: PuppetClass,
+            list_class: PuppetClassList
           },
-          :datatypes => {
-            :item_class => PuppetDataType,
-            :list_class => PuppetDataTypeList
+          datatypes: {
+            item_class: PuppetDataType,
+            list_class: PuppetDataTypeList
           },
-          :functions => {
-            :item_class => PuppetFunction,
-            :list_class => PuppetFunctionList
+          functions: {
+            item_class: PuppetFunction,
+            list_class: PuppetFunctionList
           },
-          :types => {
-            :item_class => PuppetType,
-            :list_class => PuppetTypeList
+          types: {
+            item_class: PuppetType,
+            list_class: PuppetTypeList
           }
         }.freeze
 

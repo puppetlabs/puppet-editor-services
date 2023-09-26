@@ -55,7 +55,7 @@ module PuppetLanguageServer
       def parse_lsp_configuration_settings!(settings = {})
         # format on type enabled
         value = to_boolean(safe_hash_traverse(settings, 'puppet', 'editorService', 'formatOnType', 'enable'), DEFAULT_FORMAT_ON_TYPE_ENABLE)
-        unless value == @format_on_type # rubocop:disable Style/GuardClause  Ummm no.
+        unless value == @format_on_type # Ummm no.
           # Is dynamic registration available?
           if client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration') == true
             if value
@@ -74,7 +74,7 @@ module PuppetLanguageServer
 
         # folding range enabled
         value = to_boolean(safe_hash_traverse(settings, 'puppet', 'editorService', 'foldingRange', 'enable'), DEFAULT_FOLDING_RANGE_ENABLE) && PuppetLanguageServer::ServerCapabilites.folding_provider_supported?
-        unless value == @folding_range # rubocop:disable Style/GuardClause  Ummm no.
+        unless value == @folding_range # Ummm no.
           # Is dynamic registration available?
           if client_capability('textDocument', 'foldingRange', 'dynamicRegistration') == true
             if value
@@ -90,7 +90,7 @@ module PuppetLanguageServer
       end
 
       def capability_registrations(method)
-        return [{ :registered => false, :state => :complete }] if @registrations[method].nil? || @registrations[method].empty?
+        return [{ registered: false, state: :complete }] if @registrations[method].nil? || @registrations[method].empty?
 
         @registrations[method].dup
       end
@@ -111,7 +111,7 @@ module PuppetLanguageServer
         # Note - Don't put more than one method per request even though you can.  It makes decoding errors much harder!
 
         @registrations[method] = [] if @registrations[method].nil?
-        @registrations[method] << { :registered => false, :state => :pending, :id => id }
+        @registrations[method] << { registered: false, state: :pending, id: id }
 
         message_handler.protocol.send_client_request('client/registerCapability', params)
         true

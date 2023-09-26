@@ -67,7 +67,7 @@ module PuppetLanguageServer
 
       def self.extract_document_symbols(content, options = {})
         options = {
-          :tasks_mode => false
+          tasks_mode: false
         }.merge(options)
         parser = Puppet::Pops::Parser::Parser.new
         result = parser.singleton_parse_string(content, options[:tasks_mode], '')

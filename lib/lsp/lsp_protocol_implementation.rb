@@ -5,7 +5,6 @@
 
 # rubocop:disable Layout/EmptyLinesAroundClassBody
 # rubocop:disable Lint/UselessAssignment
-# rubocop:disable Style/AsciiComments
 # rubocop:disable Naming/MethodName
 
 module LSP

@@ -5,7 +5,7 @@ require 'puppet_editor_services/server/base'
 module PuppetEditorServices
   module Server
     def self.current_server
-      @@current_server # rubocop:disable Style/ClassVars  This is fine
+      @@current_server # This is fine
     end
 
     def self.current_server=(value)

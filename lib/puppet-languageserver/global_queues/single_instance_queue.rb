@@ -59,12 +59,10 @@ module PuppetLanguageServer
           # Append a new thread if we have space
           if @queue_threads.count < max_queue_threads
             @queue_threads << Thread.new do
-              begin
-                thread_worker
-              rescue => e # rubocop:disable Style/RescueStandardError
-                PuppetLanguageServer.log_message(:error, "Error in #{self.class} Thread: #{e}")
-                raise
-              end
+              thread_worker
+            rescue => e # rubocop:disable Style/RescueStandardError
+              PuppetLanguageServer.log_message(:error, "Error in #{self.class} Thread: #{e}")
+              raise
             end
           end
         end

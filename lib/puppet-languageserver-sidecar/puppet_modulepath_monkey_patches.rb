@@ -6,7 +6,7 @@ module Puppet
   module Util
     class Autoload
       class << self
-        alias_method :original_module_directories, :module_directories
+        alias original_module_directories module_directories
         def module_directories(env)
           result = original_module_directories(env)
           return result unless PuppetLanguageServerSidecar::Workspace.has_module_metadata?
@@ -26,9 +26,9 @@ end
 # Monkey patch the module loader and inject a workspace module
 # into the modules memoization variable
 require 'puppet/node/environment'
-class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
-  alias_method :original_modules, :modules
-  alias_method :original_modules_by_path, :modules_by_path
+class Puppet::Node::Environment
+  alias original_modules modules
+  alias original_modules_by_path modules_by_path
 
   # The Puppet::Util::Json class doesn't exist in all puppet version.  Instead
   # just vendor the code here as it's a simple JSON loader only for metadata.json.
@@ -56,7 +56,7 @@ class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
     # Read the metadata to find the actual module name
     md_file = File.join(PuppetLanguageServerSidecar::Workspace.root_path, 'metadata.json')
     begin
-      metadata = workspace_load_json(File.read(md_file, :encoding => 'utf-8'))
+      metadata = workspace_load_json(File.read(md_file, encoding: 'utf-8'))
       return nil if metadata['name'].nil?
 
       # Extract the actual module name
@@ -74,7 +74,7 @@ class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
       # The Puppet::Module initializer was changed in
       # https://github.com/puppetlabs/puppet/commit/935c0311dbaf1df03937822525c36b26de5390ef
       # We need to switch the creation based on whether the modules_strict_semver? method is available
-      return Puppet::Module.new(module_name, path, self, modules_strict_semver?) if respond_to?('modules_strict_semver?')
+      return Puppet::Module.new(module_name, path, self, modules_strict_semver?) if respond_to?(:modules_strict_semver?)
 
       Puppet::Module.new(module_name, path, self)
     rescue StandardError
@@ -84,7 +84,7 @@ class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
 
   def modules
     if @modules.nil?
-      original_modules # rubocop:disable Style/IdenticalConditionalBranches
+      original_modules
       if PuppetLanguageServerSidecar::Workspace.has_module_metadata?
         workspace_module = create_workspace_module_object(PuppetLanguageServerSidecar::Workspace.root_path)
         @modules << workspace_module unless workspace_module.nil?
@@ -92,7 +92,7 @@ class Puppet::Node::Environment # rubocop:disable Style/ClassAndModuleChildren
 
       @modules
     else
-      original_modules # rubocop:disable Style/IdenticalConditionalBranches
+      original_modules
     end
   end
 
@@ -112,8 +112,8 @@ end
 
 # Inject the workspace as a module in all modulepaths
 require 'puppet/settings/environment_conf'
-class Puppet::Settings::EnvironmentConf # rubocop:disable Style/ClassAndModuleChildren
-  alias_method :original_modulepath, :modulepath
+class Puppet::Settings::EnvironmentConf
+  alias original_modulepath modulepath
 
   def modulepath
     result = original_modulepath
@@ -128,9 +128,9 @@ end
 
 # Inject the workspace into the facter search paths
 require 'puppet/indirector/facts/facter'
-class Puppet::Node::Facts::Facter # rubocop:disable Style/ClassAndModuleChildren
+class Puppet::Node::Facts::Facter
   class << self
-    alias_method :original_setup_search_paths, :setup_search_paths
+    alias original_setup_search_paths setup_search_paths
     def setup_search_paths(request)
       result = original_setup_search_paths(request)
       return result unless PuppetLanguageServerSidecar::Workspace.has_module_metadata?

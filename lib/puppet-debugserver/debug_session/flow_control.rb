@@ -15,13 +15,13 @@ module PuppetDebugServer
 
         @flag_mutex = Mutex.new
         @flags = {
-          :start_puppet => false,
-          :puppet_started => false,
-          :session_paused => false,
-          :client_completed_configuration => false,
-          :session_setup => false,
-          :terminate => false,
-          :suppress_log_messages => false
+          start_puppet: false,
+          puppet_started: false,
+          session_paused: false,
+          client_completed_configuration: false,
+          session_setup: false,
+          terminate: false,
+          suppress_log_messages: false
         }
 
         @run_mode = PuppetDebugServer::DebugSession::PuppetSessionRunMode.new

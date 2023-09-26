@@ -145,8 +145,8 @@ module PuppetLanguageServerSidecar
             item[:docstring][:tags].select { |tag| tag[:tag_name] == 'param' && tag.key?(:types) }.each do |tag|
               param_name = tag[:name]
               obj.parameters[param_name] = {
-                :doc => tag[:text],
-                :type => tag[:types]&.join(', ')
+                doc: tag[:text],
+                type: tag[:types]&.join(', ')
               }
             end
           end
@@ -280,17 +280,17 @@ module PuppetLanguageServerSidecar
         unless item[:properties].nil?
           item[:properties].each do |prop|
             obj.attributes[prop[:name]] = {
-              :type => :property,
-              :doc => prop[:description]
+              type: :property,
+              doc: prop[:description]
             }
           end
         end
         unless item[:parameters].nil?
           item[:parameters].each do |prop|
             obj.attributes[prop[:name]] = {
-              :type => :param,
-              :doc => prop[:description],
-              :isnamevar? => prop[:isnamevar]
+              type: :param,
+              doc: prop[:description],
+              isnamevar?: prop[:isnamevar]
             }
           end
         end
@@ -308,7 +308,7 @@ module PuppetLanguageServerSidecar
         name = param.name.dup # Don't want to modify the original object
         # Munge the parameter name to what it appears in the signature key
         # Ref - https://github.com/puppetlabs/puppet-strings/blob/2987558bb3170bc37e6077aab1b60efb17161eff/lib/puppet-strings/yard/handlers/ruby/function_handler.rb#L293-L317
-        if name.start_with?('*') || name.start_with?('&')
+        if name.start_with?('*', '&')
           name.insert(1, '$')
         else
           name = "$#{name}"

@@ -25,8 +25,8 @@ module PuppetLanguageServer
 
       def self.validate(session_state, content, options = {})
         options = {
-          :max_problems => 100,
-          :tasks_mode => false
+          max_problems: 100,
+          tasks_mode: false
         }.merge(options)
 
         result = []
@@ -66,44 +66,37 @@ module PuppetLanguageServer
                                             'message' => problem[:message])
             end
           end
-        # rubocop:disable Lint/SuppressedException
         rescue StandardError
           # If anything catastrophic happens we resort to puppet parsing anyway
         end
-        # rubocop:enable Lint/SuppressedException
-
         # TODO: Should I wrap this thing in a big rescue block?
         Puppet[:code] = content
         env = Puppet.lookup(:current_environment)
         loaders = Puppet::Pops::Loaders.new(env)
         Puppet.override({ loaders: loaders }, 'For puppet parser validate') do
-          begin
-            validation_environment = env
-            $PuppetParserMutex.synchronize do # rubocop:disable Style/GlobalVars
-              begin
-                original_taskmode = Puppet[:tasks] if Puppet.tasks_supported?
-                Puppet[:tasks] = options[:tasks_mode] if Puppet.tasks_supported?
-                validation_environment.check_for_reparse
-                validation_environment.known_resource_types.clear
-              ensure
-                Puppet[:tasks] = original_taskmode if Puppet.tasks_supported?
-              end
-            end
-          rescue StandardError => e
-            # Sometimes the error is in the cause not the root object itself
-            e = e.cause if !e.respond_to?(:line) && e.respond_to?(:cause)
-            ex_line = e.respond_to?(:line) && !e.line.nil? ? e.line - 1 : nil # Line numbers from puppet exceptions are base 1
-            ex_pos = e.respond_to?(:pos) && !e.pos.nil? ? e.pos : nil # Pos numbers from puppet are base 1
+          validation_environment = env
+          $PuppetParserMutex.synchronize do # rubocop:disable Style/GlobalVars
+            original_taskmode = Puppet[:tasks] if Puppet.tasks_supported?
+            Puppet[:tasks] = options[:tasks_mode] if Puppet.tasks_supported?
+            validation_environment.check_for_reparse
+            validation_environment.known_resource_types.clear
+          ensure
+            Puppet[:tasks] = original_taskmode if Puppet.tasks_supported?
+          end
+        rescue StandardError => e
+          # Sometimes the error is in the cause not the root object itself
+          e = e.cause if !e.respond_to?(:line) && e.respond_to?(:cause)
+          ex_line = e.respond_to?(:line) && !e.line.nil? ? e.line - 1 : nil # Line numbers from puppet exceptions are base 1
+          ex_pos = e.respond_to?(:pos) && !e.pos.nil? ? e.pos : nil # Pos numbers from puppet are base 1
 
-            message = e.respond_to?(:message) ? e.message : nil
-            message = e.basic_message if message.nil? && e.respond_to?(:basic_message)
+          message = e.respond_to?(:message) ? e.message : nil
+          message = e.basic_message if message.nil? && e.respond_to?(:basic_message)
 
-            unless ex_line.nil? || ex_pos.nil? || message.nil?
-              result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
-                                            'range' => LSP.create_range(ex_line, ex_pos, ex_line, ex_pos + 1),
-                                            'source' => 'Puppet',
-                                            'message' => message)
-            end
+          unless ex_line.nil? || ex_pos.nil? || message.nil?
+            result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
+                                          'range' => LSP.create_range(ex_line, ex_pos, ex_line, ex_pos + 1),
+                                          'source' => 'Puppet',
+                                          'message' => message)
           end
         end
 

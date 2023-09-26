@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-module Puppet::Environments # rubocop:disable Style/ClassAndModuleChildren
+module Puppet::Environments
   class Directories
     # Monkey patch the environment loader.  When it attempts to load the special sidecar
     # environment, create a new Puppet::Node::Environment object for the workspace
-    alias_method :original_get, :get
+    alias original_get get
     def get(name)
       if name.intern == PuppetLanguageServerSidecar::PuppetHelper::SIDECAR_PUPPET_ENVIRONMENT.intern
         env_symbol = name.intern
@@ -24,7 +24,7 @@ module Puppet::Environments # rubocop:disable Style/ClassAndModuleChildren
     # Monkey patch the environment loader.  When it attempts to load the special sidecar
     # environment.conf file, create a new Puppet::Settings::EnvironmentConf object
     # from the workspace.
-    alias_method :original_get_conf, :get_conf
+    alias original_get_conf get_conf
     def get_conf(name)
       if name.intern == PuppetLanguageServerSidecar::PuppetHelper::SIDECAR_PUPPET_ENVIRONMENT.intern
         conf = Puppet::Settings::EnvironmentConf.load_from(PuppetLanguageServerSidecar::Workspace.root_path, @global_module_path)
@@ -45,7 +45,7 @@ end
 # Monkey patch the environment.  Normally it's not possible to modify environment settings.
 # Add a method to get the underlying environment settings which can be used to modify
 # settings on the fly.
-class Puppet::Settings::EnvironmentConf # rubocop:disable Style/ClassAndModuleChildren
+class Puppet::Settings::EnvironmentConf
   def get_raw_setting(setting_name)
     section.setting(setting_name) if section
   end
