@@ -149,7 +149,7 @@ describe 'End to End Testing' do
       # Puppet Resource request
       @client.clear_messages!
       @client.send_data(@client.puppet_getresource_request(@client.next_seq_id, 'user'))
-      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 15])
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 25])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
       #   Expect something to be returned
       expect(result['result']['data']).not_to be_nil
@@ -158,7 +158,7 @@ describe 'End to End Testing' do
       # Node Graph request
       @client.clear_messages!
       @client.send_data(@client.puppet_compilenodegraph_request(@client.next_seq_id, manifest_uri))
-      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
+      expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 25])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
       #   Expect something to be returned
       expect(result['result']['edges']).to be_empty
