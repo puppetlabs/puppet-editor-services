@@ -5,11 +5,11 @@ module PuppetLanguageServer
     module HoverProvider
       def self.resolve(session_state, content, line_num, char_num, options = {})
         options = {
-          :tasks_mode => false
+          tasks_mode: false
         }.merge(options)
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
-                                                                              :disallowed_classes => [Puppet::Pops::Model::BlockExpression],
-                                                                              :tasks_mode         => options[:tasks_mode])
+                                                                              disallowed_classes: [Puppet::Pops::Model::BlockExpression],
+                                                                              tasks_mode: options[:tasks_mode])
         return nil if result.nil?
 
         path = result[:path]
@@ -70,7 +70,7 @@ module PuppetLanguageServer
         when 'Puppet::Pops::Model::QualifiedReference'
           # https://github.com/puppetlabs/puppet-specifications/blob/master/language/names.md#names
           # Datatypes have to start with uppercase and can be fully qualified
-          if item.cased_value =~ /^[A-Z][a-zA-Z:0-9]*$/ # rubocop:disable Style/GuardClause
+          if /^[A-Z][a-zA-Z:0-9]*$/.match?(item.cased_value) # rubocop:disable Style/GuardClause
             content = get_puppet_datatype_content(session_state, item, options[:tasks_mode])
           else
             raise "#{item.cased_value} is an unknown QualifiedReference"
@@ -80,6 +80,7 @@ module PuppetLanguageServer
         end
 
         return nil if content.nil?
+
         LSP::Hover.new('contents' => content)
       end
 
@@ -115,6 +116,7 @@ module PuppetLanguageServer
       def self.get_fact_content(session_state, factname)
         fact = PuppetLanguageServer::FacterHelper.fact(session_state, factname)
         return nil if fact.nil?
+
         value = fact.value
         content = "**#{factname}** Fact\n\n"
 
@@ -145,6 +147,7 @@ module PuppetLanguageServer
       def self.get_attribute_class_parameter_content(item_class, param)
         param_type = item_class.parameters[param]
         return nil if param_type.nil?
+
         content = "**#{param}** Parameter"
         content += "\n\n#{param_type[:doc]}" unless param_type[:doc].nil?
         content
@@ -169,8 +172,10 @@ module PuppetLanguageServer
         # Get an instance of the type
         item_object = PuppetLanguageServer::PuppetHelper.get_type(session_state, name)
         return get_puppet_type_content(item_object) unless item_object.nil?
+
         item_object = PuppetLanguageServer::PuppetHelper.get_class(session_state, name)
         return get_puppet_class_content(item_object) unless item_object.nil?
+
         raise "#{name} is not a valid puppet type"
       end
 

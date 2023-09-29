@@ -13,8 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - '2.5'
           - '2.7'
+          - '3.2'
         runs_on:
           - 'ubuntu-latest'
           - 'windows-latest'
@@ -32,8 +32,13 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - '2.5'
           - '2.7'
+          - '3.2'
+        include:
+          - ruby_version: '2.7'
+            puppet_version: '~> 7.0'
+          - ruby_version: '3.2'
+            puppet_version: '~> 8.0'
         runs_on:
           - 'ubuntu-latest'
           - 'windows-latest'
@@ -45,16 +50,22 @@ jobs:
       ruby_version: ${{ matrix.ruby_version }}
       runs_on: ${{ matrix.runs_on }}
       rake_task: 'gem_revendor acceptance_languageserver'
-      puppet_version: '~> 7.24'
+      puppet_version: ${{ matrix.puppet_version }}
 
   build:
-    name: "Build Editor Service"
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby_version:
+          - '2.7'
+          - '3.2'
+    name: "Build Editor Service (Ruby ${{ matrix.ruby_version }})"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7'
+          ruby-version: ${{ matrix.ruby_version }}
           bundler-cache: true
       - name: Set build version
         shell: pwsh

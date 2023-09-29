@@ -12,10 +12,10 @@ module PuppetLanguageServer
 
       def self.validate(content, options = {})
         options = {
-          :max_problems       => 100,
-          :resolve_puppetfile => true,
-          :module_path        => [],
-          :document_uri       => '???'
+          max_problems: 100,
+          resolve_puppetfile: true,
+          module_path: [],
+          document_uri: '???'
         }.merge(options)
 
         result = []
@@ -33,9 +33,9 @@ module PuppetLanguageServer
         rescue PuppetfileResolver::Puppetfile::Parser::ParserError => e
           result << LSP::Diagnostic.new(
             'severity' => LSP::DiagnosticSeverity::ERROR,
-            'range'    => document_location_to_lsp_range(e.location),
-            'source'   => 'Puppet',
-            'message'  => e.to_s
+            'range' => document_location_to_lsp_range(e.location),
+            'source' => 'Puppet',
+            'message' => e.to_s
           )
           puppetfile = nil
         end
@@ -48,19 +48,19 @@ module PuppetLanguageServer
             related_information = validation_error.duplicates.map do |dup_mod|
               {
                 'location' => {
-                  'uri'   => options[:document_uri],
+                  'uri' => options[:document_uri],
                   'range' => document_location_to_lsp_range(dup_mod.location)
                 },
-                'message'  => validation_error.message
+                'message' => validation_error.message
               }
             end
           end
 
           result << LSP::Diagnostic.new(
-            'severity'           => LSP::DiagnosticSeverity::ERROR,
-            'range'              => document_location_to_lsp_range(validation_error.puppet_module.location),
-            'source'             => 'Puppet',
-            'message'            => validation_error.message,
+            'severity' => LSP::DiagnosticSeverity::ERROR,
+            'range' => document_location_to_lsp_range(validation_error.puppet_module.location),
+            'source' => 'Puppet',
+            'message' => validation_error.message,
             'relatedInformation' => related_information
           )
         end
@@ -82,9 +82,9 @@ module PuppetLanguageServer
         rescue PuppetfileResolver::Puppetfile::DocumentResolveError => e
           return [LSP::Diagnostic.new(
             'severity' => LSP::DiagnosticSeverity::ERROR,
-            'range'    => LSP.create_range(0, 0, 0, max_line_length),
-            'source'   => 'Puppet',
-            'message'  => e.message
+            'range' => LSP.create_range(0, 0, 0, max_line_length),
+            'source' => 'Puppet',
+            'message' => e.message
           )]
         end
 
@@ -99,9 +99,9 @@ module PuppetLanguageServer
                      end
           LSP::Diagnostic.new(
             'severity' => severity,
-            'range'    => document_location_to_lsp_range(error.puppet_module.location),
-            'source'   => 'Puppet',
-            'message'  => error.message
+            'range' => document_location_to_lsp_range(error.puppet_module.location),
+            'source' => 'Puppet',
+            'message' => error.message
           )
         end
       end
@@ -134,6 +134,7 @@ module PuppetLanguageServer
 
       def self.resolver_cache
         return @resolver_cache unless @resolver_cache.nil?
+
         require 'puppetfile-resolver/cache/base'
         # TODO: The cache should probably not cache local module information though
         # Share a cache between resolution calls to speed-up lookups
@@ -145,27 +146,27 @@ module PuppetLanguageServer
         if error.puppetfile_modules.count.zero?
           return LSP::Diagnostic.new(
             'severity' => LSP::DiagnosticSeverity::ERROR,
-            'range'    => LSP.create_range(0, 0, 0, max_line_length),
-            'source'   => 'Puppet',
-            'message'  => error.message
+            'range' => LSP.create_range(0, 0, 0, max_line_length),
+            'source' => 'Puppet',
+            'message' => error.message
           )
         end
 
         related_information = error.puppetfile_modules.slice(1..-1).map do |dup_mod|
           {
             'location' => {
-              'uri'   => document_uri,
+              'uri' => document_uri,
               'range' => document_location_to_lsp_range(dup_mod.location)
             },
-            'message'  => "Module definition for #{dup_mod.name}"
+            'message' => "Module definition for #{dup_mod.name}"
           }
         end
 
         LSP::Diagnostic.new(
-          'severity'           => LSP::DiagnosticSeverity::ERROR,
-          'range'              => document_location_to_lsp_range(error.puppetfile_modules[0].location),
-          'source'             => 'Puppet',
-          'message'            => error.message,
+          'severity' => LSP::DiagnosticSeverity::ERROR,
+          'range' => document_location_to_lsp_range(error.puppetfile_modules[0].location),
+          'source' => 'Puppet',
+          'message' => error.message,
           'relatedInformation' => related_information.empty? ? nil : related_information
         )
       end

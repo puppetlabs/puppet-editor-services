@@ -12,16 +12,16 @@ module PuppetLanguageServer
       # https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialize-request
 
       value = {
-        'textDocumentSync'        => LSP::TextDocumentSyncKind::FULL,
-        'hoverProvider'           => true,
-        'completionProvider'      => {
-          'resolveProvider'   => true,
+        'textDocumentSync' => LSP::TextDocumentSyncKind::FULL,
+        'hoverProvider' => true,
+        'completionProvider' => {
+          'resolveProvider' => true,
           'triggerCharacters' => ['>', '$', '[', '=']
         },
-        'definitionProvider'      => true,
-        'documentSymbolProvider'  => true,
+        'definitionProvider' => true,
+        'documentSymbolProvider' => true,
         'workspaceSymbolProvider' => true,
-        'signatureHelpProvider'   => {
+        'signatureHelpProvider' => {
           'triggerCharacters' => ['(', ',']
         }
       }
@@ -42,8 +42,7 @@ module PuppetLanguageServer
 
     def self.no_capabilities
       # Any empty hash denotes no capabilities at all
-      {
-      }
+      {}
     end
   end
 end

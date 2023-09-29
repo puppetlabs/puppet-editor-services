@@ -29,7 +29,7 @@ module PuppetDebugServer
 
           begin
             # TODO: This could be slow on big files....
-            IO.foreach(file_path, :mode => 'rb', :encoding => 'UTF-8').each_with_index do |item, index|
+            IO.foreach(file_path, mode: 'rb', encoding: 'UTF-8').each_with_index do |item, index|
               # index here zero-based whereas we want one-based indexing
               file_contents[index + 1] = item if line_list.include?(index + 1)
             end
@@ -44,7 +44,7 @@ module PuppetDebugServer
         break_points = arguments.breakpoints.map do
           DSP::Breakpoint.new.from_h!(
             'verified' => false,
-            'source'   => arguments.source.to_h
+            'source' => arguments.source.to_h
           )
         end
 
@@ -103,6 +103,7 @@ module PuppetDebugServer
       # @return [Array<Integer>] All of the line breakpoints. Returns empty array if there no breakpoints.
       def line_breakpoints(file_path)
         return [] if @source_breakpoints[canonical_file_path(file_path)].nil?
+
         @source_breakpoints[canonical_file_path(file_path)].map(&:line)
       end
 

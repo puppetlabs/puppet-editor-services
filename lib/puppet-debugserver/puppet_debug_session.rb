@@ -42,7 +42,8 @@ module PuppetDebugServer
     # Creates a debug session
     def self.instance
       # This can be called from any thread
-      return @@session_instance unless @@session_instance.nil? # rubocop:disable Style/ClassVars  This class method (not instance) should be inherited
+      return @@session_instance unless @@session_instance.nil? # This class method (not instance) should be inherited
+
       @@session_instance = PuppetDebugSession.new # rubocop:disable Style/ClassVars  This class method (not instance) should be inherited
     end
 
@@ -134,7 +135,7 @@ module PuppetDebugServer
 
       send_output_event(
         'category' => 'console',
-        'output'   => "puppet #{cmd_args.join(' ')}\n"
+        'output' => "puppet #{cmd_args.join(' ')}\n"
       )
       send_thread_event('started', @puppet_thread_id)
 
@@ -153,9 +154,9 @@ module PuppetDebugServer
         target = state.pops_target
 
         frame = DSP::StackFrame.new.from_h!(
-          'id'     => stack_frames.count,
-          'name'   => get_puppet_class_name(target),
-          'line'   => 0,
+          'id' => stack_frames.count,
+          'name' => get_puppet_class_name(target),
+          'line' => 0,
           'column' => 0
         )
 
@@ -181,9 +182,9 @@ module PuppetDebugServer
       unless state.exception.nil?
         err = state.exception
         frame = DSP::StackFrame.new.from_h!(
-          'id'     => stack_frames.count,
-          'name'   => err.class.to_s,
-          'line'   => 0,
+          'id' => stack_frames.count,
+          'name' => err.class.to_s,
+          'line' => 0,
           'column' => 0
         )
 
@@ -205,10 +206,10 @@ module PuppetDebugServer
           source_line = pup_stack[1]
 
           frame = DSP::StackFrame.new.from_h!(
-            'id'     => stack_frames.count,
-            'name'   => source_file.to_s,
+            'id' => stack_frames.count,
+            'name' => source_file.to_s,
             'source' => { 'path' => source_file },
-            'line'   => source_line,
+            'line' => source_line,
             'column' => 0
           )
           stack_frames << frame
@@ -227,25 +228,22 @@ module PuppetDebugServer
 
       result = []
 
-      this_scope = puppet_session_state.saved.scope
-      # rubocop:disable Lint/Void  Go home rubocop, you're drunk.
+      this_scope = puppet_session_state.saved.scope # Go home rubocop, you're drunk.
       until this_scope.nil? || this_scope.is_topscope?
         result << DSP::Scope.new.from_h!(
-          'name'               => this_scope.to_s,
+          'name' => this_scope.to_s,
           'variablesReference' => this_scope.object_id,
-          'namedVariables'     => this_scope.to_hash(false).count,
-          'expensive'          => false
+          'namedVariables' => this_scope.to_hash(false).count,
+          'expensive' => false
         )
         this_scope = this_scope.parent
       end
-      # rubocop:enable Lint/Void
-
       unless puppet_session_state.actual.compiler.nil?
         result << DSP::Scope.new.from_h!(
-          'name'               => puppet_session_state.actual.compiler.topscope.to_s,
+          'name' => puppet_session_state.actual.compiler.topscope.to_s,
           'variablesReference' => VARIABLES_REFERENCE_TOP_SCOPE,
-          'namedVariables'     => puppet_session_state.actual.compiler.topscope.to_hash(false).count,
-          'expensive'          => false
+          'namedVariables' => puppet_session_state.actual.compiler.topscope.to_hash(false).count,
+          'expensive' => false
         )
       end
       result
@@ -354,6 +352,7 @@ module PuppetDebugServer
     def get_puppet_class_name(obj)
       # Puppet 5+ has PCore Types
       return obj._pcore_type.simple_name if obj.respond_to?(:_pcore_type)
+
       # .. otherwise revert to simple naive text splitting
       # e.g. Puppet::Pops::Model::CallNamedFunctionExpression becomes CallNamedFunctionExpression
       obj.class.to_s.split('::').last
@@ -481,8 +480,8 @@ module PuppetDebugServer
       end
 
       DSP::Variable.new.from_h!(
-        'name'               => name,
-        'value'              => out_value,
+        'name' => name,
+        'value' => out_value,
         'variablesReference' => var_ref
       )
     end
@@ -524,12 +523,14 @@ module PuppetDebugServer
     # Start aggregating log messages
     def start!
       return if @started
+
       @hook_manager.add_hook(:hook_log_message, @hook_id) { |args| on_hook_log_message(args) }
     end
 
     # Stop aggregating log messages
     def stop!
       return unless @started
+
       @hook_manager.delete_hook(:hook_log_message, @hook_id)
     end
 

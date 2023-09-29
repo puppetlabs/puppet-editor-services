@@ -9,13 +9,14 @@ module PuppetLanguageServer
         object_cache.all_objects do |key, item|
           key_string = key.to_s
           next unless query.empty? || key_string.include?(query)
+
           case item
           when PuppetLanguageServer::Sidecar::Protocol::PuppetType
             result << LSP::SymbolInformation.new(
-              'name'     => key_string,
-              'kind'     => LSP::SymbolKind::METHOD,
+              'name' => key_string,
+              'kind' => LSP::SymbolKind::METHOD,
               'location' => {
-                'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+                'uri' => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
                 # Don't have char pos for types so just pick extreme values
                 'range' => LSP.create_range(item.line, 0, item.line, 1024)
               }
@@ -23,10 +24,10 @@ module PuppetLanguageServer
 
           when PuppetLanguageServer::Sidecar::Protocol::PuppetFunction
             result << LSP::SymbolInformation.new(
-              'name'     => key_string,
-              'kind'     => LSP::SymbolKind::FUNCTION,
+              'name' => key_string,
+              'kind' => LSP::SymbolKind::FUNCTION,
               'location' => {
-                'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+                'uri' => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
                 # Don't have char pos for functions so just pick extreme values
                 'range' => LSP.create_range(item.line, 0, item.line, 1024)
               }
@@ -34,10 +35,10 @@ module PuppetLanguageServer
 
           when PuppetLanguageServer::Sidecar::Protocol::PuppetClass
             result << LSP::SymbolInformation.new(
-              'name'     => key_string,
-              'kind'     => LSP::SymbolKind::CLASS,
+              'name' => key_string,
+              'kind' => LSP::SymbolKind::CLASS,
               'location' => {
-                'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+                'uri' => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
                 # Don't have char pos for classes so just pick extreme values
                 'range' => LSP.create_range(item.line, 0, item.line, 1024)
               }
@@ -45,10 +46,10 @@ module PuppetLanguageServer
 
           when PuppetLanguageServer::Sidecar::Protocol::PuppetDataType
             result << LSP::SymbolInformation.new(
-              'name'     => key_string,
-              'kind'     => LSP::SymbolKind::NAMESPACE,
+              'name' => key_string,
+              'kind' => LSP::SymbolKind::NAMESPACE,
               'location' => {
-                'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+                'uri' => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
                 # Don't have char pos for data types so just pick extreme values
                 'range' => LSP.create_range(item.line, 0, item.line, 1024)
               }
@@ -66,7 +67,7 @@ module PuppetLanguageServer
 
       def self.extract_document_symbols(content, options = {})
         options = {
-          :tasks_mode => false
+          tasks_mode: false
         }.merge(options)
         parser = Puppet::Pops::Parser::Parser.new
         result = parser.singleton_parse_string(content, options[:tasks_mode], '')
@@ -75,6 +76,7 @@ module PuppetLanguageServer
           # We are unable to build a document symbol tree for Puppet 4 AST
           return []
         end
+
         symbols = []
         recurse_document_symbols(result.model, '', nil, symbols) # []
 
@@ -107,12 +109,12 @@ module PuppetLanguageServer
         # Puppet Resources
         when 'Puppet::Pops::Model::ResourceExpression'
           this_symbol = LSP::DocumentSymbol.new(
-            'name'           => object.type_name.value,
-            'kind'           => LSP::SymbolKind::METHOD,
-            'detail'         => object.type_name.value,
-            'range'          => create_range(object.offset, object.length, object.locator),
+            'name' => object.type_name.value,
+            'kind' => LSP::SymbolKind::METHOD,
+            'detail' => object.type_name.value,
+            'range' => create_range(object.offset, object.length, object.locator),
             'selectionRange' => create_range(object.offset, object.length, object.locator),
-            'children'       => []
+            'children' => []
           )
 
         when 'Puppet::Pops::Model::ResourceBody'
@@ -125,33 +127,33 @@ module PuppetLanguageServer
         when 'Puppet::Pops::Model::AttributeOperation'
           attr_name = object.attribute_name
           this_symbol = LSP::DocumentSymbol.new(
-            'name'           => attr_name,
-            'kind'           => LSP::SymbolKind::VARIABLE,
-            'detail'         => attr_name,
-            'range'          => create_range(object.offset, object.length, object.locator),
+            'name' => attr_name,
+            'kind' => LSP::SymbolKind::VARIABLE,
+            'detail' => attr_name,
+            'range' => create_range(object.offset, object.length, object.locator),
             'selectionRange' => create_range(object.offset, attr_name.length, object.locator),
-            'children'       => []
+            'children' => []
           )
 
         # Puppet Class
         when 'Puppet::Pops::Model::HostClassDefinition'
           this_symbol = LSP::DocumentSymbol.new(
-            'name'           => object.name,
-            'kind'           => LSP::SymbolKind::CLASS,
-            'detail'         => object.name,
-            'range'          => create_range(object.offset, object.length, object.locator),
+            'name' => object.name,
+            'kind' => LSP::SymbolKind::CLASS,
+            'detail' => object.name,
+            'range' => create_range(object.offset, object.length, object.locator),
             'selectionRange' => create_range(object.offset, object.length, object.locator),
-            'children'       => []
+            'children' => []
           )
           # Load in the class parameters
           object.parameters.each do |param|
             param_symbol = LSP::DocumentSymbol.new(
-              'name'           => "$#{param.name}",
-              'kind'           => LSP::SymbolKind::PROPERTY,
-              'detail'         => "$#{param.name}",
-              'range'          => create_range(param.offset, param.length, param.locator),
+              'name' => "$#{param.name}",
+              'kind' => LSP::SymbolKind::PROPERTY,
+              'detail' => "$#{param.name}",
+              'range' => create_range(param.offset, param.length, param.locator),
               'selectionRange' => create_range(param.offset, param.length, param.locator),
-              'children'       => []
+              'children' => []
             )
             this_symbol.children.push(param_symbol)
           end
@@ -159,55 +161,55 @@ module PuppetLanguageServer
         # Puppet Defined Type
         when 'Puppet::Pops::Model::ResourceTypeDefinition'
           this_symbol = LSP::DocumentSymbol.new(
-            'name'           => object.name,
-            'kind'           => LSP::SymbolKind::CLASS,
-            'detail'         => object.name,
-            'range'          => create_range(object.offset, object.length, object.locator),
+            'name' => object.name,
+            'kind' => LSP::SymbolKind::CLASS,
+            'detail' => object.name,
+            'range' => create_range(object.offset, object.length, object.locator),
             'selectionRange' => create_range(object.offset, object.length, object.locator),
-            'children'       => []
+            'children' => []
           )
           # Load in the class parameters
           object.parameters.each do |param|
             param_symbol = LSP::DocumentSymbol.new(
-              'name'           => "$#{param.name}",
-              'kind'           => LSP::SymbolKind::FIELD,
-              'detail'         => "$#{param.name}",
-              'range'          => create_range(param.offset, param.length, param.locator),
+              'name' => "$#{param.name}",
+              'kind' => LSP::SymbolKind::FIELD,
+              'detail' => "$#{param.name}",
+              'range' => create_range(param.offset, param.length, param.locator),
               'selectionRange' => create_range(param.offset, param.length, param.locator),
-              'children'       => []
+              'children' => []
             )
             this_symbol.children.push(param_symbol)
           end
 
         when 'Puppet::Pops::Model::AssignmentExpression'
           this_symbol = LSP::DocumentSymbol.new(
-            'name'           => "$#{object.left_expr.expr.value}",
-            'kind'           => LSP::SymbolKind::VARIABLE,
-            'detail'         => "$#{object.left_expr.expr.value}",
-            'range'          => create_range(object.left_expr.offset, object.left_expr.length, object.left_expr.locator),
+            'name' => "$#{object.left_expr.expr.value}",
+            'kind' => LSP::SymbolKind::VARIABLE,
+            'detail' => "$#{object.left_expr.expr.value}",
+            'range' => create_range(object.left_expr.offset, object.left_expr.length, object.left_expr.locator),
             'selectionRange' => create_range(object.left_expr.offset, object.left_expr.length, object.left_expr.locator),
-            'children'       => []
+            'children' => []
           )
 
         # Puppet Plan
         when 'Puppet::Pops::Model::PlanDefinition'
           this_symbol = LSP::DocumentSymbol.new(
-            'name'           => object.name,
-            'kind'           => LSP::SymbolKind::CLASS,
-            'detail'         => object.name,
-            'range'          => create_range(object.offset, object.length, object.locator),
+            'name' => object.name,
+            'kind' => LSP::SymbolKind::CLASS,
+            'detail' => object.name,
+            'range' => create_range(object.offset, object.length, object.locator),
             'selectionRange' => create_range(object.offset, object.length, object.locator),
-            'children'       => []
+            'children' => []
           )
           # Load in the class parameters
           object.parameters.each do |param|
             param_symbol = LSP::DocumentSymbol.new(
-              'name'           => "$#{param.name}",
-              'kind'           => LSP::SymbolKind::CLASS,
-              'detail'         => "$#{param.name}",
-              'range'          => create_range(param.offset, param.length, param.locator),
+              'name' => "$#{param.name}",
+              'kind' => LSP::SymbolKind::CLASS,
+              'detail' => "$#{param.name}",
+              'range' => create_range(param.offset, param.length, param.locator),
               'selectionRange' => create_range(param.offset, param.length, param.locator),
-              'children'       => []
+              'children' => []
             )
             this_symbol.children.push(param_symbol)
           end
@@ -218,6 +220,7 @@ module PuppetLanguageServer
         end
 
         return if this_symbol.nil?
+
         parentsymbol.nil? ? symbollist.push(this_symbol) : parentsymbol.children.push(this_symbol)
       end
     end

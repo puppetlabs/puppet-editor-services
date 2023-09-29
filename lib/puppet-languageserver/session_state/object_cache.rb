@@ -16,6 +16,7 @@ module PuppetLanguageServer
       def import_sidecar_list!(list, section, origin)
         return if origin.nil?
         return if section.nil?
+
         list = [] if list.nil?
 
         @cache_lock.synchronize do
@@ -51,6 +52,7 @@ module PuppetLanguageServer
       def section_in_origin_exist?(section, origin)
         @cache_lock.synchronize do
           return false if @inmemory_cache[origin].nil? || @inmemory_cache[origin].empty?
+
           @inmemory_cache[origin].key?(section)
         end
       end
@@ -60,16 +62,18 @@ module PuppetLanguageServer
         # options[:exclude_origins]
         # options[:fuzzy_match]
         options = {
-          :exclude_origins => [],
-          :fuzzy_match     => false
+          exclude_origins: [],
+          fuzzy_match: false
         }.merge(options)
 
         name = name.intern if name.is_a?(String)
         return nil if section.nil?
+
         @cache_lock.synchronize do
           @inmemory_cache.each do |origin, sections|
             next if sections.nil? || sections[section].nil? || sections[section].empty?
             next if options[:exclude_origins].include?(origin)
+
             sections[section].each do |item|
               match = options[:fuzzy_match] ? fuzzy_match?(item.key, name) : item.key == name
               return item if match
@@ -102,14 +106,16 @@ module PuppetLanguageServer
       # options[:exclude_origins]
       def object_names_by_section(section, options = {})
         options = {
-          :exclude_origins => []
+          exclude_origins: []
         }.merge(options)
         result = []
         return result if section.nil?
+
         @cache_lock.synchronize do
           @inmemory_cache.each do |origin, sections|
             next if sections.nil? || sections[section].nil? || sections[section].empty?
             next if options[:exclude_origins].include?(origin)
+
             result.concat(sections[section].map { |i| i.key })
           end
         end
@@ -120,9 +126,11 @@ module PuppetLanguageServer
       # section => <Type of object in the file :function, :type, :class, :datatype>
       def objects_by_section(section, &_block)
         return if section.nil?
+
         @cache_lock.synchronize do
           @inmemory_cache.each do |_, sections|
             next if sections.nil? || sections[section].nil? || sections[section].empty?
+
             sections[section].each { |i| yield i.key, i }
           end
         end
@@ -132,6 +140,7 @@ module PuppetLanguageServer
         @cache_lock.synchronize do
           @inmemory_cache.each do |_origin, sections|
             next if sections.nil?
+
             sections.each do |_section_name, list|
               list.each { |i| yield i.key, i }
             end
@@ -144,6 +153,7 @@ module PuppetLanguageServer
       def remove_section_impl(section, origin = nil)
         @inmemory_cache.each do |list_origin, sections|
           next unless origin.nil? || list_origin == origin
+
           sections[section].clear unless sections.nil? || sections[section].nil?
         end
       end

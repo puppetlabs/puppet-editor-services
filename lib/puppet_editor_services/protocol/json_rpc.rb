@@ -8,31 +8,31 @@ require 'puppet_editor_services/protocol/base'
 module PuppetEditorServices
   module Protocol
     class JsonRPC < ::PuppetEditorServices::Protocol::Base
-      CODE_INVALID_JSON       = -32700
+      CODE_INVALID_JSON       = -32_700
       MSG_INVALID_JSON        = 'invalid JSON'
 
-      CODE_INVALID_REQUEST    = -32600
+      CODE_INVALID_REQUEST    = -32_600
       MSG_INVALID_REQ_JSONRPC = "invalid request: doesn't include \"jsonrpc\": \"2.0\""
       MSG_INVALID_REQ_ID      = 'invalid request: wrong id'
       MSG_INVALID_REQ_METHOD  = 'invalid request: wrong method'
       MSG_INVALID_REQ_PARAMS  = 'invalid request: wrong params'
 
-      CODE_METHOD_NOT_FOUND   = -32601
+      CODE_METHOD_NOT_FOUND   = -32_601
       MSG_METHOD_NOT_FOUND    = 'method not found'
 
-      CODE_INVALID_PARAMS     = -32602
+      CODE_INVALID_PARAMS     = -32_602
       MSG_INVALID_PARAMS      = 'invalid parameter(s)'
 
-      CODE_INTERNAL_ERROR     = -32603
+      CODE_INTERNAL_ERROR     = -32_603
       MSG_INTERNAL_ERROR      = 'internal error'
 
-      PARSING_ERROR_RESPONSE  = '{"jsonrpc":"2.0","id":null,"error":{' \
-                                "\"code\":#{CODE_INVALID_JSON}," \
-                                "\"message\":\"#{MSG_INVALID_JSON}\"}}"
+      PARSING_ERROR_RESPONSE = '{"jsonrpc":"2.0","id":null,"error":{' \
+                               "\"code\":#{CODE_INVALID_JSON}," \
+                               "\"message\":\"#{MSG_INVALID_JSON}\"}}"
 
       BATCH_NOT_SUPPORTED_RESPONSE = '{"jsonrpc":"2.0","id":null,"error":{' \
-                                      '"code":-32099,' \
-                                      '"message":"batch mode not implemented"}}'
+                                     '"code":-32099,' \
+                                     '"message":"batch mode not implemented"}}'
 
       KEY_JSONRPC     = 'jsonrpc'
       JSONRPC_VERSION = '2.0'
@@ -85,6 +85,7 @@ module PuppetEditorServices
           offset = 0
           while offset < @buffer.length - 4
             break if @buffer[offset] == 13 && @buffer[offset + 1] == 10 && @buffer[offset + 2] == 13 && @buffer[offset + 3] == 10
+
             offset += 1
           end
           return unless offset < @buffer.length - 4
@@ -125,6 +126,7 @@ module PuppetEditorServices
         json_obj = ::JSON.parse(content)
         return receive_json_message_as_hash(json_obj) if json_obj.is_a?(Hash)
         return unless json_obj.is_a?(Array)
+
         # Batch: multiple requests/notifications in an array.
         # NOTE: Not implemented as it doesn't make sense using JSON RPC over pure TCP / UnixSocket.
 
@@ -185,7 +187,7 @@ module PuppetEditorServices
           return true
         elsif is_response
           # Responses are special as they need the context of the original request
-          handler.handle(PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new(json_obj), :request => original_request)
+          handler.handle(PuppetEditorServices::Protocol::JsonRPCMessages::ResponseMessage.new(json_obj), request: original_request)
           return true
         end
         false

@@ -4,22 +4,19 @@
 ![ci](https://github.com/puppetlabs/puppet-editor-services/actions/workflows/ci.yml/badge.svg)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/puppetlabs/puppet-editor-services)
 
-
 A ruby based implementation of a [Language Server](https://github.com/Microsoft/language-server-protocol) and [Debug Server](TODO) for the Puppet Language.
 
 ## Requirements
 
-* Puppet 5 or above
+* Puppet 7 or above
 
-* Ruby 2.4 or above
-
-**Note** that Puppet 4 (Ruby 2.1) is not supported
+* Ruby 2.7 or above
 
 ## Setting up editor services for development
 
-* Ensure a modern ruby is installed (2.4+)
+* Ensure a modern ruby is installed (2.7+)
 
-  The editor services support Puppet 5.0.0 and above
+  The editor services support Puppet 7.0.0 and above
 
 * Clone this repository
 
@@ -299,7 +296,3 @@ Usage: puppet-debugserver.rb [options]
 ## Why are there vendored gems and why only native ruby
 
 When used by editors this language server will be running using the Ruby runtime provided by Puppet Agent.  That means no native extensions and no bundler.  Also, only the gems provided by Puppet Agent would be available by default.  To work around this limitation all runtime dependencies should be re-vendored and then the load path modified appropriately.
-
-## Known Issues
-
-* [PUP-7668](https://tickets.puppetlabs.com/browse/PUP-7668) Due to incorrect offsets, hover documentation can be displayed when the user is not actually hovering over the resource that the documentation is for.

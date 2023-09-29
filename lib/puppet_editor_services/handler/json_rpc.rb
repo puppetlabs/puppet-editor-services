@@ -66,7 +66,7 @@ module PuppetEditorServices
               )
             )
           rescue StandardError => e
-            unhandled_exception(e, :source => :request, :message => request_message)
+            unhandled_exception(e, source: :request, message: request_message)
           end
           return true
         end
@@ -88,7 +88,7 @@ module PuppetEditorServices
           begin
             send(method_name, protocol.connection.id, notification_message)
           rescue StandardError => e
-            unhandled_exception(e, :source => :notification, :message => notification_message)
+            unhandled_exception(e, source: :notification, message: notification_message)
           end
           return true
         end
@@ -106,6 +106,7 @@ module PuppetEditorServices
       def handle_response(response_message, context)
         original_request = context[:request]
         return false if original_request.nil?
+
         unless response_message.is_successful # rubocop:disable Style/IfUnlessModifier Line is too long otherwise
           PuppetEditorServices.log_message(:error, "Response for method '#{original_request.rpc_method}' with id '#{original_request.id}' failed with #{response_message.error}")
         end
@@ -114,7 +115,7 @@ module PuppetEditorServices
           begin
             send(method_name, protocol.connection.id, response_message, original_request)
           rescue StandardError => e
-            unhandled_exception(e, :source => :response, :message => response_message)
+            unhandled_exception(e, source: :response, message: response_message)
           end
           return true
         end

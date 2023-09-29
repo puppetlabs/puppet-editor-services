@@ -76,6 +76,7 @@ module PuppetLanguageServer
         @doc_mutex.synchronize do
           return nil if @documents[uri].nil?
           return nil unless doc_version.nil? || @documents[uri].version == doc_version
+
           @documents[uri]
         end
       end
@@ -90,6 +91,7 @@ module PuppetLanguageServer
           return nil if @documents[uri].nil?
           return nil unless doc_version.nil? || @documents[uri].version == doc_version
           return @documents[uri].tokens unless @documents[uri].tokens.nil?
+
           return @documents[uri].calculate_tokens!
         end
       end
@@ -105,7 +107,7 @@ module PuppetLanguageServer
 
       def document_type(uri)
         case uri
-        when /\/Puppetfile$/i
+        when %r{/Puppetfile$}i
           :puppetfile
         when /\.pp$/i
           :manifest
@@ -124,6 +126,7 @@ module PuppetLanguageServer
       def plan_file?(uri)
         uri_path = PuppetLanguageServer::UriHelper.uri_path(uri)
         return false if uri_path.nil?
+
         # For the text searching below we need a leading slash. That way
         # we don't need to use regexes which is slower
         uri_path = "/#{uri_path}" unless uri_path.start_with?('/')
@@ -145,7 +148,7 @@ module PuppetLanguageServer
       def initialize_store(options = {})
         @workspace_path = options[:workspace]
         @workspace_info_cache = {
-          :expires => Time.new - 120
+          expires: Time.new - 120
         }
       end
 
@@ -173,6 +176,7 @@ module PuppetLanguageServer
       # root of the module/control repo actually is
       def find_root_path(path)
         return nil if path.nil?
+
         filepath = File.expand_path(path)
 
         if dir_exist?(filepath)
@@ -185,13 +189,14 @@ module PuppetLanguageServer
 
         until directory.nil?
           break if file_exist?(File.join(directory, 'metadata.json')) || file_exist?(File.join(directory, 'environment.conf'))
+
           parent = File.dirname(directory)
           # If the parent is the same as the original, then we've reached the end of the path chain
-          if parent == directory
-            directory = nil
-          else
-            directory = parent
-          end
+          directory = if parent == directory
+                        nil
+                      else
+                        parent
+                      end
         end
 
         directory
@@ -199,12 +204,13 @@ module PuppetLanguageServer
 
       def store_details
         return @workspace_info_cache unless @workspace_info_cache[:never_expires] || @workspace_info_cache[:expires] < Time.new
+
         # TTL has expired, time to calculate the document store details
 
         new_cache = {
-          :root_path           => nil,
-          :has_environmentconf => false,
-          :has_metadatajson    => false
+          root_path: nil,
+          has_environmentconf: false,
+          has_metadatajson: false
         }
         if @workspace_path.nil?
           # If we have never been given a local workspace path on the command line then there is really no
@@ -240,7 +246,7 @@ module PuppetLanguageServer
       def windows?
         # Ruby only sets File::ALT_SEPARATOR on Windows and the Ruby standard
         # library uses that to test what platform it's on.
-        !!File::ALT_SEPARATOR # rubocop:disable Style/DoubleNegation
+        !!File::ALT_SEPARATOR
       end
 
       # Creates a document object based on the Uri

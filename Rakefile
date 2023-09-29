@@ -55,7 +55,7 @@ task :gem_revendor do
     {
       :directory => 'puppet-lint',
       :github_repo => 'https://github.com/puppetlabs/puppet-lint.git',
-      :github_ref => '2.5.2',
+      :github_ref => 'v4.2.0',
     },
     {
       :directory => 'hiera-eyaml',
@@ -64,8 +64,8 @@ task :gem_revendor do
     },
     {
       :directory => 'puppetfile-resolver',
-      :github_repo => 'https://github.com/glennsarti/puppetfile-resolver.git',
-      :github_ref => '0.3.0',
+      :github_repo => 'https://github.com/jordanbreen28/puppetfile-resolver.git',
+      :github_ref => 'd058f6b8b285dba2af0aeb59722ea5de23c3c13f',
     },
     {
       :directory => 'molinillo',
@@ -75,7 +75,7 @@ task :gem_revendor do
     {
       :directory => 'puppet-strings',
       :github_repo => 'https://github.com/puppetlabs/puppet-strings.git',
-      :github_ref => 'v2.4.0',
+      :github_ref => 'v4.1.0',
     },
     {
       :directory => 'yard',
@@ -89,9 +89,9 @@ task :gem_revendor do
   vendor_dir = File.join(File.dirname(__FILE__),'vendor')
   gem_list.each do |vendor|
     gem_dir = File.join(vendor_dir,vendor[:directory])
-    FileUtils.rm_rf(gem_dir) if Dir.exists?(gem_dir)
+    FileUtils.rm_rf(gem_dir) if Dir.exist?(gem_dir) 
   end
-  Dir.mkdir(vendor_dir) unless Dir.exists?(vendor_dir)
+  Dir.mkdir(vendor_dir) unless Dir.exist?(vendor_dir)
 
   gem_list.each do |vendor|
     puts "Vendoring #{vendor[:directory]}..."
@@ -143,11 +143,11 @@ task build: [:gem_revendor] do
 
   file_list = ['lib', 'vendor', 'puppet-languageserver', 'puppet-debugserver', 'puppet-languageserver-sidecar', 'LICENSE']
   # Remove files in the list that do not exist.
-  file_list.reject! { |filepath| !File.exists?(filepath) }
+  file_list.reject! { |filepath| !File.exist?(filepath) }
 
   puts "Cleaning output directory..."
-  FileUtils.rm_rf Dir.glob("#{output_dir}/*") if Dir.exists?(output_dir)
-  Dir.mkdir(output_dir) unless Dir.exists?(output_dir)
+  FileUtils.rm_rf Dir.glob("#{output_dir}/*") if Dir.exist?(output_dir)
+  Dir.mkdir(output_dir) unless Dir.exist?(output_dir)
 
   puts "Fetch editor services version..."
   require_relative 'lib/puppet_editor_services/version'

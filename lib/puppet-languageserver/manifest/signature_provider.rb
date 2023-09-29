@@ -5,13 +5,13 @@ module PuppetLanguageServer
     module SignatureProvider
       def self.signature_help(session_state, content, line_num, char_num, options = {})
         options = {
-          :tasks_mode => false
+          tasks_mode: false
         }.merge(options)
 
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
-                                                                              :multiple_attempts   => false,
-                                                                              :tasks_mode          => options[:tasks_mode],
-                                                                              :remove_trigger_char => false)
+                                                                              multiple_attempts: false,
+                                                                              tasks_mode: options[:tasks_mode],
+                                                                              remove_trigger_char: false)
         response = LSP::SignatureHelp.new.from_h!('signatures' => [], 'activeSignature' => nil, 'activeParameter' => nil)
         # We are in the root of the document so no signatures here.
         return response if result.nil?
@@ -42,11 +42,11 @@ module PuppetLanguageServer
         #   result.line_offsets contains an array of the offsets on a per line basis e.g.
         #     [0, 14, 34, 36]  means line number 2 starts at absolute offset 34
         #   Once we know the line offset, we can simply add on the char_num to get the absolute offset
-        if function_ast_object.respond_to?(:locator)
-          line_offset = function_ast_object.locator.line_index[line_num]
-        else
-          line_offset = locator.line_index[line_num]
-        end
+        line_offset = if function_ast_object.respond_to?(:locator)
+                        function_ast_object.locator.line_index[line_num]
+                      else
+                        locator.line_index[line_num]
+                      end
 
         abs_offset = line_offset + char_num
         # We need to use offsets here in case functions span lines
@@ -58,14 +58,14 @@ module PuppetLanguageServer
 
         func_info.signatures.each do |sig|
           lsp_sig = LSP::SignatureInformation.new.from_h!(
-            'label'         => sig.key,
+            'label' => sig.key,
             'documentation' => sig.doc,
-            'parameters'    => []
+            'parameters' => []
           )
 
           sig.parameters.each do |param|
             lsp_sig.parameters << LSP::ParameterInformation.new.from_h!(
-              'label'         => param.signature_key_offset.nil? || param.signature_key_length.nil? ? param.name : [param.signature_key_offset, param.signature_key_offset + param.signature_key_length],
+              'label' => param.signature_key_offset.nil? || param.signature_key_length.nil? ? param.name : [param.signature_key_offset, param.signature_key_offset + param.signature_key_length],
               'documentation' => param.doc
             )
           end
@@ -111,6 +111,7 @@ module PuppetLanguageServer
         return nil if char_offset >= function_offset + function_length
         # Does the function even have arguments? then the cursor HAS to be in the first parameter
         return 0 if function_ast_object.arguments.count.zero?
+
         # Is the cursor within any of the function argument locations? if so, return the parameter number we're in
         param_number = function_ast_object.arguments.find_index { |arg| char_offset >= arg.offset && char_offset <= arg.offset + arg.length }
         return param_number unless param_number.nil?
@@ -137,6 +138,7 @@ module PuppetLanguageServer
           # Now we now the char_offset exists between two existing locators.  Determine the location by finding which argument is AFTER the cursor
           after_index = function_ast_object.arguments.find_index { |arg| char_offset < arg.offset }
           return nil if after_index.nil? || after_index.zero? # This should never happen but, you never know.
+
           before_index = after_index - 1
 
           # Now we know between which arguments (before_index and after_index) the char_offset lies

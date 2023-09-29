@@ -34,6 +34,7 @@ module PuppetLanguageServer
         super(job_object)
         connection = connection_from_connection_id(job_object.connection_id)
         raise "Connection is not available for connection id #{job_object.connection_id}" if connection.nil?
+
         sidecar_path = File.expand_path(File.join(__dir__, '..', '..', '..', 'puppet-languageserver-sidecar'))
         args = ['--action', job_object.action].concat(job_object.additional_args).concat(sidecar_args_from_connection(connection))
         cmd = ['ruby', sidecar_path].concat(args)
@@ -45,8 +46,10 @@ module PuppetLanguageServer
         # It's possible server has closed the connection while the sidecar is running.
         # So raise if the connection is no longer available
         raise "Connection is no longer available for connection id #{job_object.connection_id}" if connection_from_connection_id(job_object.connection_id).nil?
+
         session_state = session_state_from_connection(connection)
         raise "Session state is not available for connection id #{job_object.connection_id}" if session_state.nil?
+
         cache = session_state.object_cache
 
         # Correctly encode the result as UTF8
@@ -141,6 +144,7 @@ module PuppetLanguageServer
         true
       rescue StandardError => e
         raise unless job_object.handle_errors
+
         PuppetLanguageServer.log_message(:error, "SidecarQueue Thread: Error running action #{job_object.action}. #{e}\n#{e.backtrace}")
         nil
       end
@@ -153,6 +157,7 @@ module PuppetLanguageServer
 
       def session_state_from_connection(connection)
         return if connection.nil?
+
         handler = connection.protocol.handler
         handler.respond_to?(:session_state) ? handler.session_state : nil
       end
@@ -184,8 +189,10 @@ module PuppetLanguageServer
 
       def sidecar_args_from_connection(connection)
         return nil if connection.nil?
+
         options = connection.server.handler_options
         return [] if options.nil?
+
         result = []
         result << '--no-cache' if options[:disable_sidecar_cache]
         result << "--puppet-version=#{Puppet.version}"

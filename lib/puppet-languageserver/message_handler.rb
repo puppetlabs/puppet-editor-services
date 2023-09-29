@@ -33,13 +33,13 @@ module PuppetLanguageServer
                                 PuppetLanguageServer::ServerCapabilites.folding_provider_supported?
       # Setup static registrations if dynamic registration is not available
       info = {
-        :documentOnTypeFormattingProvider => !language_client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration'),
-        :foldingRangeProvider             => static_folding_provider
+        documentOnTypeFormattingProvider: !language_client.client_capability('textDocument', 'onTypeFormatting', 'dynamicRegistration'),
+        foldingRangeProvider: static_folding_provider
       }
 
       # Configure the document store
       documents.initialize_store(
-        :workspace => workspace_root_from_initialize_params(json_rpc_message.params)
+        workspace: workspace_root_from_initialize_params(json_rpc_message.params)
       )
 
       # Initiate loading the object_cache
@@ -60,12 +60,12 @@ module PuppetLanguageServer
     def request_puppet_getversion(_, _json_rpc_message)
       LSP::PuppetVersion.new(
         'languageServerVersion' => PuppetEditorServices.version,
-        'puppetVersion'         => Puppet.version,
-        'facterVersion'         => Facter.version,
-        'factsLoaded'           => session_state.facts_loaded?,
-        'functionsLoaded'       => session_state.default_functions_loaded?,
-        'typesLoaded'           => session_state.default_types_loaded?,
-        'classesLoaded'         => session_state.default_classes_loaded?
+        'puppetVersion' => Puppet.version,
+        'facterVersion' => Facter.version,
+        'factsLoaded' => session_state.facts_loaded?,
+        'functionsLoaded' => session_state.default_functions_loaded?,
+        'typesLoaded' => session_state.default_types_loaded?,
+        'classesLoaded' => session_state.default_classes_loaded?
       )
     end
 
@@ -89,13 +89,14 @@ module PuppetLanguageServer
     def request_puppet_compilenodegraph(_, json_rpc_message)
       file_uri = json_rpc_message.params['external']
       return LSP::PuppetNodeGraphResponse.new('error' => 'Files of this type can not be used to create a node graph.') unless documents.document_type(file_uri) == :manifest
+
       document = documents.document(file_uri)
 
       begin
         node_graph = PuppetLanguageServer::PuppetHelper.get_node_graph(session_state, document.content, documents.store_root_path)
         LSP::PuppetNodeGraphResponse.new('vertices' => node_graph.vertices,
-                                         'edges'    => node_graph.edges,
-                                         'error'    => node_graph.error_content)
+                                         'edges' => node_graph.edges,
+                                         'error' => node_graph.error_content)
       rescue StandardError => e
         PuppetLanguageServer.log_message(:error, "(puppet/compileNodeGraph) Error generating node graph. #{e}")
         LSP::PuppetNodeGraphResponse.new('error' => 'An internal error occured while generating the the node graph. Please see the debug log files for more information.')
@@ -132,17 +133,17 @@ module PuppetLanguageServer
       end
 
       LSP::PuppetFixDiagnosticErrorsResponse.new(
-        'documentUri'  => formatted_request.documentUri,
+        'documentUri' => formatted_request.documentUri,
         'fixesApplied' => changes,
-        'newContent'   => changes > 0 || formatted_request.alwaysReturnContent ? new_content : nil
+        'newContent' => changes > 0 || formatted_request.alwaysReturnContent ? new_content : nil
       )
     rescue StandardError => e
       PuppetLanguageServer.log_message(:error, "(puppet/fixDiagnosticErrors) #{e}")
       unless formatted_request.nil?
         LSP::PuppetFixDiagnosticErrorsResponse.new(
-          'documentUri'  => formatted_request.documentUri,
+          'documentUri' => formatted_request.documentUri,
           'fixesApplied' => 0,
-          'newContent'   => formatted_request.alwaysReturnContent ? content : nil # rubocop:disable Metrics/BlockNesting
+          'newContent' => formatted_request.alwaysReturnContent ? content : nil
         )
       end
     end
@@ -156,7 +157,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::CompletionProvider.complete(session_state, content, line_num, char_num, :context => context, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::CompletionProvider.complete(session_state, content, line_num, char_num, context: context, tasks_mode: documents.plan_file?(file_uri))
       else
         raise "Unable to provide completion on #{file_uri}"
       end
@@ -167,6 +168,7 @@ module PuppetLanguageServer
 
     def request_textdocument_foldingrange(_, json_rpc_message)
       return nil unless language_client.folding_range
+
       file_uri = json_rpc_message.params['textDocument']['uri']
       case documents.document_type(file_uri)
       when :manifest
@@ -194,7 +196,7 @@ module PuppetLanguageServer
       content = documents.document_content(file_uri)
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::HoverProvider.resolve(session_state, content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::HoverProvider.resolve(session_state, content, line_num, char_num, tasks_mode: documents.plan_file?(file_uri))
       else
         raise "Unable to provide hover on #{file_uri}"
       end
@@ -211,7 +213,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(session_state, content, line_num, char_num, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DefinitionProvider.find_definition(session_state, content, line_num, char_num, tasks_mode: documents.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -226,7 +228,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, :tasks_mode => documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::DocumentSymbolProvider.extract_document_symbols(content, tasks_mode: documents.plan_file?(file_uri))
       else
         raise "Unable to provide definition on #{file_uri}"
       end
@@ -237,6 +239,7 @@ module PuppetLanguageServer
 
     def request_textdocument_ontypeformatting(_, json_rpc_message)
       return nil unless language_client.format_on_type
+
       file_uri = json_rpc_message.params['textDocument']['uri']
       line_num = json_rpc_message.params['position']['line']
       char_num = json_rpc_message.params['position']['character']
@@ -273,7 +276,7 @@ module PuppetLanguageServer
           content,
           line_num,
           char_num,
-          :tasks_mode => documents.plan_file?(file_uri)
+          tasks_mode: documents.plan_file?(file_uri)
         )
       else
         raise "Unable to provide signatures on #{file_uri}"
@@ -373,6 +376,7 @@ module PuppetLanguageServer
 
     def response_workspace_configuration(_, json_rpc_message, original_request)
       return unless json_rpc_message.is_successful
+
       original_request.params.items.each_with_index do |item, index|
         # The response from the client strips the section name so we need to re-add it
         language_client.parse_lsp_configuration_settings!(item.section => json_rpc_message.result[index])
@@ -399,10 +403,12 @@ module PuppetLanguageServer
     def workspace_root_from_initialize_params(params)
       if params.key?('workspaceFolders')
         return nil if params['workspaceFolders'].nil? || params['workspaceFolders'].empty?
+
         # We don't support multiple workspace folders yet, so just select the first one
         return UriHelper.uri_path(params['workspaceFolders'][0]['uri'])
       end
       return UriHelper.uri_path(params['rootUri']) if params.key?('rootUri') && !params['rootUri'].nil?
+
       params['rootPath']
     end
   end
@@ -424,12 +430,12 @@ module PuppetLanguageServer
       # case just fake the response that we are fully loaded with unknown gem versions
       LSP::PuppetVersion.new(
         'languageServerVersion' => PuppetEditorServices.version,
-        'puppetVersion'         => 'Unknown',
-        'facterVersion'         => 'Unknown',
-        'factsLoaded'           => true,
-        'functionsLoaded'       => true,
-        'typesLoaded'           => true,
-        'classesLoaded'         => true
+        'puppetVersion' => 'Unknown',
+        'facterVersion' => 'Unknown',
+        'factsLoaded' => true,
+        'functionsLoaded' => true,
+        'typesLoaded' => true,
+        'classesLoaded' => true
       )
     end
 
@@ -439,7 +445,7 @@ module PuppetLanguageServer
       protocol.encode_and_send(
         ::PuppetEditorServices::Protocol::JsonRPCMessages.new_notification(
           'window/showMessage',
-          'type'    => LSP::MessageType::WARNING,
+          'type' => LSP::MessageType::WARNING,
           'message' => 'An error occured while starting the Language Server. The server has been disabled.'
         )
       )

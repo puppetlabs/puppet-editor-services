@@ -29,10 +29,11 @@ module PuppetLanguageServer
       return nil unless actual_root.scheme == actual_uri.scheme
 
       # CGI.unescape doesn't handle space rules properly in uri paths
-      # URI.unescape does, but returns strings in their original encoding
+      # URI::parser.unescape does, but returns strings in their original encoding
       # Mostly safe here as we're only worried about file based URIs
-      root_path = URI.unescape(actual_root.path) # rubocop:disable Lint/UriEscapeUnescape
-      uri_path = URI.unescape(actual_uri.path) # rubocop:disable Lint/UriEscapeUnescape
+      parser = URI::DEFAULT_PARSER
+      root_path = parser.unescape(actual_root.path)
+      uri_path = parser.unescape(actual_uri.path)
       if case_sensitive
         return nil unless uri_path.slice(0, root_path.length) == root_path
       else

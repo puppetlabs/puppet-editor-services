@@ -12,6 +12,7 @@ module PuppetLanguageServerSidecar
 
     def self.require_puppet_strings
       return @puppet_strings_loaded unless @puppet_strings_loaded.nil?
+
       begin
         require 'puppet-strings'
         require 'puppet-strings/yard'
@@ -41,6 +42,7 @@ module PuppetLanguageServerSidecar
       # @return [FileDocumentation, nil] Returns the documentation for the path, or nil if it cannot be extracted
       def file_documentation(path, cache = nil)
         return nil unless PuppetLanguageServerSidecar::PuppetStringsHelper.require_puppet_strings
+
         @helper_cache = FileDocumentationCache.new if @helper_cache.nil?
         return @helper_cache.document(path) if @helper_cache.path_exists?(path)
 
@@ -143,8 +145,8 @@ module PuppetLanguageServerSidecar
             item[:docstring][:tags].select { |tag| tag[:tag_name] == 'param' && tag.key?(:types) }.each do |tag|
               param_name = tag[:name]
               obj.parameters[param_name] = {
-                :doc  => tag[:text],
-                :type => tag[:types]&.join(', ')
+                doc: tag[:text],
+                type: tag[:types]&.join(', ')
               }
             end
           end
@@ -173,10 +175,10 @@ module PuppetLanguageServerSidecar
         unless item[:docstring][:tags].nil?
           item[:docstring][:tags].select { |tag| tag[:tag_name] == 'param' }.each do |tag|
             obj.attributes << PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeAttribute.new.from_h!(
-              'key'           => tag[:name],
+              'key' => tag[:name],
               'default_value' => defaults[tag[:name]],
-              'doc'           => tag[:text],
-              'types'         => tag[:types].nil? ? nil : tag[:types].join(', ')
+              'doc' => tag[:text],
+              'types' => tag[:types].nil? ? nil : tag[:types].join(', ')
             )
           end
         end
@@ -236,9 +238,9 @@ module PuppetLanguageServerSidecar
               case tag[:tag_name]
               when 'param'
                 sig.parameters << PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionSignatureParameter.new.from_h!(
-                  'name'  => tag[:name],
+                  'name' => tag[:name],
                   'types' => tag[:types],
-                  'doc'   => tag[:text]
+                  'doc' => tag[:text]
                 )
               when 'return'
                 sig.return_types = tag[:types]
@@ -278,17 +280,17 @@ module PuppetLanguageServerSidecar
         unless item[:properties].nil?
           item[:properties].each do |prop|
             obj.attributes[prop[:name]] = {
-              :type => :property,
-              :doc  => prop[:description]
+              type: :property,
+              doc: prop[:description]
             }
           end
         end
         unless item[:parameters].nil?
           item[:parameters].each do |prop|
             obj.attributes[prop[:name]] = {
-              :type       => :param,
-              :doc        => prop[:description],
-              :isnamevar? => prop[:isnamevar]
+              type: :param,
+              doc: prop[:description],
+              isnamevar?: prop[:isnamevar]
             }
           end
         end
@@ -306,7 +308,7 @@ module PuppetLanguageServerSidecar
         name = param.name.dup # Don't want to modify the original object
         # Munge the parameter name to what it appears in the signature key
         # Ref - https://github.com/puppetlabs/puppet-strings/blob/2987558bb3170bc37e6077aab1b60efb17161eff/lib/puppet-strings/yard/handlers/ruby/function_handler.rb#L293-L317
-        if name.start_with?('*') || name.start_with?('&')
+        if name.start_with?('*', '&')
           name.insert(1, '$')
         else
           name = "$#{name}"
@@ -352,11 +354,11 @@ module PuppetLanguageServerSidecar
     # Serialisation
     def to_h
       {
-        'path'      => path,
-        'classes'   => classes,
+        'path' => path,
+        'classes' => classes,
         'datatypes' => datatypes,
         'functions' => functions,
-        'types'     => types
+        'types' => types
       }
     end
 

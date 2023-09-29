@@ -22,9 +22,9 @@ module PuppetLanguageServer
 
           unless ex_line.nil? || ex_pos.nil? || message.nil?
             result << LSP::Diagnostic.new('severity' => LSP::DiagnosticSeverity::ERROR,
-                                          'range'    => LSP.create_range(ex_line, ex_pos, ex_line, ex_pos + 1),
-                                          'source'   => 'Puppet',
-                                          'message'  => message)
+                                          'range' => LSP.create_range(ex_line, ex_pos, ex_line, ex_pos + 1),
+                                          'source' => 'Puppet',
+                                          'message' => message)
           end
         end
         result

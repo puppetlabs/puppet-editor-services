@@ -34,6 +34,7 @@ module PuppetLanguageServer
 
   def self.featureflag?(flagname)
     return false if @flags.nil? || @flags.empty?
+
     @flags.include?(flagname)
   end
 
@@ -62,11 +63,9 @@ module PuppetLanguageServer
       message_handler
       server_capabilities
     ].each do |lib|
-      begin
-        require "puppet-languageserver/#{lib}"
-      rescue LoadError
-        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
-      end
+      require "puppet-languageserver/#{lib}"
+    rescue LoadError
+      require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
     end
 
     begin
@@ -90,11 +89,9 @@ module PuppetLanguageServer
       puppet_monkey_patches
       providers
     ].each do |lib|
-      begin
-        require "puppet-languageserver/#{lib}"
-      rescue LoadError
-        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
-      end
+      require "puppet-languageserver/#{lib}"
+    rescue LoadError
+      require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-languageserver', lib))
     end
 
     # Validate the feature flags
@@ -239,8 +236,8 @@ module PuppetLanguageServer
     require 'puppet_editor_services/protocol/json_rpc'
 
     server_options = options
-    protocol_options = { :class => PuppetEditorServices::Protocol::JsonRPC }.merge(options)
-    handler_options = { :class => PuppetLanguageServer::MessageHandler }.merge(options)
+    protocol_options = { class: PuppetEditorServices::Protocol::JsonRPC }.merge(options)
+    handler_options = { class: PuppetLanguageServer::MessageHandler }.merge(options)
 
     unless active?
       handler_options[:class] = PuppetLanguageServer::DisabledMessageHandler

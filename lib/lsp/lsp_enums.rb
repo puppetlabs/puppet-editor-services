@@ -3,11 +3,6 @@
 # DO NOT MODIFY. This file is built automatically
 # LSP Enumerations
 
-# rubocop:disable Layout/EmptyLinesAroundClassBody
-# rubocop:disable Lint/UselessAssignment
-# rubocop:disable Style/AsciiComments
-# rubocop:disable Naming/MethodName
-
 module LSP
   module DiagnosticSeverity
     ERROR = 1
@@ -145,7 +140,4 @@ module LSP
   end
 end
 
-# rubocop:enable Layout/EmptyLinesAroundClassBody
-# rubocop:enable Lint/UselessAssignment
 # rubocop:enable Style/AsciiComments
-# rubocop:enable Naming/MethodName

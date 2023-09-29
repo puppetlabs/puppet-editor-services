@@ -12,9 +12,7 @@
   manifest/hover_provider
   puppetfile/validation_provider
 ].each do |lib|
-  begin
-    require "puppet-languageserver/#{lib}"
-  rescue LoadError
-    require File.expand_path(File.join(File.dirname(__FILE__), lib))
-  end
+  require "puppet-languageserver/#{lib}"
+rescue LoadError
+  require File.expand_path(File.join(File.dirname(__FILE__), lib))
 end

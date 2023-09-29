@@ -25,7 +25,7 @@ require 'puppet/parser/compiler'
 module Puppet
   module Parser
     class Compiler
-      alias_method :original_compile, :compile
+      alias original_compile compile
 
       def compile
         PuppetDebugServer::PuppetDebugSession.instance.execute_hook(:hook_before_compile, [self])
@@ -36,6 +36,7 @@ module Puppet
         # TODO: Potential issue here with 4.10.x not implementing .file on the Positioned class
         # Just re-raise if there is no Puppet manifest file associated with the error
         raise if e.file.nil? || e.line.nil? || e.pos.nil?
+
         PuppetDebugServer::PuppetDebugSession.instance.execute_hook(:hook_exception, [e])
         raise
       end
@@ -49,7 +50,7 @@ module Puppet
   module Pops
     module Evaluator
       class EvaluatorImpl
-        alias_method :original_evaluate, :evaluate
+        alias original_evaluate evaluate
 
         def evaluate(target, scope)
           PuppetDebugServer::PuppetDebugSession.instance.execute_hook(:hook_before_pops_evaluate, [self, target, scope])
@@ -95,7 +96,7 @@ module Puppet
   module Parser
     module Functions
       class << self
-        alias_method :original_reset, :reset
+        alias original_reset reset
 
         def reset
           result = original_reset

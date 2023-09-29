@@ -40,11 +40,9 @@ module PuppetDebugServer
       debug_session/puppet_session_state
       puppet_monkey_patches
     ].each do |lib|
-      begin
-        require "puppet-debugserver/#{lib}"
-      rescue LoadError
-        require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-debugserver', lib))
-      end
+      require "puppet-debugserver/#{lib}"
+    rescue LoadError
+      require File.expand_path(File.join(File.dirname(__FILE__), 'puppet-debugserver', lib))
     end
   ensure
     $VERBOSE = original_verbose
@@ -128,8 +126,8 @@ module PuppetDebugServer
       require 'puppet_editor_services/server/tcp'
 
       server_options = options.dup
-      protocol_options = { :class => PuppetEditorServices::Protocol::DebugAdapter }.merge(options)
-      handler_options = { :class => PuppetDebugServer::MessageHandler }.merge(options)
+      protocol_options = { class: PuppetEditorServices::Protocol::DebugAdapter }.merge(options)
+      handler_options = { class: PuppetDebugServer::MessageHandler }.merge(options)
       # TODO: Add max threads?
       server_options[:servicename] = 'DEBUG SERVER'
 
@@ -155,9 +153,11 @@ module PuppetDebugServer
     # TODO: Can I use a real mutex here? might be hard with the rpc_thread.alive? call
     sleep(0.5) while !debug_session.flow_control.flag?(:start_puppet) && rpc_thread.alive? && !debug_session.flow_control.terminate?
     return unless rpc_thread.alive? || debug_session.flow_control.terminate?
+
     debug_session.run_puppet
 
     return unless rpc_thread.alive?
+
     debug_session.close
     rpc_thread.join
   end

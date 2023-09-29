@@ -75,6 +75,7 @@ module PuppetLanguageServer
       def session_state_from_connection_id(connection_id)
         connection = PuppetEditorServices::Server.current_server.connection(connection_id)
         return if connection.nil?
+
         handler = connection.protocol.handler
         handler.respond_to?(:session_state) ? handler.session_state : nil
       end

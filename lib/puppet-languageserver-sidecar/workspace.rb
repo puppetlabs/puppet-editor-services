@@ -29,6 +29,7 @@ module PuppetLanguageServerSidecar
     # root of the module/control repo actually is
     def self.find_root_path(path)
       return nil if path.nil?
+
       filepath = File.expand_path(path)
 
       if dir_exist?(filepath)
@@ -41,13 +42,14 @@ module PuppetLanguageServerSidecar
 
       until directory.nil?
         break if file_exist?(File.join(directory, 'metadata.json')) || file_exist?(File.join(directory, 'environment.conf'))
+
         parent = File.dirname(directory)
         # If the parent is the same as the original, then we've reached the end of the path chain
-        if parent == directory
-          directory = nil
-        else
-          directory = parent
-        end
+        directory = if parent == directory
+                      nil
+                    else
+                      parent
+                    end
       end
 
       directory
@@ -56,9 +58,9 @@ module PuppetLanguageServerSidecar
 
     def self.process_workspace(path)
       result = {
-        :root_path           => nil,
-        :has_environmentconf => false,
-        :has_metadatajson    => false
+        root_path: nil,
+        has_environmentconf: false,
+        has_metadatajson: false
       }
       return result if path.nil?
 

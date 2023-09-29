@@ -5,11 +5,11 @@ module PuppetLanguageServer
     module DefinitionProvider
       def self.find_definition(session_state, content, line_num, char_num, options = {})
         options = {
-          :tasks_mode => false
+          tasks_mode: false
         }.merge(options)
         result = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num,
-                                                                              :disallowed_classes => [Puppet::Pops::Model::BlockExpression],
-                                                                              :tasks_mode         => options[:tasks_mode])
+                                                                              disallowed_classes: [Puppet::Pops::Model::BlockExpression],
+                                                                              tasks_mode: options[:tasks_mode])
         return nil if result.nil?
 
         path = result[:path]
@@ -76,7 +76,7 @@ module PuppetLanguageServer
         item = PuppetLanguageServer::PuppetHelper.get_class(session_state, resource_name) if item.nil?
         unless item.nil?
           return LSP::Location.new(
-            'uri'   => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
+            'uri' => PuppetLanguageServer::UriHelper.build_file_uri(item.source),
             'range' => LSP.create_range(item.line, 0, item.line, 1024)
           )
         end
@@ -87,8 +87,9 @@ module PuppetLanguageServer
       def self.function_name(session_state, func_name)
         item = PuppetLanguageServer::PuppetHelper.function(session_state, func_name)
         return nil if item.nil? || item.source.nil? || item.line.nil?
+
         LSP::Location.new(
-          'uri'   => "file:///#{item.source}",
+          'uri' => "file:///#{item.source}",
           'range' => LSP.create_range(item.line, 0, item.line, 1024)
         )
       end

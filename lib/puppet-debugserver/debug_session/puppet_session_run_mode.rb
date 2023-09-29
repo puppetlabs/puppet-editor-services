@@ -17,6 +17,7 @@ module PuppetDebugServer
       # @param options See options
       def initialize(mode = :run, options = {})
         raise "Invalid mode #{mode}" unless %i[run stepin next stepout].include?(mode)
+
         @mode = mode
         @options = options
 
@@ -37,7 +38,7 @@ module PuppetDebugServer
         @run_mode_mutex.synchronize do
           @mode = :next
           @options = {
-            :pops_depth_level => pops_depth_level
+            pops_depth_level: pops_depth_level
           }
         end
       end
@@ -56,7 +57,7 @@ module PuppetDebugServer
         @run_mode_mutex.synchronize do
           @mode = :stepout
           @options = {
-            :pops_depth_level => pops_depth_level
+            pops_depth_level: pops_depth_level
           }
         end
       end

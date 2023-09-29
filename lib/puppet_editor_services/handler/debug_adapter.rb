@@ -40,10 +40,10 @@ module PuppetEditorServices
             result = send(method_name, protocol.connection.id, request_message)
             protocol.encode_and_send(result) unless result.nil?
           rescue NoMethodError, LoadError => e
-            unhandled_exception(e, :source => :request, :message => request_message)
+            unhandled_exception(e, source: :request, message: request_message)
             raise
           rescue StandardError => e
-            unhandled_exception(e, :source => :request, :message => request_message)
+            unhandled_exception(e, source: :request, message: request_message)
           end
           return true
         end

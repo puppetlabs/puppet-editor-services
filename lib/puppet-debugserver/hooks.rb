@@ -60,12 +60,10 @@ module PuppetDebugServer
     def exec_hook(event_name, *args, &block)
       PuppetDebugServer.log_message(:debug, "Starting to execute hook #{event_name}") unless event_name == :hook_log_message
       @hooks[event_name.to_s].map do |_hook_name, callable|
-        begin
-          callable.call(*args, &block)
-        rescue ::RuntimeError => e
-          errors << e
-          e
-        end
+        callable.call(*args, &block)
+      rescue ::RuntimeError => e
+        errors << e
+        e
       end.last
       PuppetDebugServer.log_message(:debug, "Finished executing hook #{event_name}") unless event_name == :hook_log_message
     end
@@ -91,7 +89,7 @@ module PuppetDebugServer
     # @note Modifying the returned hash does not alter the hooks, use
     # `add_hook`/`delete_hook` for that.
     def get_hooks(event_name)
-      Hash[@hooks[event_name.to_s]]
+      (@hooks[event_name.to_s]).to_h
     end
 
     # @param [Symbol] event_name The name of the event.

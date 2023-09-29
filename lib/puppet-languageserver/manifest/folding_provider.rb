@@ -23,15 +23,16 @@ module PuppetLanguageServer
       REGION_REGION = 'region'
 
       def start_region?(text)
-        !(text =~ %r{^#\s*region\b}).nil?
+        !(text =~ /^#\s*region\b/).nil?
       end
 
       def end_region?(text)
-        !(text =~ %r{^#\s*endregion\b}).nil?
+        !(text =~ /^#\s*endregion\b/).nil?
       end
 
       def folding_ranges(tokens, show_last_line = false)
         return nil unless self.class.supported?
+
         ranges = {}
 
         brace_stack = []
@@ -127,12 +128,13 @@ module PuppetLanguageServer
         start_line = line_for_offset(start_token) - 1
         end_line = line_for_offset(end_token) - 1
         return nil if start_line == end_line
+
         LSP::FoldingRange.new({
-                                'startLine'      => start_line,
+                                'startLine' => start_line,
                                 'startCharacter' => pos_on_line(start_token) - 1,
-                                'endLine'        => end_line,
-                                'endCharacter'   => pos_on_line(end_token, end_token.offset + end_token.length) - 1,
-                                'kind'           => kind
+                                'endLine' => end_line,
+                                'endCharacter' => pos_on_line(end_token, end_token.offset + end_token.length) - 1,
+                                'kind' => kind
                               })
       end
 
@@ -141,12 +143,13 @@ module PuppetLanguageServer
         start_line = line_for_offset(token) - 1
         end_line = line_for_offset(token, token.offset + token.length) - 1
         return nil if start_line == end_line
+
         LSP::FoldingRange.new({
-                                'startLine'      => start_line,
+                                'startLine' => start_line,
                                 'startCharacter' => pos_on_line(token) - 1,
-                                'endLine'        => end_line,
-                                'endCharacter'   => pos_on_line(token, token.offset + token.length) - 1,
-                                'kind'           => kind
+                                'endLine' => end_line,
+                                'endCharacter' => pos_on_line(token, token.offset + token.length) - 1,
+                                'kind' => kind
                               })
       end
 
@@ -157,13 +160,14 @@ module PuppetLanguageServer
         # use the heredoc sublocator endline and add one
         end_line = line_for_offset(heredoc_token, heredoc_token.offset + heredoc_token.length + subloc_token.length)
         return nil if start_line == end_line
+
         LSP::FoldingRange.new({
-                                'startLine'      => start_line,
+                                'startLine' => start_line,
                                 'startCharacter' => pos_on_line(heredoc_token) - 1,
-                                'endLine'        => end_line,
+                                'endLine' => end_line,
                                 # We don't know where the end token for the Heredoc is, so just assume it's at the start of the line
-                                'endCharacter'   => 0,
-                                'kind'           => kind
+                                'endCharacter' => 0,
+                                'kind' => kind
                               })
       end
 
@@ -174,6 +178,7 @@ module PuppetLanguageServer
 
         # Ignore the range if there is an existing one which is bigger
         return nil unless ranges[range.startLine].nil? || ranges[range.startLine].endLine < range.endLine
+
         ranges[range.startLine] = range
         nil
       end
@@ -184,12 +189,15 @@ module PuppetLanguageServer
         line_num = line_for_offset(tokens[index][1])
         while index < tokens.length - 2
           break unless tokens[index + 1][0] == :TOKEN_COMMENT
+
           next_line = line_for_offset(tokens[index + 1][1])
           # Tokens must be on contiguous lines
           break unless next_line == line_num + 1
+
           # Must not be a region comment
           comment = extract_text(tokens[index + 1][1])
           break if start_region?(comment) || end_region?(comment)
+
           # It's a block comment
           line_num = next_line
           index += 1
@@ -206,6 +214,7 @@ module PuppetLanguageServer
         return false unless tokens[index][0] == :TOKEN_COMMENT
         # If it's the first token then it has to be at the start of a line
         return true if index.zero?
+
         # It has to be the first token on this line
         this_token_line = line_for_offset(tokens[index][1])
         prev_token_line = line_for_offset(tokens[index - 1][1])

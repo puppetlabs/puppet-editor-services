@@ -11,13 +11,11 @@ module Puppet
       class Parser
         def singleton_parse_string(code, task_mode = false, path = nil)
           $PuppetParserMutex.synchronize do # rubocop:disable Style/GlobalVars
-            begin
-              original_taskmode = Puppet[:tasks] if Puppet.tasks_supported?
-              Puppet[:tasks] = task_mode if Puppet.tasks_supported?
-              return parse_string(code, path)
-            ensure
-              Puppet[:tasks] = original_taskmode if Puppet.tasks_supported?
-            end
+            original_taskmode = Puppet[:tasks] if Puppet.tasks_supported?
+            Puppet[:tasks] = task_mode if Puppet.tasks_supported?
+            return parse_string(code, path)
+          ensure
+            Puppet[:tasks] = original_taskmode if Puppet.tasks_supported?
           end
         end
       end

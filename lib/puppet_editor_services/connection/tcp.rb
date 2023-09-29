@@ -14,6 +14,7 @@ module PuppetEditorServices
 
       def send_data(data)
         return false if socket.nil?
+
         socket.write(data)
         true
       end
