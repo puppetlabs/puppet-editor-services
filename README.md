@@ -291,6 +291,10 @@ Usage: puppet-debugserver.rb [options]
     -v, --version                    Prints the Debug Server version
 ```
 
+## License
+
+This codebase is licensed under Apache 2.0. However, the open source dependencies included in this codebase might be subject to other software licenses such as AGPL, GPL2.0, and MIT.
+
 # Other information
 
 ## Why are there vendored gems and why only native ruby
