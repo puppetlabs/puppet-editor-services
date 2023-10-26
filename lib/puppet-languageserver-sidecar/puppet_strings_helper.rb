@@ -6,8 +6,8 @@ module PuppetLanguageServerSidecar
       @instance ||= Helper.new
     end
 
-    def self.file_documentation(path, cache = nil)
-      instance.file_documentation(path, cache)
+    def self.file_documentation(path, puppet_path, cache = nil)
+      instance.file_documentation(path, puppet_path, cache)
     end
 
     def self.require_puppet_strings
@@ -40,7 +40,7 @@ module PuppetLanguageServerSidecar
       # @param [String] path The absolute path to the file that will be documented
       # @param [PuppetLanguageServerSidecar::Cache] cache A Sidecar cache which stores already parsed documents as serialised FileDocumentation objects
       # @return [FileDocumentation, nil] Returns the documentation for the path, or nil if it cannot be extracted
-      def file_documentation(path, cache = nil)
+      def file_documentation(path, puppet_path, cache = nil)
         return nil unless PuppetLanguageServerSidecar::PuppetStringsHelper.require_puppet_strings
 
         @helper_cache = FileDocumentationCache.new if @helper_cache.nil?
@@ -73,7 +73,7 @@ module PuppetLanguageServerSidecar
         ::YARD::CLI::Yardoc.run(*args)
 
         # Populate the documentation cache from the YARD information
-        @helper_cache.populate_from_yard_registry!
+        @helper_cache.populate_from_yard_registry!(puppet_path)
 
         # Save to the permanent cache
         @helper_cache.save_to_sidecar_cache(path, cache) unless cache.nil? || !cache.active?
@@ -98,13 +98,13 @@ module PuppetLanguageServerSidecar
       @cache[path]
     end
 
-    def populate_from_yard_registry!
+    def populate_from_yard_registry!(puppet_path)
       # Extract all of the information
       # Ref - https://github.com/puppetlabs/puppet-strings/blob/87a8e10f45bfeb7b6b8e766324bfb126de59f791/lib/puppet-strings/json.rb#L10-L16
       populate_classes_from_yard_registry!
       populate_data_types_from_yard_registry!
       populate_functions_from_yard_registry!
-      populate_types_from_yard_registry!
+      populate_types_from_yard_registry!(puppet_path)
     end
 
     def populate_from_sidecar_cache!(path, cache)
@@ -263,10 +263,10 @@ module PuppetLanguageServerSidecar
       end
     end
 
-    def populate_types_from_yard_registry!
+    def populate_types_from_yard_registry!(puppet_path)
       ::YARD::Registry.all(:puppet_type).map(&:to_hash).each do |item|
-        source_path = item[:file]
         type_name = item[:name].to_s
+        source_path = item[:file]
         @cache[source_path] = FileDocumentation.new(source_path) if @cache[source_path].nil?
 
         obj                = PuppetLanguageServer::Sidecar::Protocol::PuppetType.new
@@ -295,6 +295,13 @@ module PuppetLanguageServerSidecar
           end
         end
 
+        if obj.key == 'file'
+          # Special case for file type
+          # we need to set the source and calling_source to the correct file definition
+          path = File.join(puppet_path, 'lib/puppet/type')
+          obj.source = "#{path}/#{obj.key}.rb"
+          obj.calling_source = obj.source
+        end
         @cache[source_path].types << obj
       end
     end

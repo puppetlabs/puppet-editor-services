@@ -92,7 +92,7 @@ module PuppetLanguageServerSidecar
       paths = finder.find(options[:root_path])
 
       paths.each do |path|
-        file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path, cache)
+        file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path, finder.puppet_path, cache)
         next if file_doc.nil?
 
         if object_types.include?(:class) # rubocop:disable Style/IfUnlessModifier   This reads better
@@ -108,6 +108,7 @@ module PuppetLanguageServerSidecar
 
         file_doc.types.each do |item|
           result.append!(item) unless name == 'whit' || name == 'component'
+          FileUtils.rm_f(finder.temp_file) if item.key == 'file' && finder.temp_file # Remove the temp_file.rb if it exists
         end
       end
 
@@ -152,7 +153,7 @@ module PuppetLanguageServerSidecar
     # A helper class to find the paths for different kinds of things related to Puppet, for example
     # DataType ruby files or manifests.
     class PuppetPathFinder
-      attr_reader :object_types
+      attr_reader :object_types, :puppet_path, :temp_file
 
       # @param puppet_env [Puppet::Node::Environment] The environment to search within
       # @param object_types [Symbol] The types of objects that will be searched for. See available_documentation_types for the complete list
@@ -212,12 +213,25 @@ module PuppetLanguageServerSidecar
               PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Searching glob '#{glob}''")
 
               Dir.glob(glob) do |filename|
-                paths << filename
+                # name of temp file to store the file type definitions (if any)
+                @temp_file = 'temp_file.rb'
+                # if filename matches file.rb or /file/<any>.rb then we need to loop through each file type definition
+                if filename.match?(%r{/type/file/.*.rb|/type/file.rb})
+                  # Create/Open the temp file and write the file type definitions to it
+                  File.open(@temp_file, 'a') do |f|
+                    # Read each file type definition and write it to the temp file
+                    PuppetLanguageServerSidecar.log_message(:debug, "[PuppetPathFinder] Found file type definition at '#{filename}'.")
+                    f.puts(File.read(filename))
+                  end
+                else
+                  paths << filename
+                end
               end
             end
           end
         end
-
+        #  Add the temp_file.rb to the paths array for searching (if exists)
+        paths << @temp_file if @temp_file && File.exist?(@temp_file)
         paths
       end
 
@@ -258,7 +272,7 @@ module PuppetLanguageServerSidecar
             { relative_dir: 'lib/puppet/parser/functions', glob: '/**/*.rb' }  # Contains functions written in Ruby for the legacy Puppet::Parser::Functions API
           ],
           type: [
-            { relative_dir: 'lib/puppet/type',             glob: '/*.rb' } # Contains Puppet resource types. We don't care about providers. Types cannot exist in subdirs
+            { relative_dir: 'lib/puppet/type',             glob: '/{,file/}*.rb' } # Contains Puppet resource types. Resource types like `file` can live in subdirs, hence the glob
           ]
         }
       end
