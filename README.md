@@ -4,7 +4,7 @@
 ![ci](https://github.com/puppetlabs/puppet-editor-services/actions/workflows/ci.yml/badge.svg)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/puppetlabs/puppet-editor-services)
 
-A ruby based implementation of a [Language Server](https://github.com/Microsoft/language-server-protocol) and [Debug Server](TODO) for the Puppet Language.
+A ruby based implementation of a [Language Server](https://github.com/Microsoft/language-server-protocol) and [Debug Server](https://github.com/microsoft/debug-adapter-protocol) for the Puppet Language. Integrate this into your editor to benefit from full Puppet Language support, such as syntax hightlighting, linting, hover support and more.
 
 ## Requirements
 
@@ -20,7 +20,7 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
 
 * Clone this repository
 
-```
+```bash
 > git clone https://github.com/puppetlabs/puppet-editor-services.git
 
 > cd puppet-editor-services
@@ -28,7 +28,7 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
 
 * Bundle the development gems
 
-```
+```bash
 > bundle install
 
   ... < lots of text >
@@ -36,7 +36,7 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
 
 * Installed vendored gems
 
-```
+```bash
 > bundle exec rake gem_revendor
 
   ... < lots of text >
@@ -48,7 +48,7 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
 
 By default the language server will stop if no connection is made within 10 seconds and will also stop after a client disconnects.  Adding `--debug=stdout` will log messages to the console
 
-```
+```bash
 > bundle exec ruby ./puppet-languageserver --debug=stdout
 I, [2018-12-05T15:19:51.853802 #28756]  INFO -- : Language Server is v0.16.0
 I, [2018-12-05T15:19:51.854809 #28756]  INFO -- : Using Puppet v5.5.8
@@ -89,7 +89,7 @@ I, [2018-12-05T15:20:03.632011 #28756]  INFO -- : Language Server exited.
 
 To make the server run continuously add `--timeout=0` and `--no-stop` to the command line. For example;
 
-```
+```bash
 > bundle exec ruby ./puppet-languageserver --debug=stdout --timeout=0 --no-stop
 I, [2018-12-05T15:20:56.302414 #29752]  INFO -- : Language Server is v0.16.0
 I, [2018-12-05T15:20:56.303391 #29752]  INFO -- : Using Puppet v5.5.8
@@ -122,7 +122,7 @@ D, [2018-12-05T15:20:56.374333 #29752] DEBUG -- : TCPSRV: Started listening on l
 
 > On Windows you need to run ruby with the `Puppet Command Prompt` which can be found in the Start Menu.  This enables the Puppet Agent ruby environment.
 
-```
+```bash
 > ruby puppet-languageserver
 LANGUAGE SERVER RUNNING 127.0.0.1:55086
 ```
@@ -131,7 +131,7 @@ LANGUAGE SERVER RUNNING 127.0.0.1:55086
 
 Note that the Language Server will use TCP as the default transport on `localhost` at a random port.  The IP Address and Port can be changed using the `--ip` and `--port` arguments respectively.  For example to listen on all interfaces on port 9000;
 
-```
+```bash
 > ruby ./puppet-languageserver --ip=0.0.0.0 --port=9000
 ```
 
@@ -139,7 +139,7 @@ To change the protocol to STDIO, that is using STDOUT and STDIN, use the `--stdi
 
 ## Command line arguments
 
-```
+```bash
 Usage: puppet-languageserver.rb [options]
     -p, --port=PORT                  TCP Port to listen on.  Default is random port
     -i, --ip=ADDRESS                 IP Address to listen on (0.0.0.0 for all interfaces).  Default is localhost
@@ -174,21 +174,21 @@ Note that using the `--debug=STDOUT` option without directing the output to a te
 
 The `noop` action just outputs an empty JSON array but can be used to confirm that the Sidecar does not error while loading Puppet.
 
-```
+```bash
 > bundle exec ruby ./puppet-languageserver-sidecar --action=noop
 []
 ```
 
 #### Output all default Puppet Types
 
-```
+```bash
 > bundle exec ruby ./puppet-languageserver-sidecar --action=default_types
 [{"key":"anchor","calling_source":"puppet/cache/lib/puppet/type/anchor.rb","sou ...
 ```
 
 #### Output all default Puppet Functions with a different puppet configuration, and debug information
 
-```
+```bash
 > bundle exec ruby ./puppet-languageserver-sidecar --action=default_types --puppet-settings=--vardir,./test/vardir,--confdir,./test/confdir --debug=STDOUT
 I, [2018-12-05T15:42:56.679837 #51864]  INFO -- : Language Server Sidecar is v0.16.0
 I, [2018-12-05T15:42:56.679837 #51864]  INFO -- : Using Puppet v5.5.8
@@ -201,14 +201,14 @@ D, [2018-12-05T15:42:56.752804 #51864] DEBUG -- : [PuppetLanguageServerSidecar::
 
 #### Output all Puppet Classes in a workspace directory
 
-```
+```bash
 > bundle exec ruby ./puppet-languageserver-sidecar --action=workspace_classes --local-workspace=C:\source\puppetlabs-sqlserver
 [{"key":"sqlserver::config","calling_source":"C:/Source/puppetlabs-sqlserver/manifests/config.pp","source":"C:/Source/puppetlabs-sqlserver/manifests/config.pp","line":25,"ch...
 ```
 
 ## Command line arguments
 
-```
+```bash
 Usage: puppet-languageserver-sidecar.rb [options]
     -a, --action=NAME                The action for the sidecar to take. Expected ["noop", "default_classes", "default_functions", "default_types", "node_graph", "resource_list", "workspace_classes", "workspace_functions", "workspace_types"]
     -c, --action-parameters=JSON     JSON Encoded string containing the parameters for the sidecar action
@@ -222,14 +222,13 @@ Usage: puppet-languageserver-sidecar.rb [options]
     -v, --version                    Prints the Langauge Server version
 ```
 
-
 # Debug Server
 
 ## How to run the Debug Server for Development
 
-By default the language server will stop if no connection is made within 10 seconds and will also stop after a client disconnects.  Adding `--debug=stdout` will log messages to the console
+By default the debug server will stop if no connection is made within 10 seconds and will also stop after a client disconnects.  Adding `--debug=stdout` will log messages to the console
 
-```
+```bash
 > bundle exec ruby ./puppet-debugserver --debug=stdout
 I, [2018-04-17T14:19:24.131869 #6940]  INFO -- : Debug Server is v0.10.0
 I, [2018-04-17T14:19:24.132871 #6940]  INFO -- : Starting RPC Server...
@@ -249,7 +248,7 @@ I, [2018-04-17T14:19:34.150402 #6940]  INFO -- : Debug Server exited.
 
 To make the server run continuously add `--timeout=0` to the command line. For example;
 
-```
+```bash
 > bundle exec ruby ./puppet-debugserver --debug=stdout --timeout=0
 I, [2018-04-17T14:21:10.542332 #12424]  INFO -- : Debug Server is v0.10.0
 I, [2018-04-17T14:21:10.543334 #12424]  INFO -- : Starting RPC Server...
@@ -267,12 +266,11 @@ D, [2018-04-17T14:21:10.546834 #12424] DEBUG -- : TCPSRV: Started listening on 1
   * [Windows](https://puppet.com/docs/puppet/latest/install_agents.html#install_windows_agents)
   * [macOS](https://puppet.com/docs/puppet/latest/install_agents.html#install_mac_agents)
 
-
 * Run the `puppet-debugserver` with ruby
 
 > On Windows you need to run ruby with the `Puppet Command Prompt` which can be found in the Start Menu.  This enables the Puppet Agent ruby environment.
 
-```
+```bash
 > ruby puppet-debugserver
 DEBUG SERVER RUNNING 127.0.0.1:8082
 ```
@@ -281,7 +279,7 @@ Note the debug server will stop after 10 seconds if no client connection is made
 
 ## Command line arguments
 
-```
+```bash
 Usage: puppet-debugserver.rb [options]
     -p, --port=PORT                  TCP Port to listen on.  Default is random port}
     -i, --ip=ADDRESS                 IP Address to listen on (0.0.0.0 for all interfaces).  Default is localhost
@@ -296,6 +294,14 @@ Usage: puppet-debugserver.rb [options]
 This codebase is licensed under Apache 2.0. However, the open source dependencies included in this codebase might be subject to other software licenses such as AGPL, GPL2.0, and MIT.
 
 # Other information
+
+## Reporting bugs
+
+If you find a bug in puppet-editor-services or its results, please create an issue in the [repo issues tracker](https://github.com/puppetlabs/puppet-editor-services/issues). Bonus points will be awarded if you also include a patch that fixes the issue.
+
+## Development
+
+If you run into an issue with this tool or would like to request a feature you can raise a PR with your suggested changes. Alternatively, you can raise a Github issue with a feature request or to report any bugs. Every other Tuesday the DevX team holds office hours in the Puppet Community Slack, where you can ask questions about this and any other supported tools. This session runs at 15:00 (GMT) for about an hour.
 
 ## Why are there vendored gems and why only native ruby
 
