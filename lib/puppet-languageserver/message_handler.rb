@@ -328,10 +328,12 @@ module PuppetLanguageServer
       enqueue_validation(file_uri, doc_version, client_handler_id)
     end
 
-    def notification_textdocument_didclose(_, json_rpc_message)
+    def notification_textdocument_didclose(client_handler_id, json_rpc_message)
       PuppetLanguageServer.log_message(:info, 'Received textDocument/didClose notification.')
       file_uri = json_rpc_message.params['textDocument']['uri']
+      doc_version = json_rpc_message.params['textDocument']['version']
       documents.remove_document(file_uri)
+      enqueue_validation(file_uri, doc_version, client_handler_id)
     end
 
     def notification_textdocument_didchange(client_handler_id, json_rpc_message)
