@@ -176,8 +176,8 @@ describe 'PuppetLanguageServer::GlobalQueues::ValidationQueue' do
       allow(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:validate).and_raise("PuppetLanguageServer::Puppetfile::ValidationProvider.validate mock should not be called")
     end
 
-    it 'should not send validation results for documents that do not exist' do
-      expect(subject).to_not receive(:send_diagnostics)
+    it 'should send empty validation results for documents that do not exist' do
+      expect(subject).to receive(:send_diagnostics).with(connection_id, VALIDATE_MISSING_FILENAME, [])
 
       subject.execute(VALIDATE_MISSING_FILENAME, 1, connection_id)
     end

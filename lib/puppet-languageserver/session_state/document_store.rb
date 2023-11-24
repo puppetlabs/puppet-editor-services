@@ -86,6 +86,11 @@ module PuppetLanguageServer
         doc.nil? ? nil : doc.content.clone
       end
 
+      def get_document(uri)
+        doc = @documents[uri]
+        doc.nil? ? nil : doc.content.clone
+      end
+
       def document_tokens(uri, doc_version = nil)
         @doc_mutex.synchronize do
           return nil if @documents[uri].nil?

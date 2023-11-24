@@ -34,12 +34,21 @@ module PuppetLanguageServer
         super(job_object)
         session_state = session_state_from_connection_id(job_object.connection_id)
         document_store = session_state.nil? ? nil : session_state.documents
-        raise "Document store is not available for connection id #{job_object.connection_id}" if document_store.nil?
+        raise "Document store is not available for connection id #{job_object.connection_id}" unless document_store
+
+        # Check if the document still exists
+        doc = document_store.get_document(job_object.file_uri)
+        unless doc
+          # Send an empty diagnostics message to clear the diagnostics
+          send_diagnostics(job_object.connection_id, job_object.file_uri, [])
+          PuppetLanguageServer.log_message(:debug, "#{self.class.name}: Ignoring #{job_object.file_uri} as it is has been removed.")
+          return
+        end
 
         # Check if the document is the latest version
         content = document_store.document_content(job_object.file_uri, job_object.doc_version)
-        if content.nil?
-          PuppetLanguageServer.log_message(:debug, "#{self.class.name}: Ignoring #{job_object.file_uri} as it is not the latest version or has been removed")
+        unless content
+          PuppetLanguageServer.log_message(:debug, "#{self.class.name}: Ignoring #{job_object.file_uri} as it is not the latest version.")
           return
         end
 
