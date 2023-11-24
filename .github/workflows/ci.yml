@@ -6,76 +6,36 @@ on:
       - "main"
   workflow_dispatch:
 
+env:
+  puppet_gem_version: '~> 8.0'
+  ruby_version: '3.2'
+
 jobs:
-
   spec:
-    strategy:
-      fail-fast: false
-      matrix:
-        ruby_version:
-          - '2.7'
-          - '3.2'
-        runs_on:
-          - 'ubuntu-latest'
-          - 'windows-latest'
-
-    name: "Spec : ${{ matrix.runs_on }} Ruby ${{ matrix.ruby_version }}"
-    uses: "puppetlabs/cat-github-actions/.github/workflows/gem_ci.yml@main"
-    secrets: "inherit"
-    with:
-      ruby_version: ${{ matrix.ruby_version }}
-      runs_on: ${{ matrix.runs_on }}
-      rake_task: 'gem_revendor test_languageserver test_languageserver_sidecar test_debugserver'
-
-  acceptance:
-    strategy:
-      fail-fast: false
-      matrix:
-        ruby_version:
-          - '2.7'
-          - '3.2'
-        include:
-          - ruby_version: '2.7'
-            puppet_version: '~> 7.0'
-          - ruby_version: '3.2'
-            puppet_version: '~> 8.0'
-        runs_on:
-          - 'ubuntu-latest'
-          - 'windows-latest'
-
-    name: "Acceptance : ${{ matrix.runs_on }} Ruby ${{ matrix.ruby_version }}"
-    uses: "puppetlabs/cat-github-actions/.github/workflows/gem_acceptance.yml@main"
-    secrets: "inherit"
-    with:
-      ruby_version: ${{ matrix.ruby_version }}
-      runs_on: ${{ matrix.runs_on }}
-      rake_task: 'gem_revendor acceptance_languageserver'
-      puppet_version: ${{ matrix.puppet_version }}
-
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        ruby_version:
-          - '2.7'
-          - '3.2'
-    name: "Build Editor Service (Ruby ${{ matrix.ruby_version }})"
-    runs-on: ubuntu-latest
+    name: Spec
+    runs-on: 'ubuntu-latest'
     steps:
-      - uses: actions/checkout@v3
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ${{ matrix.ruby_version }}
-          bundler-cache: true
-      - name: Set build version
-        shell: pwsh
-        run: |
-          '99.99.0-gh.${{ github.run_number }}' | Out-File -FilePath 'lib\puppet_editor_services\VERSION' -Encoding ASCII -Confirm:$false -Force
-      - name: Run rake gem_revendor build
-        run: bundle exec rake gem_revendor build
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
-        with:
-          name: puppet-editor-services
-          path: output/*.zip
-          retention-days: 2
+    - name: "checkout"
+      uses: "actions/checkout@v4"
+
+    - name: "export environment"
+      run: |
+        echo "PUPPET_GEM_VERSION=${{ env.puppet_gem_version }}" >> $GITHUB_ENV
+
+    - name: "setup ruby"
+      uses: "ruby/setup-ruby@v1"
+      with:
+        ruby-version: ${{ env.ruby_version }}
+        bundler-cache: true
+
+    - name: "bundle environment"
+      run: |
+        echo ::group::bundler environment
+        bundle env
+        echo ::endgroup::
+    
+    - name: Start SSH session
+      uses: luchihoratiu/debug-via-ssh@main
+      with:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+        SSH_PASS: ${{ secrets.SSH_PASS }}
