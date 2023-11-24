@@ -35,16 +35,16 @@ module PuppetLanguageServer
         session_state = session_state_from_connection_id(job_object.connection_id)
         document_store = session_state.nil? ? nil : session_state.documents
         raise "Document store is not available for connection id #{job_object.connection_id}" unless document_store
-        
+
         # Check if the document still exists
         doc = document_store.get_document(job_object.file_uri)
         unless doc
           # Send an empty diagnostics message to clear the diagnostics
-          send_remove_diagnostic(job_object.connection_id, job_object.file_uri, nil)
+          send_diagnostics(job_object.connection_id, job_object.file_uri, [])
           PuppetLanguageServer.log_message(:debug, "#{self.class.name}: Ignoring #{job_object.file_uri} as it is has been removed.")
           return
         end
-        
+
         # Check if the document is the latest version
         content = document_store.document_content(job_object.file_uri, job_object.doc_version)
         unless content
@@ -95,15 +95,6 @@ module PuppetLanguageServer
 
         connection.protocol.encode_and_send(
           ::PuppetEditorServices::Protocol::JsonRPCMessages.new_notification('textDocument/publishDiagnostics', 'uri' => file_uri, 'diagnostics' => diagnostics)
-        )
-      end
-
-      def send_remove_diagnostic(connection_id, file_uri, diagnostics)
-        connection = PuppetEditorServices::Server.current_server.connection(connection_id)
-        return if connection.nil?
-
-        connection.protocol.encode_and_send(
-          ::PuppetEditorServices::Protocol::JsonRPCMessages.new_notification('textDocument/publishDiagnostics', 'uri' => file_uri, 'diagnostics' => [])
         )
       end
     end
