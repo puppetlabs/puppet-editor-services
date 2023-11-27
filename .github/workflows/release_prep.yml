@@ -55,7 +55,7 @@ jobs:
       - name: "Check if a release is necessary"
         id: "check"
         run: |
-          git diff --quiet CHANGELOG.md && echo "{release}={false}" >> $GITHUB_OUTPUT || echo "{release}={true}" >> $GITHUB_OUTPUT
+          git diff --quiet CHANGELOG.md && echo "release=false" >> $GITHUB_OUTPUT || echo "release=true" >> $GITHUB_OUTPUT
 
       - name: "Commit changes"
         if: ${{ steps.check.outputs.release == 'true' }}
