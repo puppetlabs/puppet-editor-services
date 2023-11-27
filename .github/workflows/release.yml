@@ -35,15 +35,26 @@ jobs:
           echo ::group::bundler environment
           bundle env
           echo ::endgroup::
+
       - name: "Get version"
         id: "get_version"
         run: |
           echo "version=$(ruby -e "require './lib/puppet_editor_services/version'; puts PuppetEditorServices::PUPPETEDITORSERVICESVERSION.to_s")" >> $GITHUB_OUTPUT
+
       - name: "Build"
         run: |
           bundle exec rake build
+
+      - name: "Generate release notes"
+        run: |
+          export GH_HOST=github.com
+          gh extension install chelnak/gh-changelog
+          gh changelog get --latest > OUTPUT.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: "Create release"
         run: |
-          gh release create v${{ steps.get_version.outputs.version }} ./output/* --title v${{ steps.get_version.outputs.version }}
+          gh release create v${{ steps.get_version.outputs.version }} ./output/* --title v${{ steps.get_version.outputs.version }} -F OUTPUT.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
