@@ -381,10 +381,10 @@ module PuppetLanguageServerSidecar
         case key
         when 'path'
           # Simple deserialised object types
-          self.instance_variable_set("@#{key}", obj[key]) # rubocop:disable Style/RedundantSelf   Reads better this way
+          self.instance_variable_set(:"@#{key}", obj[key]) # rubocop:disable Style/RedundantSelf   Reads better this way
         else
           # Sidecar protocol list object types
-          prop = self.instance_variable_get("@#{key}") # rubocop:disable Style/RedundantSelf   Reads better this way
+          prop = self.instance_variable_get(:"@#{key}") # rubocop:disable Style/RedundantSelf   Reads better this way
 
           obj[key].each do |child_hash|
             child = prop.child_type.new
