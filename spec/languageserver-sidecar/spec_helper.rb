@@ -1,3 +1,5 @@
+require_relative '../spec_helper.rb'
+
 # Emulate the setup from the root 'puppet-languageserver' file
 
 root = File.join(File.dirname(__FILE__),'..','..')

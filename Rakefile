@@ -3,6 +3,16 @@ require 'rspec/core/rake_task'
 rubocop_available = Gem::Specification::find_all_by_name('rubocop').any?
 require 'rubocop/rake_task' if rubocop_available
 
+namespace :test do
+  desc 'Run tests with code coverage'
+  task :coverage do
+    ENV['COVERAGE'] = 'yes'
+    Rake::Task['test_languageserver'].execute
+    Rake::Task['test_languageserver_sidecar'].execute
+    Rake::Task['test_debugserver'].execute
+  end
+end
+
 desc 'Run rspec tests for the Language Server with coloring.'
 RSpec::Core::RakeTask.new(:test_languageserver) do |t|
   t.rspec_opts = %w[--color --format documentation --default-path spec/languageserver]

@@ -15,9 +15,12 @@ group :development do
   gem 'puppetfile-resolver', '~> 0.6.2',  :require => false
   gem 'yard', '~> 0.9.28',                :require => false
   gem 'ffi', '= 1.15.5',                  :require => false
-  gem "rubocop", '~> 1.48.1',                          require: false
-  gem "rubocop-performance", '~> 1.16',                require: false
-  gem "rubocop-rspec", '~> 2.19',                      require: false
+  gem "rubocop", '~> 1.48.1',             :require => false
+  gem "rubocop-performance", '~> 1.16',   :require => false
+  gem "rubocop-rspec", '~> 2.19',         :require => false
+  gem 'simplecov',                        :require => false
+  gem 'simplecov-console',                :require => false
+  gem 'codecov',                          :require => false
 
   if ENV['PUPPET_GEM_VERSION']
     gem 'puppet', ENV['PUPPET_GEM_VERSION'], :require => false
