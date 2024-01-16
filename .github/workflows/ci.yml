@@ -6,6 +6,9 @@ on:
       - "main"
   workflow_dispatch:
 
+env:
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
 jobs:
 
   spec:
@@ -25,7 +28,7 @@ jobs:
     with:
       ruby_version: ${{ matrix.ruby_version }}
       runs_on: ${{ matrix.runs_on }}
-      rake_task: 'gem_revendor test_languageserver test_languageserver_sidecar test_debugserver'
+      rake_task: 'gem_revendor test:coverage'
 
   acceptance:
     strategy:
