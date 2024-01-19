@@ -14,7 +14,6 @@ group :development do
   gem 'puppet-lint', '~> 4.0',            :require => false
   gem 'puppetfile-resolver', '~> 0.6.2',  :require => false
   gem 'yard', '~> 0.9.28',                :require => false
-  gem 'ffi', '= 1.15.5',                  :require => false
   gem "rubocop", '~> 1.48.1',             :require => false
   gem "rubocop-performance", '~> 1.16',   :require => false
   gem "rubocop-rspec", '~> 2.19',         :require => false
