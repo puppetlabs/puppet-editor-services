@@ -22,7 +22,7 @@ module PuppetLanguageServer
 
         function_ast_object = nil
         # Try and find the acutal function object within the AST
-        if item.class.to_s == 'Puppet::Pops::Model::CallNamedFunctionExpression'
+        if item.instance_of?(::Puppet::Pops::Model::CallNamedFunctionExpression)
           function_ast_object = item
         else
           # Try and find the function with the AST tree

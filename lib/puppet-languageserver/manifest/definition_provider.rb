@@ -30,7 +30,7 @@ module PuppetLanguageServer
           # class { 'testclass':    <--- testclass would be the LiteralString inside a ResourceBody
           # }
           if !parent.nil? &&
-             parent.class.to_s == 'Puppet::Pops::Model::ResourceBody' &&
+             parent.instance_of?(::Puppet::Pops::Model::ResourceBody) &&
              parent.title.value == item.value
             resource_name = item.value
             response << type_or_class(session_state, resource_name)
@@ -42,18 +42,18 @@ module PuppetLanguageServer
 
           # What if it's a function name.  Then the Qualified name must be the same as the function name
           if !parent.nil? &&
-             parent.class.to_s == 'Puppet::Pops::Model::CallNamedFunctionExpression' &&
+             parent.instance_of?(::Puppet::Pops::Model::CallNamedFunctionExpression) &&
              parent.functor_expr.value == item.value
             func_name = item.value
             response << function_name(session_state, func_name)
           end
           # What if it's an "include <class>" call
-          if !parent.nil? && parent.class.to_s == 'Puppet::Pops::Model::CallNamedFunctionExpression' && parent.functor_expr.value == 'include'
+          if !parent.nil? && parent.instance_of?(::Puppet::Pops::Model::CallNamedFunctionExpression) && parent.functor_expr.value == 'include'
             resource_name = item.value
             response << type_or_class(session_state, resource_name)
           end
           # What if it's the name of a resource type or class
-          if !parent.nil? && parent.class.to_s == 'Puppet::Pops::Model::ResourceExpression'
+          if !parent.nil? && parent.instance_of?(::Puppet::Pops::Model::ResourceExpression)
             resource_name = item.value
             response << type_or_class(session_state, resource_name)
           end
