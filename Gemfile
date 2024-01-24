@@ -19,7 +19,6 @@ group :development do
   gem "rubocop-rspec", '~> 2.19',         :require => false
   gem 'simplecov',                        :require => false
   gem 'simplecov-console',                :require => false
-  gem 'codecov',                          :require => false
 
   if ENV['PUPPET_GEM_VERSION']
     gem 'puppet', ENV['PUPPET_GEM_VERSION'], :require => false
