@@ -85,7 +85,7 @@ task :gem_revendor do
     {
       :directory => 'puppet-strings',
       :github_repo => 'https://github.com/puppetlabs/puppet-strings.git',
-      :github_ref => 'v4.1.0',
+      :github_ref => 'v4.1.2',
     },
     {
       :directory => 'yard',
