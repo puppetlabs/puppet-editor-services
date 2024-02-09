@@ -65,7 +65,7 @@ task :gem_revendor do
     {
       :directory => 'puppet-lint',
       :github_repo => 'https://github.com/puppetlabs/puppet-lint.git',
-      :github_ref => 'v4.2.0',
+      :github_ref => 'v4.2.4',
     },
     {
       :directory => 'hiera-eyaml',
