@@ -5,12 +5,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v2.0.1](https://github.com/puppetlabs/puppet-editor-services/tree/v2.0.1) - 2024-02-14
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/v2.0.0...v2.0.1)
+
+### Fixed
+
+- (Dependencies) - Upgrade puppet-lint to v4.2.4 & puppet-strings to v4.1.2 [#370](https://github.com/puppetlabs/puppet-editor-services/pull/370) ([jordanbreen28](https://github.com/jordanbreen28))
+
 ## [v2.0.0](https://github.com/puppetlabs/puppet-editor-services/tree/v2.0.0) - 2023-11-27
 
 [Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/v1.3.1...v2.0.0)
 
 ### Changed
-
 - (CAT-1430) - Drop ruby 2.5 Support & Add Ruby 3.x Support [#348](https://github.com/puppetlabs/puppet-editor-services/pull/348) ([jordanbreen28](https://github.com/jordanbreen28))
 
 ### Fixed
