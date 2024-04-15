@@ -291,7 +291,7 @@ module PuppetLanguageServer
           unless param_type.nil?
             # TODO: More things?
             result.documentation = param_type[:doc] unless param_type[:doc].nil?
-            result.insertText = "#{data['param']} => "
+            result.insertText = "#{data['param']} => ,"
           end
         when 'resource_property'
           item_type = PuppetLanguageServer::PuppetHelper.get_type(session_state, data['resource_type'])
@@ -301,7 +301,7 @@ module PuppetLanguageServer
           unless prop_type.nil?
             # TODO: More things?
             result.documentation = prop_type[:doc] unless prop_type[:doc].nil?
-            result.insertText = "#{data['prop']} => "
+            result.insertText = "#{data['prop']} => ,"
           end
 
         when 'resource_class'
@@ -320,7 +320,7 @@ module PuppetLanguageServer
             doc += param_type[:type] unless param_type[:type].nil?
             doc += "---\n#{param_type[:doc]}" unless param_type[:doc].nil?
             result.documentation = doc
-            result.insertText = "#{data['param']} => "
+            result.insertText = "#{data['param']} => ,"
           end
         end
 
