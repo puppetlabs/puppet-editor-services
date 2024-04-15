@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v2.0.2](https://github.com/puppetlabs/puppet-editor-services/tree/v2.0.2) - 2024-04-15
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/v2.0.1...v2.0.2)
+
+### Fixed
+
+- (CAT-1669) - Add trailing comma to completion item [#372](https://github.com/puppetlabs/puppet-editor-services/pull/372) ([jordanbreen28](https://github.com/jordanbreen28))
+
 ## [v2.0.1](https://github.com/puppetlabs/puppet-editor-services/tree/v2.0.1) - 2024-02-14
 
 [Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/v2.0.0...v2.0.1)
