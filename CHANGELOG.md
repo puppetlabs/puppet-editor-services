@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
+## [v2.0.3](https://github.com/puppetlabs/puppet-editor-services/tree/v2.0.3) - 2024-04-17
+
+[Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/v2.0.2...v2.0.3)
+
+### Fixed
+
+- (bug) - Add synchronization to Dir.chdir in init_puppet_lint [#374](https://github.com/puppetlabs/puppet-editor-services/pull/374) ([jordanbreen28](https://github.com/jordanbreen28))
+
 ## [v2.0.2](https://github.com/puppetlabs/puppet-editor-services/tree/v2.0.2) - 2024-04-15
 
 [Full Changelog](https://github.com/puppetlabs/puppet-editor-services/compare/v2.0.1...v2.0.2)
