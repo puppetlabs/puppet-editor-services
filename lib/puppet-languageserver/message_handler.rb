@@ -300,9 +300,12 @@ module PuppetLanguageServer
       # Raise a warning if the Puppet version is mismatched
       server_options = protocol.connection.server.server_options
       unless server_options[:puppet_version].nil? || server_options[:puppet_version] == Puppet.version
-        json_rpc_handler.send_show_message_notification(
-          LSP::MessageType::WARNING,
-          "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
+        protocol.encode_and_send(
+          ::PuppetEditorServices::Protocol::JsonRPCMessages.new_notification(
+            'window/showMessage',
+            'type' => LSP::MessageType::WARNING,
+            'message' => "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
+          )
         )
       end
 
