@@ -881,6 +881,40 @@ describe 'PuppetLanguageServer::MessageHandler' do
       )
     end
 
+    describe 'PuppetLanguageServer::MessageHandler' do
+      let(:server_options) { { puppet_version: '5.5.1' } }
+      let(:server) { double('PuppetEditorServices::Server') }
+      let(:connection) { double('PuppetEditorServices::Protocol::Connection', id: 'some_id') }
+      let(:protocol) { double('PuppetEditorServices::Protocol::JsonRPC') }
+      let(:handler_object) { PuppetLanguageServer::MessageHandler.new(protocol) }
+    
+      before do
+        allow(server).to receive(:server_options).and_return(server_options)
+        allow(connection).to receive(:server).and_return(server)
+        allow(protocol).to receive(:connection).and_return(connection)
+      end
+    
+      context 'When receiving a notification' do
+        context '.notification_initialized' do
+          it 'sends a warning message when Puppet versions are mismatched' do
+            allow(Puppet).to receive(:version).and_return('6.0.0')
+          
+            expected_message = {
+              'type' => LSP::MessageType::WARNING,
+              'message' => "Unable to use Puppet version '#{server_options[:puppet_version]}' as it is not available. Using version '#{Puppet.version}' instead."
+            }
+          
+            expect(protocol).to receive(:encode_and_send) do |arg|
+              expect(arg).to be_a(PuppetEditorServices::Protocol::JsonRPCMessages::NotificationMessage)
+              expect(arg.params).to eq(expected_message)
+            end
+          
+            handler_object.notification_initialized(nil, nil)
+          end
+        end
+      end
+    end
+
     # initialized - https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#initialized
     describe '.notification_initialized' do
       let(:notification_method) { 'initialized' }
