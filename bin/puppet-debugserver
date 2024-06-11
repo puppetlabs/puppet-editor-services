@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'puppet_debugserver'
+
+PuppetDebugServer.init_puppet(PuppetDebugServer::CommandLineParser.parse(ARGV))
+rpc_thread = PuppetDebugServer.rpc_server_async(PuppetDebugServer::CommandLineParser.parse(ARGV))
+PuppetDebugServer.execute(rpc_thread)
