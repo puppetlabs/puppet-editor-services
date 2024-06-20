@@ -128,7 +128,7 @@ module PuppetLanguageServer
         return if section.nil?
 
         @cache_lock.synchronize do
-          @inmemory_cache.each do |_, sections|
+          @inmemory_cache.each_value do |sections|
             next if sections.nil? || sections[section].nil? || sections[section].empty?
 
             sections[section].each { |i| yield i.key, i }
@@ -138,10 +138,10 @@ module PuppetLanguageServer
 
       def all_objects(&_block)
         @cache_lock.synchronize do
-          @inmemory_cache.each do |_origin, sections|
+          @inmemory_cache.each_value do |sections|
             next if sections.nil?
 
-            sections.each do |_section_name, list|
+            sections.each_value do |list|
               list.each { |i| yield i.key, i }
             end
           end

@@ -45,7 +45,7 @@ module PuppetEditorServices
       KEY_MESSAGE     = 'message'
 
       def initialize(connection)
-        super(connection)
+        super
 
         @state = :data
         @buffer = []

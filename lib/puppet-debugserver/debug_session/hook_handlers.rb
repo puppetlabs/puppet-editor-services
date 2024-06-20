@@ -209,7 +209,7 @@ module PuppetDebugServer
 
         msg = args[0]
         str = msg.respond_to?(:multiline) ? msg.multiline : msg.to_s
-        str = msg.source == 'Puppet' ? str : "#{msg.source}: #{str}"
+        str = "#{msg.source}: #{str}" unless msg.source == 'Puppet'
 
         level = msg.level.to_s.capitalize
 

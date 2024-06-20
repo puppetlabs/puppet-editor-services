@@ -11,7 +11,7 @@ module PuppetEditorServices
       KEY_TYPE = 'type'
 
       def initialize(connection)
-        super(connection)
+        super
 
         @state = :data
         @buffer = []

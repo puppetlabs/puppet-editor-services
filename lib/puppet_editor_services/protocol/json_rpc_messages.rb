@@ -58,7 +58,7 @@ module PuppetEditorServices
 
         def from_h!(value)
           value = {} if value.nil?
-          super(value)
+          super
           self.id = value['id']
           self.rpc_method = value['method']
           self.params = value['params']
@@ -94,7 +94,7 @@ module PuppetEditorServices
 
         def from_h!(value)
           value = {} if value.nil?
-          super(value)
+          super
           self.rpc_method = value['method']
           self.params = value['params']
           self
@@ -136,7 +136,7 @@ module PuppetEditorServices
 
         def from_h!(value)
           value = {} if value.nil?
-          super(value)
+          super
           self.id = value['id']
           self.result = value['result']
           self.error = value['error']

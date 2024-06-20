@@ -54,7 +54,7 @@ module PuppetEditorServices
 
         def from_h!(value)
           value = {} if value.nil?
-          super(value)
+          super
           self.command = value['command']
           self.arguments = value['arguments']
           self
@@ -84,7 +84,7 @@ module PuppetEditorServices
 
         def from_h!(value)
           value = {} if value.nil?
-          super(value)
+          super
           self.event = value['event']
           self.body = value['body']
           self
@@ -121,7 +121,7 @@ module PuppetEditorServices
 
         def from_h!(value)
           value = {} if value.nil?
-          super(value)
+          super
           self.request_seq = value['request_seq']
           self.success = value['success']
           self.command = value['command']

@@ -140,7 +140,7 @@ module PuppetEditorServices
       # @api private
       def push_event(handler, *args, &block)
         if block
-          self.class.e_locker.synchronize { self.class.events << [(proc { |a| push_event block, handler.call(*a) }), args] }
+          self.class.e_locker.synchronize { self.class.events << [proc { |a| push_event block, handler.call(*a) }, args] }
         else
           self.class.e_locker.synchronize { self.class.events << [handler, args] }
         end
@@ -301,7 +301,7 @@ module PuppetEditorServices
       # @api public
       def connection(connection_id)
         self.class.c_locker.synchronize do
-          self.class.io_connection_dic.each do |_, v|
+          self.class.io_connection_dic.each_value do |v|
             return v[:handler] unless v[:handler].nil? || v[:handler].id != connection_id
           end
         end

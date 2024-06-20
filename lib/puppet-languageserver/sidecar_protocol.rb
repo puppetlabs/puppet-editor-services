@@ -67,13 +67,12 @@ module PuppetLanguageServer
         end
 
         def hash
-          props = []
-          self.class
-              .instance_methods(false)
-              .reject { |name| name.to_s.end_with?('=', '!') }
-              .reject { |name| %i[to_h to_json].include?(name) }
-              .each do |method_name|
-            props << send(method_name).hash
+          props = self.class
+                      .instance_methods(false)
+                      .reject { |name| name.to_s.end_with?('=', '!') }
+                      .reject { |name| %i[to_h to_json].include?(name) }
+                      .map do |method_name|
+            send(method_name).hash
           end
           props.hash
         end

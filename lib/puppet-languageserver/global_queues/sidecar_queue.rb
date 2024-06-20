@@ -31,7 +31,7 @@ module PuppetLanguageServer
       end
 
       def execute_job(job_object)
-        super(job_object)
+        super
         connection = connection_from_connection_id(job_object.connection_id)
         raise "Connection is not available for connection id #{job_object.connection_id}" if connection.nil?
 

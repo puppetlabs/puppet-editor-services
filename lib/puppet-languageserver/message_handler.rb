@@ -388,7 +388,7 @@ module PuppetLanguageServer
     end
 
     def unhandled_exception(error, options)
-      super(error, options)
+      super
       PuppetLanguageServer::CrashDump.write_crash_file(error, session_state, nil, options)
     end
 
