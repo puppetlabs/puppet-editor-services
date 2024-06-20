@@ -31,7 +31,7 @@ module PuppetLanguageServer
       end
 
       def execute_job(job_object)
-        super(job_object)
+        super
         session_state = session_state_from_connection_id(job_object.connection_id)
         document_store = session_state.nil? ? nil : session_state.documents
         raise "Document store is not available for connection id #{job_object.connection_id}" unless document_store

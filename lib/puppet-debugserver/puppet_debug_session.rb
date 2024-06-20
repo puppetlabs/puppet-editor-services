@@ -431,12 +431,9 @@ module PuppetDebugServer
     # @return [Array<DSP::Variable>] Array of DSP::Variable
     # @private
     def variable_list_from_hash(obj_hash = {})
-      result = []
-      obj_hash.sort.each do |key, value|
-        result << variable_from_ruby_object(key, value)
+      obj_hash.sort.map do |key, value|
+        variable_from_ruby_object(key, value)
       end
-
-      result
     end
 
     # Converts an array of ruby objects into an array of DSP::Variable objects
@@ -515,7 +512,7 @@ module PuppetDebugServer
     # @param hook_manager [PuppetDebugServer::Hooks] The hook manager to use
     def initialize(hook_manager)
       @hook_manager = hook_manager
-      @hook_id = "aggregator#{object_id}".intern
+      @hook_id = :"aggregator#{object_id}"
       @messages = []
       @started = false
     end
