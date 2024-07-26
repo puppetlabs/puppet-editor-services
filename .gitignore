@@ -1,5 +1,6 @@
 Gemfile.lock
 Gemfile.local
+*.gem
 log/
 junit/
 .vagrant/

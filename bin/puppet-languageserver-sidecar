@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'puppet_languageserver_sidecar'
+
+PuppetLanguageServerSidecar.init_puppet_sidecar(PuppetLanguageServerSidecar::CommandLineParser.parse(ARGV))
+PuppetLanguageServerSidecar.execute_and_output(PuppetLanguageServerSidecar::CommandLineParser.parse(ARGV))

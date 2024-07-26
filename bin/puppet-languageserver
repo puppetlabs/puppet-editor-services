@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'puppet_languageserver'
+
+PuppetLanguageServer.init_puppet(PuppetLanguageServer::CommandLineParser.parse(ARGV))
+PuppetLanguageServer.rpc_server(PuppetLanguageServer::CommandLineParser.parse(ARGV))
