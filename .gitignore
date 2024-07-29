@@ -11,3 +11,4 @@ log/
 tmp/
 output/
 vendor/
+pkg/
