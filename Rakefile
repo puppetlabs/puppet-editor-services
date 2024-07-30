@@ -149,7 +149,7 @@ task build: [:gem_revendor] do
   require 'digest'
 
   project_dir = File.dirname(__FILE__)
-  output_dir = File.join(project_dir, 'output')
+  output_dir = File.join(project_dir, './pkg/')
 
   file_list = ['lib', 'vendor', 'puppet-languageserver', 'puppet-debugserver', 'puppet-languageserver-sidecar', 'LICENSE']
   # Remove files in the list that do not exist.
@@ -180,6 +180,11 @@ task build: [:gem_revendor] do
     File.open(filepath + '.sha256', 'wb') { |file| file.write(sha) }
   end
   puts "Created checksums"
+
+  puts 'Building gem..'
+  require 'bundler/gem_tasks'
+  Rake::Task['build'].invoke
+  puts 'Gem built'
 end
 
 task :default => [:test]

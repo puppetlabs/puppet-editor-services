@@ -55,6 +55,26 @@ jobs:
 
       - name: "Create release"
         run: |
-          gh release create v${{ steps.get_version.outputs.version }} ./output/* --title v${{ steps.get_version.outputs.version }} -F OUTPUT.md
+          gh release create v${{ steps.get_version.outputs.version }} ./pkg/* --title v${{ steps.get_version.outputs.version }} -F OUTPUT.md
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Publish gem to rubygems"
+        run: |
+          gem push ./pkg/*.gem
+        env:
+          GEM_HOST_API_KEY: '${{ secrets.GEM_HOST_API_KEY }}'
+
+      - name: "Publish to GitHub Package"
+        run: |
+          echo "Setting up access to RubyGems"
+          mkdir -p ~/.gem
+          touch ~/.gem/credentials
+          chmod 600 ~/.gem/credentials
+
+          echo "Logging in to GitHub Package Registry"
+          echo "---" > ~/.gem/credentials
+          echo ":github: Bearer ${{ secrets.GITHUB_TOKEN }}" >> ~/.gem/credentials
+
+          echo "Pushing gem to GitHub Package Registry"
+          gem push --key "github" --host "https://rubygems.pkg.github.com/${{github.repository_owner}}" ./pkg/*.gem
