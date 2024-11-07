@@ -16,9 +16,10 @@ group :development do
   gem 'yard', '~> 0.9.28',                :require => false
   gem "rubocop", '~> 1.64.0',             :require => false
   gem "rubocop-performance", '~> 1.16',   :require => false
-  gem "rubocop-rspec", '~> 3.0',         :require => false
+  gem "rubocop-rspec", '~> 3.0',          :require => false
   gem 'simplecov',                        :require => false
   gem 'simplecov-console',                :require => false
+  gem 'json', "< 2.8.0",                  :require => false
 
   if ENV['PUPPET_GEM_VERSION']
     gem 'puppet', ENV['PUPPET_GEM_VERSION'], :require => false
