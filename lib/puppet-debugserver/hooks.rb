@@ -57,10 +57,10 @@ module PuppetDebugServer
     # @param [Symbol] event_name The name of the event.
     # @param [Array] args The arguments to pass to each hook function.
     # @return [Object] The return value of the last executed hook.
-    def exec_hook(event_name, *args, &block)
+    def exec_hook(event_name, ...)
       PuppetDebugServer.log_message(:debug, "Starting to execute hook #{event_name}") unless event_name == :hook_log_message
       @hooks[event_name.to_s].map do |_hook_name, callable|
-        callable.call(*args, &block)
+        callable.call(...)
       rescue ::RuntimeError => e
         errors << e
         e

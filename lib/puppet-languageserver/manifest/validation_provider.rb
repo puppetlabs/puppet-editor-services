@@ -73,7 +73,7 @@ module PuppetLanguageServer
         Puppet[:code] = content
         env = Puppet.lookup(:current_environment)
         loaders = Puppet::Pops::Loaders.new(env)
-        Puppet.override({ loaders: loaders }, 'For puppet parser validate') do
+        Puppet.override({ loaders: }, 'For puppet parser validate') do
           validation_environment = env
           $PuppetParserMutex.synchronize do # rubocop:disable Style/GlobalVars
             original_taskmode = Puppet[:tasks] if Puppet.tasks_supported?

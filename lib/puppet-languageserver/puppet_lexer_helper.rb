@@ -9,7 +9,7 @@ module Puppet
       class Lexer2WithComments < Puppet::Pops::Parser::Lexer2
         # The PATTERN_COMMENT in lexer2 also consumes the trailing \r in the token and
         # we don't want that.
-        PATTERN_COMMENT_NO_WS = /#[^\r\n]*/.freeze
+        PATTERN_COMMENT_NO_WS = /#[^\r\n]*/
 
         TOKEN_COMMENT = [:COMMENT, '#', 1].freeze
         TOKEN_MLCOMMENT = [:MLCOMMENT, nil, 0].freeze

@@ -111,7 +111,7 @@ module PuppetLanguageServer
         # Note - Don't put more than one method per request even though you can.  It makes decoding errors much harder!
 
         @registrations[method] = [] if @registrations[method].nil?
-        @registrations[method] << { registered: false, state: :pending, id: id }
+        @registrations[method] << { registered: false, state: :pending, id: }
 
         message_handler.protocol.send_client_request('client/registerCapability', params)
         true

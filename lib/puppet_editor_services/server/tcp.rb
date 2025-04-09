@@ -156,8 +156,8 @@ module PuppetEditorServices
 
       # creates an asynchronous call to a method, with an optional callback (shortcut)
       # @api private
-      def callback(object, method, *args, &block)
-        push_event object.method(method), *args, &block
+      def callback(object, method, ...)
+        push_event(object.method(method), ...)
       end
 
       # event handling FIFO
