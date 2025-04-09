@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - '2.7'
           - '3.2'
         runs_on:
           - 'ubuntu-latest'
@@ -38,11 +37,8 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - '2.7'
           - '3.2'
         include:
-          - ruby_version: '2.7'
-            puppet_version: '~> 7.0'
           - ruby_version: '3.2'
             puppet_version: '~> 8.0'
         runs_on:
@@ -63,7 +59,6 @@ jobs:
       fail-fast: false
       matrix:
         ruby_version:
-          - '2.7'
           - '3.2'
     name: "Build Editor Service (Ruby ${{ matrix.ruby_version }})"
     runs-on: ubuntu-latest

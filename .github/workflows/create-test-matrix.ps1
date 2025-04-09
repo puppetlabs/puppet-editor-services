@@ -10,7 +10,7 @@ $OSList =@('ubuntu-20.04', 'windows-2019')
 #  - https://github.com/puppetlabs/puppet/pull/8577#issuecomment-823820255
 #  - https://www.msys2.org/news/#2021-01-31-aslr-enabled-by-default
 $RubyPuppet = @(
-  @{ ruby = '2.7'; puppet_gem_version = '~> 7.0' }
+  @{ ruby = '3.1'; puppet_gem_version = '~> 8.0' }
 )
 
 $OSList | ForEach-Object {
