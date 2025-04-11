@@ -63,7 +63,7 @@ module PuppetEditorServices
         read_ready && stream == read_ready[0][0]
       end
 
-      def read_from_pipe(pipe, timeout = 0.1, &_block)
+      def read_from_pipe(pipe, timeout = 0.1, &)
         if pipe_is_readable?(pipe, timeout)
           l = nil
           begin

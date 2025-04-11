@@ -60,13 +60,13 @@ module PuppetLanguageServer
         :function,
         name,
         fuzzy_match: true,
-        exclude_origins: exclude_origins
+        exclude_origins:
       )
     end
 
     def self.function_names(session_state, tasks_mode = false)
       exclude_origins = tasks_mode ? [] : [:bolt]
-      session_state.object_cache.object_names_by_section(:function, exclude_origins: exclude_origins).map(&:to_s)
+      session_state.object_cache.object_names_by_section(:function, exclude_origins:).map(&:to_s)
     end
 
     def self.get_class(session_state, name)
@@ -83,7 +83,7 @@ module PuppetLanguageServer
         :datatype,
         name,
         fuzzy_match: true,
-        exclude_origins: exclude_origins
+        exclude_origins:
       )
     end
 

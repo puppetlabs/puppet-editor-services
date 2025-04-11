@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
     Language support, such as syntax hightlighting, linting, hover support and more.
   EOF
   s.homepage    = 'https://github.com/puppetlabs/puppet-editor-services'
-  s.required_ruby_version = '>= 2.7.0'
+  s.required_ruby_version = '>= 3.1.0'
   s.executables = %w[ puppet-debugserver puppet-languageserver puppet-languageserver-sidecar ]
   s.files          = FileList['lib/**/*.rb',
                               'bin/*',

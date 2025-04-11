@@ -273,7 +273,7 @@ module PuppetDebugServer
           break_description,
           pops_target: pops_target_object,
           scope: scope_object,
-          pops_depth_level: pops_depth_level,
+          pops_depth_level:,
           puppet_stacktrace: stack_trace
         )
       end

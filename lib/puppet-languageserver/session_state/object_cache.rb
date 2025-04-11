@@ -124,7 +124,7 @@ module PuppetLanguageServer
       end
 
       # section => <Type of object in the file :function, :type, :class, :datatype>
-      def objects_by_section(section, &_block)
+      def objects_by_section(section, &)
         return if section.nil?
 
         @cache_lock.synchronize do
@@ -136,7 +136,7 @@ module PuppetLanguageServer
         end
       end
 
-      def all_objects(&_block)
+      def all_objects(&)
         @cache_lock.synchronize do
           @inmemory_cache.each_value do |sections|
             next if sections.nil?

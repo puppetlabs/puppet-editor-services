@@ -157,7 +157,7 @@ module PuppetLanguageServer
 
       case documents.document_type(file_uri)
       when :manifest
-        PuppetLanguageServer::Manifest::CompletionProvider.complete(session_state, content, line_num, char_num, context: context, tasks_mode: documents.plan_file?(file_uri))
+        PuppetLanguageServer::Manifest::CompletionProvider.complete(session_state, content, line_num, char_num, context:, tasks_mode: documents.plan_file?(file_uri))
       else
         raise "Unable to provide completion on #{file_uri}"
       end

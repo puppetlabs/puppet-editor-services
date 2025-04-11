@@ -8,15 +8,15 @@ A ruby based implementation of a [Language Server](https://github.com/Microsoft/
 
 ## Requirements
 
-* Puppet 7 or above
+* Puppet 8 or above
 
-* Ruby 2.7 or above
+* Ruby 3.1 or above
 
 ## Setting up editor services for development
 
-* Ensure a modern ruby is installed (2.7+)
+* Ensure a modern ruby is installed (3.1+)
 
-  The editor services support Puppet 7.0.0 and above
+  The editor services support Puppet 8.0.0 and above
 
 * Clone this repository
 

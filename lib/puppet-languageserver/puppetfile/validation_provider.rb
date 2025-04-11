@@ -73,7 +73,7 @@ module PuppetLanguageServer
       def self.validate_resolution(puppetfile_document, document_uri, cache, module_path, puppet_version)
         ui = nil
         resolver = PuppetfileResolver::Resolver.new(puppetfile_document, puppet_version)
-        opts = { cache: cache, ui: ui, module_paths: module_path, allow_missing_modules: true }
+        opts = { cache:, ui:, module_paths: module_path, allow_missing_modules: true }
         begin
           resolution = resolver.resolve(opts)
         rescue PuppetfileResolver::Puppetfile::DocumentVersionConflictError,
