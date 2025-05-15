@@ -300,8 +300,8 @@ describe 'End to End Testing' do
 
       # Ensure the $a_test_string variable is set correctly
       expect(result['body']['variables'].find { |item| item['name'] == 'a_test_string'}).to include('value' => 'This is a string')
-      # Ensure the core fact, in the global scope, exists 'operatingsystem'
-      expect(result['body']['variables'].find { |item| item['name'] == 'operatingsystem'}).to_not be nil
+      # Ensure the core fact, in the global scope, exists 'os'
+      expect(result['body']['variables'].find { |item| item['name'] == 'os'}).to_not be nil
       # Ensure the $a_test_array variable exists
       obj = result['body']['variables'].find { |item| item['name'] == 'a_test_array'}
       expect(obj).to_not be nil
@@ -367,11 +367,11 @@ describe 'End to End Testing' do
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
       expect(result['body']['result']).to eq('before')
-      # - Check $democlass::after_var
+      # - Check $democlass::after_var (does not exist)
       @client.send_data(@client.evaluate_request(@client.next_seq_id, '$democlass::after_var', 0, 'repl'))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
       result = @client.data_from_request_seq_id(@client.current_seq_id)
-      expect(result['body']['result']).to be_nil
+      expect(result['message']).to eq('Evaluation Error: Unknown variable: \'democlass::after_var\'. (line: 1, column: 1)')
       # - Create $mid_var
       @client.send_data(@client.evaluate_request(@client.next_seq_id, '$mid_var = \'middle\'', 0, 'repl'))
       expect(@client).to receive_message_with_request_id_within_timeout([@client.current_seq_id, 5])
