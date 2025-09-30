@@ -85,7 +85,7 @@ module PuppetLanguageServerSidecar
       return result if object_types.empty?
 
       current_env = current_environment
-      for_agent = options[:for_agent].nil? ? true : options[:for_agent]
+      for_agent = options[:for_agent].nil? || options[:for_agent]
       Puppet::Pops::Loaders.new(current_env, for_agent)
 
       finder = PuppetPathFinder.new(current_env, object_types)
@@ -107,7 +107,7 @@ module PuppetLanguageServerSidecar
         next unless object_types.include?(:type)
 
         file_doc.types.each do |item|
-          result.append!(item) unless name == 'whit' || name == 'component'
+          result.append!(item) unless %w[whit component].include?(name)
           finder.temp_file.unlink if item.key == 'file' && File.exist?(finder.temp_file.path) # Remove the temp_file.rb if it exists
         end
       end

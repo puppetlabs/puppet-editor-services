@@ -167,7 +167,7 @@ module PuppetEditorServices
         end
 
         # Requests and Notifications must have a method
-        if (is_request || is_notification) && !((json_obj[KEY_METHOD]).is_a? String)
+        if (is_request || is_notification) && !(json_obj[KEY_METHOD].is_a? String)
           reply_error id, CODE_INVALID_REQUEST, MSG_INVALID_REQ_METHOD
           return false
         end

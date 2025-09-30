@@ -89,7 +89,7 @@ module PuppetDebugServer
     # @note Modifying the returned hash does not alter the hooks, use
     # `add_hook`/`delete_hook` for that.
     def get_hooks(event_name)
-      (@hooks[event_name.to_s]).to_h
+      @hooks[event_name.to_s].to_h
     end
 
     # @param [Symbol] event_name The name of the event.

@@ -214,7 +214,7 @@ module PuppetDebugServer
         level = msg.level.to_s.capitalize
 
         category = 'stderr'
-        category = 'stdout' if msg.level == :notice || msg.level == :info || msg.level == :debug
+        category = 'stdout' if %i[notice info debug].include?(msg.level)
 
         @debug_session.send_output_event(
           'category' => category,
