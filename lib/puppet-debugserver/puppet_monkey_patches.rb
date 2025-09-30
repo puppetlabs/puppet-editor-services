@@ -57,7 +57,7 @@ module Puppet
           result = original_evaluate(target, scope)
           PuppetDebugServer::PuppetDebugSession.instance.execute_hook(:hook_after_pops_evaluate, [self, target, scope])
           result
-        rescue => e # rubocop:disable Style/RescueStandardError Any error could be thrown here
+        rescue => e # rubocop:disable Style/RescueStandardError -- Any error could be thrown here
           # Emit non-Puppet related errors to the debug log. We shouldn't get any of these!
           PuppetDebugServer.log_message(:debug, "Error in Puppet::Pops::Evaluator::EvaluatorImpl.evaluate #{e}: #{e.backtrace}") unless e.is_a?(Puppet::Error)
           raise

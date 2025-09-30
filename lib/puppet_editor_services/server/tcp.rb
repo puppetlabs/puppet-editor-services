@@ -294,7 +294,7 @@ module PuppetEditorServices
           end
         end
         callback(conn, :post_init)
-      rescue Exception => e # rubocop:disable Lint/RescueException  Need to swallow all errors here
+      rescue Exception => e # rubocop:disable Lint/RescueException -- Need to swallow all errors here
         callback(self, :log, "Error creating connection #{e.inspect}\n#{e.backtrace}")
       end
 

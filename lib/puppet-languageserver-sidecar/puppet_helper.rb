@@ -85,7 +85,7 @@ module PuppetLanguageServerSidecar
       return result if object_types.empty?
 
       current_env = current_environment
-      for_agent = options[:for_agent].nil? ? true : options[:for_agent]
+      for_agent = options[:for_agent].nil? || options[:for_agent]
       Puppet::Pops::Loaders.new(current_env, for_agent)
 
       finder = PuppetPathFinder.new(current_env, object_types)
@@ -95,19 +95,19 @@ module PuppetLanguageServerSidecar
         file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path, finder.puppet_path, cache)
         next if file_doc.nil?
 
-        if object_types.include?(:class) # rubocop:disable Style/IfUnlessModifier   This reads better
+        if object_types.include?(:class) # rubocop:disable Style/IfUnlessModifier -- This reads better
           file_doc.classes.each { |item| result.append!(item) }
         end
-        if object_types.include?(:datatype) # rubocop:disable Style/IfUnlessModifier   This reads better
+        if object_types.include?(:datatype) # rubocop:disable Style/IfUnlessModifier -- This reads better
           file_doc.datatypes.each { |item| result.append!(item) }
         end
-        if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better
+        if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier -- This reads better
           file_doc.functions.each { |item| result.append!(item) }
         end
         next unless object_types.include?(:type)
 
         file_doc.types.each do |item|
-          result.append!(item) unless name == 'whit' || name == 'component'
+          result.append!(item) unless %w[whit component].include?(name)
           finder.temp_file.unlink if item.key == 'file' && File.exist?(finder.temp_file.path) # Remove the temp_file.rb if it exists
         end
       end

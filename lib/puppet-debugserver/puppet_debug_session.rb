@@ -34,7 +34,7 @@ module PuppetDebugServer
     attr_reader :puppet_session_state
 
     # Use to track the default instance of the debug session
-    @@session_instance = nil # rubocop:disable Style/ClassVars  This class method (not instance) should be inherited
+    @@session_instance = nil # rubocop:disable Style/ClassVars -- This class method (not instance) should be inherited
 
     VARIABLES_REFERENCE_TOP_SCOPE = 1
     ERROR_LOG_LEVELS = %i[warning err alert emerg crit].freeze
@@ -44,7 +44,7 @@ module PuppetDebugServer
       # This can be called from any thread
       return @@session_instance unless @@session_instance.nil? # This class method (not instance) should be inherited
 
-      @@session_instance = PuppetDebugSession.new # rubocop:disable Style/ClassVars  This class method (not instance) should be inherited
+      @@session_instance = PuppetDebugSession.new # rubocop:disable Style/ClassVars -- This class method (not instance) should be inherited
     end
 
     def initialize
@@ -258,7 +258,7 @@ module PuppetDebugServer
       result = nil
 
       # Check if this is the topscope
-      if variables_reference == VARIABLES_REFERENCE_TOP_SCOPE # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
+      if variables_reference == VARIABLES_REFERENCE_TOP_SCOPE # rubocop:disable Style/IfUnlessModifier -- Nicer to read like this
         result = variable_list_from_hash(puppet_session_state.actual.compiler.topscope.to_hash(false))
       end
       return result unless result.nil?

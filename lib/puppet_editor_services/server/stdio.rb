@@ -24,12 +24,12 @@ module PuppetEditorServices
         $VERBOSE = nil
         # Some libraries use $stdout to write to the console. Suppress all of that too!
         # Copy the existing $stdout variable and then reassign to NUL to suppress it
-        $editor_services_stdout = $stdout # rubocop:disable Style/GlobalVars  We need this global var
+        $editor_services_stdout = $stdout # rubocop:disable Style/GlobalVars -- We need this global var
         $stdout = File.open(File::NULL, 'w')
 
-        $editor_services_stdout.sync = true # rubocop:disable Style/GlobalVars  We need this global var
+        $editor_services_stdout.sync = true # rubocop:disable Style/GlobalVars -- We need this global var
         # Stop the stupid CRLF injection when on Windows
-        $editor_services_stdout.binmode unless $editor_services_stdout.binmode # rubocop:disable Style/GlobalVars  We need this global var
+        $editor_services_stdout.binmode unless $editor_services_stdout.binmode # rubocop:disable Style/GlobalVars -- We need this global var
 
         @client_connection = PuppetEditorServices::Connection::Stdio.new(self)
 

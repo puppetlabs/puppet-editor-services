@@ -81,7 +81,7 @@ module PuppetDebugServer
           request_message,
           'result' => debug_session.evaluate_string(obj.arguments), 'variablesReference' => 0
         )
-      rescue => e # rubocop:disable Style/RescueStandardError  Anything could be thrown here. Catch 'em all
+      rescue => e # rubocop:disable Style/RescueStandardError -- Anything could be thrown here. Catch 'em all
         PuppetEditorServices::Protocol::DebugAdapterMessages.reply_error(
           request_message,
           e.to_s
