@@ -95,13 +95,13 @@ module PuppetLanguageServerSidecar
         file_doc = PuppetLanguageServerSidecar::PuppetStringsHelper.file_documentation(path, finder.puppet_path, cache)
         next if file_doc.nil?
 
-        if object_types.include?(:class) # rubocop:disable Style/IfUnlessModifier   This reads better
+        if object_types.include?(:class) # rubocop:disable Style/IfUnlessModifier -- This reads better
           file_doc.classes.each { |item| result.append!(item) }
         end
-        if object_types.include?(:datatype) # rubocop:disable Style/IfUnlessModifier   This reads better
+        if object_types.include?(:datatype) # rubocop:disable Style/IfUnlessModifier -- This reads better
           file_doc.datatypes.each { |item| result.append!(item) }
         end
-        if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier   This reads better
+        if object_types.include?(:function) # rubocop:disable Style/IfUnlessModifier -- This reads better
           file_doc.functions.each { |item| result.append!(item) }
         end
         next unless object_types.include?(:type)

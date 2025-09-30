@@ -13,7 +13,7 @@ module PuppetLanguageServer
       @session_state = ClientSessionState.new(self)
     end
 
-    def session_state # rubocop:disable Style/TrivialAccessors During the refactor, this is fine.
+    def session_state # rubocop:disable Style/TrivialAccessors -- During the refactor, this is fine.
       @session_state
     end
 

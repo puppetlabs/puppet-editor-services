@@ -151,7 +151,7 @@ module PuppetLanguageServer
           original_request.params.registrations.each do |reg|
             # Mark the registration as completed and failed
             @registrations[reg.method__lsp] = [] if @registrations[reg.method__lsp].nil?
-            @registrations[reg.method__lsp].select { |i| i[:id] == reg.id }.each { |i| i[:registered] = false; i[:state] = :complete } # rubocop:disable Style/Semicolon This is fine
+            @registrations[reg.method__lsp].select { |i| i[:id] == reg.id }.each { |i| i[:registered] = false; i[:state] = :complete } # rubocop:disable Style/Semicolon -- This is fine
           end
           return true
         end
@@ -161,7 +161,7 @@ module PuppetLanguageServer
 
           # Mark the registration as completed and succesful
           @registrations[reg.method__lsp] = [] if @registrations[reg.method__lsp].nil?
-          @registrations[reg.method__lsp].select { |i| i[:id] == reg.id }.each { |i| i[:registered] = true; i[:state] = :complete } # rubocop:disable Style/Semicolon This is fine
+          @registrations[reg.method__lsp].select { |i| i[:id] == reg.id }.each { |i| i[:registered] = true; i[:state] = :complete } # rubocop:disable Style/Semicolon -- This is fine
 
           # If we just registered the workspace/didChangeConfiguration method then
           # also trigger a configuration request to get the initial state

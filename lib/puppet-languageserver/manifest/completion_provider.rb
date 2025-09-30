@@ -275,7 +275,7 @@ module PuppetLanguageServer
           snippet = "#{data['name']} { '${1:title}':\n"
           attr_names.each_index do |index|
             name = attr_names[index]
-            value_text = (name == 'ensure') ? 'present' : 'value' # rubocop:disable Style/TernaryParentheses  In this case it's easier to read.
+            value_text = (name == 'ensure') ? 'present' : 'value' # rubocop:disable Style/TernaryParentheses -- In this case it's easier to read.
             snippet += "\t#{name.ljust(max_length, ' ')} => '${#{index + 2}:#{value_text}}'\n"
           end
           snippet += '}'

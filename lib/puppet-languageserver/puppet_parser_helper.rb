@@ -100,14 +100,14 @@ module PuppetLanguageServer
           # Perhaps try inserting double quotes.  Useful in empty arrays or during variable assignment
           # Grab the line up to the cursor character + 1
           line = get_line_at(content, line_offsets, line_num).slice!(0, char_num + 1)
-          if line.strip.end_with?('=') || line.end_with?('[]') # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
+          if line.strip.end_with?('=') || line.end_with?('[]') # rubocop:disable Style/IfUnlessModifier -- Nicer to read like this
             new_content = insert_text_at(content, line_offsets, line_num, char_num, "''")
           end
         when :try_quotes_and_comma
           # Perhaps try inserting double quotes with a comma.  Useful resource properties and parameter assignments
           # Grab the line up to the cursor character + 1
           line = get_line_at(content, line_offsets, line_num).slice!(0, char_num + 1)
-          if line.strip.end_with?('=>') # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
+          if line.strip.end_with?('=>') # rubocop:disable Style/IfUnlessModifier -- Nicer to read like this
             new_content = insert_text_at(content, line_offsets, line_num, char_num, "'',")
           end
         else
@@ -159,7 +159,7 @@ module PuppetLanguageServer
       else
         path = []
         result.model._pcore_all_contents(path) do |item|
-          if check_for_valid_item(item, abs_offset, options[:disallowed_classes]) # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
+          if check_for_valid_item(item, abs_offset, options[:disallowed_classes]) # rubocop:disable Style/IfUnlessModifier -- Nicer to read like this
             valid_models.push(model_path_locator_struct.new(item, path.dup))
           end
         end
@@ -171,7 +171,7 @@ module PuppetLanguageServer
 
       response = valid_models[0]
 
-      if response.respond_to? :eAllContents # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
+      if response.respond_to? :eAllContents # rubocop:disable Style/IfUnlessModifier -- Nicer to read like this
         response = model_path_locator_struct.new(response, construct_path(response))
       end
 

@@ -9,7 +9,7 @@ module PuppetEditorServices
     end
 
     def self.current_server=(value)
-      @@current_server = value # rubocop:disable Style/ClassVars  This is fine
+      @@current_server = value # rubocop:disable Style/ClassVars -- This is fine
     end
   end
 end

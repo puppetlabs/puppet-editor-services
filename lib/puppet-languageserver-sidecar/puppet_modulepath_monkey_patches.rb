@@ -118,7 +118,7 @@ class Puppet::Settings::EnvironmentConf
   def modulepath
     result = original_modulepath
 
-    if PuppetLanguageServerSidecar::Workspace.has_module_metadata? # rubocop:disable Style/IfUnlessModifier  Nicer to read like this
+    if PuppetLanguageServerSidecar::Workspace.has_module_metadata? # rubocop:disable Style/IfUnlessModifier -- Nicer to read like this
       result = result + File::PATH_SEPARATOR + PuppetLanguageServerSidecar::Workspace.root_path
     end
 
