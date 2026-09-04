@@ -9,6 +9,7 @@ if ENV['COVERAGE'] == 'yes'
       ]
 
       SimpleCov.start do
+        command_name "RSpec-#{ENV.fetch('COVERAGE_SUITE', 'default')}"
         track_files 'lib/**/*.rb'
         add_filter '/spec'
         add_filter '/tools'
