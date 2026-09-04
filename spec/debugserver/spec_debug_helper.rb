@@ -1,3 +1,4 @@
+ENV['COVERAGE_SUITE'] = 'debugserver'
 require_relative '../spec_helper.rb'
 # Emulate the setup from the root 'puppet-debugserver' file
 # Add the debug server into the load path
