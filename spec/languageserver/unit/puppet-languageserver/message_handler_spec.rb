@@ -346,6 +346,82 @@ describe 'PuppetLanguageServer::MessageHandler' do
       end
     end
 
+    describe '.request_puppet_getfacts' do
+      let(:request_rpc_method) { 'puppet/getFacts' }
+
+      it 'should reply with a PuppetFactResponse' do
+        allow(PuppetLanguageServer::FacterHelper).to receive(:facts_to_hash).and_return({ 'os' => 'linux' })
+        result = subject.request_puppet_getfacts(connection_id, request_message)
+        expect(result).to be_a(LSP::PuppetFactResponse)
+        expect(result.facts).to eq({ 'os' => 'linux' })
+      end
+    end
+
+    describe '.request_puppetfile_getdependencies' do
+      let(:request_rpc_method) { 'puppetfile/getDependencies' }
+      let(:file_uri) { PUPPETFILE_FILENAME }
+      let(:request_params) { { 'uri' => file_uri } }
+
+      before(:each) do
+        subject.documents.clear
+        subject.documents.set_document(file_uri, 'mod "foo"', 0)
+      end
+
+      context 'when the file is not a Puppetfile' do
+        let(:file_uri) { MANIFEST_FILENAME }
+
+        it 'should return an error response' do
+          result = subject.request_puppetfile_getdependencies(connection_id, request_message)
+          expect(result.error).to match(/puppetfile/)
+        end
+      end
+
+      context 'when the file is a Puppetfile and dependencies are found' do
+        it 'should return a dependency response' do
+          allow(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:find_dependencies).and_return([])
+          result = subject.request_puppetfile_getdependencies(connection_id, request_message)
+          expect(result.dependencies).to eq([])
+        end
+      end
+
+      context 'when finding dependencies raises an error' do
+        it 'should return an error response' do
+          allow(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:find_dependencies).and_raise(StandardError, 'mock error')
+          result = subject.request_puppetfile_getdependencies(connection_id, request_message)
+          expect(result.error).to match(/internal error/)
+        end
+      end
+    end
+
+    describe '.request_workspace_symbol' do
+      let(:request_rpc_method) { 'workspace/symbol' }
+      let(:request_params) { { 'query' => 'foo' } }
+
+      it 'should return an array of symbols' do
+        result = subject.request_workspace_symbol(connection_id, request_message)
+        expect(result).to be_an(Array)
+      end
+    end
+
+    describe '.request_puppet_compilenodegraph (exception path)' do
+      let(:request_rpc_method) { 'puppet/compileNodeGraph' }
+      let(:file_uri) { MANIFEST_FILENAME }
+      let(:file_content) { 'some file content' }
+      let(:request_params) { { 'external' => file_uri } }
+
+      before(:each) do
+        subject.documents.clear
+        subject.documents.set_document(file_uri, file_content, 0)
+        allow(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).and_raise(StandardError, 'mock error')
+        allow(PuppetLanguageServer).to receive(:log_message)
+      end
+
+      it 'should reply with an error message from the rescue path' do
+        result = subject.request_puppet_compilenodegraph(connection_id, request_message)
+        expect(result.error).to match(/internal error/)
+      end
+    end
+
     describe '.request_puppet_fixdiagnosticerrors' do
       let(:request_rpc_method) { 'puppet/fixDiagnosticErrors' }
       let(:file_uri) { MANIFEST_FILENAME }

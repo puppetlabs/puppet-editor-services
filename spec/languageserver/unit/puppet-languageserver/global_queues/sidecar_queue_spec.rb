@@ -111,5 +111,178 @@ describe 'PuppetLanguageServer::GlobalQueues::SidecarQueue' do
         expect(cache.object_by_name(:type, fixture[0].key)).to_not be nil
       end
     end
+
+    context 'default_datatypes action' do
+      let(:action) { 'default_datatypes' }
+
+      it 'should deserialize the json, import into the cache' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
+        fixture << random_sidecar_puppet_datatype
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+
+        subject.execute(action, [], false, connection_id)
+        expect(cache.object_by_name(:datatype, fixture[0].key)).to_not be nil
+      end
+    end
+
+    context 'facts action' do
+      let(:action) { 'facts' }
+
+      it 'should deserialize the json, import into the cache' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::FactList.new
+        fixture << random_sidecar_fact
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+
+        subject.execute(action, [], false, connection_id)
+        expect(cache.object_by_name(:fact, fixture[0].key)).to_not be nil
+      end
+    end
+
+    context 'node_graph action' do
+      let(:action) { 'node_graph' }
+
+      it 'returns a PuppetNodeGraph object' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::PuppetNodeGraph.new
+        fixture.vertices = []
+        fixture.edges = []
+        fixture.error_content = ''
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+
+        result = subject.execute(action, [], false, connection_id)
+        expect(result).to be_a(PuppetLanguageServer::Sidecar::Protocol::PuppetNodeGraph)
+      end
+    end
+
+    context 'resource_list action' do
+      let(:action) { 'resource_list' }
+
+      it 'returns a ResourceList object' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::ResourceList.new
+        fixture << random_sidecar_resource
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+
+        result = subject.execute(action, [], false, connection_id)
+        expect(result).to be_a(PuppetLanguageServer::Sidecar::Protocol::ResourceList)
+      end
+    end
+
+    context 'workspace_aggregate action' do
+      let(:action) { 'workspace_aggregate' }
+
+      it 'should deserialize the json, import into the cache under workspace origin' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::AggregateMetadata.new
+        fixture.append!(random_sidecar_puppet_class)
+        fixture.append!(random_sidecar_puppet_function)
+        fixture.append!(random_sidecar_puppet_type)
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+
+        subject.execute(action, [], false, connection_id)
+        expect(cache.object_by_name(:class, fixture.classes[0].key)).to_not be_nil
+        expect(cache.object_by_name(:function, fixture.functions[0].key)).to_not be_nil
+        expect(cache.object_by_name(:type, fixture.types[0].key)).to_not be_nil
+        expect(cache.section_in_origin_exist?(:class, :workspace)).to be(true)
+      end
+    end
+
+    context 'workspace_classes action' do
+      let(:action) { 'workspace_classes' }
+
+      it 'should deserialize the json, import into the cache under workspace origin' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::PuppetClassList.new
+        fixture << random_sidecar_puppet_class
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+
+        subject.execute(action, [], false, connection_id)
+        expect(cache.object_by_name(:class, fixture[0].key)).to_not be_nil
+        expect(cache.section_in_origin_exist?(:class, :workspace)).to be(true)
+      end
+    end
+
+    context 'workspace_datatypes action' do
+      let(:action) { 'workspace_datatypes' }
+
+      it 'should deserialize the json, import into the cache under workspace origin' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
+        fixture << random_sidecar_puppet_datatype
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+
+        subject.execute(action, [], false, connection_id)
+        expect(cache.object_by_name(:datatype, fixture[0].key)).to_not be_nil
+        expect(cache.section_in_origin_exist?(:datatype, :workspace)).to be(true)
+      end
+    end
+
+    context 'workspace_functions action' do
+      let(:action) { 'workspace_functions' }
+
+      it 'should deserialize the json, import into the cache under workspace origin' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::PuppetFunctionList.new
+        fixture << random_sidecar_puppet_function
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+
+        subject.execute(action, [], false, connection_id)
+        expect(cache.object_by_name(:function, fixture[0].key)).to_not be_nil
+        expect(cache.section_in_origin_exist?(:function, :workspace)).to be(true)
+      end
+    end
+
+    context 'workspace_types action' do
+      let(:action) { 'workspace_types' }
+
+      it 'should deserialize the json, import into the cache under workspace origin' do
+        fixture = PuppetLanguageServer::Sidecar::Protocol::PuppetTypeList.new
+        fixture << random_sidecar_puppet_type
+        sidecar_response = [fixture.to_json, 'stderr', SuccessStatus.new]
+
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+
+        subject.execute(action, [], false, connection_id)
+        expect(cache.object_by_name(:type, fixture[0].key)).to_not be_nil
+        expect(cache.section_in_origin_exist?(:type, :workspace)).to be(true)
+      end
+    end
+
+    context 'unknown action' do
+      let(:action) { 'unknown_action' }
+
+      it 'logs an error and returns true' do
+        sidecar_response = ['{}', 'stderr', SuccessStatus.new]
+        expect(subject).to receive(:run_sidecar).and_return(sidecar_response)
+        allow(PuppetLanguageServer).to receive(:log_message)
+        expect(PuppetLanguageServer).to receive(:log_message).with(:error, /Unknown action/)
+
+        result = subject.execute(action, [], false, connection_id)
+        expect(result).to be(true)
+      end
+    end
+
+    context 'when an error is raised and handle_errors is true' do
+      let(:action) { 'default_classes' }
+
+      it 'logs the error and returns nil instead of raising' do
+        allow(subject).to receive(:run_sidecar).and_raise(StandardError, 'mock error')
+        allow(PuppetLanguageServer).to receive(:log_message)
+        expect(PuppetLanguageServer).to receive(:log_message).with(:error, /mock error/)
+
+        result = subject.execute(action, [], true, connection_id)
+        expect(result).to be_nil
+      end
+    end
   end
 end
