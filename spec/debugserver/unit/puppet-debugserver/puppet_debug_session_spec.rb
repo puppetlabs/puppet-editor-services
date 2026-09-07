@@ -212,6 +212,112 @@ describe 'PuppetDebugServer::PuppetDebugSession' do
       expect(subject.get_puppet_class_name(obj)).to eq('CallNamedFunctionExpression')
     end
   end
+
+  describe '#generate_stackframe_list with a non-Positioned pops_target' do
+    it 'generates a basic stack frame for non-Positioned pops_target' do
+      target = double('pops_target')
+      allow(target).to receive(:respond_to?).with(:_pcore_type).and_return(false)
+      allow(target).to receive(:class).and_return(Puppet::Pops::Model::CallNamedFunctionExpression)
+      allow(target).to receive(:is_a?).with(Puppet::Pops::Model::Positioned).and_return(false)
+      subject.puppet_session_state.saved.update!(pops_target: target)
+      result = subject.generate_stackframe_list
+      expect(result.length).to eq(1)
+    end
+  end
+
+  describe '#force_terminate' do
+    it 'does not raise when puppet_thread is nil' do
+      expect { subject.force_terminate }.not_to raise_error
+    end
+  end
+
+  describe '#variable_from_ruby_object (private)' do
+    it 'returns a DSP::Variable for a string value' do
+      result = subject.send(:variable_from_ruby_object, 'myvar', 'hello')
+      expect(result).to be_a(DSP::Variable)
+      expect(result.value).to eq('hello')
+    end
+
+    it 'returns a DSP::Variable for an Array value with reference' do
+      arr = [1, 2, 3]
+      result = subject.send(:variable_from_ruby_object, 'myarr', arr)
+      expect(result).to be_a(DSP::Variable)
+      expect(result.value).to include('Array')
+      expect(result.variablesReference).to eq(arr.object_id)
+    end
+
+    it 'returns a DSP::Variable for a Hash value with reference' do
+      hsh = { 'a' => 1 }
+      result = subject.send(:variable_from_ruby_object, 'myhash', hsh)
+      expect(result).to be_a(DSP::Variable)
+      expect(result.value).to include('Hash')
+      expect(result.variablesReference).to eq(hsh.object_id)
+    end
+  end
+
+  describe '#variable_list_from_hash (private)' do
+    it 'returns an array of DSP::Variable objects' do
+      result = subject.send(:variable_list_from_hash, { 'b' => 'val2', 'a' => 'val1' })
+      expect(result).to be_an(Array)
+      expect(result.length).to eq(2)
+      expect(result.first).to be_a(DSP::Variable)
+      # Should be sorted alphabetically
+      expect(result.first.name).to eq('a')
+    end
+  end
+
+  describe '#variable_list_from_array (private)' do
+    it 'returns an array of DSP::Variable objects' do
+      result = subject.send(:variable_list_from_array, ['x', 'y', 'z'])
+      expect(result).to be_an(Array)
+      expect(result.length).to eq(3)
+      expect(result.first).to be_a(DSP::Variable)
+      expect(result.first.name).to eq('0')
+    end
+  end
+end
+
+describe 'PuppetDebugServer::LogMessageAggregator' do
+  let(:debug_session) { PuppetDebugServer::PuppetDebugSession.new }
+  let(:subject) { PuppetDebugServer::LogMessageAggregator.new(debug_session.hook_manager) }
+
+  before(:each) do
+    allow(PuppetDebugServer).to receive(:log_message)
+  end
+
+  describe '#initialize' do
+    it 'starts with an empty messages array' do
+      expect(subject.messages).to eq([])
+    end
+  end
+
+  describe '#start!' do
+    it 'adds a hook to the hook_manager' do
+      subject.start!
+      expect(debug_session.hook_manager.hook_count(:hook_log_message)).to be > 0
+    end
+
+    it 'aggregates log messages when active' do
+      subject.start!
+      mock_msg = double('puppet_log_message')
+      subject.on_hook_log_message([mock_msg])
+      expect(subject.messages).to include(mock_msg)
+    end
+  end
+
+  describe '#stop!' do
+    it 'does not raise when not started' do
+      expect { subject.stop! }.not_to raise_error
+    end
+  end
+
+  describe '#on_hook_log_message' do
+    it 'appends the message to the messages array' do
+      mock_msg = double('puppet_log_message')
+      subject.on_hook_log_message([mock_msg])
+      expect(subject.messages).to include(mock_msg)
+    end
+  end
 end
 
 describe 'PuppetDebugServer::SourcePosition' do

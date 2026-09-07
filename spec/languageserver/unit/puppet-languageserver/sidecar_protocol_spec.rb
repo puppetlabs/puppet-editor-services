@@ -615,5 +615,53 @@ describe 'PuppetLanguageServer::Sidecar::Protocol' do
     }
 
     it_should_behave_like 'a base Sidecar Protocol object'
+
+    describe '#list_for_object_class' do
+      it 'raises for an unknown object class' do
+        expect { subject.send(:list_for_object_class, String) }.to raise_error(RuntimeError, /Unknown object class/)
+      end
+    end
+  end
+
+  describe 'Base module' do
+    let(:test_class) do
+      Class.new do
+        include PuppetLanguageServer::Sidecar::Protocol::Base
+      end
+    end
+
+    it 'raises NotImplementedError for to_json' do
+      expect { test_class.new.to_json }.to raise_error(NotImplementedError)
+    end
+
+    it 'raises NotImplementedError for from_json!' do
+      expect { test_class.new.from_json!('{}') }.to raise_error(NotImplementedError)
+    end
+  end
+
+  describe 'BaseClass#eql?' do
+    let(:obj1) do
+      value = PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new
+      add_default_basepuppetobject_values!(value)
+      value.doc = nil
+      value.parameters = {}
+      value
+    end
+    let(:obj2) do
+      value = PuppetLanguageServer::Sidecar::Protocol::PuppetClass.new
+      add_default_basepuppetobject_values!(value)
+      value.doc = nil
+      value.parameters = {}
+      value
+    end
+
+    it 'returns true for equivalent objects' do
+      expect(obj1.eql?(obj2)).to be true
+    end
+
+    it 'returns false for objects of different classes' do
+      other = PuppetLanguageServer::Sidecar::Protocol::PuppetType.new
+      expect(obj1.eql?(other)).to be false
+    end
   end
 end
