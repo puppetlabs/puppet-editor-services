@@ -20,7 +20,8 @@ Gem::Specification.new do |s|
                               'bin/*',
                               '[A-Z]*'].to_a
   s.license        = 'Apache-2.0'
-  s.add_runtime_dependency 'puppet-lint', '~> 4.0'
+  s.add_runtime_dependency 'puppet-lint', '~> 5.0'
+  s.add_runtime_dependency 'logger'
   s.add_runtime_dependency 'hiera-eyaml', '~> 2.1'
   s.add_runtime_dependency 'puppetfile-resolver', '~> 0.6'
   s.add_runtime_dependency 'molinillo', '~> 0.6'

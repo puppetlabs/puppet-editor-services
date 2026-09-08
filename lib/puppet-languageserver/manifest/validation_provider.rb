@@ -17,7 +17,7 @@ module PuppetLanguageServer
         linter = PuppetLint::Checks.new
         linter.load_data(nil, content)
 
-        problems = linter.run(nil, content)
+        problems = linter.run('', content)
         problems_fixed = problems.nil? ? 0 : problems.count { |item| item[:kind] == :fixed }
 
         [problems_fixed, linter.manifest]
@@ -39,7 +39,7 @@ module PuppetLanguageServer
           linter = PuppetLint::Checks.new
           linter.load_data(nil, content)
 
-          problems = linter.run(nil, content)
+          problems = linter.run('', content)
           unless problems.nil?
             problems.each do |problem|
               # Syntax errors are better handled by the puppet parser, not puppet lint

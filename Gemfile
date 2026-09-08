@@ -28,7 +28,11 @@ gemsource_facter = if Gem.ruby_version >= Gem::Version.new('4.0')
 group :development do
   gem 'rake', '>= 10.4',                  :require => false
   gem 'rspec', '>= 3.2',                  :require => false
-  gem 'puppet-lint', '~> 4.0',            :require => false
+  # logger moved from a Ruby default gem to a bundled gem; Bundler won't expose it
+  # under Ruby 4.0 unless it's declared explicitly. lib/puppet_languageserver.rb
+  # requires it directly.
+  gem 'logger',                           :require => false
+  gem 'puppet-lint', '~> 5.0',            :require => false
   gem 'puppetfile-resolver', '~> 0.6.2',  :require => false
   gem 'yard', '~> 0.9.28',                :require => false
   gem "rubocop", '~> 1.73.0',             :require => false
