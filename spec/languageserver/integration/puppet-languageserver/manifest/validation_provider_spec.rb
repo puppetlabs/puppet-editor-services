@@ -88,7 +88,7 @@ describe 'PuppetLanguageServer::Manifest::ValidationProvider' do
     describe "Given a complete manifest which has disabed fixable lint errors" do
       let(:manifest) { "
         user { \"Bob\": # lint:ignore:double_quoted_strings
-          ensure  => 'present'
+          ensure => 'present'
         }"
       }
 
