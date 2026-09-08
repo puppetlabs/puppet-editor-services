@@ -106,4 +106,82 @@ describe 'PuppetEditorServices::Protocol::JsonRPC' do
       subject.receive_data(data)
     end
   end
+
+  context 'Given an empty data string' do
+    it 'should not call the message handler' do
+      expect(message_handler).not_to receive(:handle)
+      subject.receive_data('')
+    end
+  end
+
+  context 'Given a batch (array) JSON message' do
+    let(:data) { "Content-Length: 41\r\n\r\n" + '[{"jsonrpc":"2.0","id":1,"method":"foo"}]' }
+
+    it 'should not call the message handler' do
+      expect(message_handler).not_to receive(:handle)
+      subject.receive_data(data)
+    end
+  end
+
+  context 'Given a JSON message with an invalid jsonrpc version' do
+    let(:data) { "Content-Length: 39\r\n\r\n" + '{"jsonrpc":"1.0","id":1,"method":"foo"}' }
+
+    it 'should not call the message handler' do
+      expect(message_handler).not_to receive(:handle)
+      subject.receive_data(data)
+    end
+  end
+
+  context 'Given a JSON message with params that are neither Hash nor Array' do
+    let(:data) { "Content-Length: 57\r\n\r\n" + '{"jsonrpc":"2.0","id":1,"method":"foo","params":"string"}' }
+
+    it 'should not call the message handler' do
+      expect(message_handler).not_to receive(:handle)
+      subject.receive_data(data)
+    end
+  end
+
+  context 'Given a JSON message with an invalid id type' do
+    let(:data) { "Content-Length: 42\r\n\r\n" + '{"jsonrpc":"2.0","id":true,"method":"foo"}' }
+
+    it 'should not call the message handler' do
+      expect(message_handler).not_to receive(:handle)
+      subject.receive_data(data)
+    end
+  end
+
+  context 'Given a JSON message with a non-string method' do
+    let(:data) { "Content-Length: 37\r\n\r\n" + '{"jsonrpc":"2.0","id":1,"method":123}' }
+
+    it 'should not call the message handler' do
+      expect(message_handler).not_to receive(:handle)
+      subject.receive_data(data)
+    end
+  end
+
+  context 'Given a JSON message that is neither request, notification, nor response' do
+    # Has id but no method, no result, no error
+    let(:data) { "Content-Length: 24\r\n\r\n" + '{"jsonrpc":"2.0","id":1}' }
+
+    it 'should not call the message handler' do
+      expect(message_handler).not_to receive(:handle)
+      subject.receive_data(data)
+    end
+  end
+
+  describe '#extract_headers' do
+    it 'parses a Content-Length header' do
+      headers = subject.extract_headers('Content-Length: 42')
+      expect(headers['Content-Length']).to eq(42)
+    end
+
+    it 'parses a Content-Type header (case-insensitive)' do
+      headers = subject.extract_headers("Content-Type: application/vscode-jsonrpc\r\nContent-Length: 10")
+      expect(headers['Content-Length']).to eq(10)
+    end
+
+    it 'raises for unknown headers' do
+      expect { subject.extract_headers('X-Unknown: value') }.to raise_error(/Unknown header X-Unknown/)
+    end
+  end
 end

@@ -346,6 +346,82 @@ describe 'PuppetLanguageServer::MessageHandler' do
       end
     end
 
+    describe '.request_puppet_getfacts' do
+      let(:request_rpc_method) { 'puppet/getFacts' }
+
+      it 'should reply with a PuppetFactResponse' do
+        allow(PuppetLanguageServer::FacterHelper).to receive(:facts_to_hash).and_return({ 'os' => 'linux' })
+        result = subject.request_puppet_getfacts(connection_id, request_message)
+        expect(result).to be_a(LSP::PuppetFactResponse)
+        expect(result.facts).to eq({ 'os' => 'linux' })
+      end
+    end
+
+    describe '.request_puppetfile_getdependencies' do
+      let(:request_rpc_method) { 'puppetfile/getDependencies' }
+      let(:file_uri) { PUPPETFILE_FILENAME }
+      let(:request_params) { { 'uri' => file_uri } }
+
+      before(:each) do
+        subject.documents.clear
+        subject.documents.set_document(file_uri, 'mod "foo"', 0)
+      end
+
+      context 'when the file is not a Puppetfile' do
+        let(:file_uri) { MANIFEST_FILENAME }
+
+        it 'should return an error response' do
+          result = subject.request_puppetfile_getdependencies(connection_id, request_message)
+          expect(result.error).to match(/puppetfile/)
+        end
+      end
+
+      context 'when the file is a Puppetfile and dependencies are found' do
+        it 'should return a dependency response' do
+          allow(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:find_dependencies).and_return([])
+          result = subject.request_puppetfile_getdependencies(connection_id, request_message)
+          expect(result.dependencies).to eq([])
+        end
+      end
+
+      context 'when finding dependencies raises an error' do
+        it 'should return an error response' do
+          allow(PuppetLanguageServer::Puppetfile::ValidationProvider).to receive(:find_dependencies).and_raise(StandardError, 'mock error')
+          result = subject.request_puppetfile_getdependencies(connection_id, request_message)
+          expect(result.error).to match(/internal error/)
+        end
+      end
+    end
+
+    describe '.request_workspace_symbol' do
+      let(:request_rpc_method) { 'workspace/symbol' }
+      let(:request_params) { { 'query' => 'foo' } }
+
+      it 'should return an array of symbols' do
+        result = subject.request_workspace_symbol(connection_id, request_message)
+        expect(result).to be_an(Array)
+      end
+    end
+
+    describe '.request_puppet_compilenodegraph (exception path)' do
+      let(:request_rpc_method) { 'puppet/compileNodeGraph' }
+      let(:file_uri) { MANIFEST_FILENAME }
+      let(:file_content) { 'some file content' }
+      let(:request_params) { { 'external' => file_uri } }
+
+      before(:each) do
+        subject.documents.clear
+        subject.documents.set_document(file_uri, file_content, 0)
+        allow(PuppetLanguageServer::PuppetHelper).to receive(:get_node_graph).and_raise(StandardError, 'mock error')
+        allow(PuppetLanguageServer).to receive(:log_message)
+      end
+
+      it 'should reply with an error message from the rescue path' do
+        result = subject.request_puppet_compilenodegraph(connection_id, request_message)
+        expect(result.error).to match(/internal error/)
+      end
+    end
+
     describe '.request_puppet_fixdiagnosticerrors' do
       let(:request_rpc_method) { 'puppet/fixDiagnosticErrors' }
       let(:file_uri) { MANIFEST_FILENAME }
@@ -869,6 +945,109 @@ describe 'PuppetLanguageServer::MessageHandler' do
         end
       end
     end
+
+    # textDocument/foldingRange
+    describe '.request_textdocument_foldingrange' do
+      let(:request_rpc_method) { 'textDocument/foldingRange' }
+      let(:file_uri) { MANIFEST_FILENAME }
+      let(:request_params) { { 'textDocument' => { 'uri' => file_uri } } }
+
+      before(:each) do
+        subject.documents.clear
+        subject.documents.set_document(file_uri, 'class foo {}', 0)
+      end
+
+      context 'with client.folding_range set to false' do
+        before(:each) do
+          allow(subject.language_client).to receive(:folding_range).and_return(false)
+        end
+
+        it 'should reply with nil' do
+          expect(subject.request_textdocument_foldingrange(connection_id, request_message)).to be_nil
+        end
+      end
+
+      context 'with client.folding_range set to true' do
+        before(:each) do
+          allow(subject.language_client).to receive(:folding_range).and_return(true)
+          allow(PuppetLanguageServer).to receive(:log_message)
+        end
+
+        context 'for a puppet manifest file' do
+          it 'should call the FoldingProvider and return an array' do
+            allow(PuppetLanguageServer::Manifest::FoldingProvider.instance).to receive(:folding_ranges).and_return([])
+            result = subject.request_textdocument_foldingrange(connection_id, request_message)
+            expect(result).to be_an(Array)
+          end
+        end
+
+        context 'for a file the server does not understand' do
+          let(:file_uri) { UNKNOWN_FILENAME }
+
+          it 'should log an error message' do
+            expect(PuppetLanguageServer).to receive(:log_message).with(:error, /Unable to provide folding ranages on/)
+            subject.request_textdocument_foldingrange(connection_id, request_message)
+          end
+
+          it 'should reply with nil' do
+            expect(subject.request_textdocument_foldingrange(connection_id, request_message)).to be_nil
+          end
+        end
+      end
+    end
+
+    # textDocument/signatureHelp
+    describe '.request_textdocument_signaturehelp' do
+      let(:request_rpc_method) { 'textDocument/signatureHelp' }
+      let(:file_uri) { MANIFEST_FILENAME }
+      let(:line_num) { 0 }
+      let(:char_num) { 5 }
+      let(:request_params) do
+        {
+          'textDocument' => { 'uri' => file_uri },
+          'position' => { 'line' => line_num, 'character' => char_num }
+        }
+      end
+
+      before(:each) do
+        subject.documents.clear
+        subject.documents.set_document(file_uri, 'notice("hello")', 0)
+        allow(PuppetLanguageServer).to receive(:log_message)
+      end
+
+      context 'for a puppet manifest file' do
+        it 'should call SignatureProvider.signature_help' do
+          allow(PuppetLanguageServer::Manifest::SignatureProvider).to receive(:signature_help).and_return(nil)
+          expect(PuppetLanguageServer::Manifest::SignatureProvider).to receive(:signature_help)
+          subject.request_textdocument_signaturehelp(connection_id, request_message)
+        end
+      end
+
+      context 'for a file the server does not understand' do
+        let(:file_uri) { UNKNOWN_FILENAME }
+
+        it 'should log an error message' do
+          expect(PuppetLanguageServer).to receive(:log_message).with(:error, /Unable to provide signatures on/)
+          subject.request_textdocument_signaturehelp(connection_id, request_message)
+        end
+
+        it 'should reply with nil' do
+          expect(subject.request_textdocument_signaturehelp(connection_id, request_message)).to be_nil
+        end
+      end
+
+      context 'when an error occurs' do
+        before(:each) do
+          allow(PuppetLanguageServer::Manifest::SignatureProvider).to receive(:signature_help).and_raise(StandardError, 'mock error')
+        end
+
+        it 'should log an error and return nil' do
+          expect(PuppetLanguageServer).to receive(:log_message).with(:error, /mock error/)
+          result = subject.request_textdocument_signaturehelp(connection_id, request_message)
+          expect(result).to be_nil
+        end
+      end
+    end
   end
 
   context 'When receiving a notification' do
@@ -1200,6 +1379,78 @@ describe 'PuppetLanguageServer::MessageHandler' do
           subject.response_workspace_configuration(connection_id, response_message, request_message)
         end
       end
+    end
+  end
+end
+
+describe 'PuppetLanguageServer::DisabledMessageHandler' do
+  let(:server) do
+    MockServer.new({}, {}, {}, { class: PuppetLanguageServer::DisabledMessageHandler })
+  end
+  let(:connection_id) { server.connection_object.id }
+  let(:subject) { server.handler_object }
+
+  let(:request_message) do
+    ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!(
+      'id' => 1, 'method' => 'initialize', 'params' => {}
+    )
+  end
+  let(:notification_message) do
+    ::PuppetEditorServices::Protocol::JsonRPCMessages::NotificationMessage.new.from_h!(
+      'method' => 'initialized', 'params' => {}
+    )
+  end
+
+  before(:each) do
+    allow(PuppetLanguageServer).to receive(:log_message)
+  end
+
+  describe '.request_initialize' do
+    it 'returns capabilities hash with no_capabilities' do
+      result = subject.request_initialize(connection_id, request_message)
+      expect(result).to be_a(Hash)
+      expect(result).to have_key('capabilities')
+    end
+  end
+
+  describe '.request_shutdown' do
+    it 'returns nil' do
+      msg = ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!(
+        'id' => 2, 'method' => 'shutdown', 'params' => {}
+      )
+      result = subject.request_shutdown(connection_id, msg)
+      expect(result).to be_nil
+    end
+  end
+
+  describe '.request_puppet_getversion' do
+    it 'returns a PuppetVersion object with all loaded flags true' do
+      msg = ::PuppetEditorServices::Protocol::JsonRPCMessages::RequestMessage.new.from_h!(
+        'id' => 3, 'method' => 'puppet/getVersion', 'params' => {}
+      )
+      result = subject.request_puppet_getversion(connection_id, msg)
+      expect(result).to be_a(LSP::PuppetVersion)
+      expect(result.factsLoaded).to be true
+      expect(result.functionsLoaded).to be true
+      expect(result.typesLoaded).to be true
+      expect(result.classesLoaded).to be true
+    end
+  end
+
+  describe '.notification_initialized' do
+    it 'sends a window/showMessage notification via the protocol' do
+      expect(subject.protocol).to receive(:encode_and_send)
+      subject.notification_initialized(connection_id, notification_message)
+    end
+  end
+
+  describe '.notification_exit' do
+    it 'closes the connection' do
+      msg = ::PuppetEditorServices::Protocol::JsonRPCMessages::NotificationMessage.new.from_h!(
+        'method' => 'exit', 'params' => {}
+      )
+      expect(subject.protocol).to receive(:close_connection)
+      subject.notification_exit(connection_id, msg)
     end
   end
 end

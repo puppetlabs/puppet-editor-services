@@ -74,6 +74,17 @@ describe 'PuppetLanguageServer::Manifest::DocumentSymbolProvider' do
       expect(result.count).to eq(1)
       expect(result[0]).to be_symbol_information('func1', LSP::SymbolKind::FUNCTION)
     end
+
+    context 'when the cache contains an object of unknown type' do
+      it 'logs a warning and skips the unknown object' do
+        mock_cache = instance_double(PuppetLanguageServer::SessionState::ObjectCache)
+        allow(mock_cache).to receive(:all_objects).and_yield(:unknown_key, Object.new)
+        allow(PuppetLanguageServer).to receive(:log_message)
+        expect(PuppetLanguageServer).to receive(:log_message).with(:warn, /Unknown object type/)
+        result = subject.workspace_symbols(nil, mock_cache)
+        expect(result).to be_empty
+      end
+    end
   end
 
   context 'with Puppet 4.0 and below', :if => Gem::Version.new(Puppet.version) < Gem::Version.new('5.0.0') do
@@ -151,6 +162,47 @@ describe 'PuppetLanguageServer::Manifest::DocumentSymbolProvider' do
         expect(result[0]).to be_document_symbol('foo', LSP::SymbolKind::CLASS, 0, 0, 3, 1)
         expect(result[0].children.count).to eq(1)
         expect(result[0].children[0]).to be_document_symbol("user: 'alice'", LSP::SymbolKind::METHOD, 1, 2, 2, 3)
+      end
+
+      it 'should find a defined type in the document root' do
+        content = "define mymodule::mytype() {\n}"
+        result = subject.extract_document_symbols(content)
+
+        expect(result.count).to eq(1)
+        expect(result[0].name).to eq('mymodule::mytype')
+        expect(result[0].kind).to eq(LSP::SymbolKind::CLASS)
+      end
+
+      it 'should find a defined type with parameters' do
+        content = "define mymodule::mytype(\n  String $param1,\n) {\n}"
+        result = subject.extract_document_symbols(content)
+
+        expect(result.count).to eq(1)
+        expect(result[0].name).to eq('mymodule::mytype')
+        expect(result[0].kind).to eq(LSP::SymbolKind::CLASS)
+        expect(result[0].children.count).to eq(1)
+        expect(result[0].children[0].name).to eq('$param1')
+        expect(result[0].children[0].kind).to eq(LSP::SymbolKind::FIELD)
+      end
+
+      it 'should find a variable assignment' do
+        content = "$myvar = 'hello'"
+        result = subject.extract_document_symbols(content)
+
+        expect(result.count).to eq(1)
+        expect(result[0].name).to eq('$myvar')
+        expect(result[0].kind).to eq(LSP::SymbolKind::VARIABLE)
+      end
+
+      it 'should find resource attributes as children' do
+        content = "user { 'alice':\n  ensure => present,\n}"
+        result = subject.extract_document_symbols(content)
+
+        expect(result.count).to eq(1)
+        expect(result[0].children.count).to be >= 1
+        ensure_sym = result[0].children.find { |c| c.name == 'ensure' }
+        expect(ensure_sym).not_to be_nil
+        expect(ensure_sym.kind).to eq(LSP::SymbolKind::VARIABLE)
       end
     end
   end

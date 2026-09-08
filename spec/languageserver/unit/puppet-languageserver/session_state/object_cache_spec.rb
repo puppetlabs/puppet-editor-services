@@ -153,5 +153,35 @@ describe 'PuppetLanguageServer::SessionState::ObjectCache' do
         expect(result).to eq(['func1', 'func2', 'func3', 'func4', 'class1', 'class2'])
       end
     end
+
+    describe '#object_by_name with fuzzy_match' do
+      before(:each) do
+        datatype1 = random_sidecar_puppet_datatype
+        datatype1.key = :'Boltlib::TargetSpec'
+        list = PuppetLanguageServer::Sidecar::Protocol::PuppetDataTypeList.new
+        list << datatype1
+        subject.import_sidecar_list!(list, :datatype, origin_default)
+      end
+
+      it 'finds an exact match with fuzzy_match enabled' do
+        result = subject.object_by_name(:datatype, :'Boltlib::TargetSpec', fuzzy_match: true)
+        expect(result).not_to be_nil
+      end
+
+      it 'finds a shortname match (e.g. TargetSpec in Boltlib::TargetSpec)' do
+        result = subject.object_by_name(:datatype, :TargetSpec, fuzzy_match: true)
+        expect(result).not_to be_nil
+      end
+
+      it 'does not match when test name starts with ::' do
+        result = subject.object_by_name(:datatype, :'::TargetSpec', fuzzy_match: true)
+        expect(result).to be_nil
+      end
+
+      it 'returns nil for no match' do
+        result = subject.object_by_name(:datatype, :NoSuchType, fuzzy_match: true)
+        expect(result).to be_nil
+      end
+    end
   end
 end
