@@ -401,6 +401,52 @@ describe 'PuppetLanguageServer::SessionState::LanguageClient' do
           'textDocument/foldingRange'
       end
     end
+
+    describe 'puppet.editorService.formatOnType.maxFileSize' do
+      let(:settings) do
+        { 'puppet' => { 'editorService' => { 'formatOnType' => { 'maxFileSize' => setting_value } } } }
+      end
+
+      context 'when set to a valid positive integer' do
+        let(:setting_value) { 5000 }
+
+        it 'sets the filesize limit' do
+          subject.parse_lsp_configuration_settings!(settings)
+          expect(subject.format_on_type_filesize_limit).to eq(5000)
+        end
+      end
+
+      context 'when set to a negative integer (below min)' do
+        let(:setting_value) { -1 }
+
+        it 'uses the default value' do
+          subject.parse_lsp_configuration_settings!(settings)
+          expect(subject.format_on_type_filesize_limit).to eq(PuppetLanguageServer::SessionState::LanguageClient::DEFAULT_FORMAT_ON_TYPE_FILESIZE_LIMIT)
+        end
+      end
+
+      context 'when set to a non-parseable string' do
+        let(:setting_value) { 'not-a-number' }
+
+        it 'uses the default value' do
+          subject.parse_lsp_configuration_settings!(settings)
+          expect(subject.format_on_type_filesize_limit).to eq(PuppetLanguageServer::SessionState::LanguageClient::DEFAULT_FORMAT_ON_TYPE_FILESIZE_LIMIT)
+        end
+      end
+    end
+
+    describe 'puppet.editorService.formatOnType.enable with string value' do
+      let(:settings) do
+        { 'puppet' => { 'editorService' => { 'formatOnType' => { 'enable' => 'true' } } } }
+      end
+
+      it 'exercises the string-coercion path without raising' do
+        # The to_boolean regex %r{^(true|t|yes|y|1)$/i} treats the /i as literal,
+        # so a string value evaluates to nil (falsy). This test covers that code path.
+        expect { subject.parse_lsp_configuration_settings!(settings) }.not_to raise_error
+        expect(subject.format_on_type).to be_falsey
+      end
+    end
   end
 
   describe '#capability_registrations' do

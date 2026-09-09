@@ -15,9 +15,7 @@ module PuppetLanguageServer
         init_puppet_lint(session_state.documents.store_root_path, ['--fix'])
 
         linter = PuppetLint::Checks.new
-        linter.load_data(nil, content)
-
-        problems = linter.run('', content)
+        problems = linter.run('manifest.pp', content)
         problems_fixed = problems.nil? ? 0 : problems.count { |item| item[:kind] == :fixed }
 
         [problems_fixed, linter.manifest]
@@ -37,9 +35,7 @@ module PuppetLanguageServer
 
         begin
           linter = PuppetLint::Checks.new
-          linter.load_data(nil, content)
-
-          problems = linter.run('', content)
+          problems = linter.run('manifest.pp', content)
           unless problems.nil?
             problems.each do |problem|
               # Syntax errors are better handled by the puppet parser, not puppet lint

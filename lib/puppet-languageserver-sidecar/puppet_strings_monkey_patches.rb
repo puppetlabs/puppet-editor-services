@@ -2,7 +2,7 @@
 
 require 'yard/logging'
 module YARD
-  class Logger < ::Logger
+  class Logger
     # Suppress ANY output
     def self.instance(_pipe = $stdout)
       @logger ||= new(nil)
