@@ -370,7 +370,7 @@ module PuppetLanguageServerSidecar
     end
 
     def to_json(*options)
-      JSON.generate(to_h, options)
+      JSON.generate(to_h, *options)
     end
 
     # Deserialisation
