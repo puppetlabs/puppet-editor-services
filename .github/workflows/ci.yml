@@ -20,6 +20,12 @@ jobs:
       matrix:
         ruby_version:
           - '3.2'
+          - '4.0'
+        include:
+          - ruby_version: '3.2'
+            puppet_version: '~> 8.0'
+          - ruby_version: '4.0'
+            puppet_version: '~> 9.0'
         runs_on:
           - 'ubuntu-latest'
           - 'windows-latest'
@@ -29,6 +35,7 @@ jobs:
     secrets: "inherit"
     with:
       ruby_version: ${{ matrix.ruby_version }}
+      puppet_gem_version: ${{ matrix.puppet_version }}
       runs_on: ${{ matrix.runs_on }}
       rake_task: 'gem_revendor test:coverage'
 
@@ -38,9 +45,12 @@ jobs:
       matrix:
         ruby_version:
           - '3.2'
+          - '4.0'
         include:
           - ruby_version: '3.2'
             puppet_version: '~> 8.0'
+          - ruby_version: '4.0'
+            puppet_version: '~> 9.0'
         runs_on:
           - 'ubuntu-latest'
           - 'windows-latest'
